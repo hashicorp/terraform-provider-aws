@@ -19,13 +19,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMailManagerIngressPoint_tags(t *testing.T) {
+func testAccMailManagerIngressPoint_tagsSerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                             testAccMailManagerIngressPoint_tags,
+		"null":                                      testAccMailManagerIngressPoint_Tags_null,
+		"EmptyMap":                                  testAccMailManagerIngressPoint_Tags_emptyMap,
+		"AddOnUpdate":                               testAccMailManagerIngressPoint_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccMailManagerIngressPoint_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccMailManagerIngressPoint_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccMailManagerIngressPoint_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccMailManagerIngressPoint_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccMailManagerIngressPoint_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccMailManagerIngressPoint_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccMailManagerIngressPoint_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccMailManagerIngressPoint_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccMailManagerIngressPoint_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccMailManagerIngressPoint_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_resourceTag,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccMailManagerIngressPoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -207,7 +236,7 @@ func TestAccMailManagerIngressPoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_null(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_null(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -215,7 +244,7 @@ func TestAccMailManagerIngressPoint_Tags_null(t *testing.T) {
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -277,13 +306,13 @@ func TestAccMailManagerIngressPoint_Tags_null(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_emptyMap(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -333,13 +362,13 @@ func TestAccMailManagerIngressPoint_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_addOnUpdate(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -419,7 +448,7 @@ func TestAccMailManagerIngressPoint_Tags_addOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_EmptyTag_onCreate(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -427,7 +456,7 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_onCreate(t *testing.T) {
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -517,7 +546,7 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -525,7 +554,7 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -664,7 +693,7 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -672,7 +701,7 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -762,13 +791,13 @@ func TestAccMailManagerIngressPoint_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -949,13 +978,13 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_providerOnly(t *testing.T) 
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1115,13 +1144,13 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_nonOverlapping(t *testing.T
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_overlapping(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1297,13 +1326,13 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1393,13 +1422,13 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_updateToProviderOnly(t *tes
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1488,7 +1517,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_updateToResourceOnly(t *tes
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1496,7 +1525,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyResourceTag(t *testing
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1562,7 +1591,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyResourceTag(t *testing
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1570,7 +1599,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1628,7 +1657,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1636,7 +1665,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullOverlappingResourceTag(
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1705,7 +1734,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullOverlappingResourceTag(
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource IngressPoint does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1713,7 +1742,7 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullNonOverlappingResourceT
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1784,13 +1813,13 @@ func TestAccMailManagerIngressPoint_Tags_DefaultTags_nullNonOverlappingResourceT
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_ComputedTag_onCreate(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1845,13 +1874,13 @@ func TestAccMailManagerIngressPoint_Tags_ComputedTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1948,13 +1977,13 @@ func TestAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2041,13 +2070,13 @@ func TestAccMailManagerIngressPoint_Tags_ComputedTag_OnUpdate_replace(t *testing
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2209,13 +2238,13 @@ func TestAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 	})
 }
 
-func TestAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func testAccMailManagerIngressPoint_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},

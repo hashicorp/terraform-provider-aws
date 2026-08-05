@@ -20,13 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMailManagerIngressPoint_Identity_basic(t *testing.T) {
+func testAccMailManagerIngressPoint_identitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccMailManagerIngressPoint_Identity_basic,
+		"RegionOverride": testAccMailManagerIngressPoint_Identity_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccMailManagerIngressPoint_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -107,13 +118,13 @@ func TestAccMailManagerIngressPoint_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_Identity_regionOverride(t *testing.T) {
+func testAccMailManagerIngressPoint_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_mailmanager_ingress_point.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
