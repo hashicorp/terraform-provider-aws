@@ -179,7 +179,7 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	// DescribeSenderIds (used on Read/import) returns message types in mixed case
 	// (e.g. "Transactional"), while the canonical enum values are upper case. Normalize
 	// here so Create-time state matches what Read produces and import stays consistent.
-	data.MessageTypes = flattenMessageTypes(ctx, output.MessageTypes)
+	data.MessageTypes = normalizeMessageTypes(ctx, output.MessageTypes)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -347,16 +347,16 @@ func (model *senderIDResourceModel) flatten(ctx context.Context, out *awstypes.S
 	// DescribeSenderIds returns message types in mixed case (e.g. "Transactional"),
 	// while the canonical enum values are upper case. Normalize so state matches the
 	// configured value and stays stable across refresh and import.
-	model.MessageTypes = flattenMessageTypes(ctx, out.MessageTypes)
+	model.MessageTypes = normalizeMessageTypes(ctx, out.MessageTypes)
 
 	model.setID()
 
 	return diags
 }
 
-// flattenMessageTypes normalizes AWS message types to their canonical upper case enum
+// normalizeMessageTypes canonicalizes AWS message types to their upper case enum
 // values. The DescribeSenderIds and RequestSenderId APIs are inconsistent about casing.
-func flattenMessageTypes(ctx context.Context, messageTypes []awstypes.MessageType) fwtypes.SetOfStringEnum[awstypes.MessageType] {
+func normalizeMessageTypes(ctx context.Context, messageTypes []awstypes.MessageType) fwtypes.SetOfStringEnum[awstypes.MessageType] {
 	values := make([]attr.Value, len(messageTypes))
 	for i, mt := range messageTypes {
 		values[i] = fwtypes.StringEnumValue(awstypes.MessageType(strings.ToUpper(string(mt))))
