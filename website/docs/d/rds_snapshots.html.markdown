@@ -20,7 +20,7 @@ data "aws_rds_snapshots" "example" {
 }
 ```
 
-### Filter by snapshot ID
+### Filter by Snapshot ID
 
 ```terraform
 data "aws_rds_snapshots" "example" {
