@@ -56,7 +56,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_basic/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -70,7 +70,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_basic/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
@@ -109,7 +109,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
@@ -128,7 +128,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
@@ -185,7 +185,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_region_override/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -200,7 +200,7 @@ func TestAccPinpointSMSVoiceV2SenderID_List_regionOverride(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SenderID/list_region_override/"),
 				ConfigVariables: config.Variables{
-					"rName":          config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
