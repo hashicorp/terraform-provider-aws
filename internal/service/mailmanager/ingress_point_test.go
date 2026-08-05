@@ -156,10 +156,10 @@ func TestAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngressPointConfig_tlsPolicy(rName, "REQUIRE_TLS"),
+				Config: testAccIngressPointConfig_tlsPolicy(rName, "REQUIRED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tls_policy", "REQUIRE_TLS"),
+					resource.TestCheckResourceAttr(resourceName, "tls_policy", "REQUIRED"),
 				),
 			},
 			{
@@ -183,6 +183,45 @@ func TestAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
 	})
 }
 
+func TestAccMailManagerIngressPoint_type(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_ingress_point.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIngressPoint(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngressPointConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "OPEN"),
+				),
+			},
+			{
+				// Changing type requires replacement, not an in-place update.
+				Config: testAccIngressPointConfig_smtpPasswordWO(rName, "Password1!", 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AUTH"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -199,12 +238,12 @@ func TestAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
 		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngressPointConfig_publicNetworkConfiguration(rName, "DUALSTACK"),
+				Config: testAccIngressPointConfig_publicNetworkConfiguration(rName, "DUAL_STACK"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.public_network_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.public_network_configuration.0.ip_type", "DUALSTACK"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.public_network_configuration.0.ip_type", "DUAL_STACK"),
 				),
 			},
 			{
@@ -217,6 +256,39 @@ func TestAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.public_network_configuration.0.ip_type", "IPV4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMailManagerIngressPoint_networkConfiguration_private(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_ingress_point.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIngressPoint(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngressPointConfig_privateNetworkConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.private_network_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.private_network_configuration.0.vpc_endpoint_id"),
 				),
 			},
 			{
@@ -288,6 +360,7 @@ func TestAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *
 			},
 			{
 				// Rotate the password: bumping smtp_password_wo_version triggers an in-place update.
+				// After rotation, the previous version fields are populated.
 				Config: testAccIngressPointConfig_smtpPasswordWO(rName, "rotatedPassword2!", 2),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -297,7 +370,61 @@ func TestAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.0.smtp_password_wo_version", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.smtp_password_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.previous_smtp_password_version"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "ingress_point_configuration.0.previous_smtp_password_expiry_timestamp"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_ingress_point.test"
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCert := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIngressPoint(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngressPointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngressPointConfig_tlsAuth(rName, caCert),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "MTLS"),
+					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.0.tls_auth_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.0.tls_auth_configuration.0.trust_store.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.tls_auth_configuration.0.trust_store.0.ca_content"),
+				),
+			},
+			{
+				// Update: add crl_content to the existing trust store.
+				Config: testAccIngressPointConfig_tlsAuthWithCRL(rName, caCert),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngressPointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.tls_auth_configuration.0.trust_store.0.ca_content"),
+					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.tls_auth_configuration.0.trust_store.0.crl_content"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -364,8 +491,6 @@ func testAccPreCheckIngressPoint(ctx context.Context, t *testing.T) {
 	}
 }
 
-// testAccIngressPointConfigBase returns the shared Traffic Policy and Rule Set
-// prerequisites referenced by all ingress point configurations below.
 func testAccIngressPointConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mailmanager_traffic_policy" "test" {
@@ -483,4 +608,81 @@ resource "aws_mailmanager_ingress_point" "test" {
   }
 }
 `, rName, password, version))
+}
+
+func testAccIngressPointConfig_privateNetworkConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIngressPointConfigBase(rName),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.mail-manager"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids = aws_subnet.private[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_mailmanager_ingress_point" "test" {
+  name              = %[1]q
+  type              = "OPEN"
+  rule_set_id       = aws_mailmanager_rule_set.test.id
+  traffic_policy_id = aws_mailmanager_traffic_policy.test.id
+
+  network_configuration {
+    private_network_configuration {
+      vpc_endpoint_id = aws_vpc_endpoint.test.id
+    }
+  }
+}
+`, rName))
+}
+
+func testAccIngressPointConfig_tlsAuth(rName, caCert string) string {
+	return acctest.ConfigCompose(
+		testAccIngressPointConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_mailmanager_ingress_point" "test" {
+  name              = %[1]q
+  type              = "MTLS"
+  rule_set_id       = aws_mailmanager_rule_set.test.id
+  traffic_policy_id = aws_mailmanager_traffic_policy.test.id
+
+  ingress_point_configuration {
+    tls_auth_configuration {
+      trust_store {
+        ca_content = %[2]q
+      }
+    }
+  }
+}
+`, rName, caCert))
+}
+
+func testAccIngressPointConfig_tlsAuthWithCRL(rName, caCert string) string {
+	return acctest.ConfigCompose(
+		testAccIngressPointConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_mailmanager_ingress_point" "test" {
+  name              = %[1]q
+  type              = "MTLS"
+  rule_set_id       = aws_mailmanager_rule_set.test.id
+  traffic_policy_id = aws_mailmanager_traffic_policy.test.id
+
+  ingress_point_configuration {
+    tls_auth_configuration {
+      trust_store {
+        ca_content  = %[2]q
+        crl_content = %[2]q
+      }
+    }
+  }
+}
+`, rName, caCert))
 }
