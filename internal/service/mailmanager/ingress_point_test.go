@@ -21,7 +21,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMailManagerIngressPoint_basic(t *testing.T) {
+func TestAccMailManagerIngressPoint_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                       testAccMailManagerIngressPoint_basic,
+		acctest.CtDisappears:                  testAccMailManagerIngressPoint_disappears,
+		"update":                              testAccMailManagerIngressPoint_update,
+		"tlsPolicy":                           testAccMailManagerIngressPoint_tlsPolicy,
+		"type":                                testAccMailManagerIngressPoint_type,
+		"networkConfiguration_public":         testAccMailManagerIngressPoint_networkConfiguration_public,
+		"networkConfiguration_private":        testAccMailManagerIngressPoint_networkConfiguration_private,
+		"ingressPointConfiguration_secretARN": testAccMailManagerIngressPoint_ingressPointConfiguration_secretARN,
+		"ingressPointConfiguration_smtpPasswordWO": testAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO,
+		"ingressPointConfiguration_tlsAuth":        testAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth,
+		"Identity":                                 testAccMailManagerIngressPoint_identitySerial,
+		"Tags":                                     testAccMailManagerIngressPoint_tagsSerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccMailManagerIngressPoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -29,7 +50,7 @@ func TestAccMailManagerIngressPoint_basic(t *testing.T) {
 	trafficPolicyName := "aws_mailmanager_traffic_policy.test"
 	ruleSetName := "aws_mailmanager_rule_set.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -63,13 +84,13 @@ func TestAccMailManagerIngressPoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_disappears(t *testing.T) {
+func testAccMailManagerIngressPoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -95,14 +116,14 @@ func TestAccMailManagerIngressPoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_update(t *testing.T) {
+func testAccMailManagerIngressPoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -140,13 +161,13 @@ func TestAccMailManagerIngressPoint_update(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
+func testAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -183,13 +204,13 @@ func TestAccMailManagerIngressPoint_tlsPolicy(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_type(t *testing.T) {
+func testAccMailManagerIngressPoint_type(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -222,13 +243,13 @@ func TestAccMailManagerIngressPoint_type(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
+func testAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -267,13 +288,13 @@ func TestAccMailManagerIngressPoint_networkConfiguration_public(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_networkConfiguration_private(t *testing.T) {
+func testAccMailManagerIngressPoint_networkConfiguration_private(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -300,13 +321,13 @@ func TestAccMailManagerIngressPoint_networkConfiguration_private(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerIngressPoint_ingressPointConfiguration_secretARN(t *testing.T) {
+func testAccMailManagerIngressPoint_ingressPointConfiguration_secretARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -333,13 +354,13 @@ func TestAccMailManagerIngressPoint_ingressPointConfiguration_secretARN(t *testi
 	})
 }
 
-func TestAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *testing.T) {
+func testAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_ingress_point.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
@@ -379,7 +400,7 @@ func TestAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *
 	})
 }
 
-func TestAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth(t *testing.T) {
+func testAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -387,7 +408,7 @@ func TestAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth(t *testing
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCert := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIngressPoint(ctx, t)
