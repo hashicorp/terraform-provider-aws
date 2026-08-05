@@ -260,6 +260,10 @@ func NewListNestedObjectValueOfUnknown[T any](ctx context.Context) ListNestedObj
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListUnknown(NewObjectTypeOf[T](ctx))}
 }
 
+func NewListNestedObjectValueOfEmpty[T any](ctx context.Context, f ...NestedObjectOfOptionsFunc[T]) ListNestedObjectValueOf[T] {
+	return NewListNestedObjectValueOfSliceMust(ctx, []*T{}, f...)
+}
+
 func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T, f ...NestedObjectOfOptionsFunc[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
 	opts := newNestedObjectOfOptions(f...)
 	return newListNestedObjectValueOfPtr(ctx, t, opts.SemanticEqualityFunc)

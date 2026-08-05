@@ -3,10 +3,17 @@
 FEATURES:
 
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+* **New List Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
+* **New Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
 
 ENHANCEMENTS:
 
 * resource/aws_backup_selection: Add resource identity support ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server.mcp_tool_schema` configuration block and `target_configuration.mcp.mcp_server.resource_priority` argument ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
+
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway_target: Treat OAuth `CREATE_PENDING_AUTH` and `UPDATE_PENDING_AUTH` statuses as successful terminal states ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
 
 ## 6.58.0 (August 5, 2026)
 
