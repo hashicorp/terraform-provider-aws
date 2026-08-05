@@ -750,10 +750,8 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
-	@semgrep --quiet \
-		--test .ci/semgrep/
-	@semgrep --quiet \
-		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
+	@semgrep --test .ci/semgrep/
+	@semgrep --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
