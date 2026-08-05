@@ -266,9 +266,15 @@ The `config` block supports exactly one of the following:
 
 ### `agentcore_runtime_environment` Block
 
-* `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration`](#lifecycle_configuration) below.
+* `lifecycle_configuration` - (Optional) Lifecycle configuration. If omitted, the service applies defaults (`idle_runtime_session_timeout = 900`, `max_lifetime = 28800`). See [`lifecycle_configuration`](#lifecycle_configuration) below.
 * `network_configuration` - (Optional) Network configuration. See [`network_configuration`](#network_configuration) below.
 * `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration`](#filesystem_configuration) below.
+
+The following attributes are exported under `agentcore_runtime_environment`:
+
+* `agent_runtime_arn` - ARN of the agent runtime the service provisions for the harness.
+* `agent_runtime_id` - ID of the agent runtime the service provisions for the harness.
+* `agent_runtime_name` - Name of the agent runtime the service derives for the harness.
 
 ### `lifecycle_configuration` Block
 
