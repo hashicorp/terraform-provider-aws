@@ -19,7 +19,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +73,6 @@ func (d *snapshotsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 
 func (d *snapshotsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().RDSClient(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var data snapshotsDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
@@ -94,21 +92,10 @@ func (d *snapshotsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.Snapshots))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.Snapshots, flex.WithNoIgnoredFieldNames()))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Tags are ignored by AutoFlex; populate them manually.
-	snapshots, diags := data.Snapshots.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	for i, snapshot := range snapshots {
-		snapshot.Tags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, keyValueTags(ctx, out[i].TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
-	}
-	data.Snapshots = fwtypes.NewListNestedObjectValueOfSliceMust[snapshotModel](ctx, snapshots)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -130,26 +117,31 @@ type snapshotFilterModel struct {
 }
 
 type snapshotModel struct {
-	AllocatedStorage           types.Int64       `tfsdk:"allocated_storage"`
-	AvailabilityZone           types.String      `tfsdk:"availability_zone"`
-	DBInstanceIdentifier       types.String      `tfsdk:"db_instance_identifier"`
-	DBSnapshotARN              types.String      `tfsdk:"db_snapshot_arn"`
-	DBSnapshotIdentifier       types.String      `tfsdk:"db_snapshot_identifier"`
-	Encrypted                  types.Bool        `tfsdk:"encrypted"`
-	Engine                     types.String      `tfsdk:"engine"`
-	EngineVersion              types.String      `tfsdk:"engine_version"`
-	IOPS                       types.Int64       `tfsdk:"iops"`
-	KMSKeyID                   types.String      `tfsdk:"kms_key_id"`
-	LicenseModel               types.String      `tfsdk:"license_model"`
-	OptionGroupName            types.String      `tfsdk:"option_group_name"`
-	OriginalSnapshotCreateTime timetypes.RFC3339 `tfsdk:"original_snapshot_create_time"`
-	Port                       types.Int64       `tfsdk:"port"`
-	SnapshotCreateTime         timetypes.RFC3339 `tfsdk:"snapshot_create_time"`
-	SnapshotType               types.String      `tfsdk:"snapshot_type"`
-	SourceDBSnapshotIdentifier types.String      `tfsdk:"source_db_snapshot_identifier"`
-	SourceRegion               types.String      `tfsdk:"source_region"`
-	Status                     types.String      `tfsdk:"status"`
-	StorageType                types.String      `tfsdk:"storage_type"`
-	Tags                       tftags.Map        `tfsdk:"tags"`
-	VPCID                      types.String      `tfsdk:"vpc_id"`
+	AllocatedStorage           types.Int64                                       `tfsdk:"allocated_storage"`
+	AvailabilityZone           types.String                                      `tfsdk:"availability_zone"`
+	DBInstanceIdentifier       types.String                                      `tfsdk:"db_instance_identifier"`
+	DBSnapshotARN              types.String                                      `tfsdk:"db_snapshot_arn"`
+	DBSnapshotIdentifier       types.String                                      `tfsdk:"db_snapshot_identifier"`
+	Encrypted                  types.Bool                                        `tfsdk:"encrypted"`
+	Engine                     types.String                                      `tfsdk:"engine"`
+	EngineVersion              types.String                                      `tfsdk:"engine_version"`
+	IOPS                       types.Int64                                       `tfsdk:"iops"`
+	KMSKeyID                   types.String                                      `tfsdk:"kms_key_id"`
+	LicenseModel               types.String                                      `tfsdk:"license_model"`
+	OptionGroupName            types.String                                      `tfsdk:"option_group_name"`
+	OriginalSnapshotCreateTime timetypes.RFC3339                                 `tfsdk:"original_snapshot_create_time"`
+	Port                       types.Int64                                       `tfsdk:"port"`
+	SnapshotCreateTime         timetypes.RFC3339                                 `tfsdk:"snapshot_create_time"`
+	SnapshotType               types.String                                      `tfsdk:"snapshot_type"`
+	SourceDBSnapshotIdentifier types.String                                      `tfsdk:"source_db_snapshot_identifier"`
+	SourceRegion               types.String                                      `tfsdk:"source_region"`
+	Status                     types.String                                      `tfsdk:"status"`
+	StorageType                types.String                                      `tfsdk:"storage_type"`
+	TagList                    fwtypes.ListNestedObjectValueOf[tagListItemModel] `tfsdk:"tag_list"`
+	VPCID                      types.String                                      `tfsdk:"vpc_id"`
+}
+
+type tagListItemModel struct {
+	Key   types.String `tfsdk:"key"`
+	Value types.String `tfsdk:"value"`
 }
