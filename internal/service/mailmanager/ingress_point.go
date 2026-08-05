@@ -459,6 +459,7 @@ func statusIngressPoint(ctx context.Context, conn *mailmanager.Client, id string
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
+
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}
