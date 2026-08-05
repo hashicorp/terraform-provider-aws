@@ -309,8 +309,8 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 	// The `ImportAssetsFromSignedURL` Job technically requires a `Name` parameter, but I've defaulted to the name of the file.
 	// This should probably be changed to explicitly require the `name`
 	revisionID := aws.ToString(out.Id)
-	assets := make([]assetModel, len(plan.Assets.Elements()))
-	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
+	assets := make([]assetModel, plan.Assets.Length(fwtypes.CollectionLengthUnhandledAsZero))
+	existingAssetIDs := make([]string, 0, plan.Assets.Length(fwtypes.CollectionLengthUnhandledAsZero))
 	for i, asset := range nestedObjectCollectionAllMust[assetModel](ctx, plan.Assets) {
 		switch {
 		case !asset.ImportAssetsFromS3.IsNull():
