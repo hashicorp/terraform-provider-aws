@@ -794,6 +794,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("summarization_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("summarization_builtin_001"),
@@ -816,6 +817,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("summarization_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("summarization_builtin_001"),
@@ -837,6 +839,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("semantic_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("semantic_builtin_001"),
@@ -858,6 +861,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("user_preference_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("user_preference_builtin_001"),
@@ -887,6 +891,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:            types.StringNull(),
 				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryRecordSchema:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:               types.StringNull(),
 				MemoryStrategyID:       types.StringValue("episodic_builtin_001-Qw47TlFGX5"),
 				Name:                   types.StringValue("episodic_builtin_001"),
@@ -929,6 +934,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("summarization_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("summarization_override_001"),
@@ -980,6 +986,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("semantic_override_001"),
@@ -1031,6 +1038,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("user_preference_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("user_preference_override_001"),
@@ -1095,6 +1103,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryID:                types.StringNull(),
 				MemoryStrategyID:        types.StringValue("episodic_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("episodic_override_001"),
@@ -1746,6 +1755,78 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_memoryRecordSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: Create memory with execution role
+			{
+				Config: testAccMemoryConfig_memoryExecutionRole(rName),
+			},
+			// Step 1: Create SEMANTIC strategy with a memory_record_schema entry
+			{
+				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "The priority of the record"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.key", names.AttrPriority),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_type", "LLM_INFERRED"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.type", "STRING"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.definition", "The priority of the record"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.0.string_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.0.string_validation.0.allowed_values.#", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: Update the metadata entry definition (in-place)
+			{
+				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "Updated priority definition"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.definition", "Updated priority definition"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 3: Import test
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -2253,6 +2334,326 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   type                = "CUSTOM"
   description         = "Test custom strategy"
   namespace_templates = ["default"]
+}
+`, rName))
+}
+
+func testAccMemoryStrategyConfig_memoryRecordSchema(rName, key, extractionType, valueType, definition string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Test memory record schema"
+  namespaces                = ["default"]
+
+  memory_record_schema {
+    metadata_schema {
+      key             = %[2]q
+      extraction_type = %[3]q
+      type            = %[4]q
+
+      extraction_config {
+        llm_extraction_config {
+          definition = %[5]q
+
+          validation {
+            string_validation {
+              allowed_values = ["high", "medium", "low"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, key, extractionType, valueType, definition))
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_validationAtLeastOneOf confirms an empty
+// number_validation {} / string_list_validation {} is rejected at plan time. Such an
+// empty union member previously passed validation but was discarded by the API,
+// producing "inconsistent result after apply: validation block count 1 -> 0".
+func TestAccBedrockAgentCoreMemoryStrategy_validationAtLeastOneOf(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomMemoryName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMemoryStrategyConfig_emptyNumberValidation(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_nameForceNew confirms that changing name
+// forces replacement. ModifyMemoryStrategyInput has no Name field, so an in-place
+// rename was silently ignored by the API and produced "inconsistent result after
+// apply: .name".
+func TestAccBedrockAgentCoreMemoryStrategy_nameForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_semanticNamed(rName, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+			},
+			{
+				Config: testAccMemoryStrategyConfig_semanticNamed(rName, rName+"_renamed"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_recordSchemaRemovalForceNew confirms that
+// removing memory_record_schema forces replacement. The API ignores a nil
+// MemoryRecordSchema on update and retains the prior value, so an in-place removal
+// produced "inconsistent result after apply: memory_record_schema block count 0 -> 1".
+func TestAccBedrockAgentCoreMemoryStrategy_recordSchemaRemovalForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_recordSchemaToggle(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.#", "1"),
+				),
+			},
+			{
+				Config: testAccMemoryStrategyConfig_recordSchemaToggle(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom confirms that
+// switching a strategy from a non-CUSTOM type to CUSTOM (which forces replacement)
+// plans without crashing. The errorIfSingleBlockRemoved plan modifier previously
+// read configuration[0].type into a non-nullable enum and panicked on the null a
+// non-CUSTOM prior state produces, aborting plan generation.
+func TestAccBedrockAgentCoreMemoryStrategy_typeSwitchNonCustomToCustom(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_withExecutionRole(rName, "SEMANTIC", "Semantic strategy", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+				),
+			},
+			{
+				Config: testAccMemoryStrategyConfig_custom(rName, "SEMANTIC_OVERRIDE", "consolidate", "anthropic.claude-3-sonnet-20240229-v1:0", "extract", "anthropic.claude-3-haiku-20240307-v1:0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_descriptionClearing confirms that removing
+// the optional description after it was set converges to an empty plan rather than a
+// perpetual diff or "inconsistent result after apply". description is a plain Optional
+// attribute (not Optional+Computed), so the cleared value must round-trip: if the API
+// silently retained the prior description on update, state would diverge from the
+// null-in-config plan and the PostApplyPostRefresh plan would be non-empty.
+func TestAccBedrockAgentCoreMemoryStrategy_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create SEMANTIC strategy with a description set.
+			{
+				Config: testAccMemoryStrategyConfig_descriptionToggle(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description clearing test"),
+				),
+			},
+			// Step 2: Remove the description; the set->unset transition must converge.
+			{
+				Config: testAccMemoryStrategyConfig_descriptionToggle(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccMemoryStrategyConfig_semanticNamed(rName, strategyName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[2]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Rename test"
+  namespaces                = ["default"]
+}
+`, rName, strategyName))
+}
+
+func testAccMemoryStrategyConfig_recordSchemaToggle(rName string, withSchema bool) string {
+	schemaBlock := ""
+	if withSchema {
+		schemaBlock = `
+  memory_record_schema {
+    metadata_schema {
+      key             = "priority"
+      extraction_type = "LLM_INFERRED"
+      type            = "STRING"
+
+      extraction_config {
+        llm_extraction_config {
+          definition = "The priority of the record"
+
+          validation {
+            string_validation {
+              allowed_values = ["high", "medium", "low"]
+            }
+          }
+        }
+      }
+    }
+  }`
+	}
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Record schema removal test"
+  namespaces                = ["default"]
+%[2]s
+}
+`, rName, schemaBlock))
+}
+
+func testAccMemoryStrategyConfig_descriptionToggle(rName string, withDescription bool) string {
+	descriptionLine := ""
+	if withDescription {
+		descriptionLine = `
+  description               = "Description clearing test"`
+	}
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  namespaces                = ["default"]
+%[2]s
+}
+`, rName, descriptionLine))
+}
+
+func testAccMemoryStrategyConfig_emptyNumberValidation(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "SEMANTIC"
+  description               = "Empty number_validation test"
+  namespaces                = ["default"]
+
+  memory_record_schema {
+    metadata_schema {
+      key = "priority"
+
+      extraction_config {
+        llm_extraction_config {
+          definition = "The priority of the record"
+
+          validation {
+            number_validation {}
+          }
+        }
+      }
+    }
+  }
 }
 `, rName))
 }
