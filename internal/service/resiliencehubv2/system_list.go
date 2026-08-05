@@ -23,22 +23,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkListResource("aws_resiliencehubv2_policy")
-func newPolicyResourceAsListResource() list.ListResourceWithConfigure {
-	return &policyListResource{}
+// @FrameworkListResource("aws_resiliencehubv2_system")
+func newSystemResourceAsListResource() list.ListResourceWithConfigure {
+	return &systemListResource{}
 }
 
-var _ list.ListResource = &policyListResource{}
+var _ list.ListResource = &systemListResource{}
 
-type policyListResource struct {
-	policyResource
+type systemListResource struct {
+	systemResource
 	framework.WithList
 }
 
-func (l *policyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *systemListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listPolicyModel
+	var query listSystemModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -47,25 +47,25 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input resiliencehubv2.ListPoliciesInput
-		for item, err := range listPolicies(ctx, conn, &input) {
+		var input resiliencehubv2.ListSystemsInput
+		for item, err := range listSystems(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			arn := aws.ToString(item.PolicyArn)
+			arn := aws.ToString(item.SystemArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
 
-			var data policyResourceModel
+			var data systemResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.PolicyARN = fwflex.StringValueToFramework(ctx, arn)
+				data.SystemARN = fwflex.StringValueToFramework(ctx, arn)
 
 				if request.IncludeResource {
-					output, err := findPolicyByARN(ctx, conn, arn)
+					output, err := findSystemByARN(ctx, conn, arn)
 					if retry.NotFound(err) {
 						return
 					}
@@ -91,25 +91,25 @@ func (l *policyListResource) List(ctx context.Context, request list.ListRequest,
 	}
 }
 
-type listPolicyModel struct {
+type listSystemModel struct {
 	framework.WithRegionModel
 }
 
-func listPolicies(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListPoliciesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.PolicySummary, error] {
-	return tfiter.ConcatValuesWithError(listPolicyPages(ctx, conn, input, optFns...))
+func listSystems(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListSystemsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.SystemSummary, error] {
+	return tfiter.ConcatValuesWithError(listSystemPages(ctx, conn, input, optFns...))
 }
 
-func listPolicyPages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListPoliciesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.PolicySummary, error] {
-	return func(yield func([]awstypes.PolicySummary, error) bool) {
-		pages := resiliencehubv2.NewListPoliciesPaginator(conn, input)
+func listSystemPages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListSystemsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.SystemSummary, error] {
+	return func(yield func([]awstypes.SystemSummary, error) bool) {
+		pages := resiliencehubv2.NewListSystemsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(nil, fmt.Errorf("listing Resilience Hub V2 Policies: %w", err))
+				yield(nil, fmt.Errorf("listing Resilience Hub V2 Systems: %w", err))
 				return
 			}
 
-			if !yield(page.PolicySummaries, nil) {
+			if !yield(page.SystemSummaries, nil) {
 				return
 			}
 		}
