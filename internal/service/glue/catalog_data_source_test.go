@@ -160,6 +160,33 @@ func testAccCatalogDataSource_FederatedCatalog_s3Tables(t *testing.T) {
 	})
 }
 
+func testAccCatalogDataSource_rootCatalog(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	dataSourceName := "data.aws_glue_catalog.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccCatalogPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogDataSourceConfig_rootCatalog(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrName),
+				),
+			},
+		},
+	})
+}
+
 // --- Config functions ---
 
 func testAccCatalogDataSourceConfig_catalogPropertiesDataLakeAccess(rName string) string {
@@ -204,4 +231,14 @@ data "aws_glue_catalog" "test" {
 }
 `,
 	)
+}
+
+func testAccCatalogDataSourceConfig_rootCatalog() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_glue_catalog" "test" {
+  name = data.aws_caller_identity.current.account_id
+}
+`
 }
