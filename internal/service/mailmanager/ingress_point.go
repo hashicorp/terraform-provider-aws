@@ -423,7 +423,6 @@ func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id st
 		Target:                    enum.Slice(awstypes.IngressPointStatusActive),
 		Refresh:                   statusIngressPoint(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
