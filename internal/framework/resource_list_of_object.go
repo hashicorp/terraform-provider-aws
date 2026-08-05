@@ -43,3 +43,68 @@ func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, 
 		},
 	}
 }
+
+type resourceListOfObjectsOptions[T any] struct {
+	nestedObjectOptions []fwtypes.NestedObjectOfOption[T]
+	planModifiers       []planmodifier.List
+	validators          []validator.List
+}
+
+type ResourceListOfObjectsOptionsFunc[T any] func(*resourceListOfObjectsOptions[T])
+
+// WithNestedObjectOptions sets the list of nested object options.
+//
+// Use this option to fully overwrite the nested object options list. To preserve
+// preexisting items, use WithNestedObjectOptionsAppend instead.
+func WithNestedObjectOptions[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOption[T]) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.nestedObjectOptions = nestedObjectOptions
+	}
+}
+
+// WithNestedObjectOptionsAppend appends to the list of nested object options.
+//
+// Use this option to preserve preexisting items in the nested object options list.
+func WithNestedObjectOptionsAppend[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOption[T]) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.nestedObjectOptions = append(o.nestedObjectOptions, nestedObjectOptions...)
+	}
+}
+
+// WithPlanModifiers sets the list of plan modifiers.
+//
+// Use this option to fully overwrite the plan modifiers list. To preserve
+// preexisting items, use WithPlanModifiersAppend instead.
+func WithPlanModifiers[T any](planModifiers ...planmodifier.List) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.planModifiers = planModifiers
+	}
+}
+
+// WithPlanModifiersAppend appends to the list of plan modifiers.
+//
+// Use this option to preserve preexisting items in the plan modifiers list.
+func WithPlanModifiersAppend[T any](planModifiers ...planmodifier.List) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.planModifiers = append(o.planModifiers, planModifiers...)
+	}
+}
+
+// WithValidators sets the list of validators.
+//
+// Use this option to fully overwrite the validators list. To preserve
+// preexisting items, use WithValidatorsAppend instead.
+func WithValidators[T any](validators ...validator.List) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.validators = validators
+	}
+}
+
+// WithValidatorsAppend appends to the list of validators.
+//
+// Use this option to preserve preexisting items in the validator list.
+func WithValidatorsAppend[T any](validators ...validator.List) ResourceListOfObjectsOptionsFunc[T] {
+	return func(o *resourceListOfObjectsOptions[T]) {
+		o.validators = append(o.validators, validators...)
+	}
+}
