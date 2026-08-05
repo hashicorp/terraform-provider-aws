@@ -36,7 +36,7 @@ func testAccRandomSenderID(t *testing.T) string {
 func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TFBASIC"
+	senderIDName := testAccRandomSenderID(t)
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -74,7 +74,7 @@ func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TFDISAPPR"
+	senderIDName := testAccRandomSenderID(t)
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -110,7 +110,7 @@ func TestAccPinpointSMSVoiceV2SenderID_disappears(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TFDELPROT"
+	senderIDName := testAccRandomSenderID(t)
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -153,7 +153,7 @@ func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_messageTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TFMSGTYPE"
+	senderIDName := testAccRandomSenderID(t)
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
