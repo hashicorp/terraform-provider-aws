@@ -124,7 +124,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Set values for unknowns.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output.System, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output.System, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}

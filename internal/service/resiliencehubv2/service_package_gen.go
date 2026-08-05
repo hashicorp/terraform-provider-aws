@@ -70,7 +70,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
-			Factory:  newResourceSystemAsListResource,
+			Factory:  newSystemResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
