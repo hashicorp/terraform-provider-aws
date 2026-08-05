@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_gateway_target: Add `mcp_tool_schema` configuration block and `resource_priority` argument to the `mcp_server` target configuration
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server.mcp_tool_schema` configuration block and `target_configuration.mcp.mcp_server.resource_priority` argument
 ```
 
 ```release-note:bug
