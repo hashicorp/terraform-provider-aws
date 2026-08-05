@@ -441,7 +441,7 @@ The `memory` block supports one of the following:
 
 `retrieval_config` supports the following:
 
-* `map_block_key` - (Required) Key for the retrieval configuration map block.
+* `map_block_key` - (Required) Namespace path template for retrieval settings.
 * `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
