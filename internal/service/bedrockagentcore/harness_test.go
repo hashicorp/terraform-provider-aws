@@ -1328,6 +1328,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = %[2]q
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, prompt))
 }
@@ -1348,6 +1350,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, tools))
 }
@@ -1370,6 +1374,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, maxIter, maxTokens, timeout))
 }
@@ -1391,6 +1397,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -1420,6 +1428,8 @@ resource "aws_bedrockagentcore_harness" "test" {
       }
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, messagesCount))
 }
@@ -1450,6 +1460,8 @@ resource "aws_bedrockagentcore_harness" "test" {
       }
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -1490,6 +1502,8 @@ resource "aws_bedrockagentcore_harness" "test" {
       }
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -1513,6 +1527,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, key, value))
 }
@@ -1538,6 +1554,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_bedrockagentcore_memory" "test" {
@@ -1576,6 +1594,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_bedrockagentcore_memory" "test" {
@@ -1612,6 +1632,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_bedrockagentcore_memory" "test" {
@@ -1640,6 +1662,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -1666,6 +1690,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, eventExpiryDuration, strategies))
 }
@@ -1691,6 +1717,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_kms_key" "test" {
@@ -1720,6 +1748,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 data "aws_ecr_image" "test" {
@@ -1754,6 +1784,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
@@ -1777,6 +1809,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -1801,6 +1835,8 @@ resource "aws_bedrockagentcore_harness" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
