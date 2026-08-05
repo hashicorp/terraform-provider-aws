@@ -46,6 +46,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckIngressPoint")
+// @Testing(serialize=true)
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newIngressPointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingressPointResource{}
