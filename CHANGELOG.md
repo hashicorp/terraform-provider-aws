@@ -1,3 +1,5 @@
+## 6.59.0 (Unreleased)
+
 ## 6.58.0 (August 5, 2026)
 
 FEATURES:
