@@ -38,6 +38,7 @@ BUG FIXES:
 * resource/aws_glue_catalog_table: Fix `InvalidInputException: StorageDescriptor is not allowed` error when creating or updating ATHENA-dialect views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix `InvalidInputException` error when creating or updating SPARK-dialect views without an explicit `storage_descriptor` block ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
 * resource/aws_glue_catalog_table: Fix perpetual diff on `view_definition.representations` fields (`validation_connection`, `view_original_text`, `view_expanded_text`) that AWS Glue does not echo back for validated ATHENA views ([#49156](https://github.com/hashicorp/terraform-provider-aws/issues/49156))
+* resource/aws_iam_user: Retry destroying users when there are conflicts, and ignore non-errors during destroy ([#49260](https://github.com/hashicorp/terraform-provider-aws/issues/49260))
 * resource/aws_route53recoverycontrolconfig_safety_rule: Fix crash when the create operation returns an error ([#49155](https://github.com/hashicorp/terraform-provider-aws/issues/49155))
 * resource/aws_ssm_parameter: Correctly imports when passing ARN value. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
 * resource/aws_ssm_parameter: Prevents errors when importing specific version. ([#49134](https://github.com/hashicorp/terraform-provider-aws/issues/49134))
