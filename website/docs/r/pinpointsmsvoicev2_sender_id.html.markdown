@@ -16,7 +16,7 @@ Manages an End User Messaging SMS Sender ID.
 
 ```terraform
 resource "aws_pinpointsmsvoicev2_sender_id" "example" {
-  sender_id        = "MyCompany"
+  sender_id        = "MYCOMPANY"
   iso_country_code = "GB"
   message_types    = ["TRANSACTIONAL"]
 }
@@ -26,7 +26,7 @@ resource "aws_pinpointsmsvoicev2_sender_id" "example" {
 
 ```terraform
 resource "aws_pinpointsmsvoicev2_sender_id" "example" {
-  sender_id                   = "MyCompany"
+  sender_id                   = "MYCOMPANY"
   iso_country_code            = "GB"
   message_types               = ["TRANSACTIONAL"]
   deletion_protection_enabled = true
@@ -38,7 +38,7 @@ resource "aws_pinpointsmsvoicev2_sender_id" "example" {
 The following arguments are required:
 
 * `iso_country_code` - (Required, Forces new resource) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
-* `sender_id` - (Required, Forces new resource) Alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only letters, numbers, and dashes, and cannot be numeric-only.
+* `sender_id` - (Required, Forces new resource) Alphanumeric sender ID to request. Must be between 3 and 11 characters long, contain only upper case letters, numbers, and dashes, and cannot be numeric-only. AWS stores sender IDs in upper case, so upper case is required here to keep configuration, state, and resource identity consistent.
 
 The following arguments are optional:
 

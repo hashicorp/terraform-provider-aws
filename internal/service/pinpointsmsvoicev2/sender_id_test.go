@@ -6,6 +6,7 @@ package pinpointsmsvoicev2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
@@ -24,18 +25,18 @@ import (
 
 // testAccRandomSenderID returns a random sender ID.
 //
-// Sender IDs must be 3-11 characters of letters, numbers, and dashes, and must
-// contain at least one letter, so the standard `rName` generators cannot be used.
+// Sender IDs must be 3-11 upper case characters of letters, numbers, and dashes, and
+// must contain at least one letter, so the standard `rName` generators cannot be used.
 func testAccRandomSenderID(t *testing.T) string {
 	t.Helper()
 
-	return "Tf" + acctest.RandStringFromCharSet(t, 9, acctest.CharSetAlphaNum)
+	return "TF" + strings.ToUpper(acctest.RandStringFromCharSet(t, 9, acctest.CharSetAlphaNum))
 }
 
 func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TfBasic"
+	senderIDName := "TFBASIC"
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -73,7 +74,7 @@ func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TfDisappr"
+	senderIDName := "TFDISAPPR"
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -109,7 +110,7 @@ func TestAccPinpointSMSVoiceV2SenderID_disappears(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TfDelProt"
+	senderIDName := "TFDELPROT"
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 
@@ -152,7 +153,7 @@ func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 func TestAccPinpointSMSVoiceV2SenderID_messageTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var senderID awstypes.SenderIdInformation
-	senderIDName := "TfMsgType"
+	senderIDName := "TFMSGTYPE"
 	isoCountryCode := "GB"
 	resourceName := "aws_pinpointsmsvoicev2_sender_id.test"
 

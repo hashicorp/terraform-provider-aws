@@ -117,11 +117,10 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 			},
 			"sender_id": schema.StringAttribute{
-				CustomType: fwtypes.CaseInsensitiveStringType,
-				Required:   true,
+				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9-]{3,11}$`), "must be between 3 and 11 characters and contain only letters, numbers, and dashes"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z]`), "must contain at least one letter (numeric-only sender IDs are not supported)"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z0-9-]{3,11}$`), "must be between 3 and 11 characters and contain only uppercase letters, numbers, and dashes"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[A-Z]`), "must contain at least one letter (numeric-only sender IDs are not supported)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -179,11 +178,11 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 
 	output := outputRaw.(*pinpointsmsvoicev2.RequestSenderIdOutput)
 
-	// `sender_id` is deliberately left as configured. AWS may return it uppercased,
-	// but `fwtypes.CaseInsensitiveString` treats the two as semantically equal, so the
-	// framework reverts state to the configured value regardless. Assigning the
-	// API-returned value here would have no effect on state while still being captured
-	// by the resource identity, leaving identity and state permanently mismatched.
+	// AWS canonicalizes sender IDs to upper case, and `sender_id` is validated to be
+	// upper case, so the returned value always matches the configured one. Taking it
+	// from the response keeps AWS the single source of truth for the attribute, the
+	// composite `id`, and the resource identity.
+	data.SenderID = fwflex.StringToFramework(ctx, output.SenderId)
 	data.ISOCountryCode = fwflex.StringToFramework(ctx, output.IsoCountryCode)
 	data.SenderIDARN = fwflex.StringToFramework(ctx, output.SenderIdArn)
 	data.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, output.MonthlyLeasingPrice)
@@ -301,7 +300,7 @@ type senderIDResourceModel struct {
 	MonthlyLeasingPrice       types.String                                  `tfsdk:"monthly_leasing_price"`
 	Registered                types.Bool                                    `tfsdk:"registered"`
 	RegistrationID            types.String                                  `tfsdk:"registration_id"`
-	SenderID                  fwtypes.CaseInsensitiveString                 `tfsdk:"sender_id"`
+	SenderID                  types.String                                  `tfsdk:"sender_id"`
 	SenderIDARN               types.String                                  `tfsdk:"arn"`
 	Tags                      tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                    `tfsdk:"tags_all"`
@@ -314,7 +313,7 @@ func (model *senderIDResourceModel) InitFromID() error {
 		return fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", model.ID.ValueString(), senderIDResourceIDSeparator)
 	}
 
-	model.SenderID = fwtypes.CaseInsensitiveStringValue(parts[0])
+	model.SenderID = types.StringValue(parts[0])
 	model.ISOCountryCode = types.StringValue(parts[1])
 
 	return nil
@@ -344,7 +343,7 @@ func (senderIDImportID) Parse(id string) (string, map[string]any, error) {
 }
 
 func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var senderID fwtypes.CaseInsensitiveString
+	var senderID types.String
 	state.GetAttribute(ctx, path.Root("sender_id"), &senderID)
 
 	var isoCountryCode types.String
@@ -354,8 +353,8 @@ func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
 }
 
 func (model *senderIDResourceModel) flattenSenderIdInformation(ctx context.Context, out *awstypes.SenderIdInformation) {
-	// `sender_id` is intentionally not set from the API response. See the comment in Create.
 	model.SenderIDARN = fwflex.StringToFramework(ctx, out.SenderIdArn)
+	model.SenderID = fwflex.StringToFramework(ctx, out.SenderId)
 	model.ISOCountryCode = fwflex.StringToFramework(ctx, out.IsoCountryCode)
 	model.DeletionProtectionEnabled = types.BoolValue(out.DeletionProtectionEnabled)
 	model.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, out.MonthlyLeasingPrice)
