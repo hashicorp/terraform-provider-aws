@@ -5,7 +5,6 @@ package elb
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -103,21 +103,6 @@ type listLoadBalancerModel struct {
 	framework.WithRegionModel
 }
 
-func listLoadBalancers(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancersInput) iter.Seq2[awstypes.LoadBalancerDescription, error] {
-	return func(yield func(awstypes.LoadBalancerDescription, error) bool) {
-		pages := elasticloadbalancing.NewDescribeLoadBalancersPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.LoadBalancerDescription{}, fmt.Errorf("listing ELB Classic Load Balancer resources: %w", err))
-				return
-			}
-
-			for _, item := range page.LoadBalancerDescriptions {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listLoadBalancers(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancersInput, optFns ...func(*elasticloadbalancing.Options)) iter.Seq2[awstypes.LoadBalancerDescription, error] {
+	return tfiter.ConcatValuesWithError(listLoadBalancerPages(ctx, conn, input, optFns...))
 }

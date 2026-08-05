@@ -5417,6 +5417,10 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 

@@ -205,7 +205,21 @@ func findLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadba
 		PolicyNames:      []string{policyName},
 	}
 
-	output, err := conn.DescribeLoadBalancerPolicies(ctx, &input)
+	return findLoadBalancerPolicy(ctx, conn, &input)
+}
+
+func findLoadBalancerPolicy(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancerPoliciesInput) (*awstypes.PolicyDescription, error) {
+	output, err := findLoadBalancerPolicies(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLoadBalancerPolicies(ctx context.Context, conn *elasticloadbalancing.Client, input *elasticloadbalancing.DescribeLoadBalancerPoliciesInput) ([]awstypes.PolicyDescription, error) {
+	output, err := conn.DescribeLoadBalancerPolicies(ctx, input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -217,7 +231,7 @@ func findLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadba
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output.PolicyDescriptions)
+	return output.PolicyDescriptions, nil
 }
 
 func findLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int32, policyName string) (*awstypes.PolicyDescription, error) {

@@ -9,6 +9,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"slices"
 	"strconv"
@@ -37,6 +38,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -2097,11 +2100,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 	instanceStates := make(map[string]map[string]string)
 
 	for _, lbName := range g.LoadBalancerNames {
-		input := elasticloadbalancing.DescribeInstanceHealthInput{
-			LoadBalancerName: aws.String(lbName),
-		}
-
-		output, err := conn.DescribeInstanceHealth(ctx, &input)
+		elbInstanceStates, err := tfelb.FindInstanceStatesByName(ctx, conn, lbName)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
@@ -2109,7 +2108,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 
 		instanceStates[lbName] = make(map[string]string)
 
-		for _, v := range output.InstanceStates {
+		for _, v := range elbInstanceStates {
 			instanceID := aws.ToString(v.InstanceId)
 			if instanceID == "" {
 				continue
@@ -2130,11 +2129,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	instanceStates := make(map[string]map[string]string)
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
-		input := elasticloadbalancingv2.DescribeTargetHealthInput{
-			TargetGroupArn: aws.String(targetGroupARN),
-		}
-
-		output, err := conn.DescribeTargetHealth(ctx, &input)
+		targetHealthDescriptions, err := tfelbv2.FindTargetHealthDescriptionsByARN(ctx, conn, targetGroupARN)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
@@ -2142,7 +2137,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 
 		instanceStates[targetGroupARN] = make(map[string]string)
 
-		for _, v := range output.TargetHealthDescriptions {
+		for _, v := range targetHealthDescriptions {
 			if v.Target == nil || v.TargetHealth == nil {
 				continue
 			}
@@ -2163,8 +2158,25 @@ func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.C
 	return instanceStates, nil
 }
 
-func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) (*awstypes.AutoScalingGroup, error) {
-	output, err := findGroups(ctx, conn, input)
+func listGroupPages(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...func(*autoscaling.Options)) iter.Seq2[[]awstypes.AutoScalingGroup, error] {
+	return func(yield func([]awstypes.AutoScalingGroup, error) bool) {
+		pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Auto Scaling Groups: %w", err))
+				return
+			}
+
+			if !yield(page.AutoScalingGroups, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AutoScalingGroup]) (*awstypes.AutoScalingGroup, error) {
+	output, err := findGroups(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -2173,21 +2185,8 @@ func findGroup(ctx context.Context, conn *autoscaling.Client, input *autoscaling
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) ([]awstypes.AutoScalingGroup, error) {
-	var output []awstypes.AutoScalingGroup
-
-	pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.AutoScalingGroups...)
-	}
-
-	return output, nil
+func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AutoScalingGroup]) ([]awstypes.AutoScalingGroup, error) {
+	return tfslices.CollectAndConcatWithError(listGroupPages(ctx, conn, input), optFns...)
 }
 
 func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {

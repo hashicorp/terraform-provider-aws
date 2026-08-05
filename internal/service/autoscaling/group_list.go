@@ -5,7 +5,6 @@ package autoscaling
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -97,21 +97,6 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 	}
 }
 
-func listGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) iter.Seq2[awstypes.AutoScalingGroup, error] {
-	return func(yield func(awstypes.AutoScalingGroup, error) bool) {
-		pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.AutoScalingGroup{}, fmt.Errorf("listing Auto Scaling Groups: %w", err))
-				return
-			}
-
-			for _, g := range page.AutoScalingGroups {
-				if !yield(g, nil) {
-					return
-				}
-			}
-		}
-	}
+func listGroups(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput, optFns ...func(*autoscaling.Options)) iter.Seq2[awstypes.AutoScalingGroup, error] {
+	return tfiter.ConcatValuesWithError(listGroupPages(ctx, conn, input, optFns...))
 }
