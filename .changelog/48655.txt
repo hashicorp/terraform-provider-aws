@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `managed_memory_configuration` configuration block and `disabled` argument to `memory`
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix `Unsupported Type` error on create when the service returns a managed or disabled memory configuration
+```
