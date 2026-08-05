@@ -428,6 +428,7 @@ The `claim_match_value` block supports the following:
 The `memory` block supports one of the following:
 
 * `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`agentcore_memory_configuration` Block](#agentcore_memory_configuration-block) below.
+* `disabled` - (Optional) Explicitly disable memory for this harness. See [`disabled` Block](#disabled-block) below.
 * `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`managed_memory_configuration` Block](#managed_memory_configuration-block) below.
 
 ### `agentcore_memory_configuration` Block
@@ -445,6 +446,10 @@ The `memory` block supports one of the following:
 * `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
+
+### `disabled` Block
+
+The `disabled` block takes no arguments. Use this to explicitly opt out of memory for the harness.
 
 ### `managed_memory_configuration` Block
 
