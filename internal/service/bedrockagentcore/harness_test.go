@@ -120,8 +120,10 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.#", "1"),
 					acctest.ImportMatchResourceAttr("memory.0.managed_memory_configuration.0.arn", regexache.MustCompile(`^arn:[^:]+:bedrock-agentcore:[^:]+:\d{12}:memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+$`)),
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.encryption_key_arn", ""),
-					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.event_expiry_duration", ""),
-					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.strategies.#", ""),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.event_expiry_duration", "30"),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.strategies.#", "2"),
+					importCheckSetContains("memory.0.managed_memory_configuration.0.strategies", "SEMANTIC"),
+					importCheckSetContains("memory.0.managed_memory_configuration.0.strategies", "SUMMARIZATION"),
 				),
 			},
 		},
@@ -1002,6 +1004,22 @@ func testAccPreCheckHarness(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func importCheckSetContains(prefix, value string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("expected 1 instance state, got %d", len(is))
+		}
+
+		rs := is[0]
+		for k, v := range rs.Attributes {
+			if strings.HasPrefix(k, prefix+".") && k != prefix+".#" && v == value {
+				return nil
+			}
+		}
+		return fmt.Errorf("set %q does not contain value %q", prefix, value)
 	}
 }
 
