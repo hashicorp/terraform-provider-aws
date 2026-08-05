@@ -87,6 +87,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newConfigurationBundleResource,
+			TypeName: "aws_bedrockagentcore_configuration_bundle",
+			Name:     "Configuration Bundle",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "bundle_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("bundle_id", true),
+				inttypes.WithIdentityDuplicateAttrs("bundle_id"),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newEvaluatorResource,
 			TypeName: "aws_bedrockagentcore_evaluator",
 			Name:     "Evaluator",
