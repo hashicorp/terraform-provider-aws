@@ -647,7 +647,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, "actor1", 10, "key1", 0.25, 5),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, "actor1", 10, "/namespace1/{actorId}", 0.25, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -663,7 +663,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(
 						"messages_count": knownvalue.Int32Exact(10),
 						"retrieval_config": knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"map_block_key":   knownvalue.StringExact("key1"),
+								"map_block_key":   knownvalue.StringExact("/namespace1/{actorId}"),
 								"relevance_score": knownvalue.Float32Exact(0.25),
 								"strategy_id":     knownvalue.Null(),
 								"top_k":           knownvalue.Int32Exact(5),
@@ -674,7 +674,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(
 				},
 			},
 			{
-				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, "actor2", 20, "key2", 0.35, 10),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, "actor2", 20, "/namespace2/{actorId}", 0.35, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -690,7 +690,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_options(
 						"messages_count": knownvalue.Int32Exact(20),
 						"retrieval_config": knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"map_block_key":   knownvalue.StringExact("key2"),
+								"map_block_key":   knownvalue.StringExact("/namespace2/{actorId}"),
 								"relevance_score": knownvalue.Float32Exact(0.35),
 								"strategy_id":     knownvalue.Null(),
 								"top_k":           knownvalue.Int32Exact(10),
@@ -749,7 +749,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_addRetri
 				},
 			},
 			{
-				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, "key1", 0.25, 5),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, "/namespace1", 0.25, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -761,7 +761,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_addRetri
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("agentcore_memory_configuration").AtSliceIndex(0).AtMapKey("retrieval_config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"map_block_key":   knownvalue.StringExact("key1"),
+							"map_block_key":   knownvalue.StringExact("/namespace1"),
 							"relevance_score": knownvalue.Float32Exact(0.25),
 							"strategy_id":     knownvalue.Null(),
 							"top_k":           knownvalue.Int32Exact(5),
@@ -804,7 +804,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_removeRe
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, "key1", 0.25, 5),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, "/namespace1", 0.25, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -816,7 +816,7 @@ func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration_removeRe
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("agentcore_memory_configuration").AtSliceIndex(0).AtMapKey("retrieval_config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"map_block_key":   knownvalue.StringExact("key1"),
+							"map_block_key":   knownvalue.StringExact("/namespace1"),
 							"relevance_score": knownvalue.Float32Exact(0.25),
 							"strategy_id":     knownvalue.Null(),
 							"top_k":           knownvalue.Int32Exact(5),
@@ -1547,7 +1547,7 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, actorID string, messagesCount int, mapBlockKey string, relevanceScore float32, topK int) string {
+func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_options(rName, actorID string, messagesCount int, namespacePathTemplate string, relevanceScore float32, topK int) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
@@ -1582,10 +1582,10 @@ resource "aws_bedrockagentcore_memory" "test" {
   name                  = %[1]q
   event_expiry_duration = 7
 }
-`, rName, actorID, messagesCount, mapBlockKey, relevanceScore, topK))
+`, rName, actorID, messagesCount, namespacePathTemplate, relevanceScore, topK))
 }
 
-func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, mapBlockKey string, relevanceScore float32, topK int) string {
+func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_retrievalConfig(rName, namespacePathTemplate string, relevanceScore float32, topK int) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
@@ -1618,7 +1618,7 @@ resource "aws_bedrockagentcore_memory" "test" {
   name                  = %[1]q
   event_expiry_duration = 7
 }
-`, rName, mapBlockKey, relevanceScore, topK))
+`, rName, namespacePathTemplate, relevanceScore, topK))
 }
 
 func testAccHarnessConfig_Memory_managedMemoryConfiguration_empty(rName string) string {
