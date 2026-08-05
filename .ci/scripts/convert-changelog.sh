@@ -24,6 +24,20 @@ if ! grep -q '```release-note:' "$CHANGELOG_FILE"; then
     exit 1
 fi
 
+# Validate that no field contains shell metacharacters.
+# Backticks in body text are Markdown code spans, not shell; they are excluded.
+# The remaining characters ($, \, ;, |, &) are injection vectors when parsed
+# values are passed as arguments to changie new in a pull_request_target context.
+SHELL_METACHAR_PATTERN='[$\\;|&]'
+while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    [[ "$line" == '```'* ]] && continue
+    if [[ "$line" =~ $SHELL_METACHAR_PATTERN ]]; then
+        echo "Error: Shell metacharacter detected in '$CHANGELOG_FILE': $line"
+        exit 1
+    fi
+done < "$CHANGELOG_FILE"
+
 # Extract PR number from filename
 PR_NUMBER=$(basename "$CHANGELOG_FILE" .txt)
 
@@ -111,7 +125,12 @@ while IFS= read -r line; do
         if [ "$KIND" = "feature" ]; then
             # For features, extract the resource/data source name from body
             NAME=$(echo "$BODY" | head -n1)
-            changie new --kind "$KIND" --custom "NewType=$FEATURE_TYPE" --custom "Name=$NAME" --custom "PullRequest=$PR_NUMBER"
+            changie new \
+                --interactive=false \
+                --kind "$KIND" \
+                --custom "NewType=$FEATURE_TYPE" \
+                --custom "Name=$NAME" \
+                --custom "PullRequest=$PR_NUMBER"
         else
             # For other kinds (breaking-change, note, enhancement, bug)
             # Extract Impact (resource/data-source prefix) and Body (description) separately
@@ -119,17 +138,26 @@ while IFS= read -r line; do
                 # Has Impact prefix (e.g., "resource/aws_example: Description")
                 IMPACT="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
                 DESCRIPTION="${BASH_REMATCH[3]}"
-                changie new --kind "$KIND" --custom "Impact=$IMPACT" --custom "Body=$DESCRIPTION" --custom "PullRequest=$PR_NUMBER"
+                changie new \
+                    --interactive=false \
+                    --kind "$KIND" \
+                    --custom "Impact=$IMPACT" \
+                    --custom "Body=$DESCRIPTION" \
+                    --custom "PullRequest=$PR_NUMBER"
             elif [[ "$BODY" =~ ^(provider):\ (.+)$ ]]; then
                 # Provider-level change without resource prefix (e.g., "provider: Description")
                 IMPACT="${BASH_REMATCH[1]}"
                 DESCRIPTION="${BASH_REMATCH[2]}"
-                changie new --kind "$KIND" --custom "Impact=$IMPACT" --custom "Body=$DESCRIPTION" --custom "PullRequest=$PR_NUMBER"
+                changie new \
+                    --interactive=false \
+                    --kind "$KIND" \
+                    --custom "Impact=$IMPACT" \
+                    --custom "Body=$DESCRIPTION" \
+                    --custom "PullRequest=$PR_NUMBER"
             else
-                # No Impact prefix - use full body as description with empty Impact
-                # This shouldn't happen in well-formed entries, but handle gracefully
-                echo "Warning: Entry does not follow expected format (missing Impact prefix): $BODY"
-                changie new --kind "$KIND" --custom "Body=$BODY" --custom "PullRequest=$PR_NUMBER"
+                # No Impact prefix - cannot create a valid fragment without an Impact value
+                echo "Error: Entry does not follow expected format (missing resource/data-source/provider prefix): $BODY"
+                exit 1
             fi
         fi
 
