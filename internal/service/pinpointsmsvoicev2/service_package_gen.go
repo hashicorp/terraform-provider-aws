@@ -125,6 +125,19 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
+		{
+			Factory:  newSenderIDResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_sender_id",
+			Name:     "Sender ID",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("sender_id", true),
+				inttypes.StringIdentityAttribute("iso_country_code", true),
+			}),
+		},
 	})
 }
 
