@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,7 +30,7 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModi
 
 // ResourceOptionalComputedListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, nestedObjectOptions []fwtypes.NestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
+func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, nestedObjectOptions []fwtypes.NestedObjectOfOptionsFunc[T], planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
 		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, nestedObjectOptions...),
 		Optional:      true,
@@ -45,9 +46,17 @@ func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, 
 }
 
 type resourceListOfObjectsOptions[T any] struct {
-	nestedObjectOptions []fwtypes.NestedObjectOfOption[T]
+	nestedObjectOptions []fwtypes.NestedObjectOfOptionsFunc[T]
 	planModifiers       []planmodifier.List
 	validators          []validator.List
+}
+
+func newResourceListOfObjectsOptions[T any](optFns ...ResourceListOfObjectsOptionsFunc[T]) resourceListOfObjectsOptions[T] {
+	var opts resourceListOfObjectsOptions[T]
+	for _, fn := range optFns {
+		fn(&opts)
+	}
+	return opts
 }
 
 type ResourceListOfObjectsOptionsFunc[T any] func(*resourceListOfObjectsOptions[T])
@@ -56,16 +65,16 @@ type ResourceListOfObjectsOptionsFunc[T any] func(*resourceListOfObjectsOptions[
 //
 // Use this option to fully overwrite the nested object options list. To preserve
 // preexisting items, use WithNestedObjectOptionsAppend instead.
-func WithNestedObjectOptions[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOption[T]) ResourceListOfObjectsOptionsFunc[T] {
+func WithNestedObjectOptions[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOptionsFunc[T]) ResourceListOfObjectsOptionsFunc[T] {
 	return func(o *resourceListOfObjectsOptions[T]) {
-		o.nestedObjectOptions = nestedObjectOptions
+		o.nestedObjectOptions = slices.Clone(nestedObjectOptions)
 	}
 }
 
 // WithNestedObjectOptionsAppend appends to the list of nested object options.
 //
 // Use this option to preserve preexisting items in the nested object options list.
-func WithNestedObjectOptionsAppend[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOption[T]) ResourceListOfObjectsOptionsFunc[T] {
+func WithNestedObjectOptionsAppend[T any](nestedObjectOptions ...fwtypes.NestedObjectOfOptionsFunc[T]) ResourceListOfObjectsOptionsFunc[T] {
 	return func(o *resourceListOfObjectsOptions[T]) {
 		o.nestedObjectOptions = append(o.nestedObjectOptions, nestedObjectOptions...)
 	}
@@ -77,7 +86,7 @@ func WithNestedObjectOptionsAppend[T any](nestedObjectOptions ...fwtypes.NestedO
 // preexisting items, use WithPlanModifiersAppend instead.
 func WithPlanModifiers[T any](planModifiers ...planmodifier.List) ResourceListOfObjectsOptionsFunc[T] {
 	return func(o *resourceListOfObjectsOptions[T]) {
-		o.planModifiers = planModifiers
+		o.planModifiers = slices.Clone(planModifiers)
 	}
 }
 
@@ -96,7 +105,7 @@ func WithPlanModifiersAppend[T any](planModifiers ...planmodifier.List) Resource
 // preexisting items, use WithValidatorsAppend instead.
 func WithValidators[T any](validators ...validator.List) ResourceListOfObjectsOptionsFunc[T] {
 	return func(o *resourceListOfObjectsOptions[T]) {
-		o.validators = validators
+		o.validators = slices.Clone(validators)
 	}
 }
 
