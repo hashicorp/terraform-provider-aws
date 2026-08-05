@@ -471,46 +471,22 @@ var (
 func (m ingressPointConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	if !m.SMTPPassword.IsNull() && !m.SMTPPassword.IsUnknown() {
+	switch {
+	case !m.SMTPPassword.IsNull() && !m.SMTPPassword.IsUnknown():
 		return &awstypes.IngressPointConfigurationMemberSmtpPassword{
 			Value: m.SMTPPassword.ValueString(),
 		}, diags
-	}
-
-	if !m.SecretARN.IsNull() && !m.SecretARN.IsUnknown() {
+	case !m.SecretARN.IsNull():
 		return &awstypes.IngressPointConfigurationMemberSecretArn{
 			Value: m.SecretARN.ValueString(),
 		}, diags
-	}
-
-	if !m.TLSAuthConfiguration.IsNull() && !m.TLSAuthConfiguration.IsUnknown() {
-		tlsConfigs, d := m.TLSAuthConfiguration.ToSlice(ctx)
-		diags.Append(d...)
+	case !m.TLSAuthConfiguration.IsNull():
+		var x awstypes.IngressPointConfigurationMemberTlsAuthConfiguration
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.TLSAuthConfiguration, &x.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		if len(tlsConfigs) == 1 {
-			tlsStores, d := tlsConfigs[0].TrustStore.ToSlice(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			if len(tlsStores) == 1 {
-				ts := tlsStores[0]
-				awsTs := awstypes.TrustStore{
-					CAContent: ts.CAContent.ValueStringPointer(),
-				}
-				if !ts.CRLContent.IsNull() {
-					awsTs.CrlContent = ts.CRLContent.ValueStringPointer()
-				}
-				if !ts.KMSKeyARN.IsNull() {
-					awsTs.KmsKeyArn = ts.KMSKeyARN.ValueStringPointer()
-				}
-				return &awstypes.IngressPointConfigurationMemberTlsAuthConfiguration{
-					Value: awstypes.TlsAuthConfiguration{TrustStore: &awsTs},
-				}, diags
-			}
-		}
+		return &x, diags
 	}
 
 	return nil, diags
@@ -551,30 +527,21 @@ func (m *ingressPointConfigurationModel) Flatten(ctx context.Context, v any) dia
 func (m networkConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	if !m.PublicNetworkConfiguration.IsNull() && !m.PublicNetworkConfiguration.IsUnknown() {
-		pubs, d := m.PublicNetworkConfiguration.ToSlice(ctx)
-		diags.Append(d...)
+	switch {
+	case !m.PublicNetworkConfiguration.IsNull():
+		var x awstypes.NetworkConfigurationMemberPublicNetworkConfiguration
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.PublicNetworkConfiguration, &x.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		if len(pubs) == 1 {
-			return &awstypes.NetworkConfigurationMemberPublicNetworkConfiguration{
-				Value: awstypes.PublicNetworkConfiguration{IpType: pubs[0].IPType.ValueEnum()},
-			}, diags
-		}
-	}
-
-	if !m.PrivateNetworkConfiguration.IsNull() && !m.PrivateNetworkConfiguration.IsUnknown() {
-		privs, d := m.PrivateNetworkConfiguration.ToSlice(ctx)
-		diags.Append(d...)
+		return &x, diags
+	case !m.PrivateNetworkConfiguration.IsNull():
+		var x awstypes.NetworkConfigurationMemberPrivateNetworkConfiguration
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.PrivateNetworkConfiguration, &x.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		if len(privs) == 1 {
-			return &awstypes.NetworkConfigurationMemberPrivateNetworkConfiguration{
-				Value: awstypes.PrivateNetworkConfiguration{VpcEndpointId: privs[0].VPCEndpointID.ValueStringPointer()},
-			}, diags
-		}
+		return &x, diags
 	}
 
 	return nil, diags
