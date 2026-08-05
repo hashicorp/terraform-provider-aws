@@ -68,7 +68,7 @@ type resourcePool struct {
 func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_settings": framework.ResourceOptionalComputedListOfObjectsAttribute[applicationSettingsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"application_settings": framework.ResourceOptionalComputedSingleNestedObjectAttribute[applicationSettingsModel](ctx),
 			"bundle_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -155,7 +155,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			names.AttrTags:     tftags.TagsAttribute(),
 			names.AttrTagsAll:  tftags.TagsAttributeComputedOnly(),
-			"timeout_settings": framework.ResourceOptionalComputedListOfObjectsAttribute[timeoutSettingsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"timeout_settings": framework.ResourceOptionalComputedSingleNestedObjectAttribute[timeoutSettingsModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"capacity": schema.ListNestedBlock{

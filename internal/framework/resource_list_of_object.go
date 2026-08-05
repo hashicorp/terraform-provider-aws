@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -43,6 +44,33 @@ func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, 
 			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
 		},
 	}
+}
+
+func ResourceOptionalComputedListOfObjectsAttribute2[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
+	opts := newResourceListOfObjectsOptions(optFns...)
+
+	return schema.ListAttribute{
+		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, opts.nestedObjectOptions...),
+		Optional:      true,
+		Computed:      true,
+		PlanModifiers: opts.planModifiers,
+		Validators:    opts.validators,
+		ElementType: types.ObjectType{
+			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
+		},
+	}
+}
+
+// ResourceOptionalComputedSingleNestedObjectAttribute returns a schema attribute that
+// is equivalent to a Terraform Plugin SDKv2 Optional+Computed list nested block with a maximum size of 1.
+func ResourceOptionalComputedSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+	return ResourceOptionalComputedListOfObjectsAttribute2(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseStateForUnknown()))
+}
+
+// ResourceOptionalComputedForceNewSingleNestedObjectAttribute returns a schema attribute that
+// is equivalent to a Terraform Plugin SDKv2 Optional+Computed+ForceNew list nested block with a maximum size of 1.
+func ResourceOptionalComputedForceNewSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
+	return ResourceOptionalComputedListOfObjectsAttribute2(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()))
 }
 
 type resourceListOfObjectsOptions[T any] struct {
