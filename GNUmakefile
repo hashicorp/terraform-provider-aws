@@ -173,9 +173,6 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-changelog-convert: ## Convert go-changelog fragment to Changie format
-	@.ci/scripts/convert-changelog.sh $(FILE)
-
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
 ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
@@ -288,6 +285,9 @@ clean-tidy: prereq-go ## Clean up tidy
 	cd skaff && $$gover mod tidy && cd .. ; \
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
+
+convert-changelog: ## Convert go-changelog fragment to Changie format
+	@.ci/scripts/convert-changelog.sh $(FILE)
 
 copyright: ## [CI] Copyright Checks / headers check
 	@echo "make: Copyright Checks / headers check..."
@@ -1229,7 +1229,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	cache-info \
-	changelog-convert \
 	changelog-misspell \
 	ci \
 	ci-quick \
@@ -1238,6 +1237,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-go-cache-trim \
 	clean-make-tests \
 	clean-tidy \
+	convert-changelog \
 	copyright \
 	copyright-fix \
 	default \
