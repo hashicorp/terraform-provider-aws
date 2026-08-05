@@ -263,6 +263,38 @@ func TestAccCognitoIDPUserPool_withAdminCreateUserEmailOnlyInviteMessageTemplate
 	})
 }
 
+func TestAccCognitoIDPUserPool_withAdminCreateUserPasswordlessEmailInviteMessageTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_adminCreateConfigurationPasswordlessEmail(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username}. Sign in at https://example.com/sign-in."),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Welcome"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", ""),
+					resource.TestCheckResourceAttr(resourceName, "sign_in_policy.0.allowed_first_auth_factors.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "sign_in_policy.0.allowed_first_auth_factors.*", "EMAIL_OTP"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49203
 func TestAccCognitoIDPUserPool_withAdminCreateUserSMSOnlyInviteMessageTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2376,6 +2408,26 @@ resource "aws_cognito_user_pool" "test" {
       email_message = "Your username is {username} and temporary password is {####}. "
       email_subject = "FooBar {####}"
     }
+  }
+}
+`, rName)
+}
+
+func testAccUserPoolConfig_adminCreateConfigurationPasswordlessEmail(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                = %[1]q
+  username_attributes = ["email"]
+
+  admin_create_user_config {
+    invite_message_template {
+      email_message = "Your username is {username}. Sign in at https://example.com/sign-in."
+      email_subject = "Welcome"
+    }
+  }
+
+  sign_in_policy {
+    allowed_first_auth_factors = ["EMAIL_OTP"]
   }
 }
 `, rName)
