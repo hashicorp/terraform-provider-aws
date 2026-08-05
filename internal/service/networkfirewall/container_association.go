@@ -361,9 +361,7 @@ func waitContainerAssociationCreated(ctx context.Context, conn *networkfirewall.
 
 func waitContainerAssociationUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeContainerAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		// The SDK's ContainerAssociationStatus enum does not include "UPDATING", but the
-		// API returns it as a transient status while an update is in progress.
-		Pending:                   []string{"UPDATING"},
+		Pending:                   enum.Slice(awstypes.ContainerAssociationStatusUpdating),
 		Target:                    enum.Slice(awstypes.ContainerAssociationStatusActive),
 		Refresh:                   statusContainerAssociation(conn, arn),
 		Timeout:                   timeout,
