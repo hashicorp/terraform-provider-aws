@@ -1,0 +1,131 @@
+{
+  "format_version": "1.0",
+  "provider_schemas": {
+    "registry.terraform.io/hashicorp/aws": {
+      "provider": {
+        "version": 0,
+        "block": {}
+      },
+      "resource_schemas": {
+        "aws_sns_topic": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id": {
+                "type": "string",
+                "computed": true
+              },
+              "arn": {
+                "type": "string",
+                "computed": true
+              },
+              "name": {
+                "type": "string",
+                "optional": true,
+                "computed": true
+              },
+              "display_name": {
+                "type": "string",
+                "optional": true
+              },
+              "fifo_topic": {
+                "type": "bool",
+                "optional": true,
+                "computed": true
+              },
+              "kms_master_key_id": {
+                "type": "string",
+                "optional": true
+              },
+              "tags": {
+                "type": ["map", "string"],
+                "optional": true
+              },
+              "tags_all": {
+                "type": ["map", "string"],
+                "computed": true
+              }
+            },
+            "block_types": {
+              "timeouts": {
+                "nesting_mode": "single",
+                "block": {
+                  "attributes": {
+                    "create": { "type": "string", "optional": true },
+                    "delete": { "type": "string", "optional": true },
+                    "update": { "type": "string", "optional": true }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "aws_sqs_queue": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id": {
+                "type": "string",
+                "computed": true
+              },
+              "arn": {
+                "type": "string",
+                "computed": true
+              },
+              "name": {
+                "type": "string",
+                "optional": true,
+                "computed": true
+              },
+              "fifo_queue": {
+                "type": "bool",
+                "optional": true,
+                "computed": true
+              },
+              "visibility_timeout_seconds": {
+                "type": "number",
+                "optional": true,
+                "computed": true
+              },
+              "message_retention_seconds": {
+                "type": "number",
+                "optional": true,
+                "computed": true
+              },
+              "delay_seconds": {
+                "type": "number",
+                "optional": true,
+                "computed": true
+              },
+              "max_message_size": {
+                "type": "number",
+                "optional": true,
+                "computed": true
+              },
+              "tags": {
+                "type": ["map", "string"],
+                "optional": true
+              },
+              "tags_all": {
+                "type": ["map", "string"],
+                "computed": true
+              }
+            }
+          }
+        }
+      },
+      "data_source_schemas": {
+        "aws_sns_topic": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id":   { "type": "string", "optional": true, "computed": true },
+              "arn":  { "type": "string", "computed": true },
+              "name": { "type": "string", "required": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}
