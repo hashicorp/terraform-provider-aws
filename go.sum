@@ -425,8 +425,8 @@ github.com/aws/aws-sdk-go-v2/service/pcs v1.24.3 h1:Q08CwSOxYXpFTnbx3oyFHmzdBEk6
 github.com/aws/aws-sdk-go-v2/service/pcs v1.24.3/go.mod h1:cd1R0oiA/Gcer0vRgCiu1EILQu1SF0qw5TZ6fgIkDEY=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.42.3 h1:4bN1MQE7V+tJpM7LuQfLFqT64YR/zLGiSv5f2EZHkRY=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.42.3/go.mod h1:14Hi9mL6yow1HyZ8wS8hnEUSsJhpE0KPMeyNtPJX/Iw=
-github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.32.2 h1:MPEeDt6cku0mEkBeBVRsnZMgngV6OnItD1CpIfHZPMA=
-github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.32.2/go.mod h1:/LgPn9U2Llr7FhPNEJ7YMrI5osMxRdSmSS8mfrjfVoM=
+github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.32.3 h1:34q41mhFaiRC3t4667d0NNJJstS7EKlYrqpwlg27aCA=
+github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.32.3/go.mod h1:Q4VVt14EluUmBfjdXVT/xRVg/JOOBWoIauC5KDMJNYM=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.26.2 h1:LsZffveexO2+j6t5mjsAuqfKfA9qH3THPJrB9PBPEec=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.26.2/go.mod h1:R8BEa/ghoOI4+sNJsJz1AyreH4T0tp/SBmmNWYvd66Y=
 github.com/aws/aws-sdk-go-v2/service/polly v1.60.2 h1:sZgTE02Z+bxwcq23Kl0f+8Ie7tBYmee3ATA/k3cOlhQ=
