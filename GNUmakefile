@@ -540,7 +540,8 @@ sane: prereq-go ## Run sane check
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -548,7 +549,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -558,7 +560,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$'
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -566,7 +569,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 18-$$fails1 )) ; \
 	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
@@ -577,7 +581,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \
@@ -590,7 +595,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
 	passes=$$(( 54-$$tot_fails )) ; \
@@ -792,17 +798,17 @@ sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper-check: sweeper-linked sweeper-unlinked ## [CI] Provider Checks / Sweeper Linked, Unlinked
 
 sweeper-linked: ## [CI] Provider Checks / Sweeper Functions Linked
 	@echo "make: Provider Checks / Sweeper Functions Linked..." ; \
-	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
+	$(GO_VER) test -c -o ./sweeper-bin ./internal/sweep/ ; \
 	count=`strings ./sweeper-bin | \
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-linked: found $$count, expected more than 0" ; \
@@ -834,7 +840,7 @@ swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -842,7 +848,7 @@ test-compile: prereq-go ## Test package compilation
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
+	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off -buildvcs=false
 
 test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -976,7 +982,7 @@ terraform-fmt: ## [CI] Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl fi
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false 
 
 testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
 
