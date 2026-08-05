@@ -86,6 +86,11 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				framework.WithValidators[contactDetailModel](listvalidator.SizeAtMost(1)),
 				framework.WithPlanModifiers[contactDetailModel](tflistplanmodifier.DefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			),
+			"billing_privacy": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			names.AttrCreationDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
