@@ -38,8 +38,8 @@ func TestAccRDSSnapshotsDataSource_basic(t *testing.T) {
 							"db_instance_identifier": knownvalue.StringExact(rName),
 							"db_snapshot_identifier": knownvalue.StringExact(rName),
 							"snapshot_create_time":   knownvalue.NotNull(),
-							"status":                 knownvalue.NotNull(),
-							"engine":                 knownvalue.NotNull(),
+							names.AttrStatus:         knownvalue.NotNull(),
+							names.AttrEngine:         knownvalue.NotNull(),
 							names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
 								"Name": knownvalue.StringExact(rName),
 							}),
