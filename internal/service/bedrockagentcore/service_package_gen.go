@@ -87,6 +87,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newDatasetResource,
+			TypeName: "aws_bedrockagentcore_dataset",
+			Name:     "Dataset",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "dataset_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("dataset_id", true),
+				inttypes.WithIdentityDuplicateAttrs("dataset_id"),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newEvaluatorResource,
 			TypeName: "aws_bedrockagentcore_evaluator",
 			Name:     "Evaluator",
