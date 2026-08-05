@@ -42,8 +42,8 @@ func TestAccRDSSnapshotsDataSource_basic(t *testing.T) {
 							names.AttrEngine:         knownvalue.NotNull(),
 							"tag_list": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"key":   knownvalue.StringExact("Name"),
-									"value": knownvalue.StringExact(rName),
+									names.AttrKey:   knownvalue.StringExact("Name"),
+									names.AttrValue: knownvalue.StringExact(rName),
 								}),
 							}),
 						}),
