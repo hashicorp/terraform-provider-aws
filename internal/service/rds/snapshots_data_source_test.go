@@ -59,7 +59,6 @@ func TestAccRDSSnapshotsDataSource_filter(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_snapshots.test"
-	resourceName := "aws_db_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -69,10 +68,13 @@ func TestAccRDSSnapshotsDataSource_filter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotsDataSourceConfig_filter(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "snapshots.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "snapshots.0.db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("snapshots"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"db_snapshot_identifier": knownvalue.StringExact(rName),
+						}),
+					})),
+				},
 			},
 		},
 	})
