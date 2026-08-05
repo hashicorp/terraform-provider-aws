@@ -290,17 +290,9 @@ func (r *ingressPointResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// AWS always returns a NetworkConfiguration. Restore the plan value when
-	// the user did not configure it to avoid a plan/state inconsistency.
-	planNetworkConfiguration := data.NetworkConfiguration
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ingressPointOut, &data, flex.WithFieldNamePrefix("IngressPoint")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, ingressPointOut, &data))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if planNetworkConfiguration.IsNull() {
-		data.NetworkConfiguration = planNetworkConfiguration
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
@@ -327,17 +319,9 @@ func (r *ingressPointResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	// AWS always returns a NetworkConfiguration; restore the prior state when
-	// the user did not configure it to avoid drift.
-	priorNetworkConfiguration := state.NetworkConfiguration
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("IngressPoint")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if priorNetworkConfiguration.IsNull() {
-		state.NetworkConfiguration = priorNetworkConfiguration
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -392,17 +376,9 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		// AWS always returns a NetworkConfiguration; restore the plan value when
-		// the user did not configure it to avoid drift.
-		planNetworkConfiguration := plan.NetworkConfiguration
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ingressPointOut, &plan, flex.WithFieldNamePrefix("IngressPoint")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, ingressPointOut, &plan))
 		if resp.Diagnostics.HasError() {
 			return
-		}
-
-		if planNetworkConfiguration.IsNull() {
-			plan.NetworkConfiguration = planNetworkConfiguration
 		}
 	}
 
@@ -438,6 +414,24 @@ func (r *ingressPointResource) Delete(ctx context.Context, req resource.DeleteRe
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, ingressPointID)
 	}
 }
+
+func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanager.GetIngressPointOutput, data *ingressPointResourceModel) diag.Diagnostics {
+	// AWS always returns a NetworkConfiguration even when the user did not
+	// configure one. Preserve the existing value so we don't introduce drift.
+	priorNetworkConfiguration := data.NetworkConfiguration
+
+	diags := flex.Flatten(ctx, apiObject, data, flex.WithFieldNamePrefix("IngressPoint"))
+	if diags.HasError() {
+		return diags
+	}
+
+	if priorNetworkConfiguration.IsNull() {
+		data.NetworkConfiguration = priorNetworkConfiguration
+	}
+
+	return diags
+}
+
 
 func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id string, timeout time.Duration) (*mailmanager.GetIngressPointOutput, error) {
 	stateConf := &retry.StateChangeConf{
