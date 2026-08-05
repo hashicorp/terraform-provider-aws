@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_security_group_rule: Disallow empty strings in `prefix_list_ids`
-```

@@ -77,7 +77,7 @@ func testAccCheckAccessPointDestroy(ctx context.Context, t *testing.T) resource.
 	}
 }
 
-func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string, v *awstypes.AccessPointDescription) resource.TestCheckFunc {
+func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -86,15 +86,8 @@ func testAccCheckAccessPointExists(ctx context.Context, t *testing.T, n string, 
 
 		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 
-		output, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		_, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
+		return err
 	}
 }
 ```

@@ -386,6 +386,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
+		if d.HasChange("embed_host_domains") {
+			input.EmbedHostDomains = flex.ExpandStringValueSet(d.Get("embed_host_domains").(*schema.Set))
+		}
+
 		if d.HasChange("feedback_url") {
 			input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
 		}

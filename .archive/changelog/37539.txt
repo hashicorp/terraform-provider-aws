@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appconfig_configuration_profile: Increase `name` max length validation to 128
-```

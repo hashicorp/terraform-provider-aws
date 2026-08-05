@@ -45,17 +45,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge API Destinations using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_api_destination.test
-  id = "api-destination"
+  to = aws_cloudwatch_event_api_destination.example
+  identity = {
+    name = "example-destination"
+  }
+}
+
+resource "aws_cloudwatch_event_api_destination" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EventBridge API Destinations using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the API destination.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Destinations using `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_api_destination.example
+  id = "example-destination"
+}
+```
+
+Using `terraform import`, import API Destinations using `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_api_destination.test api-destination
+% terraform import aws_cloudwatch_event_api_destination.example example-destination
 ```

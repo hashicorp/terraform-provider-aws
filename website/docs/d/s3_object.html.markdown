@@ -71,11 +71,12 @@ resource "aws_lambda_function" "test_lambda" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `checksum_mode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksum_mode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
-* `download_body` - Set to `true` to always download object data to `body_base64` attribute. If unset and [conditions described above](#data-source-aws_s3_object) are met, `body` will be available but `body_base64` will not be. If set to `false`, the body is not downloaded and neither `body` nor `body_base64` is available, which may improve performance.
+* `download_body` - (Optional) Set to `true` to always download object data to `body_base64` attribute. If unset and [conditions described above](#data-source-aws_s3_object) are met, `body` will be available but `body_base64` will not be. If set to `false`, the body is not downloaded and neither `body` nor `body_base64` is available, which may improve performance.
 * `key` - (Required) Full path to the object inside the bucket
+* `range` - (Optional) Byte range of the object to retrieve, in the format expected by the [HTTP `Range` header](https://www.rfc-editor.org/rfc/rfc9110.html#name-range).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
 ## Attribute Reference
@@ -85,13 +86,13 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the object.
 * `body` - Object data (see [**limitations above**](#data-source-aws_s3_object) to understand cases in which this field is actually available). If `download_body` is set to `false`, `body` is not available.
 * `body_base64` - Object data as base64 encoded string. **This is only available if `download_body` is set to `true`.**
-* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
+* `bucket_key_enabled` - Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cache_control` - Caching behavior along the request/reply chain.
-* `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
-* `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
-* `checksum_crc64nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
-* `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
-* `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
+* `checksum_crc32` - Base64-encoded, 32-bit CRC32 checksum of the object.
+* `checksum_crc32c` - Base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksum_crc64nvme` - Base64-encoded, 64-bit CRC64NVME checksum of the object.
+* `checksum_sha1` - Base64-encoded, 160-bit SHA-1 digest of the object.
+* `checksum_sha256` - Base64-encoded, 256-bit SHA-256 digest of the object.
 * `content_disposition` - Presentational information for the object.
 * `content_encoding` - What content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
 * `content_language` - Language the content is in.
@@ -102,14 +103,14 @@ This data source exports the following attributes in addition to the arguments a
 * `expires` - Date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g., `Mon, 02 Jan 2006 15:04:05 MST`)
 * `metadata` - Map of metadata stored with the object in S3. [Keys](https://developer.hashicorp.com/terraform/language/expressions/types#maps-objects) are always returned in lowercase.
-* `object_lock_legal_hold_status` - Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
+* `object_lock_legal_hold_status` - Whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
 * `object_lock_mode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
-* `object_lock_retain_until_date` - The date and time when this object's object lock will expire.
+* `object_lock_retain_until_date` - Date and time when this object's object lock will expire.
 * `server_side_encryption` - If the object is stored using server-side encryption (KMS or Amazon S3-managed encryption key), this field includes the chosen encryption and algorithm used.
 * `sse_kms_key_id` - If present, specifies the ID of the Key Management Service (KMS) master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
+* `tags`  - Map of tags assigned to the object.
 * `version_id` - Latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
-* `tags`  - Map of tags assigned to the object.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.

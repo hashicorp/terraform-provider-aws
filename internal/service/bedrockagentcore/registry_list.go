@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -31,6 +32,12 @@ var _ list.ListResource = &registryListResource{}
 type registryListResource struct {
 	registryResource
 	framework.WithList
+}
+
+func (l *registryListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
+	}
 }
 
 func (l *registryListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

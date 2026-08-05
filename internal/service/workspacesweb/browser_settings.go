@@ -35,7 +35,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_browser_settings", name="Browser Settings")
 // @Tags(identifierAttribute="browser_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.BrowserSettings")
 // @Testing(importStateIdAttribute="browser_settings_arn")

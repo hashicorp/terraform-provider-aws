@@ -100,22 +100,22 @@ resource "aws_s3_bucket_logging" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
-* `target_prefix` - (Required) Prefix for all log object keys.
 * `target_grant` - (Optional) Set of configuration blocks with information for granting permissions. [See below](#target_grant).
 * `target_object_key_format` - (Optional) Amazon S3 key format for log objects. [See below](#target_object_key_format).
+* `target_prefix` - (Required) Prefix for all log object keys.
 
-### target_grant
+### `target_grant` Block
 
 The `target_grant` configuration block supports the following arguments:
 
 * `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
 * `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `READ`, `WRITE`.
 
-### grantee
+### `grantee` Block
 
 The `grantee` configuration block supports the following arguments:
 
@@ -124,24 +124,24 @@ The `grantee` configuration block supports the following arguments:
 * `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
 
-### target_object_key_format
+### `target_object_key_format` Block
 
 The `target_object_key_format` configuration block supports the following arguments:
 
 * `partitioned_prefix` - (Optional) Partitioned S3 key for log objects, in the form `[target_prefix][SourceAccountId]/[SourceRegion]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. Conflicts with `simple_prefix`. [See below](#partitioned_prefix).
 * `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects, in the form `[target_prefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. To use, set `simple_prefix {}`. Conflicts with `partitioned_prefix`.
 
-### partitioned_prefix
+### `partitioned_prefix` Block
 
 The `partitioned_prefix` configuration block supports the following arguments:
 
-* `partition_date_source` - (Required) Specifies the partition date source for the partitioned prefix. Valid values: `EventTime`, `DeliveryTime`.
+* `partition_date_source` - (Required) Partition date source for the partitioned prefix. Valid values: `EventTime`, `DeliveryTime`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 

@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -62,12 +63,18 @@ type registryResource struct {
 
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
 		Attributes: map[string]schema.Attribute{
 			"approval_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[approvalConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"authorizer_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
 				Optional:   true,
 				Computed:   true,
+				Validators: []validator.String{
+					tfstringvalidator.DiscriminatorRequires(map[awstypes.RegistryAuthorizerType]path.Expression{
+						awstypes.RegistryAuthorizerTypeCustomJwt: path.MatchRelative().AtParent().AtName("authorizer_configuration"),
+					}),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -100,22 +107,6 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Delete: true,
 			}),
 		},
-	}
-}
-
-func (r *registryResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data registryResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if data.AuthorizerType.ValueEnum() == awstypes.RegistryAuthorizerTypeCustomJwt && data.AuthorizerConfiguration.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("authorizer_configuration"),
-			"Missing Required Attribute",
-			"authorizer_configuration is required when authorizer_type is CUSTOM_JWT",
-		)
 	}
 }
 
@@ -152,11 +143,20 @@ func (r *registryResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	// Set values for unknowns.
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := plan.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, created, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, plan.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -182,10 +182,18 @@ func (r *registryResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	priorAuthorizerConfiguration := state.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, state.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }

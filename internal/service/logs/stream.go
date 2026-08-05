@@ -108,8 +108,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ls.Arn)
-	d.Set(names.AttrName, ls.LogStreamName)
+	resourceStreamFlatten(ctx, d, *ls)
 
 	return diags
 }
@@ -134,6 +133,11 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+func resourceStreamFlatten(_ context.Context, d *schema.ResourceData, ls awstypes.LogStream) {
+	d.Set(names.AttrARN, ls.Arn)
+	d.Set(names.AttrName, ls.LogStreamName)
 }
 
 func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
