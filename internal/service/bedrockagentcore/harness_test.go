@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,16 +65,41 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_tools"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkHarnessARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_tools"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("*"),
+					})),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "bedrock-agentcore", "harness/{harness_id}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+									"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+									"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+									"filesystem_configuration": knownvalue.Null(),
+									"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"idle_runtime_session_timeout": knownvalue.Int32Exact(900),
+											"max_lifetime":                 knownvalue.Int32Exact(28800),
+										}),
+									}),
+									"network_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"network_mode":        knownvalue.StringExact("PUBLIC"),
+											"network_mode_config": knownvalue.Null(),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_iterations"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_iterations"), knownvalue.Int32Exact(75)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_tokens"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
@@ -98,9 +124,23 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("timeout_seconds"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("timeout_seconds"), knownvalue.Int32Exact(3600)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tool"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("truncation"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("truncation"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"strategy": knownvalue.StringExact("sliding_window"),
+							"config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"sliding_window": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"messages_count": knownvalue.Int32Exact(150),
+										}),
+									}),
+									"summarization": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
 				},
 			},
 			{
