@@ -515,6 +515,15 @@ resource "aws_mailmanager_traffic_policy" "test" {
 
 resource "aws_mailmanager_rule_set" "test" {
   name = %[1]q
+
+  rule {
+    action {
+      add_header {
+        header_name  = "X-Test"
+        header_value = "example"
+      }
+    }
+  }
 }
 `, rName)
 }
@@ -616,11 +625,11 @@ func testAccIngressPointConfig_privateNetworkConfiguration(rName string) string 
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
-  vpc_id            = aws_vpc.main.id
+  vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.mail-manager"
   vpc_endpoint_type = "Interface"
 
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
