@@ -280,10 +280,33 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// Save the planned table_configurations before flattening the API response.
+	// The API may return additional keys (e.g., BILLING_VIEW_ARN) that were not
+	// in the user's configuration, which causes a "Provider produced inconsistent
+	// result" error.
+	var plannedTableConfigurations fwtypes.MapOfMapOfString
+	if exports, diags := plan.Export.ToSlice(ctx); !diags.HasError() && len(exports) > 0 {
+		if dataQueries, diags := exports[0].DataQuery.ToSlice(ctx); !diags.HasError() && len(dataQueries) > 0 {
+			plannedTableConfigurations = dataQueries[0].TableConfigurations
+		}
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, outputRaw, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Restore the planned table_configurations to avoid inconsistency with
+	// extra API-returned keys.
+	if !plannedTableConfigurations.IsNull() && !plannedTableConfigurations.IsUnknown() {
+		if exports, diags := plan.Export.ToSlice(ctx); !diags.HasError() && len(exports) > 0 {
+			if dataQueries, diags := exports[0].DataQuery.ToSlice(ctx); !diags.HasError() && len(dataQueries) > 0 {
+				dataQueries[0].TableConfigurations = plannedTableConfigurations
+				exports[0].DataQuery, _ = fwtypes.NewListNestedObjectValueOfSlice(ctx, dataQueries, nil)
+				plan.Export, _ = fwtypes.NewListNestedObjectValueOfSlice(ctx, exports, nil)
+			}
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
