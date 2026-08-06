@@ -76,10 +76,10 @@ resource "aws_neptunegraph_graph" "example" {
 
 # Private Graph Endpoint
 resource "aws_neptunegraph_private_graph_endpoint" "example" {
-  graph_identifier   = aws_neptunegraph_graph.example.id
-  vpc_id             = aws_vpc.example.id
-  subnet_ids         = [aws_subnet.example1.id, aws_subnet.example2.id]
-  security_group_ids = [aws_security_group.example.id]
+  graph_identifier       = aws_neptunegraph_graph.example.id
+  vpc_id                 = aws_vpc.example.id
+  subnet_ids             = [aws_subnet.example1.id, aws_subnet.example2.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
 }
 ```
 
@@ -94,7 +94,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `subnet_ids` - (Optional) Subnets in which private graph endpoint ENIs are created.
-* `security_group_ids` - (Optional) Security groups to be attached to the private graph endpoint.
+* `vpc_security_group_ids` - (Optional) Security groups to be attached to the private graph endpoint.
 
 ## Attribute Reference
 

@@ -72,13 +72,6 @@ func (r *resourcePrivateGraphEndpoint) Schema(ctx context.Context, req resource.
 			"private_graph_endpoint_identifier": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
-				CustomType: fwtypes.SetOfStringType,
-				Optional:   true,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplace(),
-				},
-			},
 			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
 				Optional:   true,
@@ -93,6 +86,13 @@ func (r *resourcePrivateGraphEndpoint) Schema(ctx context.Context, req resource.
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -301,9 +301,9 @@ type resourcePrivateGraphEndpointModel struct {
 	framework.WithRegionModel
 	GraphIdentifier                types.String        `tfsdk:"graph_identifier"`
 	PrivateGraphEndpointIdentifier types.String        `tfsdk:"private_graph_endpoint_identifier"`
-	SecurityGroupIDs               fwtypes.SetOfString `tfsdk:"security_group_ids"`
 	SubnetIDs                      fwtypes.SetOfString `tfsdk:"subnet_ids"`
 	Timeouts                       timeouts.Value      `tfsdk:"timeouts"`
 	VPCID                          types.String        `tfsdk:"vpc_id"`
 	VPCEndpointID                  types.String        `tfsdk:"vpc_endpoint_id"`
+	VPCSecurityGroupIDs            fwtypes.SetOfString `tfsdk:"vpc_security_group_ids"`
 }
