@@ -109,7 +109,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: .github/actions/
+          sparse-checkout: |
+            .github/actions/
+            .changie.yaml
 
       - name: Community Check
         id: community_check
@@ -218,6 +220,83 @@ jobs:
                   "text": {
                     "type": "mrkdwn",
                     "text": ${{ toJSON(format(':merged-rounded: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                  }
+                }
+              ]
+            }
+
+      - name: Get Changes Directory
+        id: changes-dir
+        if: github.event.pull_request.merged
+        shell: bash
+        run: echo "changes_dir=$(yq eval '.changesDir' .changie.yaml)" >> $GITHUB_OUTPUT
+
+      - name: Check for Missing CHANGELOG Fragment
+        id: fragment-filter
+        if: github.event.pull_request.merged
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        with:
+          list-files: json
+          predicate-quantifier: 'every'
+          filters: |
+            service_files:
+              - 'internal/service/**/*.go'
+              - '!internal/service/**/*_test.go'
+            changie_fragments:
+              - added:'${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
+
+      - name: Format Missing Fragment File List
+        id: format-files
+        if: |
+          steps.fragment-filter.outputs.service_files == 'true' &&
+          steps.fragment-filter.outputs.changie_fragments != 'true' &&
+          !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed')
+        shell: bash
+        run: |
+          FORMATTED=$(echo '${{ steps.fragment-filter.outputs.service_files_files }}' | jq -r '.[] | "• `\(.)`"')
+          echo "formatted<<EOF" >> $GITHUB_OUTPUT
+          echo "$FORMATTED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Notify Maintainers of Missing CHANGELOG Entry
+        if: steps.format-files.outcome != 'skipped'
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: *Missing CHANGELOG Entry*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('Pull request <{0}|#{1}: {2}> was merged but is missing a required CHANGELOG entry.', env.PR_URL, env.PR_NUMBER, env.PR_TITLE)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Files that require a CHANGELOG entry:*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(steps.format-files.outputs.formatted) }}
                   }
                 }
               ]
