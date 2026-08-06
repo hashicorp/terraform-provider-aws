@@ -120,13 +120,41 @@ resource "aws_subnet" "bar" {
 }
 ```
 
+### Microsoft Active Directory (MicrosoftAD Hybrid Edition)
+
+```terraform
+resource "aws_directory_service_directory" "bar" {
+  edition            = "Hybrid"
+  type               = "MicrosoftAD"
+  assessment_id      = "da-xxxxxxxxxxxxxxxxxx"
+  secret_manager_arn = aws_secretsmanager_secret.admin.arn
+
+  tags = {
+    Project = "foo"
+  }
+}
+
+resource "aws_secretsmanager_secret" "admin" {
+  name = "hybrid_ad_user"
+}
+
+resource "aws_secretsmanager_secret_version" "admin" {
+  secret_id = aws_secretsmanager_secret.admin.id
+  secret_string = jsonencode({
+    customerAdAdminDomainUsername = "Administrator"
+    customerAdAdminDomainPassword = "SuperSecretPassw0rd"
+  })
+}
+
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
-* `password` - (Required) The password for the directory administrator or connector user.
+* `name` - (Required, except `MicrosoftAD - Hybrid Edition`) The fully qualified name for the directory, such as `corp.example.com`
+* `password` - (Required, except `MicrosoftAD - Hybrid Edition`) The password for the directory administrator or connector user.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
 * `vpc_settings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
@@ -136,7 +164,9 @@ This resource supports the following arguments:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
-* `edition` - (Optional, for type `MicrosoftAD` only) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise`.
+* `edition` - (Optional, for type `MicrosoftAD` only) The MicrosoftAD edition (`Standard`, `Enterprise` or `Hybrid`). Defaults to `Enterprise`.
+* `assessment_id` - (Optional, for type `MicrosoftAD` - `Hybrid` edition only) The id of passed trial hybrid directory assessment
+* `secret_arn` - (Optional, for type `MicrosoftAD` - `Hybrid` edition only) ARN of secret containing domain admin credentials for hybrid join.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `enable_directory_data_access` - (Optional) Enables access to directory data via the Directory Service Data API for the specified directory. For more information, see [Directory Service Data API Reference](https://docs.aws.amazon.com/directoryservicedata/latest/DirectoryServiceDataAPIReference/Welcome.html).
 
@@ -160,11 +190,17 @@ This resource exports the following attributes in addition to the arguments abov
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
 * `security_group_id` - The ID of the security group created by the directory.
+* `hybrid_settings` - Describes the current hybrid directory configuration settings for a directory. See [Hybrid Settings](#hybrid-settings) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
 
 * `connect_ips` - The IP addresses of the AD Connector servers.
+
+### Hybrid Settings
+
+* `self_managed_dns_ip_addrs` - The IP addresses of the DNS servers in your self-managed AD environment.
+* `self_managed_instance_ids` - The identifiers of the self-managed instances with SSM used for hybrid directory operations.
 
 ## Timeouts
 
