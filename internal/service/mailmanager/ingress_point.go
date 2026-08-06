@@ -127,19 +127,9 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"previous_smtp_password_expiry_timestamp": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						"previous_smtp_password_version": schema.StringAttribute{
-							Computed: true,
-						},
 						"secret_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
-						},
-						"smtp_password_version": schema.StringAttribute{
-							Computed: true,
 						},
 						"smtp_password_wo": schema.StringAttribute{
 							Optional:  true,
@@ -419,8 +409,8 @@ func (r *ingressPointResource) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *ingressPointResource) flatten(ctx context.Context, apiObject *mailmanager.GetIngressPointOutput, data *ingressPointResourceModel) diag.Diagnostics {
-	// AWS always returns a NetworkConfiguration even when the user did not
-	// configure one. Preserve the existing value to avoid drift.
+	// AWS always returns a NetworkConfiguration even when the user did not configure one.
+	// Preserve the existing value to avoid drift.
 	priorNetworkConfiguration := data.NetworkConfiguration
 
 	diags := flex.Flatten(ctx, apiObject, data, flex.WithFieldNamePrefix("IngressPoint"))
@@ -525,6 +515,8 @@ func (m ingressPointConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		return &awstypes.IngressPointConfigurationMemberSmtpPassword{
 			Value: m.SMTPPasswordWO.ValueString(),
 		}, diags
+	case !m.SMTPPasswordWOVersion.IsNull():
+		return &awstypes.IngressPointConfigurationMemberSmtpPassword{}, diags
 	case !m.SecretARN.IsNull():
 		return &awstypes.IngressPointConfigurationMemberSecretArn{
 			Value: m.SecretARN.ValueString(),
@@ -546,14 +538,6 @@ func (m *ingressPointConfigurationModel) Flatten(ctx context.Context, v any) dia
 
 	switch t := v.(type) {
 	case awstypes.IngressPointAuthConfiguration:
-		if t.IngressPointPasswordConfiguration != nil {
-			pc := t.IngressPointPasswordConfiguration
-			m.SMTPPasswordVersion = types.StringPointerValue(pc.SmtpPasswordVersion)
-			m.PreviousSMTPPasswordVersion = types.StringPointerValue(pc.PreviousSmtpPasswordVersion)
-			if pc.PreviousSmtpPasswordExpiryTimestamp != nil {
-				m.PreviousSMTPPasswordExpiryTimestamp = timetypes.NewRFC3339TimePointerValue(pc.PreviousSmtpPasswordExpiryTimestamp)
-			}
-		}
 		if t.SecretArn != nil {
 			m.SecretARN = fwtypes.ARNValue(aws.ToString(t.SecretArn))
 		}
@@ -654,13 +638,10 @@ type ingressPointResourceModel struct {
 }
 
 type ingressPointConfigurationModel struct {
-	PreviousSMTPPasswordExpiryTimestamp timetypes.RFC3339                                          `tfsdk:"previous_smtp_password_expiry_timestamp"`
-	PreviousSMTPPasswordVersion         types.String                                               `tfsdk:"previous_smtp_password_version"`
-	SecretARN                           fwtypes.ARN                                                `tfsdk:"secret_arn"`
-	SMTPPasswordVersion                 types.String                                               `tfsdk:"smtp_password_version"`
-	SMTPPasswordWO                      types.String                                               `tfsdk:"smtp_password_wo"`
-	SMTPPasswordWOVersion               types.Int64                                                `tfsdk:"smtp_password_wo_version"`
-	TLSAuthConfiguration                fwtypes.ListNestedObjectValueOf[tlsAuthConfigurationModel] `tfsdk:"tls_auth_configuration"`
+	SecretARN             fwtypes.ARN                                                `tfsdk:"secret_arn"`
+	SMTPPasswordWO        types.String                                               `tfsdk:"smtp_password_wo"`
+	SMTPPasswordWOVersion types.Int64                                                `tfsdk:"smtp_password_wo_version"`
+	TLSAuthConfiguration  fwtypes.ListNestedObjectValueOf[tlsAuthConfigurationModel] `tfsdk:"tls_auth_configuration"`
 }
 
 type tlsAuthConfigurationModel struct {
