@@ -55,6 +55,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newGuardrailsDataSource,
+			TypeName: "aws_bedrock_guardrails",
+			Name:     "Guardrails",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newInferenceProfileDataSource,
 			TypeName: "aws_bedrock_inference_profile",
 			Name:     "Inference Profile",
