@@ -163,6 +163,7 @@ provider "aws" {
 |CodeDeploy|`deploy`(or `codedeploy`)|`AWS_ENDPOINT_URL_CODEDEPLOY`|`codedeploy`|
 |Detective|`detective`|`AWS_ENDPOINT_URL_DETECTIVE`|`detective`|
 |Device Farm|`devicefarm`|`AWS_ENDPOINT_URL_DEVICE_FARM`|`device_farm`|
+|DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
@@ -210,6 +211,7 @@ provider "aws" {
 |EC2 Image Builder|`imagebuilder`|`AWS_ENDPOINT_URL_IMAGEBUILDER`|`imagebuilder`|
 |Inspector Classic|`inspector`|`AWS_ENDPOINT_URL_INSPECTOR`|`inspector`|
 |Inspector|`inspector2`(or `inspectorv2`)|`AWS_ENDPOINT_URL_INSPECTOR2`|`inspector2`|
+|Interconnect|`interconnect`|`AWS_ENDPOINT_URL_INTERCONNECT`|`interconnect`|
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
@@ -226,6 +228,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -235,6 +238,7 @@ provider "aws" {
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
+|SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
@@ -262,12 +266,12 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
 |Parallel Computing Service|`pcs`|`AWS_ENDPOINT_URL_PCS`|`pcs`|
-|Pinpoint|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
+|End User Messaging|`pinpoint`|`AWS_ENDPOINT_URL_PINPOINT`|`pinpoint`|
 |End User Messaging SMS|`pinpointsmsvoicev2`|`AWS_ENDPOINT_URL_PINPOINT_SMS_VOICE_V2`|`pinpoint_sms_voice_v2`|
 |EventBridge Pipes|`pipes`|`AWS_ENDPOINT_URL_PIPES`|`pipes`|
 |Polly|`polly`|`AWS_ENDPOINT_URL_POLLY`|`polly`|
@@ -284,6 +288,7 @@ provider "aws" {
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|
 |Rekognition|`rekognition`|`AWS_ENDPOINT_URL_REKOGNITION`|`rekognition`|
 |Resilience Hub|`resiliencehub`|`AWS_ENDPOINT_URL_RESILIENCEHUB`|`resiliencehub`|
+|Resilience Hub V2|`resiliencehubv2`|`AWS_ENDPOINT_URL_RESILIENCEHUBV2`|`resiliencehubv2`|
 |Resource Explorer|`resourceexplorer2`|`AWS_ENDPOINT_URL_RESOURCE_EXPLORER_2`|`resource_explorer_2`|
 |Resource Groups|`resourcegroups`|`AWS_ENDPOINT_URL_RESOURCE_GROUPS`|`resource_groups`|
 |Resource Groups Tagging|`resourcegroupstaggingapi`(or `resourcegroupstagging`)|`AWS_ENDPOINT_URL_RESOURCE_GROUPS_TAGGING_API`|`resource_groups_tagging_api`|

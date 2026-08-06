@@ -43,54 +43,56 @@ func resourceSchema() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContent: {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 385),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z_.@-]+`), ""),
-				),
-			},
-			"registry_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Type](),
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContent: {
+					Type:             schema.TypeString,
+					Required:         true,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 385),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z_.@-]+`), ""),
+					),
+				},
+				"registry_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Type](),
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_created_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -43,58 +43,60 @@ func resourceDevicePool() *schema.Resource {
 		UpdateWithoutTimeout: resourceDevicePoolUpdate,
 		DeleteWithoutTimeout: resourceDevicePoolDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 16384),
-			},
-			"max_devices": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"project_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DeviceAttribute](),
-						},
-						"operator": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuleOperator](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 16384),
+				},
+				"max_devices": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"project_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrRule: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DeviceAttribute](),
+							},
+							"operator": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuleOperator](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

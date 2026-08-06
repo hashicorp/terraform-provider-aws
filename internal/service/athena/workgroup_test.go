@@ -203,6 +203,14 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourceWorkGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1919,7 +1927,19 @@ func TestAccAthenaWorkGroup_monitoringConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_basic(t *testing.T) {
+// SSO Admin is an account-level singleton.
+func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccWorkGroup_QueryResultsS3AccessGrantsConfiguration_basic,
+		"update":        testAccWorkGroup_QueryResultsS3AccessGrantsConfiguration_update,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccWorkGroup_QueryResultsS3AccessGrantsConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1959,7 +1979,7 @@ func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_basic(t *tes
 	})
 }
 
-func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_update(t *testing.T) {
+func testAccWorkGroup_QueryResultsS3AccessGrantsConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workgroup2 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

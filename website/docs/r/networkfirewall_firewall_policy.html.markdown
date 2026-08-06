@@ -37,7 +37,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a HOME_NET Override
+### Policy with a HOME_NET Override
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -67,7 +67,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a Custom Action for Stateless Inspection
+### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -91,7 +91,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Action Order
+### Policy with Active Threat Defense in Action Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -112,7 +112,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Strict Order
+### Policy with Active Threat Defense in Strict Order
 
 ```terraform
 data "aws_region" "current" {}

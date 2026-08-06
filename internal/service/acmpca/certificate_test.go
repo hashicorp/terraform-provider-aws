@@ -27,7 +27,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -71,7 +71,7 @@ func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -116,7 +116,7 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	rootCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.root"
 	subordinateCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -158,9 +158,9 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-	csrDomain := acctest.RandomDomainName()
+	csrDomain := acctest.RandomDomainName(t)
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -201,9 +201,9 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-	csrDomain := acctest.RandomDomainName()
+	csrDomain := acctest.RandomDomainName(t)
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -245,9 +245,9 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-	csrDomain := acctest.RandomDomainName()
+	csrDomain := acctest.RandomDomainName(t)
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	later := time.Now().Add(time.Minute * 10).Unix()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

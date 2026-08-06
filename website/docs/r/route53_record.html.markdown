@@ -236,8 +236,7 @@ Weighted routing policies support the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `name` - The name of the record.
-* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
+* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`. Does not include trailing `.`.
 
 ## Timeouts
 

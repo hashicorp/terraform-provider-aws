@@ -36,9 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN assigned by AWS for this group.
 * `name` - The group's name.
 * `path` - The path of the group in IAM.
-* `unique_id` - The [unique ID][1] assigned by AWS.
-
-  [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
+* `unique_id` - The [unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
 ## Import
 

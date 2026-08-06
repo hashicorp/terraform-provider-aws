@@ -61,7 +61,7 @@ func testAccAPNSVoIPChannelCertConfigurationFromEnv(t *testing.T) *testAccAPNSVo
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -94,7 +94,20 @@ func testAccAPNSVoIPChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSV
 	return &conf
 }
 
-func TestAccPinpointAPNSVoIPChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSVoIPChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSVoIPChannel_basicCertificate,
+		"basicToken":       testAccAPNSVoIPChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSVoIPChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSVoIPChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSVoIPChannel_basicToken(t *testing.T) {
+func testAccAPNSVoIPChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
@@ -172,7 +185,7 @@ func testAccCheckAPNSVoIPChannelExists(ctx context.Context, t *testing.T, n stri
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs VoIP Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNs VoIP Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -208,7 +221,7 @@ func testAccCheckAPNSVoIPChannelDestroy(ctx context.Context, t *testing.T) resou
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS VoIP Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS VoIP Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -23,40 +23,42 @@ func dataSourceApprovalRuleTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApprovalRuleTemplateRead,
 
-		Schema: map[string]*schema.Schema{
-			"approval_rule_template_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContent: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_user": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"rule_content_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"approval_rule_template_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContent: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified_user": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				"rule_content_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

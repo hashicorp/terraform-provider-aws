@@ -24,6 +24,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.KinesisServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"is not enabled for minimum throughput billing commitment",
+	)
+}
+
 func TestAccKinesisStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
@@ -55,11 +65,14 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})
@@ -84,6 +97,14 @@ func TestAccKinesisStream_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesis.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -167,11 +188,14 @@ func TestAccKinesisStream_encryption(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -218,11 +242,14 @@ func TestAccKinesisStream_maxRecordSizeInKiB(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_maxRecordSizeInKiB(rName, 1024),
@@ -287,11 +314,14 @@ func TestAccKinesisStream_shardCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_shardCount(rName, 96),
@@ -325,11 +355,14 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_updateRetentionPeriod(rName),
@@ -371,11 +404,14 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_allShardLevelMetrics(rName),
@@ -423,11 +459,14 @@ func TestAccKinesisStream_enforceConsumerDeletion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})
@@ -454,11 +493,14 @@ func TestAccKinesisStream_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 			{
 				Config: testAccStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -532,11 +574,14 @@ func TestAccKinesisStream_basicOnDemand(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
 			},
 		},
 	})
@@ -694,6 +739,60 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationShardCountWhenOnDemand(rName),
 				ExpectError: regexache.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+			},
+		},
+	})
+}
+
+func TestAccKinesisStream_warmThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	resourceName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_warmThroughput(rName, 32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput_mib_ps"), knownvalue.Int64Exact(32)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"enforce_consumer_deletion",
+				},
+			},
+			{
+				Config: testAccStreamConfig_warmThroughput(rName, 48),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput_mib_ps"), knownvalue.Int64Exact(48)),
+				},
 			},
 		},
 	})
@@ -1026,4 +1125,18 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 `, rName)
+}
+
+func testAccStreamConfig_warmThroughput(rName string, mibPS int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name = %[1]q
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+
+  warm_throughput_mib_ps = %[2]d
+}
+`, rName, mibPS)
 }

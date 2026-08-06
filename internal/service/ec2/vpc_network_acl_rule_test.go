@@ -109,6 +109,14 @@ func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -132,6 +140,14 @@ func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACL(), "aws_network_acl.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -155,6 +171,14 @@ func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

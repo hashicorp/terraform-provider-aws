@@ -41,60 +41,62 @@ func resourceServiceSpecificCredential() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"credential_age_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 36600),
-			},
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_credential_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_credential_secret": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"service_password": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
-			},
-			"service_specific_credential_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.StatusTypeActive,
-				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
-			},
-			names.AttrUserName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"credential_age_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 36600),
+				},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_credential_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_credential_secret": {
+					Type:      schema.TypeString,
+					Sensitive: true,
+					Computed:  true,
+				},
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"service_password": {
+					Type:      schema.TypeString,
+					Sensitive: true,
+					Computed:  true,
+				},
+				"service_specific_credential_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_user_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.StatusTypeActive,
+					ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
+				},
+				names.AttrUserName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }

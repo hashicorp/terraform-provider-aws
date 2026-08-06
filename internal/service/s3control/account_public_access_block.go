@@ -39,34 +39,36 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		UpdateWithoutTimeout: resourceAccountPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceAccountPublicAccessBlockDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }

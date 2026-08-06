@@ -33,36 +33,38 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
 
-		Schema: map[string]*schema.Schema{
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -130,6 +132,12 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
+
+	return resourceBucketPublicAccessBlockFlatten(d, bucket, pabc)
+}
+
+func resourceBucketPublicAccessBlockFlatten(d *schema.ResourceData, bucket string, pabc *types.PublicAccessBlockConfiguration) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set("block_public_acls", pabc.BlockPublicAcls)

@@ -93,6 +93,14 @@ func TestAccVPCRouteServer_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCRouteServer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

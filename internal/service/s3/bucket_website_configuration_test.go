@@ -75,6 +75,14 @@ func TestAccS3BucketWebsiteConfiguration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketWebsiteConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_website_configuration.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket_website_configuration.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

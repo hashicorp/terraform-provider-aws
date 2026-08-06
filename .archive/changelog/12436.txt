@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_iam_role: Retry `assume_role_policy` updates for IAM eventual consistency
-```

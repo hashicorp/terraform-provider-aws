@@ -48,8 +48,6 @@ This resource supports the following arguments:
 * `script_id` - (Optional) ID of the GameLift Script to be deployed on the fleet. Conflicts with `build_id`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested Fields
-
 #### `certificate_configuration`
 
 * `certificate_type` - (Optional) Indicates whether a TLS/SSL certificate is generated for a fleet. Valid values are `DISABLED` and `GENERATED`. Default value is `DISABLED`.

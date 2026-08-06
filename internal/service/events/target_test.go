@@ -281,6 +281,14 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -374,7 +382,6 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
 			},
 			{

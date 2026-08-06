@@ -59,181 +59,183 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"netbios_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-							ValidateFunc:     validation.StringLenBetween(1, 15),
-						},
-						"self_managed_active_directory_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dns_ips": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 3,
-										Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"netbios_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+								ValidateFunc:     validation.StringLenBetween(1, 15),
+							},
+							"self_managed_active_directory_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dns_ips": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 3,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.IsIPAddress,
+											},
+										},
+										names.AttrDomainName: {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.IsIPAddress,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"file_system_administrators_group": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"organizational_unit_distinguished_name": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2000),
+										},
+										names.AttrPassword: {
+											Type:         schema.TypeString,
+											Sensitive:    true,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										names.AttrUsername: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
 										},
 									},
-									names.AttrDomainName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
+								},
+							},
+						},
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"iscsi": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									"file_system_administrators_group": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+							"management": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									"organizational_unit_distinguished_name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2000),
+								},
+							},
+							"nfs": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
-									names.AttrPassword: {
-										Type:         schema.TypeString,
-										Sensitive:    true,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									names.AttrUsername: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+								},
+							},
+							"smb": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDNSName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrIPAddresses: {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iscsi": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"management": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"nfs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"smb": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrIPAddresses: {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
+				names.AttrFileSystemID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(11, 21),
 				},
-			},
-			names.AttrFileSystemID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(11, 21),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 47),
-			},
-			"root_volume_security_style": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
-			},
-			"subtype": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"svm_admin_password": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 50),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uuid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 47),
+				},
+				"root_volume_security_style": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
+				},
+				"subtype": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"svm_admin_password": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 50),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

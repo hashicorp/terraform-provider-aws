@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -93,6 +94,14 @@ func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -118,6 +127,14 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(tableResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(tableResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

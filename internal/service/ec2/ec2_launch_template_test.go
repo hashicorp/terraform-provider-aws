@@ -165,6 +165,14 @@ func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1034,6 +1042,35 @@ func TestAccEC2LaunchTemplate_networkInterfaceCardIndex(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.network_card_index", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_networkInterfaceEnaQueueCount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaQueueCount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, t, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_queue_count", "4"),
 				),
 			},
 			{
@@ -4541,6 +4578,20 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     network_card_index = 1
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_networkInterfaceEnaQueueCount(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  instance_type = "c6i.4xlarge"
+
+  network_interfaces {
+    device_index    = 0
+    ena_queue_count = 4
   }
 }
 `, rName)

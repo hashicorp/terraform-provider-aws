@@ -48,54 +48,56 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ipam_resource_discovery_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"operating_regions": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidRegionName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ipam_resource_discovery_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"is_default": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"operating_regions": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"region_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
 						},
 					},
 				},
-			},
-			"organizational_unit_exclusion": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"organizations_entity_path": {
-							Type:     schema.TypeString,
-							Required: true,
+				"organizational_unit_exclusion": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"organizations_entity_path": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

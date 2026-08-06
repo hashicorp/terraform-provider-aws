@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_secretsmanager_secret_version: Avoid sending GetSecretValue calls when the secret is write-only
-```

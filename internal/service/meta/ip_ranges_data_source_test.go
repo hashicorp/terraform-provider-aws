@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
@@ -33,6 +34,7 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccIPRangesCheckAttributes(dataSourceName),
 					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "cidr_blocks"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "ipv6_cidr_blocks"),
 				),
 			},

@@ -1,0 +1,117 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package resiliencehubv2
+
+import (
+	"context"
+	"fmt"
+	"iter"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkListResource("aws_resiliencehubv2_policy")
+func newPolicyResourceAsListResource() list.ListResourceWithConfigure {
+	return &policyListResource{}
+}
+
+var _ list.ListResource = &policyListResource{}
+
+type policyListResource struct {
+	policyResource
+	framework.WithList
+}
+
+func (l *policyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	conn := l.Meta().ResilienceHubV2Client(ctx)
+
+	var query listPolicyModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		var input resiliencehubv2.ListPoliciesInput
+		for item, err := range listPolicies(ctx, conn, &input) {
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			arn := aws.ToString(item.PolicyArn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+
+			result := request.NewListResult(ctx)
+
+			var data policyResourceModel
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.PolicyARN = fwflex.StringValueToFramework(ctx, arn)
+
+				if request.IncludeResource {
+					output, err := findPolicyByARN(ctx, conn, arn)
+					if retry.NotFound(err) {
+						return
+					}
+					if err != nil {
+						result := fwdiag.NewListResultErrorDiagnostic(err)
+						yield(result)
+						return
+					}
+
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				}
+
+				result.DisplayName = aws.ToString(item.Name)
+			})
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+type listPolicyModel struct {
+	framework.WithRegionModel
+}
+
+func listPolicies(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListPoliciesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.PolicySummary, error] {
+	return tfiter.ConcatValuesWithError(listPolicyPages(ctx, conn, input, optFns...))
+}
+
+func listPolicyPages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListPoliciesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.PolicySummary, error] {
+	return func(yield func([]awstypes.PolicySummary, error) bool) {
+		pages := resiliencehubv2.NewListPoliciesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Resilience Hub V2 Policies: %w", err))
+				return
+			}
+
+			if !yield(page.PolicySummaries, nil) {
+				return
+			}
+		}
+	}
+}

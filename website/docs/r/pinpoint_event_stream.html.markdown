@@ -1,14 +1,16 @@
 ---
-subcategory: "Pinpoint"
+subcategory: "End User Messaging"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_event_stream"
 description: |-
-  Provides a Pinpoint Event Stream resource.
+  Provides an End User Messaging Event Stream resource.
 ---
 
 # Resource: aws_pinpoint_event_stream
 
-Provides a Pinpoint Event Stream resource.
+~> **NOTE:** This resource is deprecated. AWS End User Messaging event streams are being discontinued on October 30, 2026. After that date, this resource will no longer be available. For SMS/Voice event delivery, use [`aws_pinpointsmsvoicev2_configuration_set`](pinpointsmsvoicev2_configuration_set.html) with an event destination.
+
+Provides an End User Messaging Event Stream resource.
 
 ## Example Usage
 
@@ -66,10 +68,10 @@ resource "aws_iam_role_policy" "test_role_policy" {
 
 This resource supports the following arguments:
 
+* `application_id` - (Required, **Deprecated**) Application ID.
+* `destination_stream_arn` - (Required, **Deprecated**) Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `application_id` - (Required) The application ID.
-* `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
-* `role_arn` - (Required) The IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
+* `role_arn` - (Required, **Deprecated**) IAM role that authorizes AWS End User Messaging to publish events to the stream in your account.
 
 ## Attribute Reference
 
@@ -77,7 +79,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Event Stream using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import End User Messaging Event Stream using the `application-id`. For example:
 
 ```terraform
 import {
@@ -86,7 +88,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Pinpoint Event Stream using the `application-id`. For example:
+Using `terraform import`, import End User Messaging Event Stream using the `application-id`. For example:
 
 ```console
 % terraform import aws_pinpoint_event_stream.stream application-id

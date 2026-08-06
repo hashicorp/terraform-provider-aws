@@ -7,6 +7,8 @@ package osis
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,8 +36,64 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "pipeline_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "pipeline_name"),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newPipelineEndpointResource,
+			TypeName: "aws_osis_pipeline_endpoint",
+			Name:     "Pipeline Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_osis_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newPipelineResourceAsListResource,
+			TypeName: "aws_osis_pipeline",
+			Name:     "Pipeline",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "pipeline_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "pipeline_name"),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+		{
+			Factory:  newPipelineEndpointResourceAsListResource,
+			TypeName: "aws_osis_pipeline_endpoint",
+			Name:     "Pipeline Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_osis_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

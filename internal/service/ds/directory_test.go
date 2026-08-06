@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -22,7 +23,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -75,7 +76,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -94,6 +95,14 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -104,7 +113,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -158,7 +167,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -206,7 +215,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -254,7 +263,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -309,7 +318,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	alias := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -375,7 +384,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
@@ -437,7 +446,7 @@ func TestAccDSDirectory_enableDirectoryDataAccess(t *testing.T) {
 	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },

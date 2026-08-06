@@ -52,6 +52,7 @@ func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.DeploymentTypeSingleAz)),
 					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8086"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
@@ -578,6 +579,55 @@ func TestAccTimestreamInfluxDBDBInstance_deploymentType(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBInstance_maintenanceSchedule(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance timestreaminfluxdb.GetDbInstanceOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBInstanceConfig_maintenanceSchedule(rName, "Sun:02:00-Sun:06:00", "UTC"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-instance/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", "Sun:02:00-Sun:06:00"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", "UTC"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBInstanceConfig_maintenanceSchedule(rName, "Sat:03:00-Sat:07:00", "Asia/Tokyo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-instance/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", "Sat:03:00-Sat:07:00"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", "Asia/Tokyo"),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/42170.
 func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -958,6 +1008,28 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_storage_type = %[2]q
 }
 `, rName, dbStorageType))
+}
+
+func testAccDBInstanceConfig_maintenanceSchedule(rName, preferredMaintenanceWindow, timezone string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  port                   = 8086
+  bucket                 = "initial"
+  organization           = "organization"
+
+  maintenance_schedule {
+    preferred_maintenance_window = %[2]q
+    timezone                     = %[3]q
+  }
+}
+`, rName, preferredMaintenanceWindow, timezone))
 }
 
 // Minimal configuration (v5.90.0).

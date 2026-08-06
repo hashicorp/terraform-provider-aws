@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -180,6 +181,14 @@ func TestAccDataZoneGlossaryTerm_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceGlossaryTerm, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -221,7 +230,7 @@ func testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName string) resourc
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["glossary_identifier"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID}, ","), nil
 	}
 }
 

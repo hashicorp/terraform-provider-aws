@@ -49,144 +49,146 @@ func resourceClusterInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      defaultEngine,
-				ValidateFunc: validation.StringInSlice(engine_Values(), false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validIdentifier,
-			},
-			"identifier_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrIdentifier},
-				ValidateFunc:  validIdentifierPrefix,
-			},
-			"instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"neptune_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"neptune_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  DefaultPort,
-			},
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"promotion_tier": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"writer": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dbi_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      defaultEngine,
+					ValidateFunc: validation.StringInSlice(engine_Values(), false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrIdentifier: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"identifier_prefix"},
+					ValidateFunc:  validIdentifier,
+				},
+				"identifier_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrIdentifier},
+					ValidateFunc:  validIdentifierPrefix,
+				},
+				"instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"neptune_parameter_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"neptune_subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					Default:  DefaultPort,
+				},
+				"preferred_backup_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						if val == nil {
+							return ""
+						}
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"promotion_tier": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"skip_final_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"writer": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

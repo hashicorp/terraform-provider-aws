@@ -41,57 +41,59 @@ func resourceScript() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"storage_location": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"zip_file", "storage_location"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"object_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"storage_location": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					ExactlyOneOf: []string{"zip_file", "storage_location"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"object_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"zip_file": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"zip_file", "storage_location"},
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"zip_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"zip_file", "storage_location"},
+				},
+			}
 		},
 	}
 }

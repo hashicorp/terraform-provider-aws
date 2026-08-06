@@ -44,52 +44,54 @@ func resourcePatchBaseline() *schema.Resource {
 		UpdateWithoutTimeout: resourcePatchBaselineUpdate,
 		DeleteWithoutTimeout: resourcePatchBaselineDelete,
 
-		Schema: map[string]*schema.Schema{
-			"approval_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"approve_after_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 360),
-						},
-						"approve_until_date": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
-						},
-						"compliance_level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.PatchComplianceLevelUnspecified,
-							ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
-						},
-						"enable_non_security": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"patch_filter": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 20,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 64),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"approval_rule": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"approve_after_days": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 360),
+							},
+							"approve_until_date": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
+							},
+							"compliance_level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.PatchComplianceLevelUnspecified,
+								ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
+							},
+							"enable_non_security": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"patch_filter": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 20,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 64),
+											},
 										},
 									},
 								},
@@ -97,132 +99,132 @@ func resourcePatchBaseline() *schema.Resource {
 						},
 					},
 				},
-			},
-			"approved_patches": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 100),
+				"approved_patches": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 100),
+					},
 				},
-			},
-			"approved_patches_compliance_level": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PatchComplianceLevelUnspecified,
-				ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
-			},
-			"approved_patches_enable_non_security": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"available_security_updates_compliance_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceStatus](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"global_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 4,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 20,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 64),
+				"approved_patches_compliance_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.PatchComplianceLevelUnspecified,
+					ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
+				},
+				"approved_patches_enable_non_security": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"available_security_updates_compliance_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceStatus](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"global_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 4,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 20,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 64),
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-				),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.OperatingSystemWindows,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
-			"rejected_patches": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 100),
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"rejected_patches_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PatchAction](),
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 20,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrConfiguration: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(3, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-							),
-						},
-						"products": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 20,
-							Elem: &schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 128),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.OperatingSystemWindows,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+				"rejected_patches": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 100),
+					},
+				},
+				"rejected_patches_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PatchAction](),
+				},
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 20,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrConfiguration: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 128),
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(3, 50),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+								),
+							},
+							"products": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 20,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 128),
+								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

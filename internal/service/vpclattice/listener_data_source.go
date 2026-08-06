@@ -24,49 +24,51 @@ func dataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultAction: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fixed_response": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
-										Type:     schema.TypeInt,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fixed_response": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatusCode: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_groups": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_group_identifier": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrWeight: {
-													Type:     schema.TypeInt,
-													Computed: true,
+							"forward": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_groups": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_group_identifier": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrWeight: {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
 												},
 											},
 										},
@@ -76,44 +78,44 @@ func dataSourceListener() *schema.Resource {
 						},
 					},
 				},
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"last_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

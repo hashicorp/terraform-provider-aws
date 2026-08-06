@@ -97,7 +97,7 @@ Merge if CI passes.
 
 Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
 
-## tfproviderdocs Updates
+## swissshepherd Updates
 
 Merge if CI passes.
 

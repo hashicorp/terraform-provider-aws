@@ -17,7 +17,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -59,7 +59,7 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -85,7 +85,7 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -111,7 +111,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

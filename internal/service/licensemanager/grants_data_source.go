@@ -27,13 +27,15 @@ func dataSourceGrants() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributedGrantsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: namevaluesfilters.Schema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: namevaluesfilters.Schema(),
+			}
 		},
 	}
 }

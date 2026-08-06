@@ -60,6 +60,55 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppStreamStack_embedHostDomains(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackOutput awstypes.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	randomDomain := acctest.RandomDomain(t)
+	randomSubDomain := randomDomain.RandomSubdomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "0"),
+				),
+			},
+			{
+				// Add embed_host_domains to an existing stack.
+				Config: testAccStackConfig_embedHostDomains(rName, randomDomain.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomDomain.String()),
+				),
+			},
+			{
+				// Change embed_host_domains on an existing stack.
+				Config: testAccStackConfig_embedHostDomains(rName, randomSubDomain.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomSubDomain.String()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAppStreamStack_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
@@ -79,6 +128,14 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -417,6 +474,16 @@ resource "aws_appstream_stack" "test" {
   name = %[1]q
 }
 `, name)
+}
+
+func testAccStackConfig_embedHostDomains(name, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  embed_host_domains = [%[2]q]
+}
+`, name, domain)
 }
 
 func testAccStackConfig_complete(name, description string) string {

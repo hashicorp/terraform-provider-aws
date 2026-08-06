@@ -24,66 +24,72 @@ func dataSourceServer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpointType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_provider_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invocation_role": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"logging_role": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protocols": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"security_policy_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"server_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"structured_log_destinations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpointType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_provider_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invocation_role": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"logging_role": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protocols": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"security_policy_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"server_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"structured_log_destinations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -111,6 +117,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("protocols", output.Protocols)
 	d.Set("security_policy_name", output.SecurityPolicyName)

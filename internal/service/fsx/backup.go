@@ -45,35 +45,37 @@ func resourceBackup() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

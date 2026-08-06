@@ -41,479 +41,481 @@ func resourceModel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_hostname": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validName,
-						},
-						names.AttrEnvironment: {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validEnvironment,
-							Elem:         &schema.Schema{Type: schema.TypeString},
-						},
-						"image": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validImage,
-						},
-						"image_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"repository_access_mode": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RepositoryAccessMode](),
-									},
-									"repository_auth_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_credentials_provider_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"container": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_hostname": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validName,
+							},
+							names.AttrEnvironment: {
+								Type:         schema.TypeMap,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validEnvironment,
+								Elem:         &schema.Schema{Type: schema.TypeString},
+							},
+							"image": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validImage,
+							},
+							"image_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"repository_access_mode": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RepositoryAccessMode](),
+										},
+										"repository_auth_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_credentials_provider_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.ContainerModeSingleModel,
-							ValidateDiagFunc: enum.Validate[awstypes.ContainerMode](),
-						},
-						"model_data_url": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validHTTPSOrS3URI,
-						},
-						"model_package_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"model_data_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_data_source": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"compression_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
-												},
-												"model_access_config": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accept_eula": {
-																Type:     schema.TypeBool,
-																Required: true,
-																ForceNew: true,
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.ContainerModeSingleModel,
+								ValidateDiagFunc: enum.Validate[awstypes.ContainerMode](),
+							},
+							"model_data_url": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validHTTPSOrS3URI,
+							},
+							"model_package_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"model_data_source": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_data_source": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"compression_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"model_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accept_eula": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validHTTPSOrS3URI,
+													"s3_data_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+													},
+													"s3_uri": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"additional_model_data_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"s3_data_source": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"compression_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
-												},
-												"model_access_config": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accept_eula": {
-																Type:     schema.TypeBool,
-																Required: true,
-																ForceNew: true,
+							"additional_model_data_source": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"s3_data_source": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"compression_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"model_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accept_eula": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validHTTPSOrS3URI,
+													"s3_data_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+													},
+													"s3_uri": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"inference_specification_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validName,
-						},
-						"multi_model_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"model_cache_setting": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
+							"inference_specification_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validName,
+							},
+							"multi_model_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"model_cache_setting": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"enable_network_isolation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"inference_execution_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InferenceExecutionMode](),
+				"enable_network_isolation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"inference_execution_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InferenceExecutionMode](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			"primary_container": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_hostname": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validName,
-						},
-						names.AttrEnvironment: {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validEnvironment,
-							Elem:         &schema.Schema{Type: schema.TypeString},
-						},
-						"image": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validImage,
-						},
-						"image_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"repository_access_mode": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RepositoryAccessMode](),
-									},
-									"repository_auth_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"repository_credentials_provider_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: verify.ValidARN,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				"primary_container": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_hostname": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validName,
+							},
+							names.AttrEnvironment: {
+								Type:         schema.TypeMap,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validEnvironment,
+								Elem:         &schema.Schema{Type: schema.TypeString},
+							},
+							"image": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validImage,
+							},
+							"image_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"repository_access_mode": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RepositoryAccessMode](),
+										},
+										"repository_auth_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"repository_credentials_provider_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.ContainerModeSingleModel,
-							ValidateDiagFunc: enum.Validate[awstypes.ContainerMode](),
-						},
-						"model_data_url": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validHTTPSOrS3URI,
-						},
-						"model_package_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"model_data_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_data_source": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"compression_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
-												},
-												"model_access_config": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accept_eula": {
-																Type:     schema.TypeBool,
-																Required: true,
-																ForceNew: true,
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.ContainerModeSingleModel,
+								ValidateDiagFunc: enum.Validate[awstypes.ContainerMode](),
+							},
+							"model_data_url": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validHTTPSOrS3URI,
+							},
+							"model_package_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"model_data_source": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"s3_data_source": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"compression_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"model_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accept_eula": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validHTTPSOrS3URI,
+													"s3_data_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+													},
+													"s3_uri": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"additional_model_data_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"s3_data_source": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"compression_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
-												},
-												"model_access_config": {
-													Type:     schema.TypeList,
-													Optional: true,
-													ForceNew: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accept_eula": {
-																Type:     schema.TypeBool,
-																Required: true,
-																ForceNew: true,
+							"additional_model_data_source": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"s3_data_source": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"compression_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"model_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"accept_eula": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validHTTPSOrS3URI,
+													"s3_data_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+													},
+													"s3_uri": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"inference_specification_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validName,
-						},
-						"multi_model_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"model_cache_setting": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
+							"inference_specification_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validName,
+							},
+							"multi_model_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"model_cache_setting": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ModelCacheSetting](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 16,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 5,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 16,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 5,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

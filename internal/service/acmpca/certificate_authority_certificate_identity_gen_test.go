@@ -27,7 +27,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_basic(t *testing.T) {
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -112,7 +112,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_regionOverride(t *tes
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -233,7 +233,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_basi
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -312,7 +312,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_noRe
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

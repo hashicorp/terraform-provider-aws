@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -39,6 +40,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -74,6 +76,14 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

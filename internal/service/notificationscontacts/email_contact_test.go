@@ -28,7 +28,7 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EmailContact
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

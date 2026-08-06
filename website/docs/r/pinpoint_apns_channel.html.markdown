@@ -1,14 +1,14 @@
 ---
-subcategory: "Pinpoint"
+subcategory: "End User Messaging"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_channel"
 description: |-
-  Provides a Pinpoint APNs Channel resource.
+  Provides an End User Messaging APNs Channel resource.
 ---
 
 # Resource: aws_pinpoint_apns_channel
 
-Provides a Pinpoint APNs Channel resource.
+Provides an End User Messaging APNs Channel resource.
 
 ~> **Note:** All arguments, including certificates and tokens, will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
@@ -30,27 +30,16 @@ resource "aws_pinpoint_app" "app" {}
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `application_id` - (Required) The application ID.
+* `application_id` - (Required) Application ID.
+* `bundle_id` - (Required) ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app. Required if using Key credentials.
+* `certificate` - (Required) Pem encoded TLS Certificate from Apple. Required if using Certificate credentials.
+* `default_authentication_method` - (Optional) Default authentication method used for APNs. __NOTE__: AWS End User Messaging uses this default for every APNs push notification that you send using the console. You can override the default when you send a message programmatically using the AWS End User Messaging API, the AWS CLI, or an AWS SDK. If your default authentication type fails, AWS End User Messaging doesn't attempt to use the other authentication type.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
-* `default_authentication_method` - (Optional) The default authentication method used for APNs.
-  __NOTE__: Amazon Pinpoint uses this default for every APNs push notification that you send using the console.
-  You can override the default when you send a message programmatically using the Amazon Pinpoint API, the AWS CLI, or an AWS SDK.
-  If your default authentication type fails, Amazon Pinpoint doesn't attempt to use the other authentication type.
-
-One of the following sets of credentials is also required.
-
-If you choose to use __Certificate credentials__ you will have to provide:
-
-* `certificate` - (Required) The pem encoded TLS Certificate from Apple.
-* `private_key` - (Required) The Certificate Private Key file (ie. `.key` file).
-
-If you choose to use __Key credentials__ you will have to provide:
-
-* `bundle_id` - (Required) The ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app.
-* `team_id` - (Required) The ID assigned to your Apple developer account team. This value is provided on the Membership page.
-* `token_key` - (Required) The `.p8` file that you download from your Apple developer account when you create an authentication key.
-* `token_key_id` - (Required) The ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section.
+* `private_key` - (Required) Certificate Private Key file (ie. `.key` file). Required if using Certificate credentials.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `team_id` - (Required) ID assigned to your Apple developer account team. This value is provided on the Membership page. Required if using Key credentials.
+* `token_key` - (Required) `.p8` file that you download from your Apple developer account when you create an authentication key. Required if using Key credentials.
+* `token_key_id` - (Required) ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section. Required if using Key credentials.
 
 ## Attribute Reference
 
@@ -58,7 +47,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint APNs Channel using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import End User Messaging APNs Channel using the `application-id`. For example:
 
 ```terraform
 import {
@@ -67,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Pinpoint APNs Channel using the `application-id`. For example:
+Using `terraform import`, import End User Messaging APNs Channel using the `application-id`. For example:
 
 ```console
 % terraform import aws_pinpoint_apns_channel.apns application-id
