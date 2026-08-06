@@ -26,6 +26,11 @@ func TestAccConnect_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"ApprovedOrigin": {
+			acctest.CtBasic:      testAccApprovedOrigin_basic,
+			acctest.CtDisappears: testAccApprovedOrigin_disappears,
+			"import":             testAccApprovedOrigin_import,
+		},
 		"BotAssociation": {
 			acctest.CtBasic:      testAccBotAssociation_basic,
 			acctest.CtDisappears: testAccBotAssociation_disappears,
