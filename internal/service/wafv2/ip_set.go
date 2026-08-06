@@ -70,21 +70,33 @@ func resourceIPSet() *schema.Resource {
 							o, n := d.GetChange("addresses")
 							oldAddresses := o.(*schema.Set).List()
 							newAddresses := n.(*schema.Set).List()
-							if len(oldAddresses) == len(newAddresses) {
-								for _, ov := range oldAddresses {
-									hasAddress := false
-									for _, nv := range newAddresses {
-										if inttypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
-											hasAddress = true
-											break
-										}
-									}
-									if !hasAddress {
-										return false
-									}
-								}
-								return true
+
+							if len(oldAddresses) != len(newAddresses) {
+								return false
 							}
+
+							newSet := make(map[string]struct{}, len(newAddresses))
+
+							for _, nv := range newAddresses {
+								key, err := inttypes.CIDRBlockKey(nv.(string))
+								if err != nil {
+									return false
+								}
+
+								newSet[key] = struct{}{}
+							}
+
+							for _, ov := range oldAddresses {
+								key, err := inttypes.CIDRBlockKey(ov.(string))
+								if err != nil {
+									return false
+								}
+
+								if _, ok := newSet[key]; !ok {
+									return false
+								}
+							}
+							return true
 						}
 						return false
 					},
