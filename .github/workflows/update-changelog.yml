@@ -57,9 +57,9 @@ jobs:
             CHANGELOG.md
 
       - name: Get changesDir from Changie Config
-        id: changie-config
+        id: changes
         shell: bash
-        run: echo "changes_dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
+        run: echo "dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
 
       # `go-changelog` auto-conversion
       # ------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ jobs:
             go_changelog_fragments:
               - added:'.changelog/*.txt'
             changie_fragments:
-              - added:'${{ steps.changie-config.outputs.changes_dir }}/unreleased/*.yaml'
+              - added:'${{ steps.changes.outputs.dir }}/unreleased/*.yaml'
 
       - name: Validate and Convert go-changelog Fragments
         id: convert
@@ -224,12 +224,17 @@ jobs:
             exit 1
           fi
 
+      - name: Get changesDir from Changie Config
+        id: changes
+        shell: bash
+        run: echo "dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
+
       - name: Batch and Generate Final Per-Version CHANGELOG
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          CHANGES_DIR: ${{ steps.changes.outputs.dir }}
         run: |
-          CHANGES_DIR=$(yq eval '.changesDir' .changie.yaml)
           changie batch "$VERSION"
           .ci/scripts/sort-changelog-entries.sh "${CHANGES_DIR}/${VERSION}.md"
           changie merge
@@ -270,11 +275,8 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
           BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
         run: |
-          TITLE="Update CHANGELOG for v${VERSION}"
-
           cat > pr_description.md << 'EOF'
           <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
 
@@ -289,16 +291,16 @@ jobs:
           ## Description
 
           This PR:
-          - Batches unreleased change fragments into `.changes/6.x/v${VERSION}.md`
-          - Removes the batched change fragments from `.changes/6.x/unreleased/`
-          - Updates `version/VERSION` to `${VERSION}`
-          - Updates the main `CHANGELOG.md` for v${VERSION}
+          - Batches unreleased change fragments into `${{ steps.changes.outputs.dir }}/${{ steps.version.outputs.version }}.md`
+          - Removes the batched change fragments from `${{ steps.changes.outputs.dir }}/unreleased/`
+          - Updates `version/VERSION` to `${{ steps.version.outputs.version }}`
+          - Updates the main `CHANGELOG.md` for v${{ steps.version.outputs.version }}
 
           ### Relations
           EOF
 
           gh pr create \
-            --title "$TITLE" \
+            --title "Update CHANGELOG for v${{ steps.version.outputs.version }}" \
             --body-file pr_description.md \
             --base main \
             --head "$BRANCH_NAME"
