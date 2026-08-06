@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix perpetual drift on `managed_rule_group_statement.version` when `version` is not configured
+```
