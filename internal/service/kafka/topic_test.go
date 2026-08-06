@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,6 +30,71 @@ func checkTopicARN(name string) knownvalue.Check {
 
 func checkTopicARNAlternateRegion(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(`topic/.+/.+/+`+name+`$`))
+}
+
+func TestReconcileTopicConfigs(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		client string
+		server string
+		want   string
+	}{
+		"equal integer": {
+			client: `{"segment.ms":"86400000"}`,
+			server: `{"segment.ms":86400000}`,
+			want:   `{"segment.ms":"86400000"}`,
+		},
+		"equal maximum integer": {
+			client: `{"flush.messages":"9223372036854775807"}`,
+			server: `{"flush.messages":9223372036854775807}`,
+			want:   `{"flush.messages":"9223372036854775807"}`,
+		},
+		"equal decimal": {
+			client: `{"min.cleanable.dirty.ratio":"0.20"}`,
+			server: `{"min.cleanable.dirty.ratio":0.2}`,
+			want:   `{"min.cleanable.dirty.ratio":"0.20"}`,
+		},
+		"equal exponent": {
+			client: `{"segment.ms":"1e3"}`,
+			server: `{"segment.ms":1000}`,
+			want:   `{"segment.ms":"1e3"}`,
+		},
+		"changed number": {
+			client: `{"segment.ms":"123"}`,
+			server: `{"segment.ms":456}`,
+			want:   `{"segment.ms":456}`,
+		},
+		"changed string": {
+			client: `{"cleanup.policy":"compact"}`,
+			server: `{"cleanup.policy":"delete"}`,
+			want:   `{"cleanup.policy":"delete"}`,
+		},
+		"invalid numeric string": {
+			client: `{"segment.ms":"1 trailing"}`,
+			server: `{"segment.ms":1}`,
+			want:   `{"segment.ms":1}`,
+		},
+		"removed and unconfigured keys": {
+			client: `{"cleanup.policy":"compact","segment.ms":"123"}`,
+			server: `{"cleanup.policy":"compact","retention.ms":456}`,
+			want:   `{"cleanup.policy":"compact"}`,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfkafka.ReconcileTopicConfigs(testCase.client, testCase.server)
+			if err != nil {
+				t.Fatalf("reconciling topic configs: %s", err)
+			}
+			if !tfjson.EqualStrings(got, testCase.want) {
+				t.Errorf("got %s, want %s", got, testCase.want)
+			}
+		})
+	}
 }
 
 func TestAccKafkaTopic_basic(t *testing.T) {
