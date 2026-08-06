@@ -91,7 +91,7 @@ func resourceVPC() *schema.Resource {
 				"assign_generated_ipv6_cidr_block": {
 					Type:          schema.TypeBool,
 					Optional:      true,
-					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+					ConflictsWith: []string{"ipv6_ipam_pool_id", "ipv6_pool"},
 				},
 				names.AttrCIDRBlock: {
 					Type:          schema.TypeString,
@@ -160,7 +160,6 @@ func resourceVPC() *schema.Resource {
 					Optional:      true,
 					Computed:      true,
 					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-					RequiredWith:  []string{"ipv6_ipam_pool_id"},
 					ValidateFunc:  validVPCIPv6CIDRBlock,
 				},
 				"ipv6_cidr_block_network_border_group": {
@@ -172,7 +171,7 @@ func resourceVPC() *schema.Resource {
 				"ipv6_ipam_pool_id": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_pool"},
 				},
 				"ipv6_netmask_length": {
 					Type:          schema.TypeInt,
@@ -180,6 +179,13 @@ func resourceVPC() *schema.Resource {
 					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
 					ConflictsWith: []string{"ipv6_cidr_block"},
 					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"ipv6_pool": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
+					RequiredWith:  []string{"ipv6_cidr_block"},
 				},
 				"main_route_table_id": {
 					Type:     schema.TypeString,
@@ -232,6 +238,10 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
 		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("ipv6_pool"); ok {
+		input.Ipv6Pool = aws.String(v.(string))
 	}
 
 	// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
@@ -361,7 +371,8 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			"",
 			"",
 			0,
-			d.Get("ipv6_cidr_block_network_border_group").(string))
+			d.Get("ipv6_cidr_block_network_border_group").(string),
+			"")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
@@ -370,14 +381,15 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if d.HasChanges("ipv6_cidr_block", "ipv6_ipam_pool_id") {
+	if d.HasChanges("ipv6_cidr_block", "ipv6_ipam_pool_id", "ipv6_pool") {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			d.Get("ipv6_association_id").(string),
 			false,
 			d.Get("ipv6_cidr_block").(string),
 			d.Get("ipv6_ipam_pool_id").(string),
 			d.Get("ipv6_netmask_length").(int),
-			"")
+			"",
+			d.Get("ipv6_pool").(string))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
@@ -659,7 +671,7 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 
 // modifyVPCIPv6CIDRBlockAssociation modify's a VPC's IPv6 CIDR block association.
 // Any exiting association is deleted and any new association's ID is returned.
-func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vpcID, associationID string, amazonProvidedCIDRBlock bool, cidrBlock, ipamPoolID string, netmaskLength int, networkBorderGroup string) (string, error) {
+func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vpcID, associationID string, amazonProvidedCIDRBlock bool, cidrBlock, ipamPoolID string, netmaskLength int, networkBorderGroup, ipv6Pool string) (string, error) {
 	if associationID != "" {
 		input := &ec2.DisassociateVpcCidrBlockInput{
 			AssociationId: aws.String(associationID),
@@ -676,7 +688,7 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 		}
 	}
 
-	if amazonProvidedCIDRBlock || cidrBlock != "" || ipamPoolID != "" {
+	if amazonProvidedCIDRBlock || cidrBlock != "" || ipamPoolID != "" || ipv6Pool != "" {
 		input := &ec2.AssociateVpcCidrBlockInput{
 			VpcId: aws.String(vpcID),
 		}
@@ -699,6 +711,10 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 
 		if netmaskLength > 0 {
 			input.Ipv6NetmaskLength = aws.Int32(int32(netmaskLength))
+		}
+
+		if ipv6Pool != "" {
+			input.Ipv6Pool = aws.String(ipv6Pool)
 		}
 
 		output, err := conn.AssociateVpcCidrBlock(ctx, input)
@@ -770,15 +786,25 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		d.Set("ipv6_cidr_block_network_border_group", nil)
 		d.Set("ipv6_ipam_pool_id", nil)
 		d.Set("ipv6_netmask_length", nil)
+		d.Set("ipv6_pool", nil)
 	} else {
 		cidrBlock := aws.ToString(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
 		ipv6PoolID := aws.ToString(ipv6CIDRBlockAssociation.Ipv6Pool)
 		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
+		// A BYOIP (bring-your-own-IP) EC2 pool ("ipv6pool-ec2-*") is not an IPAM pool. It can be set
+		// inline via ipv6_pool, or attached with the standalone aws_vpc_ipv6_cidr_block_association
+		// resource. Either way, don't reflect the pool onto the IPAM-specific attributes.
+		isBYOIPv6Pool := strings.HasPrefix(ipv6PoolID, byoipIPv6PoolIDPrefix)
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
 		d.Set("ipv6_cidr_block", cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
-		if isAmazonIPv6Pool {
+		if isBYOIPv6Pool {
+			d.Set("ipv6_pool", ipv6PoolID)
+		} else {
+			d.Set("ipv6_pool", nil)
+		}
+		if isAmazonIPv6Pool || isBYOIPv6Pool {
 			d.Set("ipv6_ipam_pool_id", nil)
 		} else {
 			if ipv6PoolID == ipamManagedIPv6PoolID {
@@ -788,7 +814,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 			}
 		}
 		d.Set("ipv6_netmask_length", nil)
-		if ipv6PoolID != "" && !isAmazonIPv6Pool {
+		if ipv6PoolID != "" && !isAmazonIPv6Pool && !isBYOIPv6Pool {
 			parts := strings.Split(cidrBlock, "/")
 			if len(parts) == 2 {
 				if v, err := strconv.Atoi(parts[1]); err == nil {

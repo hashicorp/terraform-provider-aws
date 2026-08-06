@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -702,6 +703,52 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", ipamPoolResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "56"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccVPC_byoipIPv6 verifies that an IPv6 CIDR can be allocated inline from a non-IPAM BYOIP pool
+// ("ipv6pool-ec2-*") via the ipv6_pool argument, and that re-applying the unchanged configuration is a
+// no-op (the BYOIP pool is not misreported as ipv6_ipam_pool_id / ipv6_netmask_length).
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/48733
+//
+// A classic BYOIP pool is provisioned outside of Terraform (ProvisionByoipCidr), so this test is gated
+// on the pool ID and a CIDR block from it being supplied via environment variables.
+func TestAccVPC_byoipIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	poolID := os.Getenv("EC2_BYOIP_IPV6_POOL_ID")
+	cidrBlock := os.Getenv("EC2_BYOIP_IPV6_CIDR_BLOCK")
+	if poolID == "" || cidrBlock == "" {
+		t.Skip("Environment variable EC2_BYOIP_IPV6_POOL_ID or EC2_BYOIP_IPV6_CIDR_BLOCK is not set")
+	}
+
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_byoipIPv6(rName, poolID, cidrBlock),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", cidrBlock),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_pool", poolID),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1686,6 +1733,20 @@ resource "aws_vpc" "test" {
   depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
 `, rName, netmaskLength))
+}
+
+func testAccVPCConfig_byoipIPv6(rName, poolID, cidrBlock string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block      = "10.1.0.0/16"
+  ipv6_pool       = %[2]q
+  ipv6_cidr_block = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, poolID, cidrBlock)
 }
 
 func testAccVPCConfig_region(rName, region string) string {

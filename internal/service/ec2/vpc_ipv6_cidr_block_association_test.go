@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -97,6 +98,55 @@ func TestAccVPCIPv6CIDRBlockAssociation_disappears(t *testing.T) {
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccVPCIPv6CIDRBlockAssociation_byoip verifies that attaching a VPC's IPv6 CIDR via a
+// standalone association using a non-IPAM BYOIP pool ("ipv6pool-ec2-*") does not cause the parent
+// aws_vpc resource to reflect the pool as ipv6_ipam_pool_id / ipv6_netmask_length, which previously
+// produced a perpetual diff.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/48733
+//
+// A classic BYOIP pool is provisioned outside of Terraform (ProvisionByoipCidr), so this test is
+// gated on the pool ID and a CIDR block from it being supplied via environment variables.
+func TestAccVPCIPv6CIDRBlockAssociation_byoip(t *testing.T) {
+	ctx := acctest.Context(t)
+	poolID := os.Getenv("EC2_BYOIP_IPV6_POOL_ID")
+	cidrBlock := os.Getenv("EC2_BYOIP_IPV6_CIDR_BLOCK")
+	if poolID == "" || cidrBlock == "" {
+		t.Skip("Environment variable EC2_BYOIP_IPV6_POOL_ID or EC2_BYOIP_IPV6_CIDR_BLOCK is not set")
+	}
+
+	var association awstypes.VpcIpv6CidrBlockAssociation
+	assocName := "aws_vpc_ipv6_cidr_block_association.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv6CIDRBlockAssociationConfig_byoip(rName, poolID, cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, assocName, &association),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(assocName, tfjsonpath.New("ipv6_pool"), knownvalue.StringExact(poolID)),
+					// The BYOIP pool must not be reflected onto the parent VPC's IPAM-specific attributes.
+					statecheck.ExpectKnownValue(vpcResourceName, tfjsonpath.New("ipv6_ipam_pool_id"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(vpcResourceName, tfjsonpath.New("ipv6_netmask_length"), knownvalue.Int64Exact(0)),
+				},
+				// Re-applying the unchanged configuration must be a no-op for the VPC.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(vpcResourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -307,4 +357,22 @@ resource "aws_vpc_ipv6_cidr_block_association" "secondary_cidr" {
   vpc_id            = aws_vpc.test.id
 }
 `, rName))
+}
+
+func testAccVPCIPv6CIDRBlockAssociationConfig_byoip(rName, poolID, cidrBlock string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipv6_cidr_block_association" "test" {
+  vpc_id          = aws_vpc.test.id
+  ipv6_pool       = %[2]q
+  ipv6_cidr_block = %[3]q
+}
+`, rName, poolID, cidrBlock)
 }
