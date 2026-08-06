@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -290,6 +291,8 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
+									// TODO https://github.com/hashicorp/terraform-provider-aws/pull/49306
+									"trigger_condition": framework.ResourceOptionalComputedListOfObjectsAttribute[triggerConditionModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 								},
 								Blocks: map[string]schema.Block{
 									"invocation_configuration": schema.ListNestedBlock{
@@ -1335,11 +1338,28 @@ func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v 
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
-	// TODO
-	//TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_condition"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionModel]        `tfsdk:"trigger_condition"`
 }
 
 type invocationConfigurationModel struct {
 	PayloadDeliveryBucketName types.String `tfsdk:"payload_delivery_bucket_name"`
 	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
+}
+
+type triggerConditionModel struct {
+	MessageBasedTrigger fwtypes.ListNestedObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
+	TimeBasedTrigger    fwtypes.ListNestedObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
+	TokenBasedTrigger   fwtypes.ListNestedObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
+}
+
+type messageBasedTriggerModel struct {
+	MessageCount types.Int32 `tfsdk:"message_count"`
+}
+
+type timeBasedTriggerModel struct {
+	IdleSessionTimeout types.Int32 `tfsdk:"idle_session_timeout"`
+}
+
+type tokenBasedTriggerModel struct {
+	TokenCount types.Int32 `tfsdk:"token_count"`
 }

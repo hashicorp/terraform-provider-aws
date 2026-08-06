@@ -198,6 +198,37 @@ resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
 }
 ```
 
+### Custom Strategy with Self-Managed Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
+  name                      = "self-managed-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Self-managed processing strategy"
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed_configuration {
+      historical_context_window_size = 10
+
+      trigger_condition {
+        message_based_trigger {
+          message_count = 12
+        }
+      }
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.example.arn
+        payload_delivery_bucket_name = aws_s3_bucket.example.bucket
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
