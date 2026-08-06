@@ -86,14 +86,14 @@ func (r *resourcePrivateGraphEndpoint) Schema(ctx context.Context, req resource.
 					setplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrVPCEndpointID: schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrVPCEndpointID: schema.StringAttribute{
-				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
