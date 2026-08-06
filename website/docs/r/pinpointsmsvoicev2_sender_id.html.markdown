@@ -66,7 +66,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_pinpointsmsvoicev2_sender_id.example
   identity = {
-    sender_id        = "MySenderId"
+    sender_id        = "MYSENDERID"
     iso_country_code = "US"
   }
 }
@@ -93,12 +93,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_sender_id.example
-  id = "MySenderId,US"
+  id = "MYSENDERID,US"
 }
 ```
 
 Using `terraform import`, import an End User Messaging SMS Sender ID using the `sender_id` and `iso_country_code`, separated by a comma. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_sender_id.example "MySenderId,US"
+% terraform import aws_pinpointsmsvoicev2_sender_id.example "MYSENDERID,US"
 ```
