@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_bedrockagentcore_memory_strategy: Fix `too many results: wanted 1, got 2` error when creating or updating a strategy on a memory that already has another strategy of a different type
-```

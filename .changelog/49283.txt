@@ -1,6 +1,0 @@
-```release-note:new-list-resource
-aws_backup_selection
-```
-```release-note:enhancement
-resource/aws_backup_selection: Add resource identity support
-```
