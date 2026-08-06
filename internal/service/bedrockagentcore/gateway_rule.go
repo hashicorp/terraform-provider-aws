@@ -32,16 +32,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagentcore_gateway_rule", name="Gateway Rule")
+// @IdentityAttribute("gateway_identifier")
+// @IdentityAttribute("rule_id")
+// @ImportIDHandler("gatewayRuleImportID")
+// Requires reading the AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI environmengt variable.
+// @Testing(identityTest=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc=testAccGatewayRuleImportStateIDFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetGatewayRuleOutput")
+// @Testing(importStateIdAttribute="rule_id")
 func newGatewayRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &gatewayRuleResource{}
 
@@ -54,6 +65,7 @@ func newGatewayRuleResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type gatewayRuleResource struct {
 	framework.ResourceWithModel[gatewayRuleResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -561,16 +573,36 @@ func (r *gatewayRuleResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *gatewayRuleResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, ",")
+const gatewayRuleImportIDSeparator = intflex.ResourceIdSeparator
 
-	if len(parts) != 2 {
-		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`unexpected format for import ID (%s), use: "GatewayIdentifier,RuleId"`, request.ID))
-		return
+func gatewayRuleParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, gatewayRuleImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("rule_id"), parts[1]))
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected gateway-identifier%[2]srule-id", id, gatewayRuleImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser = gatewayRuleImportID{}
+)
+
+type gatewayRuleImportID struct{}
+
+func (gatewayRuleImportID) Parse(id string) (string, map[string]any, error) {
+	gatewayIdentifier, ruleID, err := gatewayRuleParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"gateway_identifier": gatewayIdentifier,
+		"rule_id":            ruleID,
+	}
+
+	return id, result, nil
 }
 
 func waitGatewayRuleCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, ruleID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayRuleOutput, error) {

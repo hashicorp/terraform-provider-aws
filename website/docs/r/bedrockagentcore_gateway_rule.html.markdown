@@ -208,7 +208,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a gateway rule using the gateway identifier and rule ID separated by a comma. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_gateway_rule.example
+  identity = {
+    gateway_identifier = "example-gateway-abcdef1234"
+    rule_id            = "11111111-2222-3333-4444-555555555555"
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `gateway_identifier` (String) Identifier of the gateway.
+* `rule_id` (String) Identifier of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import gateway rules using `gateway_identifier` and `rule_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
@@ -217,7 +245,7 @@ import {
 }
 ```
 
-Using `terraform import`, import a gateway rule the same way. For example:
+Using `terraform import`, import gateway rules using `gateway_identifier` and `rule_id` separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_bedrockagentcore_gateway_rule.example example-gateway-abcdef1234,11111111-2222-3333-4444-555555555555
