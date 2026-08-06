@@ -252,6 +252,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set(names.AttrEnabled, key.metadata.Enabled)
 	d.Set("expiration_model", key.metadata.ExpirationModel)
+	d.Set("key_spec", key.metadata.KeySpec)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
