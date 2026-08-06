@@ -585,7 +585,7 @@ resource "aws_mailmanager_ingress_point" "test" {
   type              = "OPEN"
   rule_set_id       = aws_mailmanager_rule_set.test.id
   traffic_policy_id = aws_mailmanager_traffic_policy.test.id
-  tls_policy = "REQUIRED"
+  tls_policy        = "REQUIRED"
 
   network_configuration {
     private_network_configuration {
