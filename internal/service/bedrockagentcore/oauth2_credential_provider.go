@@ -227,6 +227,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 						},
 						"github_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[githubOAuth2ProviderConfigModel](ctx),
 						"google_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx),
+						"included_oauth2_provider_config":   basicOAuth2ProviderConfigBlock[includedOAuth2ProviderConfigModel](ctx),
 						"microsoft_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx),
 						"salesforce_oauth2_provider_config": basicOAuth2ProviderConfigBlock[salesforceOAuth2ProviderConfigModel](ctx),
 						"slack_oauth2_provider_config":      basicOAuth2ProviderConfigBlock[slackOAuth2ProviderConfigModel](ctx),
@@ -484,6 +485,7 @@ type oauth2ProviderConfigModel struct {
 	CustomOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[customOAuth2ProviderConfigModel]     `tfsdk:"custom_oauth2_provider_config"`
 	GithubOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[githubOAuth2ProviderConfigModel]     `tfsdk:"github_oauth2_provider_config"`
 	GoogleOAuth2ProviderConfig     fwtypes.ListNestedObjectValueOf[googleOAuth2ProviderConfigModel]     `tfsdk:"google_oauth2_provider_config"`
+	IncludedOAuth2ProviderConfig   fwtypes.ListNestedObjectValueOf[includedOAuth2ProviderConfigModel]   `tfsdk:"included_oauth2_provider_config"`
 	MicrosoftOAuth2ProviderConfig  fwtypes.ListNestedObjectValueOf[microsoftOAuth2ProviderConfigModel]  `tfsdk:"microsoft_oauth2_provider_config"`
 	SalesforceOAuth2ProviderConfig fwtypes.ListNestedObjectValueOf[salesforceOAuth2ProviderConfigModel] `tfsdk:"salesforce_oauth2_provider_config"`
 	SlackOAuth2ProviderConfig      fwtypes.ListNestedObjectValueOf[slackOAuth2ProviderConfigModel]      `tfsdk:"slack_oauth2_provider_config"`
@@ -542,6 +544,15 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 		}
 		model.oauth2ClientCredentialsModel = clientCredentials
 		m.GoogleOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.Oauth2ProviderConfigOutputMemberIncludedOauth2ProviderConfig:
+		var model includedOAuth2ProviderConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		model.oauth2ClientCredentialsModel = clientCredentials
+		m.IncludedOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberMicrosoftOauth2ProviderConfig:
 		var model microsoftOAuth2ProviderConfigModel
@@ -629,6 +640,20 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		}
 		return &r, diags
 
+	case !m.IncludedOAuth2ProviderConfig.IsNull():
+		data, d := m.IncludedOAuth2ProviderConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		data.oauth2ClientCredentialsModel = clientCredentials
+		var r awstypes.Oauth2ProviderConfigInputMemberIncludedOauth2ProviderConfig
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
 	case !m.MicrosoftOAuth2ProviderConfig.IsNull():
 		data, d := m.MicrosoftOAuth2ProviderConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -702,6 +727,14 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 		}
 		return v.oauth2ClientCredentialsModel, diags
 
+	case !m.IncludedOAuth2ProviderConfig.IsNull():
+		v, d := m.IncludedOAuth2ProviderConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return inttypes.Zero[oauth2ClientCredentialsModel](), diags
+		}
+		return v.oauth2ClientCredentialsModel, diags
+
 	case !m.MicrosoftOAuth2ProviderConfig.IsNull():
 		v, d := m.MicrosoftOAuth2ProviderConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -754,6 +787,11 @@ type githubOAuth2ProviderConfigModel struct {
 }
 
 type googleOAuth2ProviderConfigModel struct {
+	oauth2ClientCredentialsModel
+	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+}
+
+type includedOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
 	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
 }

@@ -30,6 +30,22 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "github" {
 }
 ```
 
+### Notion OAuth Provider
+
+```terraform
+resource "aws_bedrockagentcore_oauth2_credential_provider" "notion" {
+  name = "notion-oauth-provider"
+
+  credential_provider_vendor = "NotionOauth2"
+  oauth2_provider_config {
+    included_oauth2_provider_config {
+      client_id     = "your-notion-client-id"
+      client_secret = "your-notion-client-secret"
+    }
+  }
+}
+```
+
 ### Custom OAuth Provider with Discovery URL
 
 ```terraform
@@ -81,7 +97,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "keycloak" {
 
 The following arguments are required:
 
-* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `CustomOauth2`, `GithubOauth2`, `GoogleOauth2`, `Microsoft`, `SalesforceOauth2`, `SlackOauth2`.
+* `credential_provider_vendor` - (Required) Vendor of the OAuth2 credential provider. Valid values: `Auth0Oauth2`, `AtlassianOauth2`, `CognitoOauth2`, `CustomOauth2`, `CyberArkOauth2`, `DropboxOauth2`, `FacebookOauth2`, `FusionAuthOauth2`, `GithubOauth2`, `GoogleOauth2`, `HubspotOauth2`, `LinkedinOauth2`, `MicrosoftOauth2`, `NotionOauth2`, `OktaOauth2`, `OneLoginOauth2`, `PingOneOauth2`, `RedditOauth2`, `SalesforceOauth2`, `SlackOauth2`, `SpotifyOauth2`, `TwitchOauth2`, `XOauth2`, `YandexOauth2`, `ZoomOauth2`.
 * `name` - (Required) Name of the OAuth2 credential provider.
 * `oauth2_provider_config` - (Required) OAuth2 provider configuration. Must contain exactly one provider type. See [`oauth2_provider_config`](#oauth2_provider_config) below.
 
@@ -95,11 +111,12 @@ The following arguments are optional:
 The `oauth2_provider_config` block must contain exactly one of the following provider configurations:
 
 * `custom_oauth2_provider_config` - (Optional) Custom OAuth2 provider configuration. See [`custom`](#custom) below.
-* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-microsoft-salesforce-slack) below.
-* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-microsoft-salesforce-slack) below.
-* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-microsoft-salesforce-slack) below.
-* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-microsoft-salesforce-slack) below.
-* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-microsoft-salesforce-slack) below.
+* `github_oauth2_provider_config` - (Optional) GitHub OAuth provider configuration. See [`github`](#github-google-included-microsoft-salesforce-slack) below.
+* `google_oauth2_provider_config` - (Optional) Google OAuth provider configuration. See [`google`](#github-google-included-microsoft-salesforce-slack) below.
+* `included_oauth2_provider_config` - (Optional) OAuth2 provider configuration for other built-in providers. See [`included`](#github-google-included-microsoft-salesforce-slack) below.
+* `microsoft_oauth2_provider_config` - (Optional) Microsoft OAuth provider configuration. See [`microsoft`](#github-google-included-microsoft-salesforce-slack) below.
+* `salesforce_oauth2_provider_config` - (Optional) Salesforce OAuth provider configuration. See [`salesforce`](#github-google-included-microsoft-salesforce-slack) below.
+* `slack_oauth2_provider_config` - (Optional) Slack OAuth provider configuration. See [`slack`](#github-google-included-microsoft-salesforce-slack) below.
 
 ### `custom`
 
@@ -120,9 +137,9 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
-### `github`, `google`, `microsoft`, `salesforce`, `slack`
+### `github`, `google`, `included`, `microsoft`, `salesforce`, `slack`
 
-These predefined provider blocks support the following:
+These predefined provider blocks along with `included` support the following:
 
 **Standard Credentials (choose one pair):**
 
