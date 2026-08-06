@@ -58,7 +58,7 @@ func main() {
 			UnwrapFunc: "aws.ToTime",
 		},
 	}
-	for k := range types {
+	for k, _ := range types {
 		typ := types[k]
 		if k == "bool" {
 			typ.Conditionals = []string{"==", "!="}
