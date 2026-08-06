@@ -92,8 +92,7 @@ func (l *listResourcePrivateGraphEndpoint) List(ctx context.Context, request lis
 				}
 
 				data.GraphIdentifier = types.StringValue(graphID)
-				data.Id = types.StringValue(graphID + "_" + vpcID)
-				data.PrivateGraphEndpointIdentifier = data.Id
+				data.PrivateGraphEndpointIdentifier = types.StringValue(graphID + "_" + vpcID)
 				result.DisplayName = graphID + "_" + vpcID
 			})
 

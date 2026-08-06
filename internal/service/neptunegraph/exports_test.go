@@ -8,6 +8,6 @@ var (
 	ResourceGraph                = newGraphResource
 	ResourcePrivateGraphEndpoint = newResourcePrivateGraphEndpoint
 
-	FindGraphByID                = findGraphByID
-	FindPrivateGraphEndpointByID = findPrivateGraphEndpointByID
+	FindGraphByID                        = findGraphByID
+	FindPrivateGraphEndpointByTwoPartKey = findPrivateGraphEndpointByTwoPartKey
 )

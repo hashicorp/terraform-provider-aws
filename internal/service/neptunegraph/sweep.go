@@ -89,9 +89,9 @@ func sweepPrivateGraphEndpoints(ctx context.Context, client *conns.AWSClient) ([
 				}
 
 				for _, v := range endpointPage.PrivateGraphEndpoints {
-					id := aws.ToString(graph.Id) + "_" + aws.ToString(v.VpcId)
 					sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePrivateGraphEndpoint, client,
-						framework.NewAttribute(names.AttrID, id)),
+						framework.NewAttribute("graph_identifier", aws.ToString(graph.Id)),
+						framework.NewAttribute(names.AttrVPCID, aws.ToString(v.VpcId))),
 					)
 				}
 			}

@@ -38,16 +38,17 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_basic(t *testing.T) {
 				Config: testAccPrivateGraphEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPrivateGraphEndpointExists(ctx, t, resourceName, &privategraphendpoint),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCEndpointID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_graph_endpoint_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "graph_identifier", "aws_neptunegraph_graph.test", names.AttrID),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, "_", "graph_identifier", names.AttrVPCID),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "graph_identifier",
 			},
 		},
 	})
@@ -98,14 +99,14 @@ func testAccCheckPrivateGraphEndpointDestroy(ctx context.Context, t *testing.T) 
 				continue
 			}
 
-			_, err := tfneptunegraph.FindPrivateGraphEndpointByID(ctx, conn, rs.Primary.ID)
+			_, err := tfneptunegraph.FindPrivateGraphEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_identifier"], rs.Primary.Attributes[names.AttrVPCID])
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
 				return err
 			}
-			return fmt.Errorf("Neptune Analytics Private Graph Endpoint %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Neptune Analytics Private Graph Endpoint %s still exists", rs.Primary.Attributes["private_graph_endpoint_identifier"])
 		}
 
 		return nil
@@ -121,7 +122,7 @@ func testAccCheckPrivateGraphEndpointExists(ctx context.Context, t *testing.T, n
 
 		conn := acctest.ProviderMeta(ctx, t).NeptuneGraphClient(ctx)
 
-		output, err := tfneptunegraph.FindPrivateGraphEndpointByID(ctx, conn, rs.Primary.ID)
+		output, err := tfneptunegraph.FindPrivateGraphEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_identifier"], rs.Primary.Attributes[names.AttrVPCID])
 		if err != nil {
 			return err
 		}

@@ -15,15 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptunegraph/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -40,9 +37,10 @@ import (
 // @FrameworkResource("aws_neptunegraph_private_graph_endpoint", name="Private Graph Endpoint")
 // @IdentityAttribute("graph_identifier")
 // @IdentityAttribute("vpc_id")
-// @ImportIDHandler("privateGraphEndpointImportID", setIDAttribute=true)
+// @ImportIDHandler("privateGraphEndpointImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/neptunegraph;neptunegraph.GetPrivateGraphEndpointOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttributes="graph_identifier;vpc_id", importStateIdAttributesSep="_")
 func newResourcePrivateGraphEndpoint(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePrivateGraphEndpoint{}
 
@@ -71,7 +69,6 @@ func (r *resourcePrivateGraphEndpoint) Schema(ctx context.Context, req resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"private_graph_endpoint_identifier": schema.StringAttribute{
 				Computed: true,
 			},
@@ -125,27 +122,26 @@ func (r *resourcePrivateGraphEndpoint) Create(ctx context.Context, req resource.
 
 	out, err := conn.CreatePrivateGraphEndpoint(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.GraphIdentifier.ValueString()+"_"+plan.VpcId.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.GraphIdentifier.ValueString())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.GraphIdentifier.ValueString()+"_"+plan.VpcId.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.GraphIdentifier.ValueString())
 		return
 	}
 
-	plan.Id = types.StringValue(plan.GraphIdentifier.ValueString() + "_" + aws.ToString(out.VpcId))
 	plan.PrivateGraphEndpointIdentifier = types.StringValue(plan.GraphIdentifier.ValueString() + "_" + aws.ToString(out.VpcId))
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitPrivateGraphEndpointAvailable(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VpcId.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Id.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
-	out2, err := findPrivateGraphEndpointByID(ctx, conn, plan.Id.ValueString())
+	out2, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VpcId.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Id.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
@@ -163,24 +159,18 @@ func (r *resourcePrivateGraphEndpoint) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	out, err := findPrivateGraphEndpointByID(ctx, conn, state.Id.ValueString())
+	out, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, state.GraphIdentifier.ValueString(), state.VpcId.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
-	parts := strings.Split(state.Id.ValueString(), "_")
-	if len(parts) == 2 {
-		state.GraphIdentifier = types.StringValue(parts[0])
-		state.VpcId = types.StringValue(parts[1])
-	}
-
-	state.PrivateGraphEndpointIdentifier = state.Id
+	state.PrivateGraphEndpointIdentifier = types.StringValue(state.GraphIdentifier.ValueString() + "_" + state.VpcId.ValueString())
 	state.VpcEndpointId = types.StringValue(aws.ToString(out.VpcEndpointId))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
@@ -211,35 +201,29 @@ func (r *resourcePrivateGraphEndpoint) Delete(ctx context.Context, req resource.
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitPrivateGraphEndpointDeleted(ctx, conn, state.GraphIdentifier.ValueString(), state.VpcId.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 }
 
-func findPrivateGraphEndpointByID(ctx context.Context, conn *neptunegraph.Client, id string) (*neptunegraph.GetPrivateGraphEndpointOutput, error) {
-	parts := strings.Split(id, "_")
-	if len(parts) != 2 {
-		return nil, errors.New("invalid ID format, expected graph_id_vpc_id")
-	}
-
+func findPrivateGraphEndpointByTwoPartKey(ctx context.Context, conn *neptunegraph.Client, graphID, vpcID string) (*neptunegraph.GetPrivateGraphEndpointOutput, error) {
 	input := neptunegraph.GetPrivateGraphEndpointInput{
-		GraphIdentifier: aws.String(parts[0]),
-		VpcId:           aws.String(parts[1]),
+		GraphIdentifier: aws.String(graphID),
+		VpcId:           aws.String(vpcID),
 	}
 
 	out, err := conn.GetPrivateGraphEndpoint(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
 			})
 		}
 
@@ -255,7 +239,7 @@ func findPrivateGraphEndpointByID(ctx context.Context, conn *neptunegraph.Client
 
 func statusPrivateGraphEndpoint(conn *neptunegraph.Client, graphID, vpcID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findPrivateGraphEndpointByID(ctx, conn, graphID+"_"+vpcID)
+		output, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, graphID, vpcID)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -295,8 +279,7 @@ func waitPrivateGraphEndpointDeleted(ctx context.Context, conn *neptunegraph.Cli
 }
 
 var (
-	_ inttypes.ImportIDParser           = privateGraphEndpointImportID{}
-	_ inttypes.FrameworkImportIDCreator = privateGraphEndpointImportID{}
+	_ inttypes.ImportIDParser = privateGraphEndpointImportID{}
 )
 
 type privateGraphEndpointImportID struct{}
@@ -304,7 +287,7 @@ type privateGraphEndpointImportID struct{}
 func (privateGraphEndpointImportID) Parse(id string) (string, map[string]any, error) {
 	graphID, vpcID, found := strings.Cut(id, "_")
 	if !found || graphID == "" || vpcID == "" {
-		return "", nil, fmt.Errorf("id %q should be in the format <graph_identifier>_<vpc_id>", id)
+		return "", nil, smarterr.NewError(fmt.Errorf("id %q should be in the format <graph_identifier>_<vpc_id>", id))
 	}
 
 	result := map[string]any{
@@ -315,18 +298,9 @@ func (privateGraphEndpointImportID) Parse(id string) (string, map[string]any, er
 	return id, result, nil
 }
 
-func (privateGraphEndpointImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var graphID, vpcID types.String
-	state.GetAttribute(ctx, path.Root("graph_identifier"), &graphID)
-	state.GetAttribute(ctx, path.Root(names.AttrVPCID), &vpcID)
-
-	return graphID.ValueString() + "_" + vpcID.ValueString()
-}
-
 type resourcePrivateGraphEndpointModel struct {
 	framework.WithRegionModel
 	GraphIdentifier                types.String        `tfsdk:"graph_identifier"`
-	Id                             types.String        `tfsdk:"id"`
 	PrivateGraphEndpointIdentifier types.String        `tfsdk:"private_graph_endpoint_identifier"`
 	SecurityGroupIDs               fwtypes.SetOfString `tfsdk:"security_group_ids"`
 	SubnetIDs                      fwtypes.SetOfString `tfsdk:"subnet_ids"`
