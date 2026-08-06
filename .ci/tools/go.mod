@@ -385,7 +385,5 @@ require (
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 )
 
-replace github.com/hashicorp/go-changelog => github.com/breathingdust/go-changelog v0.0.0-20210127001721-f985d5709c15
-
 // v1.5.1 was incorrectly built
 exclude github.com/hashicorp/go-getter v1.5.1
