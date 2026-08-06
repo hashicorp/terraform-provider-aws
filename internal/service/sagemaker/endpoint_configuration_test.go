@@ -1981,3 +1981,113 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 `, rName)
 }
+
+func TestAccSageMakerEndpointConfiguration_enableNetworkIsolation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_enableNetworkIsolation(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfigurationConfig_enableNetworkIsolation(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_enableNetworkIsolation(rName string, enableNetworkIsolation bool) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "sagemaker.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = %[2]t
+
+  production_variants {
+    variant_name           = "variant-1"
+    initial_instance_count = 1
+    instance_type          = "ml.g5.xlarge"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, enableNetworkIsolation)
+}
+
+func TestAccSageMakerEndpointConfiguration_enableNetworkIsolationWithModelName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEndpointConfigurationConfig_enableNetworkIsolationWithModelName(rName),
+				ExpectError: regexache.MustCompile(`"enable_network_isolation" cannot be set when "model_name" is specified`),
+			},
+		},
+	})
+}
+
+func testAccEndpointConfigurationConfig_enableNetworkIsolationWithModelName(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name                     = %[1]q
+  enable_network_isolation = true
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+}
+`, rName))
+}
