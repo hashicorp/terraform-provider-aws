@@ -23,7 +23,7 @@ jobs:
     name: Warn of Potential Issues
     runs-on: ubuntu-latest
     steps:
-      - name: Check for Dependency or Changelog Changes
+      - name: Check for Dependency Changes
         id: filter
         uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         with:
@@ -32,32 +32,12 @@ jobs:
               - '.ci/providerlint/**'
               - 'go.mod'
               - 'go.sum'
-            changelog:
-              - 'CHANGELOG.md'
             new-service:
               - added: 'internal/service/*'
 
-      - name: Determine if Changelog Entry is Needed
-        if: |
-          !github.event.pull_request.draft
-          && !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog-needed')
-        id: changelog-update-needed
-        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
-        with:
-          predicate-quantifier: 'every'
-          filters: |
-            needs:
-              - 'internal/service/**'
-              - '!internal/service/**/*_test.go'
-            has:
-              - '.changelog/**'
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: checkout
-        if: |
-          steps.filter.outputs.changelog == 'true'
-          || (steps.filter.outputs.dependencies == 'true' && steps.filter.outputs.new-service == 'false')
-          || (steps.changelog-update-needed.outputs.needs == 'true' && steps.changelog-update-needed.outputs.has == 'false')
+        if: steps.filter.outputs.dependencies == 'true' && steps.filter.outputs.new-service == 'false'
         with:
           sparse-checkout: .github/actions/community_check
 
@@ -108,44 +88,11 @@ jobs:
           </details>
           ' >> note.md
 
-      - name: Changelog Updated by Non-Maintainers
-        id: changelog
-        if: |
-          steps.filter.outputs.changelog == 'true'
-          && steps.community_check.outputs.maintainer == 'false'
-        shell: bash
-        run: |
-          echo '<details><summary>:x: Unnecessary Changelog Changes (Click to expand)</summary><br>
-
-          The `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for additional information.
-
-          Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging it.
-          </details>
-          ' >> note.md
-
-      - name: Needs Changelog Entry
-        id: needs-changelog-entry
-        if: |
-          steps.changelog-update-needed.outputs.needs == 'true'
-          && steps.changelog-update-needed.outputs.has == 'false'
-          && steps.community_check.outputs.maintainer == 'false'
-        shell: bash
-        run: |
-          echo '<details><summary>:x: Changelog Entry Required (Click to expand)</summary><br>
-
-          The proposed change requires a changelog entry. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for information on the changelog generation process.
-
-          **Tip:** This check is not triggered for draft pull requests, since the pull request number is not known until the pull request is opened and is required to create a changelog entry. Opening a pull request first as a draft, adding the requisite changelog entry file, and then marking the pull request as ready for review will prevent future warnings.
-           </details>
-          ' >> note.md
-
       - name: Add Start Message
         id: start
         if: |
           steps.maintainer_editability.outcome != 'skipped'
           || steps.dependencies.outcome != 'skipped'
-          || steps.changelog.outcome != 'skipped'
-          || steps.needs-changelog-entry.outcome != 'skipped'
         shell: bash
         run: |
           { echo $START_TEXT; echo "---"; cat note.md; } > tmpnote && mv tmpnote note.md
