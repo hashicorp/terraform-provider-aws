@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -487,6 +488,323 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 	})
 }
 
+func TestAccKeyspacesTable_autoScaling_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.auto_scaling_disabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.minimum_units", "5"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.maximum_units", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.target_tracking_scaling_policy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.target_tracking_scaling_policy_configuration.0.target_value", "70"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.minimum_units", "5"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.maximum_units", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.target_tracking_scaling_policy_configuration.0.target_value", "70"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"capacity_specification.0.read_capacity_units", "capacity_specification.0.write_capacity_units"},
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.maximum_units", "10"),
+				),
+			},
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 20, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.maximum_units", "20"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.target_tracking_scaling_policy_configuration.0.target_value", "60"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.maximum_units", "20"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.target_tracking_scaling_policy_configuration.0.target_value", "60"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.auto_scaling_disabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccTableConfig_autoScalingDisabled(rName1, rName2, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.read_capacity_auto_scaling.0.auto_scaling_disabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.0.write_capacity_auto_scaling.0.auto_scaling_disabled", acctest.CtTrue),
+					// Confirm against the API, not just state, that both dimensions are disabled.
+					testAccCheckTableAutoScalingDisabled(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_payPerRequestConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_autoScalingPayPerRequest(rName1, rName2),
+				ExpectError: regexache.MustCompile(`auto_scaling_specification requires capacity_specification.throughput_mode to be`),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_omittedCapacitySpecificationConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// capacity_specification is entirely omitted here, which defaults to
+				// PAY_PER_REQUEST; this must be rejected the same way an explicit
+				// PAY_PER_REQUEST is.
+				Config:      testAccTableConfig_autoScalingOmittedCapacitySpecification(rName1, rName2),
+				ExpectError: regexache.MustCompile(`auto_scaling_specification requires capacity_specification.throughput_mode to be`),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_invertedRangeConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// minimum_units > maximum_units must be rejected at plan time rather than
+				// left for the AWS API to reject at apply time.
+				Config:      testAccTableConfig_autoScaling(rName1, rName2, 10, 5, 70),
+				ExpectError: regexache.MustCompile(`minimum_units \(10\) cannot be greater than maximum_units \(5\)`),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_removal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+				),
+			},
+			{
+				// Removing the block must disable auto scaling against the API
+				Config: testAccTableConfig_provisionedCapacity(rName1, rName2, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.#", "0"),
+					testAccCheckTableAutoScalingDisabled(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_enableWithModeSwitch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_basic(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+				),
+			},
+			{
+				// Step 1 of the two-step transition: switch PAY_PER_REQUEST -> PROVISIONED
+				// with explicit capacity units before auto scaling is involved. Enabling auto
+				// scaling in the same apply is intentionally rejected when the units are held
+				// under ignore_changes (see _modeSwitchWithIgnoredUnitsConflict).
+				Config: testAccTableConfig_provisionedCapacity(rName1, rName2, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+				),
+			},
+			{
+				// Step 2: enable auto scaling now that the table is already PROVISIONED. The
+				// capacity units (5) are established in prior state, so ignore_changes keeps
+				// them in the plan and the transition succeeds.
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_specification.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_modeSwitchWithIgnoredUnitsConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_basic(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+				),
+			},
+			{
+				// Switching PAY_PER_REQUEST -> PROVISIONED while the capacity units are held
+				// under ignore_changes must be rejected at plan time: the required units are
+				// not part of the planned change, and recovering them from raw configuration
+				// would bypass the plan. The transition must be done in two steps instead.
+				Config:      testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				ExpectError: regexache.MustCompile(`requires read_capacity_units and write_capacity_units`),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_autoScaling_disableWithModeSwitch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
+	resourceName := "aws_keyspaces_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScaling(rName1, rName2, 5, 10, 70),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
+				),
+			},
+			{
+				// Disabling auto scaling and switching PROVISIONED -> PAY_PER_REQUEST in one apply:
+				// the provider must issue the auto-scaling-disable call before the capacity-mode
+				// call, since AWS rejects PAY_PER_REQUEST while provisioned auto scaling is still active.
+				Config: testAccTableConfig_payPerRequestExplicit(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
@@ -554,6 +872,50 @@ func testAccCheckTableNotRecreated(i, j *keyspaces.GetTableOutput) resource.Test
 	return func(s *terraform.State) error {
 		if !aws.ToTime(i.CreationTimestamp).Equal(aws.ToTime(j.CreationTimestamp)) {
 			return errors.New("Keyspaces Table was recreated")
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckTableAutoScalingDisabled asserts against the API that both capacity
+// dimensions report auto scaling as disabled, i.e. that removing the block actually
+// turned auto scaling off rather than leaving it silently active.
+func testAccCheckTableAutoScalingDisabled(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
+
+		keyspaceName, tableName, err := tfkeyspaces.TableParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		output, err := tfkeyspaces.FindTableAutoScalingSettingsByTwoPartKey(ctx, conn, keyspaceName, tableName)
+
+		// AWS may drop the scalable targets entirely once auto scaling is disabled,
+		// which surfaces as a not-found error; that is a valid "disabled" outcome.
+		if retry.NotFound(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		spec := output.AutoScalingSpecification
+		if spec == nil {
+			return nil
+		}
+
+		if v := spec.ReadCapacityAutoScaling; v != nil && !v.AutoScalingDisabled {
+			return fmt.Errorf("read capacity auto scaling is still enabled for %s", n)
+		}
+		if v := spec.WriteCapacityAutoScaling; v != nil && !v.AutoScalingDisabled {
+			return fmt.Errorf("write capacity auto scaling is still enabled for %s", n)
 		}
 
 		return nil
@@ -907,6 +1269,236 @@ resource "aws_keyspaces_table" "test" {
     partition_key {
       name = "message"
     }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableConfig_autoScaling(rName1, rName2 string, minimumUnits, maximumUnits, targetValue int) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode      = "PROVISIONED"
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
+
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      minimum_units = %[3]d
+      maximum_units = %[4]d
+      target_tracking_scaling_policy_configuration {
+        target_value = %[5]d
+      }
+    }
+    write_capacity_auto_scaling {
+      minimum_units = %[3]d
+      maximum_units = %[4]d
+      target_tracking_scaling_policy_configuration {
+        target_value = %[5]d
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      capacity_specification[0].read_capacity_units,
+      capacity_specification[0].write_capacity_units,
+    ]
+  }
+}
+`, rName1, rName2, minimumUnits, maximumUnits, targetValue)
+}
+
+func testAccTableConfig_autoScalingDisabled(rName1, rName2 string, capacityUnits int) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode      = "PROVISIONED"
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
+
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      auto_scaling_disabled = true
+    }
+    write_capacity_auto_scaling {
+      auto_scaling_disabled = true
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      capacity_specification[0].read_capacity_units,
+      capacity_specification[0].write_capacity_units,
+    ]
+  }
+}
+`, rName1, rName2, capacityUnits)
+}
+
+func testAccTableConfig_autoScalingPayPerRequest(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode = "PAY_PER_REQUEST"
+  }
+
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      minimum_units = 5
+      maximum_units = 10
+      target_tracking_scaling_policy_configuration {
+        target_value = 70
+      }
+    }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableConfig_autoScalingOmittedCapacitySpecification(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      minimum_units = 5
+      maximum_units = 10
+      target_tracking_scaling_policy_configuration {
+        target_value = 70
+      }
+    }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableConfig_provisionedCapacity(rName1, rName2 string, units int) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode      = "PROVISIONED"
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
+}
+`, rName1, rName2, units)
+}
+
+func testAccTableConfig_payPerRequestExplicit(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode = "PAY_PER_REQUEST"
   }
 }
 `, rName1, rName2)

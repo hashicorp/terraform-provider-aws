@@ -67,6 +67,86 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				// Auto scaling requires provisioned throughput capacity.
+				if v, ok := diff.GetOk("auto_scaling_specification"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+					return nil
+				}
+
+				var throughputMode string
+				if v, ok := diff.GetOk("capacity_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					throughputMode = v.([]any)[0].(map[string]any)["throughput_mode"].(string)
+				}
+
+				if throughputMode != string(types.ThroughputModeProvisioned) {
+					return fmt.Errorf("auto_scaling_specification requires capacity_specification.throughput_mode to be %s", types.ThroughputModeProvisioned)
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				// PROVISIONED throughput requires both capacity units, and AWS needs them
+				// as part of the PAY_PER_REQUEST -> PROVISIONED transition. Reject at plan
+				// time when the planned value is missing a unit. This catches a bare
+				// misconfiguration and the case where read/write_capacity_units
+				// are under lifecycle.ignore_changes: the planned value then keeps zero units
+				// while throughput_mode still flips to PROVISIONED, which the API rejects.
+				// Effetcively this requires the user to make the mode change happen in its own apply first.
+				v, ok := diff.GetOk("capacity_specification")
+				if !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+					return nil
+				}
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if tfMap["throughput_mode"].(string) != string(types.ThroughputModeProvisioned) {
+					return nil
+				}
+
+				read, _ := tfMap["read_capacity_units"].(int)
+				write, _ := tfMap["write_capacity_units"].(int)
+				if read == 0 || write == 0 {
+					return fmt.Errorf("capacity_specification.throughput_mode %s requires read_capacity_units and write_capacity_units to be set. "+
+						"If these are managed by auto scaling and held under lifecycle.ignore_changes, change throughput_mode to %[1]s in a separate apply before adding ignore_changes.",
+						types.ThroughputModeProvisioned)
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				v, ok := diff.GetOk("auto_scaling_specification")
+				if !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+					return nil
+				}
+				tfMap := v.([]any)[0].(map[string]any)
+
+				for _, key := range []string{"read_capacity_auto_scaling", "write_capacity_auto_scaling"} {
+					v, ok := tfMap[key].([]any)
+					if !ok || len(v) == 0 || v[0] == nil {
+						continue
+					}
+					settingsMap := v[0].(map[string]any)
+					if disabled, _ := settingsMap["auto_scaling_disabled"].(bool); disabled {
+						continue
+					}
+
+					minimumUnits, minimumUnitsOK := settingsMap["minimum_units"].(int)
+					maximumUnits, maximumUnitsOK := settingsMap["maximum_units"].(int)
+					if !minimumUnitsOK || minimumUnits == 0 || !maximumUnitsOK || maximumUnits == 0 {
+						return fmt.Errorf("auto_scaling_specification.0.%s: minimum_units and maximum_units must be configured when auto scaling is enabled", key)
+					}
+
+					policy, policyOK := settingsMap["target_tracking_scaling_policy_configuration"].([]any)
+					if !policyOK || len(policy) == 0 || policy[0] == nil {
+						return fmt.Errorf("auto_scaling_specification.0.%s: target_tracking_scaling_policy_configuration must be configured when auto scaling is enabled", key)
+					}
+
+					if minimumUnits > maximumUnits {
+						return fmt.Errorf("auto_scaling_specification.0.%s: minimum_units (%d) cannot be greater than maximum_units (%d)", key, minimumUnits, maximumUnits)
+					}
+				}
+
+				return nil
+			},
 		),
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -74,6 +154,20 @@ func resourceTable() *schema.Resource {
 				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"auto_scaling_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					// Not Computed (unlike the sibling blocks): removing it from configuration must
+					// produce a diff so the update can disable auto scaling. Computed would make Terraform
+					// retain the prior value, silently leaving auto scaling enabled.
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"read_capacity_auto_scaling":  autoScalingSettingsSchema(),
+							"write_capacity_auto_scaling": autoScalingSettingsSchema(),
+						},
+					},
 				},
 				"capacity_specification": {
 					Type:     schema.TypeList,
@@ -306,6 +400,65 @@ func resourceTable() *schema.Resource {
 	}
 }
 
+func autoScalingSettingsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"auto_scaling_disabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"maximum_units": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"minimum_units": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"target_tracking_scaling_policy_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"disable_scale_in": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"scale_in_cooldown": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"scale_out_cooldown": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"target_value": {
+								Type:         schema.TypeFloat,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.FloatBetween(20, 90),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
@@ -317,6 +470,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AutoScalingSpecification = expandAutoScalingSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -387,6 +544,52 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
+	autoScalingSettings, err := findTableAutoScalingSettingsByTwoPartKey(ctx, conn, keyspaceName, tableName)
+
+	switch {
+	case retry.NotFound(err):
+		// PAY_PER_REQUEST tables and tables without configured scalable targets can
+		// return ResourceNotFoundException even though GetTable succeeded.
+		if err := d.Set("auto_scaling_specification", nil); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting auto_scaling_specification: %s", err)
+		}
+	case errs.IsA[*types.AccessDeniedException](err):
+		// Reading auto scaling settings requires additional IAM permissions
+		// (application-autoscaling:DescribeScalableTargets and DescribeScalingPolicies)
+		// beyond what's needed to manage the table itself. Tolerate the missing
+		// permissions only for tables that aren't tracking auto scaling in state;
+		// if the resource manages auto_scaling_specification we cannot refresh or
+		// detect drift on it, so surface a clear permissions error instead of
+		// silently claiming to manage settings we can never verify. The prior state
+		// is still intact here because the attribute hasn't been overwritten yet.
+		if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s) auto scaling settings: %s\n\n"+
+				"The table manages auto_scaling_specification, which requires the "+
+				"application-autoscaling:DescribeScalableTargets and DescribeScalingPolicies permissions to read.", d.Id(), err)
+		}
+		log.Printf("[DEBUG] Keyspaces Table (%s): insufficient permissions to read auto scaling settings, leaving auto_scaling_specification unchanged: %s", d.Id(), err)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s) auto scaling settings: %s", d.Id(), err)
+	default:
+		spec := autoScalingSettings.AutoScalingSpecification
+		switch {
+		case spec == nil:
+			d.Set("auto_scaling_specification", nil)
+		case autoScalingSpecificationDisabled(spec) && !autoScalingSpecificationInState(d):
+			// Auto scaling is fully disabled and the block is not tracked in state
+			// (it was removed to disable it, or the table was imported). Treat it as
+			// absent so there is no perpetual "remove" diff, since AWS may keep returning
+			// a disabled specification rather than ResourceNotFoundException. The in-state
+			// guard is what preserves an explicitly configured auto_scaling_disabled = true
+			// block instead of stripping it.
+			d.Set("auto_scaling_specification", nil)
+		default:
+			if err := d.Set("auto_scaling_specification", []any{flattenAutoScalingSpecification(spec)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting auto_scaling_specification: %s", err)
+			}
+		}
+	}
+
 	d.Set(names.AttrARN, table.ResourceArn)
 	if table.CapacitySpecification != nil {
 		if err := d.Set("capacity_specification", []any{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
@@ -453,26 +656,106 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	updateAutoScalingSpecification := func() diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		if !d.HasChange("auto_scaling_specification") {
+			return diags
+		}
+
+		input := &keyspaces.UpdateTableInput{
+			KeyspaceName: aws.String(keyspaceName),
+			TableName:    aws.String(tableName),
+		}
+
+		if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AutoScalingSpecification = expandAutoScalingSpecification(v.([]any)[0].(map[string]any))
+		} else {
+			// The block was removed: explicitly disable auto scaling instead of leaving it
+			// active on the AWS side.
+			old, _ := d.GetChange("auto_scaling_specification")
+
+			oldList, ok := old.([]any)
+			if !ok || len(oldList) == 0 || oldList[0] == nil {
+				return diags
+			}
+
+			input.AutoScalingSpecification = expandAutoScalingSpecificationDisabled(oldList[0].(map[string]any))
+		}
+
+		_, err := conn.UpdateTable(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) AutoScalingSpecification: %s", d.Id(), err)
+		}
+
+		if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) AutoScalingSpecification update: %s", d.Id(), err)
+		}
+
+		return diags
+	}
+
+	updateCapacitySpecification := func() diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		if !d.HasChange("capacity_specification") {
+			return diags
+		}
+
+		v, ok := d.GetOk("capacity_specification")
+		if !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+			return diags
+		}
+
+		capacitySpecification := expandCapacitySpecification(v.([]any)[0].(map[string]any))
+
+		input := &keyspaces.UpdateTableInput{
+			CapacitySpecification: capacitySpecification,
+			KeyspaceName:          aws.String(keyspaceName),
+			TableName:             aws.String(tableName),
+		}
+
+		_, err := conn.UpdateTable(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
+		}
+
+		if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
+		}
+
+		return diags
+	}
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
 		// Note that you can only update one specific table setting per update operation.
-		if d.HasChange("capacity_specification") {
-			if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input := &keyspaces.UpdateTableInput{
-					CapacitySpecification: expandCapacitySpecification(v.([]any)[0].(map[string]any)),
-					KeyspaceName:          aws.String(keyspaceName),
-					TableName:             aws.String(tableName),
-				}
+		//
+		// auto_scaling_specification and capacity_specification have an ordering dependency:
+		// enabling auto scaling requires the table to already be PROVISIONED, so capacity
+		// must be updated first; disabling auto scaling (or removing the block) should
+		// happen before switching away from PROVISIONED, so auto scaling must be updated
+		// first. Determine direction from the *new* auto_scaling_specification value.
+		disablingAutoScaling := true
+		if v, ok := d.GetOk("auto_scaling_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			disablingAutoScaling = false
+		}
 
-				_, err := conn.UpdateTable(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
-				}
-
-				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
-				}
+		if disablingAutoScaling {
+			if diags := updateAutoScalingSpecification(); diags.HasError() {
+				return diags
+			}
+			if diags := updateCapacitySpecification(); diags.HasError() {
+				return diags
+			}
+		} else {
+			if diags := updateCapacitySpecification(); diags.HasError() {
+				return diags
+			}
+			if diags := updateAutoScalingSpecification(); diags.HasError() {
+				return diags
 			}
 		}
 
@@ -694,6 +977,31 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	return output, nil
 }
 
+func findTableAutoScalingSettingsByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string) (*keyspaces.GetTableAutoScalingSettingsOutput, error) {
+	input := keyspaces.GetTableAutoScalingSettingsInput{
+		KeyspaceName: aws.String(keyspaceName),
+		TableName:    aws.String(tableName),
+	}
+
+	output, err := conn.GetTableAutoScalingSettings(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
 func statusTable(conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
@@ -779,6 +1087,107 @@ func expandCapacitySpecification(tfMap map[string]any) *types.CapacitySpecificat
 
 	if v, ok := tfMap["write_capacity_units"].(int); ok && v != 0 {
 		apiObject.WriteCapacityUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingSpecification(tfMap map[string]any) *types.AutoScalingSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingSpecification{}
+
+	if v, ok := tfMap["read_capacity_auto_scaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ReadCapacityAutoScaling = expandAutoScalingSettings(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["write_capacity_auto_scaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WriteCapacityAutoScaling = expandAutoScalingSettings(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+// expandAutoScalingSpecificationDisabled builds an AutoScalingSpecification that explicitly turns
+// off auto scaling. AWS rejects the update ("When disabled, auto scaling settings should not be
+// provided") if minimum_units/maximum_units/scaling_policy are also sent alongside
+// AutoScalingDisabled: true, so only that flag is set for whichever of read/write was configured.
+func expandAutoScalingSpecificationDisabled(tfMap map[string]any) *types.AutoScalingSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingSpecification{}
+
+	if v, ok := tfMap["read_capacity_auto_scaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ReadCapacityAutoScaling = &types.AutoScalingSettings{AutoScalingDisabled: true}
+	}
+
+	if v, ok := tfMap["write_capacity_auto_scaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WriteCapacityAutoScaling = &types.AutoScalingSettings{AutoScalingDisabled: true}
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingSettings(tfMap map[string]any) *types.AutoScalingSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AutoScalingSettings{}
+
+	if v, ok := tfMap["auto_scaling_disabled"].(bool); ok {
+		apiObject.AutoScalingDisabled = v
+	}
+
+	// AWS rejects the update ("When disabled, auto scaling settings should not be provided")
+	// if minimum_units/maximum_units/scaling_policy are also sent alongside
+	// AutoScalingDisabled: true.
+	if apiObject.AutoScalingDisabled {
+		return apiObject
+	}
+
+	if v, ok := tfMap["maximum_units"].(int); ok && v != 0 {
+		apiObject.MaximumUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["minimum_units"].(int); ok && v != 0 {
+		apiObject.MinimumUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["target_tracking_scaling_policy_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScalingPolicy = &types.AutoScalingPolicy{
+			TargetTrackingScalingPolicyConfiguration: expandTargetTrackingScalingPolicyConfiguration(v[0].(map[string]any)),
+		}
+	}
+
+	return apiObject
+}
+
+func expandTargetTrackingScalingPolicyConfiguration(tfMap map[string]any) *types.TargetTrackingScalingPolicyConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.TargetTrackingScalingPolicyConfiguration{}
+
+	if v, ok := tfMap["disable_scale_in"].(bool); ok {
+		apiObject.DisableScaleIn = v
+	}
+
+	if v, ok := tfMap["scale_in_cooldown"].(int); ok {
+		apiObject.ScaleInCooldown = int32(v)
+	}
+
+	if v, ok := tfMap["scale_out_cooldown"].(int); ok {
+		apiObject.ScaleOutCooldown = int32(v)
+	}
+
+	if v, ok := tfMap["target_value"].(float64); ok {
+		apiObject.TargetValue = v
 	}
 
 	return apiObject
@@ -1067,6 +1476,94 @@ func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationS
 
 	if v := apiObject.WriteCapacityUnits; v != nil {
 		tfMap["write_capacity_units"] = aws.ToInt64(v)
+	}
+
+	return tfMap
+}
+
+// autoScalingSpecificationInState reports whether the prior state already tracks an
+// auto_scaling_specification block. During Read the resource data still holds the
+// prior state (the attribute has not been overwritten yet) and, after an update, the
+// planned value: present when the block is configured (including an explicit
+// auto_scaling_disabled = true) and absent when it was removed. The plugin protocol
+// does not provide configuration to Read, so this is the available signal for whether
+// the block is being managed.
+func autoScalingSpecificationInState(d *schema.ResourceData) bool {
+	v, ok := d.GetOk("auto_scaling_specification")
+	return ok && len(v.([]any)) > 0 && v.([]any)[0] != nil
+}
+
+// autoScalingSpecificationDisabled reports whether neither capacity dimension has
+// auto scaling actively enabled, i.e. every present dimension is disabled. Such a
+// specification is equivalent to having no auto scaling and is treated as absent.
+func autoScalingSpecificationDisabled(apiObject *types.AutoScalingSpecification) bool {
+	if apiObject == nil {
+		return true
+	}
+
+	if v := apiObject.ReadCapacityAutoScaling; v != nil && !v.AutoScalingDisabled {
+		return false
+	}
+
+	if v := apiObject.WriteCapacityAutoScaling; v != nil && !v.AutoScalingDisabled {
+		return false
+	}
+
+	return true
+}
+
+func flattenAutoScalingSpecification(apiObject *types.AutoScalingSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ReadCapacityAutoScaling; v != nil {
+		tfMap["read_capacity_auto_scaling"] = []any{flattenAutoScalingSettings(v)}
+	}
+
+	if v := apiObject.WriteCapacityAutoScaling; v != nil {
+		tfMap["write_capacity_auto_scaling"] = []any{flattenAutoScalingSettings(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAutoScalingSettings(apiObject *types.AutoScalingSettings) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"auto_scaling_disabled": apiObject.AutoScalingDisabled,
+	}
+
+	if v := apiObject.MaximumUnits; v != nil {
+		tfMap["maximum_units"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.MinimumUnits; v != nil {
+		tfMap["minimum_units"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.ScalingPolicy; v != nil && v.TargetTrackingScalingPolicyConfiguration != nil {
+		tfMap["target_tracking_scaling_policy_configuration"] = []any{flattenTargetTrackingScalingPolicyConfiguration(v.TargetTrackingScalingPolicyConfiguration)}
+	}
+
+	return tfMap
+}
+
+func flattenTargetTrackingScalingPolicyConfiguration(apiObject *types.TargetTrackingScalingPolicyConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"disable_scale_in":   apiObject.DisableScaleIn,
+		"scale_in_cooldown":  apiObject.ScaleInCooldown,
+		"scale_out_cooldown": apiObject.ScaleOutCooldown,
+		"target_value":       apiObject.TargetValue,
 	}
 
 	return tfMap
