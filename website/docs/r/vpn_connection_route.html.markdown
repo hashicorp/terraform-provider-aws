@@ -54,3 +54,48 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `destination_cidr_block` - The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - The ID of the VPN connection.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpn_connection_route.office
+  identity = {
+    destination_cidr_block = "192.168.10.0/24"
+    vpn_connection_id      = "vpn-12345678"
+  }
+}
+
+resource "aws_vpn_connection_route" "office" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `destination_cidr_block` (String) CIDR block associated with the local subnet of the customer network.
+* `vpn_connection_id` (String) ID of the VPN connection.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Connection Routes using the `destination_cidr_block` and `vpn_connection_id` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_vpn_connection_route.office
+  id = "192.168.10.0/24:vpn-12345678"
+}
+```
+
+Using `terraform import`, import VPN Connection Routes using the `destination_cidr_block` and `vpn_connection_id` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_vpn_connection_route.office 192.168.10.0/24:vpn-12345678
+```

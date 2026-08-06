@@ -1,0 +1,54 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_vpn_gateway" "test" {
+  region = var.region
+
+  tags = {
+    Name = var.rName
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  region = var.region
+
+  bgp_asn    = 65000
+  ip_address = "182.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = var.rName
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  region = var.region
+
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+
+  tags = {
+    Name = var.rName
+  }
+}
+
+resource "aws_vpn_connection_route" "test" {
+  region = var.region
+
+  destination_cidr_block = "172.168.10.0/24"
+  vpn_connection_id      = aws_vpn_connection.test.id
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}
