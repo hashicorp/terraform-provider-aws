@@ -26,5 +26,5 @@ list "aws_neptunegraph_private_graph_endpoint" "example" {
 
 This list resource supports the following arguments:
 
-* `graph_identifier` - (Required) The unique identifier of the Neptune Analytics graph.
+* `graph_identifier` - (Required) Unique identifier of the Neptune Analytics graph.
 * `region` - (Optional) Region to query. Defaults to provider region.
