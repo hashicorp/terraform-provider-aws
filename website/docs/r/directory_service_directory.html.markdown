@@ -11,7 +11,7 @@ description: |-
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
 ~> **Note:** All arguments including the password and customer username will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html). Use `password_wo` instead of `password` to avoid storing the password in state.
 
 ## Example Usage
 
@@ -126,7 +126,9 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
-* `password` - (Required) The password for the directory administrator or connector user.
+* `password` - (Optional) The password for the directory administrator or connector user. Exactly one of `password` or `password_wo` is required.
+* `password_wo` - (Optional, [Write-Only](https://developer.hashicorp.com/terraform/language/resources/ephemeral/write-only)) The password for the directory administrator or connector user. The value is not stored in state. Exactly one of `password` or `password_wo` is required. Requires `password_wo_version`.
+* `password_wo_version` - (Optional) Used together with `password_wo` to trigger a password change. Because the directory password cannot be changed in place, incrementing this value replaces the directory.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
 * `vpc_settings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
