@@ -462,13 +462,21 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	// If removing `token_validity_units`, reset to defaults
+	// If removing `token_validity_units`, reset all units and validity integers
+	// to Cognito factory defaults. Without resetting the integers, an existing
+	// value sized for the old unit is sent as-is under the new unit, e.g.:
+	//   AccessTokenValidity=60 (minutes) + hours unit → 60 hours > 24h max
+	//   RefreshTokenValidity=43200 (minutes) + days unit → 43200 days > 3650d max
+	// Both produce InvalidParameterException: Invalid range for token validity.
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() {
 		input.TokenValidityUnits = &awstypes.TokenValidityUnitsType{
 			AccessToken:  awstypes.TimeUnitsTypeHours,
 			IdToken:      awstypes.TimeUnitsTypeHours,
 			RefreshToken: awstypes.TimeUnitsTypeDays,
 		}
+		input.AccessTokenValidity = aws.Int32(1) // 1 hour — Cognito default
+		input.IdTokenValidity = aws.Int32(1)     // 1 hour — Cognito default
+		input.RefreshTokenValidity = 30          // 30 days — Cognito default
 	}
 
 	const (
