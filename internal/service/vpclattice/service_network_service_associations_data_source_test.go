@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,9 +19,9 @@ func TestAccVPCLatticeServiceNetworkServiceAssociationsDataSource_basic(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -36,52 +35,52 @@ func TestAccVPCLatticeServiceNetworkServiceAssociationsDataSource_basic(t *testi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_1",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_1",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_2",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_2",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_svc_1",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_1",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_svc_2",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_1",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_svc_1",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_2",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_svc_3",
-						"associations.*.service_network_arn",
+						"items.*.service_network_arn",
 						"aws_vpclattice_service_network.test_sn_2",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_1",
-						"associations.*.service_arn",
+						"items.*.service_arn",
 						"aws_vpclattice_service.test_svc_1",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_1",
-						"associations.*.service_arn",
+						"items.*.service_arn",
 						"aws_vpclattice_service.test_svc_2",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_2",
-						"associations.*.service_arn",
+						"items.*.service_arn",
 						"aws_vpclattice_service.test_svc_1",
 						names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.aws_vpclattice_service_network_service_associations.test_sn_2",
-						"associations.*.service_arn",
+						"items.*.service_arn",
 						"aws_vpclattice_service.test_svc_3",
 						names.AttrARN),
 				),

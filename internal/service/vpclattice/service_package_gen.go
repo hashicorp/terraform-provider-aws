@@ -26,7 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceServiceNetworkServiceAssociations,
 			TypeName: "aws_vpclattice_service_network_service_associations",
 			Name:     "Service Network Service Associations",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
