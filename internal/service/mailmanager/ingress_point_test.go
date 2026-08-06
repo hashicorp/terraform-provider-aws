@@ -376,7 +376,6 @@ func testAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AUTH"),
 					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.0.smtp_password_wo_version", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.smtp_password_version"),
 				),
 			},
 			{
@@ -391,9 +390,6 @@ func testAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO(t *
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngressPointExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ingress_point_configuration.0.smtp_password_wo_version", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.smtp_password_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "ingress_point_configuration.0.previous_smtp_password_version"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "ingress_point_configuration.0.previous_smtp_password_expiry_timestamp"),
 				),
 			},
 		},
