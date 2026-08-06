@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_prometheus_anomaly_detector
-```
-
-```release-note:new-list-resource
-aws_prometheus_anomaly_detector
-```

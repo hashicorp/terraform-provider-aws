@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_bedrockagent_data_source: Fix validator incorrectly requiring `bedrock_data_automation_configuration` when `parsing_strategy = "BEDROCK_DATA_AUTOMATION"`, a regression introduced in v6.56.0
-```

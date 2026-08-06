@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_user: Retry destroying users when there are conflicts, and ignore non-errors during destroy
-```
