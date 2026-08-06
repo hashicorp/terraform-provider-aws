@@ -12,3 +12,6 @@ paths:
   .github/workflows/*.lock.yml:
     ignore:
       - 'unexpected key "queue" for "concurrency" section'
+  .github/workflows/update-changelog.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
