@@ -128,13 +128,19 @@ This resource supports the following arguments:
 
 ### `instance_launch_template` Block
 
-* `capacity_option_type` - (Optional) Purchasing option for the EC2 instances used in the capacity provider. Determines whether to use On-Demand or Spot instances. Valid values are `ON_DEMAND` and `SPOT`. Defaults to `ON_DEMAND` when not specified. Changing this value will trigger replacement of the capacity provider. For more information, see [Amazon EC2 billing and purchasing options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-purchasing-options.html) in the Amazon EC2 User Guide.
+* `capacity_option_type` - (Optional) Purchasing option for the EC2 instances used in the capacity provider. Determines whether to use On-Demand, Spot, or Capacity Reservation instances. Valid values are `ON_DEMAND`, `SPOT`, and `RESERVED`. Defaults to `ON_DEMAND` when not specified. Changing this value will trigger replacement of the capacity provider. For more information, see [Amazon EC2 billing and purchasing options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-purchasing-options.html) in the Amazon EC2 User Guide.
+* `capacity_reservations` - (Optional) Capacity Reservation configuration used to launch instances. Required when `capacity_option_type` is `RESERVED`. Detailed below.
 * `ec2_instance_profile_arn` - (Required) ARN of the instance profile that Amazon ECS applies to Amazon ECS Managed Instances. This instance profile must include the necessary permissions for your tasks to access AWS services and resources. For more information, see [Amazon ECS instance profile for Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html) in the Amazon ECS Developer Guide.
 * `instance_requirements` - (Optional) Instance requirements. You can specify the instance types and instance requirements such as vCPU count, memory, network performance, and accelerator specifications. Amazon ECS automatically selects the instances that match the specified criteria. Detailed below.
 * `local_storage_configuration` - (Optional) Configuration block for the local storage settings applied to Amazon ECS Managed Instances. Detailed below.
 * `monitoring` - (Optional) CloudWatch provides two categories of monitoring: basic monitoring and detailed monitoring. By default, your managed instance is configured for basic monitoring. You can optionally enable detailed monitoring to help you more quickly identify and act on operational issues. You can enable or turn off detailed monitoring at launch or when the managed instance is running or stopped. For more information, see [Detailed monitoring for Amazon ECS Managed Instances](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch-metrics.html) in the Amazon ECS Developer Guide. Valid values are `BASIC` and `DETAILED`.
 * `network_configuration` - (Required) Network configuration for Amazon ECS Managed Instances. This specifies the subnets and security groups that instances use for network connectivity. Detailed below.
 * `storage_configuration` - (Optional) Storage configuration for Amazon ECS Managed Instances. This defines the root volume size and type for the instances. Detailed below.
+
+### `capacity_reservations` Block
+
+* `reservation_group_arn` - (Optional) ARN of the Capacity Reservation resource group in which to run instances. Can only be set when `reservation_preference` is `RESERVATIONS_ONLY`.
+* `reservation_preference` - (Optional) Preference for when Capacity Reservations should be used. Valid values are `RESERVATIONS_ONLY`, `RESERVATIONS_FIRST`, and `RESERVATIONS_EXCLUDED`. `instance_requirements` must be provided when set to `RESERVATIONS_ONLY` or `RESERVATIONS_FIRST`.
 
 ### `network_configuration` Block
 
