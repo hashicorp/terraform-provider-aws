@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -69,50 +70,50 @@ type gatewayRuleResource struct {
 	framework.WithTimeouts
 }
 
+// configurationBundleARNValidators returns the validators for a configuration
+// bundle ARN, mirroring the SDK GatewayConfigurationBundleArn pattern. Shared so
+// static_override.bundle_arn and traffic_split.configuration_bundle.bundle_arn
+// can't drift apart.
+func configurationBundleARNValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.RegexMatches(
+			regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
+			"",
+		),
+	}
+}
+
+// trafficSplitMetadataValidators mirrors the SDK TrafficSplitMetadataMap
+// constraints (max 25 entries; key length 1-128; value length 1-256).
+func trafficSplitMetadataValidators() []validator.Map {
+	return []validator.Map{
+		mapvalidator.SizeAtMost(25),
+		mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 128)),
+		mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
+	}
+}
+
+// configurationBundleVersionValidators mirrors the SDK bundleVersion pattern
+// (a UUID), shared by static_override and traffic_split.configuration_bundle.
+func configurationBundleVersionValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.RegexMatches(
+			regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
+			"",
+		),
+	}
+}
+
+// trafficSplitNameValidators mirrors the SDK TrafficSplitEntry/TargetTrafficSplitEntry
+// name constraints (length 1-64; alphanumeric with internal hyphens).
+func trafficSplitNameValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.LengthBetween(1, 64),
+		stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
+	}
+}
+
 func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	// configurationBundleARNValidators returns the validators for a configuration
-	// bundle ARN, mirroring the SDK GatewayConfigurationBundleArn pattern. Shared so
-	// static_override.bundle_arn and traffic_split.configuration_bundle.bundle_arn
-	// can't drift apart.
-	configurationBundleARNValidators := func() []validator.String {
-		return []validator.String{
-			stringvalidator.RegexMatches(
-				regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
-				"",
-			),
-		}
-	}
-
-	// trafficSplitMetadataValidators mirrors the SDK TrafficSplitMetadataMap
-	// constraints (max 25 entries; key length 1-128; value length 1-256).
-	trafficSplitMetadataValidators := func() []validator.Map {
-		return []validator.Map{
-			mapvalidator.SizeAtMost(25),
-			mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 128)),
-			mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
-		}
-	}
-
-	// configurationBundleVersionValidators mirrors the SDK bundleVersion pattern
-	// (a UUID), shared by static_override and traffic_split.configuration_bundle.
-	configurationBundleVersionValidators := func() []validator.String {
-		return []validator.String{
-			stringvalidator.RegexMatches(
-				regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
-				"",
-			),
-		}
-	}
-
-	// trafficSplitNameValidators mirrors the SDK TrafficSplitEntry/TargetTrafficSplitEntry
-	// name constraints (length 1-64; alphanumeric with internal hyphens).
-	trafficSplitNameValidators := func() []validator.String {
-		return []validator.String{
-			stringvalidator.LengthBetween(1, 64),
-			stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
-		}
-	}
-
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -443,6 +444,12 @@ func (r *gatewayRuleResource) Create(ctx context.Context, request resource.Creat
 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
+	// Prevent errors like
+	// "ConflictException: Failed to update the resource due to an existing lock. This means that there was a concurrent request that updated the resource. Retry the request after the other request has completed."
+	mutexKey := fmt.Sprintf("bedrockagentcore-gateway-%s", gatewayIdentifier)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
+
 	out, err := conn.CreateGatewayRule(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayIdentifier)
@@ -529,6 +536,10 @@ func (r *gatewayRuleResource) Update(ctx context.Context, request resource.Updat
 			input.Conditions = []awstypes.Condition{}
 		}
 
+		mutexKey := fmt.Sprintf("bedrockagentcore-gateway-%s", gatewayIdentifier)
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
+
 		_, err := conn.UpdateGatewayRule(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
@@ -558,6 +569,11 @@ func (r *gatewayRuleResource) Delete(ctx context.Context, request resource.Delet
 		GatewayIdentifier: aws.String(gatewayIdentifier),
 		RuleId:            aws.String(ruleID),
 	}
+
+	mutexKey := fmt.Sprintf("bedrockagentcore-gateway-%s", gatewayIdentifier)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
+
 	_, err := conn.DeleteGatewayRule(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
