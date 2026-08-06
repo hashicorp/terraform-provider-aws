@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_rds_snapshots` ([#49259](https://github.com/hashicorp/terraform-provider-aws/issues/49259))
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
 * **New List Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
 * **New Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
