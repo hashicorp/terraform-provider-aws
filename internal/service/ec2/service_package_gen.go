@@ -49,6 +49,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newCapacityReservationDataSource,
+			TypeName: "aws_ec2_capacity_reservation",
+			Name:     "Capacity Reservation",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newHostsDataSource,
 			TypeName: "aws_ec2_hosts",
 			Name:     "Hosts",
