@@ -280,6 +280,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values", "pod_identity_association") {
+		deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 		input := eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(create.UniqueId(ctx)),
@@ -319,15 +320,25 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		updateID := aws.ToString(output.Update.Id)
-		if _, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			if input.ResolveConflicts != types.ResolveConflictsOverwrite {
-				// Changing addon version w/o setting resolve_conflicts_on_update to "OVERWRITE"
-				// might result in a failed update if there are conflicts:
-				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting resolve_conflicts_on_update to %q", d.Id(), updateID, err, types.ResolveConflictsOverwrite)
-			}
+		if update, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, deadline.Remaining()); err != nil {
+			// When EKS times out an addon update, it marks the update as failed but leaves
+			// the addon in a DEGRADED (or still UPDATING) state with the new configuration applied.
+			// The addon typically self-heals to ACTIVE once the rollout converges, so wait for
+			// the addon itself to become ACTIVE, mirroring create behavior with DEGRADED addons.
+			if addonUpdateRecoverable(ctx, conn, clusterName, addonName, update) {
+				if _, err := waitAddonUpdated(ctx, conn, clusterName, addonName, deadline.Remaining()); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
+				}
+			} else {
+				if input.ResolveConflicts != types.ResolveConflictsOverwrite {
+					// Changing addon version w/o setting resolve_conflicts_on_update to "OVERWRITE"
+					// might result in a failed update if there are conflicts:
+					// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
+					return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting resolve_conflicts_on_update to %q", d.Id(), updateID, err, types.ResolveConflictsOverwrite)
+				}
 
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)
+			}
 		}
 	}
 
@@ -576,6 +587,27 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 	return nil, err
 }
 
+func waitAddonUpdated(ctx context.Context, conn *eks.Client, clusterName, addonName string, timeout time.Duration) (*types.Addon, error) {
+	stateConf := retry.StateChangeConf{
+		Pending: enum.Slice(types.AddonStatusUpdating, types.AddonStatusDegraded),
+		Target:  enum.Slice(types.AddonStatusActive),
+		Refresh: statusAddon(conn, clusterName, addonName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Addon); ok {
+		if status, health := output.Status, output.Health; status == types.AddonStatusUpdateFailed && health != nil {
+			retry.SetLastError(err, addonIssuesError(health.Issues))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonName string, timeout time.Duration) (*types.Addon, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AddonStatusActive, types.AddonStatusDeleting),
@@ -616,6 +648,23 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterNam
 	}
 
 	return nil, err
+}
+
+// addonUpdateRecoverable returns true if a failed addon update left the addon in a state
+// that is expected to converge to ACTIVE. When EKS times out an addon update, it marks the
+// update as Failed but transitions the addon to DEGRADED (or leaves it UPDATING) with the
+// new configuration applied.
+func addonUpdateRecoverable(ctx context.Context, conn *eks.Client, clusterName, addonName string, update *types.Update) bool {
+	if update == nil || update.Status != types.UpdateStatusFailed {
+		return false
+	}
+
+	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
+	if err != nil {
+		return false
+	}
+
+	return addon.Status == types.AddonStatusDegraded || addon.Status == types.AddonStatusUpdating
 }
 
 func addonIssueError(apiObject types.AddonIssue) error {
