@@ -13,6 +13,7 @@ var (
 	ResourceSharedDirectory         = resourceSharedDirectory
 	ResourceSharedDirectoryAccepter = resourceSharedDirectoryAccepter
 	ResourceTrust                   = newTrustResource
+	ResourceADAssessment            = newADAssessmentResource
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
@@ -21,4 +22,5 @@ var (
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey // nosemgrep:ci.ds-in-var-name
 	FindTrustByTwoPartKey                = findTrustByTwoPartKey
+	FindADAssessmentByID                 = findADAssessmentByID
 )
