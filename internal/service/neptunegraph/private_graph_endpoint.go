@@ -171,7 +171,6 @@ func (r *resourcePrivateGraphEndpoint) Read(ctx context.Context, req resource.Re
 	}
 
 	state.PrivateGraphEndpointIdentifier = types.StringValue(state.GraphIdentifier.ValueString() + "_" + state.VPCID.ValueString())
-	state.VPCEndpointID = types.StringValue(aws.ToString(out.VpcEndpointId))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
