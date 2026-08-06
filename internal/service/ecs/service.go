@@ -2416,16 +2416,52 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 			awstypes.ServiceDeploymentStatusRollbackRequested,
 			awstypes.ServiceDeploymentStatusRollbackInProgress,
 		),
-		Target: deploymentTerminalStates,
+		// Successful terminals only. Failed terminals are Refresh errors.
+		// Do not use findDeploymentStatus here: it maps SUCCESSFUL → tfSTABLE and
+		// returns errors for rollback terminals, which breaks Target matching.
+		Target: enum.Slice(
+			awstypes.ServiceDeploymentStatusSuccessful,
+			awstypes.ServiceDeploymentStatusRollbackSuccessful,
+		),
 		Refresh: func(ctx context.Context) (any, string, error) {
-			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
-			return nil, status, err
+			input := ecs.DescribeServiceDeploymentsInput{
+				ServiceDeploymentArns: []string{primaryDeploymentArn},
+			}
+			output, err := findServiceDeployments(ctx, conn, &input)
+			if err != nil {
+				return nil, "", err
+			}
+			if len(output) == 0 {
+				// Stay in Pending with a raw AWS status (not tfPENDING). Return a
+				// non-nil result so StateChangeConf evaluates Target/Pending.
+				return &awstypes.ServiceDeployment{}, string(awstypes.ServiceDeploymentStatusPending), nil
+			}
+
+			deployment := output[0]
+			status, err := serviceDeploymentWaitRefreshStatus(string(deployment.Status), deployment.StatusReason)
+			// Non-nil result required: a nil any is IsZero and skips Target matching.
+			return &deployment, status, err
 		},
 		Timeout: 1 * time.Hour, // Maximum time before SIGKILL
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
+}
+
+// serviceDeploymentWaitRefreshStatus maps a raw AWS service deployment status for
+// waitForDeploymentTerminalStatus. Failed terminals become errors; others pass through.
+func serviceDeploymentWaitRefreshStatus(status string, statusReason *string) (string, error) {
+	switch awstypes.ServiceDeploymentStatus(status) {
+	case awstypes.ServiceDeploymentStatusStopped, awstypes.ServiceDeploymentStatusRollbackFailed:
+		message := "Deployment failed"
+		if statusReason != nil {
+			message = aws.ToString(statusReason)
+		}
+		return status, errors.New(message)
+	default:
+		return status, nil
+	}
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
