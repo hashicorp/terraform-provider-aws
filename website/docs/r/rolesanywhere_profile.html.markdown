@@ -44,6 +44,7 @@ resource "aws_rolesanywhere_profile" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `duration_seconds` - (Optional) The number of seconds the vended session credentials are valid for. Defaults to 3600.
 * `enabled` - (Optional) Whether or not the Profile is enabled.
 * `managed_policy_arns` - (Optional) A list of managed policy ARNs that apply to the vended session credentials.
