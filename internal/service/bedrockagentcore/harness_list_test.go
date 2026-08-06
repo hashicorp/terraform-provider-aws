@@ -137,6 +137,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("memory"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+								"disabled":                       knownvalue.ListSizeExact(0),
 								"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
 										names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_0_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),

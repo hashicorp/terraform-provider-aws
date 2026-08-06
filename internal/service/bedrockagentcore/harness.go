@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -224,7 +223,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										CustomType: fwtypes.ARNType,
 										Computed:   true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"encryption_key_arn": schema.StringAttribute{
@@ -561,7 +560,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	memoryIsConfigured := config.Memory.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0
+	memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -639,7 +638,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	// During a read of an existing resource, `harness_name` will be set as it is a required attribute.
 	isImport := data.HarnessName.IsNull()
 
-	memoryIsConfigured := data.Memory.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true, UnhandledUnknownAsZero: true}) > 0
+	memoryIsConfigured := data.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -672,25 +671,27 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (r *harnessResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old harnessResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	var config harnessResourceModel
+	var plan, state harnessResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		harnessID := fwflex.StringValueFromFramework(ctx, new.HarnessID)
+		harnessID := fwflex.StringValueFromFramework(ctx, plan.HarnessID)
 		var input bedrockagentcorecontrol.UpdateHarnessInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -698,19 +699,33 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
+		if !state.Memory.IsNull() && config.Memory.IsNull() {
+			// Clears configured value for memory
+			input.Memory = &awstypes.UpdatedHarnessMemoryConfiguration{
+				OptionalValue: nil,
+			}
+		}
+
 		_, err := conn.UpdateHarness(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
 			return
 		}
 
-		if _, err := waitHarnessUpdated(ctx, conn, harnessID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		harness, err := waitHarnessUpdated(ctx, conn, harnessID, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
+			return
+		}
+
+		memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, memoryIsConfigured))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
