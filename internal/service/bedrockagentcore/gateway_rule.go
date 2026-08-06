@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -57,61 +57,54 @@ type gatewayRuleResource struct {
 	framework.WithTimeouts
 }
 
-// configurationBundleARNValidators returns the validators for a configuration
-// bundle ARN, mirroring the SDK GatewayConfigurationBundleArn pattern. Shared so
-// static_override.bundle_arn and traffic_split.configuration_bundle.bundle_arn
-// can't drift apart.
-func configurationBundleARNValidators() []validator.String {
-	return []validator.String{
-		stringvalidator.RegexMatches(
-			regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
-			"",
-		),
-	}
-}
-
-// trafficSplitMetadataValidators mirrors the SDK TrafficSplitMetadataMap
-// constraints (max 25 entries; key length 1-128; value length 1-256).
-func trafficSplitMetadataValidators() []validator.Map {
-	return []validator.Map{
-		mapvalidator.SizeAtMost(25),
-		mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 128)),
-		mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
-	}
-}
-
-// configurationBundleVersionValidators mirrors the SDK bundleVersion pattern
-// (a UUID), shared by static_override and traffic_split.configuration_bundle.
-func configurationBundleVersionValidators() []validator.String {
-	return []validator.String{
-		stringvalidator.RegexMatches(
-			regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
-			"",
-		),
-	}
-}
-
-// trafficSplitNameValidators mirrors the SDK TrafficSplitEntry/TargetTrafficSplitEntry
-// name constraints (length 1-64; alphanumeric with internal hyphens).
-func trafficSplitNameValidators() []validator.String {
-	return []validator.String{
-		stringvalidator.LengthBetween(1, 64),
-		stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
-	}
-}
-
 func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	// configurationBundleARNValidators returns the validators for a configuration
+	// bundle ARN, mirroring the SDK GatewayConfigurationBundleArn pattern. Shared so
+	// static_override.bundle_arn and traffic_split.configuration_bundle.bundle_arn
+	// can't drift apart.
+	configurationBundleARNValidators := func() []validator.String {
+		return []validator.String{
+			stringvalidator.RegexMatches(
+				regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
+				"",
+			),
+		}
+	}
+
+	// trafficSplitMetadataValidators mirrors the SDK TrafficSplitMetadataMap
+	// constraints (max 25 entries; key length 1-128; value length 1-256).
+	trafficSplitMetadataValidators := func() []validator.Map {
+		return []validator.Map{
+			mapvalidator.SizeAtMost(25),
+			mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 128)),
+			mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
+		}
+	}
+
+	// configurationBundleVersionValidators mirrors the SDK bundleVersion pattern
+	// (a UUID), shared by static_override and traffic_split.configuration_bundle.
+	configurationBundleVersionValidators := func() []validator.String {
+		return []validator.String{
+			stringvalidator.RegexMatches(
+				regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
+				"",
+			),
+		}
+	}
+
+	// trafficSplitNameValidators mirrors the SDK TrafficSplitEntry/TargetTrafficSplitEntry
+	// name constraints (length 1-64; alphanumeric with internal hyphens).
+	trafficSplitNameValidators := func() []validator.String {
+		return []validator.String{
+			stringvalidator.LengthBetween(1, 64),
+			stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
+		}
+	}
+
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
-				// Optional+Computed: the UpdateGatewayRule API treats a nil
+				// Optional+Computed: The UpdateGatewayRule API treats a nil
 				// description as "leave unchanged" (it never clears), so removing
 				// the argument keeps the prior value rather than erroring with
 				// "inconsistent result after apply".
@@ -127,9 +120,6 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 			"gateway_arn": framework.ARNAttributeComputedOnly(),
 			"gateway_identifier": schema.StringAttribute{
 				Required: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-z][-]?){1,100}-[0-9a-z]{10}$`), ""),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -141,19 +131,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"rule_id": framework.IDAttribute(),
-			names.AttrStatus: schema.StringAttribute{
-				Computed:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.GatewayRuleStatus](),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"system": framework.ResourceComputedListOfObjectsAttribute[systemManagedBlockModel](ctx),
-			// updated_at advances on every update; NO UseStateForUnknown.
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
+			"system":  framework.ResourceComputedListOfObjectsAttribute[systemManagedBlockModel](ctx, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrAction: schema.ListNestedBlock{
@@ -470,11 +448,10 @@ func (r *gatewayRuleResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, rule, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, rule, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.GatewayArn = fwflex.StringToFramework(ctx, rule.GatewayArn)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -500,11 +477,10 @@ func (r *gatewayRuleResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.GatewayArn = fwflex.StringToFramework(ctx, out.GatewayArn)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -541,24 +517,16 @@ func (r *gatewayRuleResource) Update(ctx context.Context, request resource.Updat
 			input.Conditions = []awstypes.Condition{}
 		}
 
-		if _, err := conn.UpdateGatewayRule(ctx, &input); err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
-			return
-		}
-
-		rule, err := waitGatewayRuleUpdated(ctx, conn, gatewayIdentifier, ruleID, r.UpdateTimeout(ctx, plan.Timeouts))
+		_, err := conn.UpdateGatewayRule(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
 			return
 		}
 
-		// Re-hydrate computed fields (status, system, gateway_arn) from the
-		// authoritative Get output so nothing is left Unknown after apply.
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, rule, &plan, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
-		if response.Diagnostics.HasError() {
+		if _, err := waitGatewayRuleUpdated(ctx, conn, gatewayIdentifier, ruleID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
 			return
 		}
-		plan.GatewayArn = fwflex.StringToFramework(ctx, rule.GatewayArn)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
@@ -578,10 +546,11 @@ func (r *gatewayRuleResource) Delete(ctx context.Context, request resource.Delet
 		GatewayIdentifier: aws.String(gatewayIdentifier),
 		RuleId:            aws.String(ruleID),
 	}
-	if _, err := conn.DeleteGatewayRule(ctx, &input); err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+	_, err := conn.DeleteGatewayRule(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
 		return
 	}
@@ -660,9 +629,6 @@ func statusGatewayRule(conn *bedrockagentcorecontrol.Client, gatewayIdentifier, 
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}
-		if out == nil {
-			return nil, "", nil
-		}
 		return out, string(out.Status), nil
 	}
 }
@@ -692,16 +658,13 @@ type gatewayRuleResourceModel struct {
 	framework.WithRegionModel
 	Actions           fwtypes.ListNestedObjectValueOf[actionModel]             `tfsdk:"action"`
 	Conditions        fwtypes.ListNestedObjectValueOf[conditionModel]          `tfsdk:"condition"`
-	CreatedAt         timetypes.RFC3339                                        `tfsdk:"created_at"`
 	Description       types.String                                             `tfsdk:"description"`
-	GatewayArn        types.String                                             `tfsdk:"gateway_arn"`
+	GatewayARN        types.String                                             `tfsdk:"gateway_arn"`
 	GatewayIdentifier types.String                                             `tfsdk:"gateway_identifier"`
 	Priority          types.Int64                                              `tfsdk:"priority"`
 	RuleID            types.String                                             `tfsdk:"rule_id"`
-	Status            fwtypes.StringEnum[awstypes.GatewayRuleStatus]           `tfsdk:"status"`
 	System            fwtypes.ListNestedObjectValueOf[systemManagedBlockModel] `tfsdk:"system"`
 	Timeouts          timeouts.Value                                           `tfsdk:"timeouts"`
-	UpdatedAt         timetypes.RFC3339                                        `tfsdk:"updated_at"`
 }
 
 // Action union.
