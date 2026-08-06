@@ -50,7 +50,12 @@ This data source exports the following attributes in addition to the arguments a
 * `input_modalities` - Input modalities that the model supports.
 * `model_arn` - Model ARN.
 * `model_id` - Model identifier.
+* `model_lifecycle` - Model lifecycle details. See [`model_lifecycle`](#model_lifecycle).
 * `model_name` - Model name.
 * `output_modalities` - Output modalities that the model supports.
 * `provider_name` - Model provider name.
 * `response_streaming_supported` - Indicates whether the model supports streaming.
+
+### `model_lifecycle`
+
+* `status` - Lifecycle status of the model. Valid values are `ACTIVE` and `LEGACY`.

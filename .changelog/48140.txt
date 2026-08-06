@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_bedrock_foundation_model: Add `model_lifecycle` attribute
+```
+
+```release-note:enhancement
+data-source/aws_bedrock_foundation_models: Add `model_lifecycle` attribute to `model_summaries`
+```
