@@ -102,6 +102,28 @@ func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 	return output, nil
 }
 
+func findCapacityManagerAttributes(ctx context.Context, conn *ec2.Client) (*ec2.GetCapacityManagerAttributesOutput, error) {
+	var input ec2.GetCapacityManagerAttributesInput
+	output, err := conn.GetCapacityManagerAttributes(ctx, &input)
+
+	// Capacity Manager returns an error, not a disabled status, when it isn't enabled.
+	if tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
 func findCapacityReservation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCapacityReservationsInput) (*awstypes.CapacityReservation, error) {
 	output, err := findCapacityReservations(ctx, conn, input)
 
