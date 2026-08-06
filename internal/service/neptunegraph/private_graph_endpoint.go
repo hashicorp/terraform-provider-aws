@@ -133,19 +133,19 @@ func (r *resourcePrivateGraphEndpoint) Create(ctx context.Context, req resource.
 	plan.PrivateGraphEndpointIdentifier = types.StringValue(plan.GraphIdentifier.ValueString() + "_" + aws.ToString(out.VpcId))
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPrivateGraphEndpointAvailable(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VpcId.ValueString(), createTimeout)
+	_, err = waitPrivateGraphEndpointAvailable(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VPCID.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
-	out2, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VpcId.ValueString())
+	out2, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, plan.GraphIdentifier.ValueString(), plan.VPCID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PrivateGraphEndpointIdentifier.ValueString())
 		return
 	}
 
-	plan.VpcEndpointId = types.StringValue(aws.ToString(out2.VpcEndpointId))
+	plan.VPCEndpointID = types.StringValue(aws.ToString(out2.VpcEndpointId))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -159,7 +159,7 @@ func (r *resourcePrivateGraphEndpoint) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	out, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, state.GraphIdentifier.ValueString(), state.VpcId.ValueString())
+	out, err := findPrivateGraphEndpointByTwoPartKey(ctx, conn, state.GraphIdentifier.ValueString(), state.VPCID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -170,8 +170,8 @@ func (r *resourcePrivateGraphEndpoint) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	state.PrivateGraphEndpointIdentifier = types.StringValue(state.GraphIdentifier.ValueString() + "_" + state.VpcId.ValueString())
-	state.VpcEndpointId = types.StringValue(aws.ToString(out.VpcEndpointId))
+	state.PrivateGraphEndpointIdentifier = types.StringValue(state.GraphIdentifier.ValueString() + "_" + state.VPCID.ValueString())
+	state.VPCEndpointID = types.StringValue(aws.ToString(out.VpcEndpointId))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
@@ -192,7 +192,7 @@ func (r *resourcePrivateGraphEndpoint) Delete(ctx context.Context, req resource.
 
 	input := neptunegraph.DeletePrivateGraphEndpointInput{
 		GraphIdentifier: state.GraphIdentifier.ValueStringPointer(),
-		VpcId:           state.VpcId.ValueStringPointer(),
+		VpcId:           state.VPCID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePrivateGraphEndpoint(ctx, &input)
@@ -206,7 +206,7 @@ func (r *resourcePrivateGraphEndpoint) Delete(ctx context.Context, req resource.
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPrivateGraphEndpointDeleted(ctx, conn, state.GraphIdentifier.ValueString(), state.VpcId.ValueString(), deleteTimeout)
+	_, err = waitPrivateGraphEndpointDeleted(ctx, conn, state.GraphIdentifier.ValueString(), state.VPCID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PrivateGraphEndpointIdentifier.ValueString())
 		return
@@ -305,6 +305,6 @@ type resourcePrivateGraphEndpointModel struct {
 	SecurityGroupIDs               fwtypes.SetOfString `tfsdk:"security_group_ids"`
 	SubnetIDs                      fwtypes.SetOfString `tfsdk:"subnet_ids"`
 	Timeouts                       timeouts.Value      `tfsdk:"timeouts"`
-	VpcId                          types.String        `tfsdk:"vpc_id"`
-	VpcEndpointId                  types.String        `tfsdk:"vpc_endpoint_id"`
+	VPCID                          types.String        `tfsdk:"vpc_id"`
+	VPCEndpointID                  types.String        `tfsdk:"vpc_endpoint_id"`
 }
