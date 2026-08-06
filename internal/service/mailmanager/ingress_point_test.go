@@ -36,6 +36,7 @@ func TestAccMailManagerIngressPoint_serial(t *testing.T) {
 		"ingressPointConfiguration_tlsAuth":        testAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth,
 		"Identity":                                 testAccMailManagerIngressPoint_identitySerial,
 		"Tags":                                     testAccMailManagerIngressPoint_tagsSerial,
+		"List":                                     testAccMailManagerIngressPoint_listSerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
