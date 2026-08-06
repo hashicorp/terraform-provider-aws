@@ -231,12 +231,35 @@ func resourceEndpoint() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validName,
 				},
+				"exclude_retained_variant_properties": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"variant_property_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.VariantPropertyType](),
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
 					ValidateFunc: validName,
+				},
+				"retain_all_variant_properties": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"retain_deployment_config": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -347,6 +370,18 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
 			input.DeploymentConfig = expandDeploymentConfig(v.([]any))
+		}
+
+		if v, ok := d.GetOk("retain_all_variant_properties"); ok {
+			input.RetainAllVariantProperties = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("retain_deployment_config"); ok {
+			input.RetainDeploymentConfig = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("exclude_retained_variant_properties"); ok && v.(*schema.Set).Len() > 0 {
+			input.ExcludeRetainedVariantProperties = expandVariantProperties(v.(*schema.Set).List())
 		}
 
 		_, err := conn.UpdateEndpoint(ctx, &input)
@@ -540,6 +575,27 @@ func expandDeploymentConfig(tfList []any) *awstypes.DeploymentConfig {
 	}
 
 	return apiObject
+}
+
+func expandVariantProperties(tfList []any) []awstypes.VariantProperty {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.VariantProperty
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.VariantProperty{
+			VariantPropertyType: awstypes.VariantPropertyType(tfMap["variant_property_type"].(string)),
+		})
+	}
+
+	return apiObjects
 }
 
 func flattenDeploymentConfig(apiObject *awstypes.DeploymentConfig) []any {
