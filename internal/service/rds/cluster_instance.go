@@ -82,7 +82,6 @@ func resourceClusterInstance() *schema.Resource {
 				names.AttrClusterIdentifier: {
 					Type:     schema.TypeString,
 					Required: true,
-					ForceNew: true,
 				},
 				"copy_tags_to_snapshot": {
 					Type:     schema.TypeBool,
@@ -141,7 +140,6 @@ func resourceClusterInstance() *schema.Resource {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					ForceNew:      true,
 					ConflictsWith: []string{"identifier_prefix"},
 					ValidateFunc:  validIdentifier,
 				},
@@ -449,10 +447,28 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// cluster_identifier is excluded: when the parent aws_rds_cluster is renamed,
+	// this attribute changes to follow it, but the instance's cluster membership
+	// moves with the cluster automatically and needs no ModifyDBInstance call.
+	// Excluding it also avoids issuing an empty modify request (which AWS rejects)
+	// when a parent rename is the only change.
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrClusterIdentifier) {
+		applyImmediately := d.Get(names.AttrApplyImmediately).(bool)
 		input := &rds.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+			ApplyImmediately:     aws.Bool(applyImmediately),
 			DBInstanceIdentifier: aws.String(d.Id()),
+		}
+
+		// Renaming the instance (NewDBInstanceIdentifier) is only honored when
+		// ApplyImmediately is true; otherwise AWS defers it to the next maintenance
+		// window. Because this resource's ID is the instance identifier, a deferred
+		// rename would leave the ID out of sync with the actual instance name.
+		// Require apply_immediately to keep the rename and the resource ID consistent.
+		if d.HasChange(names.AttrIdentifier) {
+			if !applyImmediately {
+				return sdkdiag.AppendErrorf(diags, "renaming RDS Cluster Instance (%s) requires apply_immediately = true", d.Id())
+			}
+			input.NewDBInstanceIdentifier = aws.String(d.Get(names.AttrIdentifier).(string))
 		}
 
 		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
@@ -521,8 +537,25 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
+		// A successful rename changes the instance identifier, which is this
+		// resource's ID. Update it so the wait and subsequent read target the new
+		// name rather than the old one.
+		if input.NewDBInstanceIdentifier != nil {
+			d.SetId(aws.ToString(input.NewDBInstanceIdentifier))
+		}
+
 		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	// A parent cluster rename propagates to this instance's cluster_identifier
+	// without a ModifyDBInstance call, but DescribeDBInstances is eventually
+	// consistent, so wait for the new cluster identifier before reading to avoid
+	// persisting a stale value.
+	if d.HasChange(names.AttrClusterIdentifier) {
+		if err := waitDBClusterInstanceClusterIdentifier(ctx, conn, d.Id(), d.Get(names.AttrClusterIdentifier).(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) to reflect renamed cluster: %s", d.Id(), err)
 		}
 	}
 
@@ -578,6 +611,38 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+// waitDBClusterInstanceClusterIdentifier waits until the instance reports the
+// expected DBClusterIdentifier. The value is eventually consistent after the
+// parent cluster is renamed, so this avoids reading a stale cluster identifier
+// into state (which would otherwise produce a persistent diff).
+func waitDBClusterInstanceClusterIdentifier(ctx context.Context, conn *rds.Client, id, expected string) error {
+	const (
+		statusPending   = "pending"
+		statusReflected = "reflected"
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusPending},
+		Target:  []string{statusReflected},
+		Refresh: func(ctx context.Context) (any, string, error) {
+			db, err := findDBInstanceByID(ctx, conn, id)
+			if err != nil {
+				return nil, "", err
+			}
+			if aws.ToString(db.DBClusterIdentifier) == expected {
+				return db, statusReflected, nil
+			}
+			return db, statusPending, nil
+		},
+		Timeout:    propagationTimeout,
+		MinTimeout: 5 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func waitDBClusterInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) { //nolint:unparam

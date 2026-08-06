@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Changing `cluster_identifier` now renames the cluster in place via `ModifyDBCluster` instead of forcing resource recreation. Requires `apply_immediately = true`.
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Changing `identifier` now renames the instance in place via `ModifyDBInstance` instead of forcing resource recreation. Requires `apply_immediately = true`. Renaming the parent cluster's `cluster_identifier` no longer forces the instance to be recreated.
+```
