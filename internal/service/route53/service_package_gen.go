@@ -129,15 +129,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("zone_id", true),
-				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "fqdn"),
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 				inttypes.StringIdentityAttribute("set_identifier", false),
 			},
 				inttypes.WithMutableIdentity(),
 			),
 			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-				ImportID:      recordImportID{},
+				CustomImport: true,
+				ImportID:     recordImportID{},
 			},
 		},
 		{
@@ -207,7 +207,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDisabled(),
 			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("zone_id", true),
-				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttributeWithMappedName(names.AttrName, true, "fqdn"),
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 				inttypes.StringIdentityAttribute("set_identifier", false),
 			},

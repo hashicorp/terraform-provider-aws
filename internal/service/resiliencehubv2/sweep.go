@@ -37,7 +37,7 @@ func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, policy := range page.PolicySummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(policy.PolicyArn)),
 			))
 		}
@@ -59,7 +59,7 @@ func sweepSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, system := range page.SystemSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSystem, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSystemResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(system.SystemArn)),
 			))
 		}

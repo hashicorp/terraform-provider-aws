@@ -22,11 +22,9 @@ import (
 
 func TestAccResilienceHubV2System_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_system.test[0]"
 	resourceName2 := "aws_resiliencehubv2_system.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -49,7 +47,12 @@ func TestAccResilienceHubV2System_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 			{
@@ -75,10 +78,8 @@ func TestAccResilienceHubV2System_List_basic(t *testing.T) {
 
 func TestAccResilienceHubV2System_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_system.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -103,6 +104,8 @@ func TestAccResilienceHubV2System_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 				},
 			},
 			{
@@ -119,9 +122,10 @@ func TestAccResilienceHubV2System_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_resiliencehubv2_system.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_resiliencehubv2_system.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_resiliencehubv2_system.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkSystemARN),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("system_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -137,11 +141,9 @@ func TestAccResilienceHubV2System_List_includeResource(t *testing.T) {
 
 func TestAccResilienceHubV2System_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_system.test[0]"
 	resourceName2 := "aws_resiliencehubv2_system.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -154,7 +156,7 @@ func TestAccResilienceHubV2System_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2ServiceID),
-		CheckDestroy:             testAccCheckSystemDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +168,12 @@ func TestAccResilienceHubV2System_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkSystemARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkSystemARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-1")),
 				},
 			},
 			{

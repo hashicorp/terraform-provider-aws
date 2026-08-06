@@ -9,11 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -52,6 +54,7 @@ func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error
 	r := &memoryResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -185,6 +188,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -316,8 +320,35 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
-		_, err := conn.UpdateMemory(ctx, &input)
+		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateMemory(ctx, &input)
+
+			// IAM propagation - retry if role validation fails
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+				return tfresource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "valid trust policy") {
+				return tfresource.RetryableError(err)
+			}
+			// IAM propagation - retry while the execution role's permissions to a
+			// referenced resource (e.g. a Kinesis stream in stream_delivery_resources)
+			// have not yet propagated.
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "does not have access to provided") {
+				return tfresource.RetryableError(err)
+			}
+
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 			return
 		}
@@ -372,6 +403,24 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	return nil, smarterr.NewError(err)
 }
 
+func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.MemoryStatusUpdating),
+		Target:                    enum.Slice(awstypes.MemoryStatusActive),
+		Refresh:                   statusMemory(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.Memory); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
 func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemoryStatusDeleting, awstypes.MemoryStatusActive),
@@ -410,6 +459,16 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 	}
 
 	return findMemory(ctx, conn, &input)
+}
+
+func findMemoryByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryARN string) (*awstypes.Memory, error) {
+	parsedARN, err := arn.Parse(memoryARN)
+	if err != nil {
+		return nil, smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
+	}
+	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
+
+	return findMemoryByID(ctx, conn, memoryID)
 }
 
 func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetMemoryInput) (*awstypes.Memory, error) {

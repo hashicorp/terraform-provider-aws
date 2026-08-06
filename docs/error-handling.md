@@ -118,10 +118,10 @@ The Terraform Plugin SDK includes some error types which are used in certain ope
 !!! note
     While these helpers currently reside in the Terraform Plugin SDK V2 package, they can be used with Plugin Framework based resources. In the future these functions will likely be migrated into the provider itself, or a standalone library as there is no direct dependency on Plugin SDK functionality.
 
-The Terraform AWS Provider codebase implements some additional helpers for working with these in the `internal/tfresource` package:
+The Terraform AWS Provider codebase implements some additional helpers for working with these in the `internal/retry` package:
 
-- `tfresource.NotFound(err)`: Returns true if the error is a `retry.NotFoundError`.
-- `tfresource.TimedOut(err)`: Returns true if the error is a `retry.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
+- `retry.NotFound(err)`: Returns true if the error is a `retry.NotFoundError`.
+- `retry.TimedOut(err)`: Returns true if the error is a `retry.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
 
 ## Resource Lifecycle Guidelines
 

@@ -138,9 +138,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -268,16 +268,7 @@ deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 
 docs: docs-link-check docs-markdown-lint docs-misspell ## [CI] Run all CI documentation checks
 
-docs-check: ## Check provider documentation (Legacy, use caution)
-	@echo "make: Legacy target, use caution..."
-	@tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-		-provider-name=aws \
-		-require-resource-subcategory
+docs-check: swissshepherd ## Legacy alias to swissshepherd
 
 docs-link-check: ## [CI] Documentation Checks / markdown-link-check
 	@echo "make: Documentation Checks / markdown-link-check..."
@@ -320,13 +311,14 @@ docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
 	@misspell -error -source text docs/
 
-examples-tflint: tflint-init ## [CI] Examples Checks / tflint
+examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" \
 	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
-fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
+fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -368,7 +360,14 @@ fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen: prereq-go gen-raw ## Run all Go generators (with Go version check)
+gen: prereq-go ## Run Go generators (all provider-wide, or scoped to a service with PKG=/K=<service>)
+ifneq ($(origin PKG), undefined)
+	@echo "make: Running Go generators for $(SVC_DIR)..."
+	@echo "make: If you changed anything under internal/generate, run the full make gen without PKG/K scoping"
+	$(GO_VER) generate $(SVC_DIR)/...
+else
+	@$(MAKE) gen-raw
+endif
 
 gen-raw: ## Run all Go generators
 	@echo "make: Running Go generators..."
@@ -433,7 +432,7 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 		$(TEST)
 
 help: ## Display this help
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
 
 import-lint: ## [CI] Provider Checks / import-lint
 	@echo "make: Provider Checks / import-lint..."
@@ -444,6 +443,10 @@ install: build ## build
 lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
+
+makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
+	@echo "make: Makefile Linting / alignment check..."
+	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
@@ -508,13 +511,13 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
-quick-fix-core-heading: ## Just a heading for quick-fix-core
+quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
 quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
-quick-fix-heading: ## Just a heading for quick-fix
+quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
@@ -544,7 +547,8 @@ sane: prereq-go ## Run sane check
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -552,7 +556,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -562,7 +567,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$'
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -570,7 +576,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 18-$$fails1 )) ; \
 	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
@@ -581,7 +588,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \
@@ -594,7 +602,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
 	passes=$$(( 54-$$tot_fails )) ; \
@@ -611,7 +620,7 @@ schema-validate: ## Validate schemas
 	@$(GO_VER) test -vet=off -buildvcs=false \
 		./internal/provider/framework -run=TestProviderInit
 
-semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
+semgrep: semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae semgrep-service-naming ## [CI] Run all CI Semgrep checks
 
 semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
@@ -653,8 +662,6 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
-		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
 		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
@@ -676,7 +683,15 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config 'r/dgryski.semgrep-go.writestring' \
 		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
-semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
+semgrep-constants: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Constants Check
+	@echo "make: Semgrep Checks / Constants Check..."
+	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml
+
+semgrep-fix-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -748,10 +763,8 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
-	@semgrep --quiet \
-		--test .ci/semgrep/
-	@semgrep --quiet \
-		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
+	@semgrep --test .ci/semgrep/
+	@semgrep --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -792,17 +805,17 @@ sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper-check: sweeper-linked sweeper-unlinked ## [CI] Provider Checks / Sweeper Linked, Unlinked
 
 sweeper-linked: ## [CI] Provider Checks / Sweeper Functions Linked
 	@echo "make: Provider Checks / Sweeper Functions Linked..." ; \
-	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
+	$(GO_VER) test -c -o ./sweeper-bin ./internal/sweep/ ; \
 	count=`strings ./sweeper-bin | \
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-linked: found $$count, expected more than 0" ; \
@@ -819,22 +832,22 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 swissshepherd: ## [CI] Run Swiss Shepherd checks
-	@echo "make: Running Swiss Shepherd checks..."
+	@echo "make: Running Swiss Shepherd checks (config: .ci/swissshepherd-weak.hcl)..."
 	@swissshepherd --config .ci/swissshepherd-weak.hcl
 
 swissshepherd-count: ## [CI] Run Swiss Shepherd checks
-	@echo "make: Count of all Swiss Shepherd checks..."
+	@echo "make: Counting all Swiss Shepherd findings (config: .ci/swissshepherd-full.hcl)..."
 	@swissshepherd --config .ci/swissshepherd-full.hcl | grep -E '^(WARN|ERROR)' | wc -l
 
 swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
-	@echo "make: Refreshing Swiss Shepherd schemas..."
+	@echo "make: Refreshing Swiss Shepherd schemas (config: .ci/swissshepherd-weak.hcl)..."
 	@echo "make: This will take a while..."
 	@swissshepherd --config .ci/swissshepherd-weak.hcl --refresh-schema
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -842,7 +855,7 @@ test-compile: prereq-go ## Test package compilation
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
+	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off -buildvcs=false
 
 test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -856,7 +869,7 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 		$(MAKE) test-full; \
 	fi
 
-test-single-service: ## Internal: test single service
+test-single-service: ## [internal] test single service
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
@@ -877,7 +890,7 @@ test-single-service: ## Internal: test single service
 		-count=1; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
-test-full: ## Internal: test full codebase
+test-full: ## [internal] test full codebase
 	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-aws-build-$$$$"; \
@@ -932,7 +945,7 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
-test-naming: ## Check test naming conventions
+test-naming: ## [CI] Check test naming conventions
 	@.ci/scripts/check-test-naming.sh
 
 testacc: prereq-go fmt-check schema-validate ## Run acceptance tests
@@ -968,7 +981,7 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
 
-terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+terraform-fmt: ## [CI] Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
 	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
 	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
 	@terraform fmt -recursive .
@@ -976,57 +989,37 @@ terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false 
 
 testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
 
-testacc-tflint-dir: tflint-init ## Run tflint on Terraform directories
+testacc-tflint-dir: tflint-init tflint-opa-tests ## Run tflint on Terraform directories
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive
 
 testacc-tflint-dir-fix: tflint-init ## fix Terraform directory linter findings
 	@echo "make: Acceptance Test Linting (standalone) / tflint..."
 	@# tflint always resolves config flies relative to the working directory when using --recursive
 	@tflint_config="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" tflint --config  "$$tflint_config" --chdir=./internal/service --recursive --fix
 
-testacc-tflint-embedded: tflint-init ## Run tflint on embedded Terraform configs
+testacc-tflint-embedded: tflint-init tflint-opa-tests ## Run tflint on embedded Terraform configs
 	@echo "make: Acceptance Test Linting (embedded) / tflint..."
-	@find $(SVC_DIR) -type f -name '*_test.go' \
+	@export TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
+
+tflint-opa-tests: tflint-init ## Run OPA policy tests
+	@TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" .ci/opa-policies/tests/run_tests.sh
 
 tflint-init: ## Initialize tflint
 	@tflint --config .ci/.tflint.hcl --init
 
-tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
-	@echo "make: Provider Checks / tfproviderdocs..."
-	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
-	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
-	echo 'data "aws_partition" "example" {}' > example.tf ; \
-	terraform init -plugin-dir terraform-plugin-dir ; \
-	mkdir -p terraform-providers-schema ; \
-	terraform providers schema -json > terraform-providers-schema/schema.json ; \
-	tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
-		-provider-source registry.terraform.io/hashicorp/aws \
-		-providers-schema-json terraform-providers-schema/schema.json \
-		-require-resource-subcategory \
-		-ignore-cdktf-missing-files \
-		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
-		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
-		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
-		-enable-enhanced-region-check
-
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -1046,6 +1039,7 @@ update: prereq-go ## Update dependencies
 	$(GO_VER) get -u ./...
 	$(GO_VER) mod tidy
 	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./tools/makelign && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
@@ -1130,7 +1124,7 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
-website-terrafmt-fix: ## [CI] Fix Website / terrafmt
+website-terrafmt-fix: ## Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
 	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
@@ -1139,10 +1133,13 @@ website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 		terrafmt fmt $$dir --pattern '*.markdown'; \
 	done
 
-website-tflint: tflint-init ## [CI] Website Checks / tflint
+website-tflint: tflint-init tflint-opa-tests ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
 	@exit_code=0 ; \
+	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" ; \
+	export TFLINT_OPA_POLICY_DIR ; \
 	shared_rules=( \
+		"--disable-rule=opa_deny_acmpca_deletion_time" \
 		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
 		"--disable-rule=aws_db_instance_default_parameter_group" \
 		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
@@ -1203,6 +1200,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-make-tests \
 	clean-tidy \
 	copyright \
+	copyright-fix \
 	default \
 	deps-check \
 	docs \
@@ -1224,7 +1222,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	gen-check \
 	gen-raw \
 	generate-changelog \
-	gh-workflows-lint \
+	gh-workflow-lint \
 	go-build \
 	go-misspell \
 	golangci-lint \
@@ -1238,6 +1236,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	install \
 	lint \
 	lint-fix \
+	makefile-lint \
 	misspell \
 	modern-check \
 	modern-fix \
@@ -1252,16 +1251,19 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-heading \
 	sane \
 	sanity \
+	schema-validate \
 	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
+	semgrep-fix-constants \
 	semgrep-fix-core \
 	semgrep-naming \
 	semgrep-naming-cae \
 	semgrep-service-naming \
+	semgrep-test \
 	semgrep-validate \
 	skaff \
 	skaff-check-compile \
@@ -1275,9 +1277,11 @@ yamllint: ## [CI] YAML Linting / yamllint
 	swissshepherd-count \
 	swissshepherd-refresh \
 	t \
+	terraform-fmt \
 	test \
 	test-compile \
 	test-full \
+	test-naming \
 	test-shard \
 	test-single-service \
 	testacc \
@@ -1287,10 +1291,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
+	testacc-tflint-dir-fix \
 	testacc-tflint-embedded \
-	terraform-fmt \
 	tflint-init \
-	tfproviderdocs \
+	tflint-opa-tests \
 	tools \
 	ts \
 	update \

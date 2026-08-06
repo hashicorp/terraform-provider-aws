@@ -43,22 +43,22 @@ resource "aws_s3control_access_grant" "example" {
 
 This resource supports the following arguments:
 
+* `access_grants_location_configuration` - (Optional) See [`access_grants_location_configuration` Block](#access_grants_location_configuration-block) below for more details.
+* `access_grants_location_id` - (Required) ID of the S3 Access Grants location to with the access grant is giving access.
+* `account_id` - (Optional) AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `grantee` - (Optional) See [`grantee` Block](#grantee-block) below for more details.
+* `permission` - (Required) Access grant's level of access. Valid values: `READ`, `WRITE`, `READWRITE`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `access_grants_location_configuration` - (Optional) See [Location Configuration](#location-configuration) below for more details.
-* `access_grants_location_id` - (Required) The ID of the S3 Access Grants location to with the access grant is giving access.
-* `account_id` - (Optional) The AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `grantee` - (Optional) See [Grantee](#grantee) below for more details.
-* `permission` - (Required) The access grant's level of access. Valid values: `READ`, `WRITE`, `READWRITE`.
 * `s3_prefix_type` - (Optional) If you are creating an access grant that grants access to only one object, set this to `Object`. Valid values: `Object`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Location Configuration
+### `access_grants_location_configuration` Block
 
 The `access_grants_location_configuration` block supports the following:
 
 * `s3_sub_prefix` - (Optional) Sub-prefix.
 
-### Grantee
+### `grantee` Block
 
 The `grantee` block supports the following:
 
@@ -71,8 +71,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `access_grant_arn` - Amazon Resource Name (ARN) of the S3 Access Grant.
 * `access_grant_id` - Unique ID of the S3 Access Grant.
-* `grant_scope` - The access grant's scope.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `grant_scope` - Access grant's scope.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpc_ipam_pool_cidr_allocation: Added support for eventual consistency on read operations after create.
-```

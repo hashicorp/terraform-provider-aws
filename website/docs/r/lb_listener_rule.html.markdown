@@ -253,8 +253,8 @@ resource "aws_lb_listener_rule" "transform" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }
@@ -399,7 +399,7 @@ Condition Blocks (for `condition`) support the following:
 Host Header Blocks (for `host_header`) support the following:
 
 * `regex_values` - (Optional) List of regular expressions to compare against the host header. The maximum length of each string is 128 characters. Conflicts with `values`.
-* `values` - (Optional) List of host header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Conflicts with `regex_values`.
+* `values` - (Optional) List of host header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. To match host headers containing a non-standard port (for example, `example.com:8443`), use `regex_values`. Conflicts with `regex_values`.
 
 #### HTTP Header Blocks
 

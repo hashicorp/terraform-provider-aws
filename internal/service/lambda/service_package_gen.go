@@ -69,6 +69,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newFunctionScalingConfigResource,
+			TypeName: "aws_lambda_function_scaling_config",
+			Name:     "Function Scaling Config",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionScalingConfigImportID{},
+			},
+		},
+		{
 			Factory:  newRuntimeManagementConfigResource,
 			TypeName: "aws_lambda_runtime_management_config",
 			Name:     "Runtime Management Config",
@@ -88,6 +102,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newFunctionScalingConfigResourceAsListResource,
+			TypeName: "aws_lambda_function_scaling_config",
+			Name:     "Function Scaling Config",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("qualifier", true),
+			}),
 		},
 	})
 }

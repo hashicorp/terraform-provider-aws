@@ -63,16 +63,16 @@ resource "aws_bedrockagentcore_memory" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the memory.
 * `event_expiry_duration` - (Required) Number of days after which memory events expire. Must be a positive integer in the range of 7 to 365.
+* `name` - (Required) Name of the memory.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the memory.
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
 * `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Changing this forces a new resource to be created. See [`indexed_key`](#indexed_key) below.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources`](#stream_delivery_resources) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -112,6 +112,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import

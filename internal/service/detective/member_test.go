@@ -221,12 +221,7 @@ func testAccCheckMemberExists(ctx context.Context, t *testing.T, n string, v *aw
 
 		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
-		graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
+		output, err := tfdetective.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_arn"], rs.Primary.Attributes[names.AttrAccountID])
 
 		if err != nil {
 			return err
@@ -247,12 +242,7 @@ func testAccCheckMemberDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
+			_, err := tfdetective.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_arn"], rs.Primary.Attributes[names.AttrAccountID])
 
 			if retry.NotFound(err) {
 				continue

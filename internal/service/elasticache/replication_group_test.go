@@ -163,6 +163,53 @@ func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_Valkey_durability(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Valkey_durability(rName, string(awstypes.DurabilitySync)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "durability", string(awstypes.DurabilitySync)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_Valkey_durability(rName, string(awstypes.DurabilityAsync)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "durability", string(awstypes.DurabilityAsync)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -608,6 +655,53 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 					testAccCheckReplicationGroupUserGroup(ctx, t, resourceName, fmt.Sprintf("%s-%d", userGroup, 1)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 1)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_PendingUserGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	userGroup := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup, 0, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 0)),
+				),
+			},
+			{
+				// Swap to the second user group with apply_immediately = false. The
+				// change is deferred to the maintenance window, so the live value
+				// still reports the first user group. This asserts that the pending
+				// add/remove delta is reconstructed into state as the second group,
+				// and the post-apply, post-refresh plan check confirms this produces
+				// no perpetual diff.
+				Config: testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup, 1, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "user_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", fmt.Sprintf("%s-%d", userGroup, 1)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -4218,6 +4312,186 @@ func TestAccElastiCacheReplicationGroup_Snapshot_ClusterModeEnabled_Valkey7(t *t
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_PendingNodeType_Redis(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.small", true, "redis"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "redis"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
+				),
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the pending node type must be
+				// reflected in state. The framework's post-apply, post-refresh plan
+				// check confirms this produces no perpetual diff.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_SlowLog_Redis5ToRedis6(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Redis_v5(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_slowLog(rName, "redis", "6.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_PendingNodeType_Valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.small", true, "valkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_pendingNodeType(rName, "cache.t3.medium", false, "valkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
+				),
+				// The modification is deferred to the maintenance window
+				// (apply_immediately = false), so the pending node type must be
+				// reflected in state. The framework's post-apply, post-refresh plan
+				// check confirms this produces no perpetual diff.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_SlowLog_Redis5ToValkey7(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Redis_v5(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_slowLog(rName, "valkey", "7.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -4696,6 +4970,56 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, engine)
 }
 
+func testAccReplicationGroupConfig_Valkey_durability(rName, durability string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.r6g.large"
+  multi_az_enabled           = true
+  port                       = 6379
+  apply_immediately          = true
+  maintenance_window         = "tue:06:30-tue:07:30"
+  snapshot_window            = "01:00-02:00"
+  engine                     = "valkey"
+  engine_version             = "9.0"
+  cluster_mode               = "enabled"
+  num_node_groups            = 2
+  replicas_per_node_group    = 1
+  automatic_failover_enabled = true
+  durability                 = %[2]q
+}
+`, rName, durability)
+}
+
+func testAccReplicationGroupConfig_slowLog(rName string, engine string, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = "%[1]s"
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = true
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
+
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.test.name
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "slow-log"
+  }
+}
+`, rName, engine, engineVersion)
+}
+
 func testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName string, engine string, engineVersion string, numNodeGroups int) string {
 	return testAccReplicationGroupConfig_clusterModeWithNumNodeGroupsReplica(rName, engine, engineVersion, numNodeGroups, 0)
 }
@@ -5055,6 +5379,40 @@ resource "aws_elasticache_replication_group" "test" {
   user_group_ids             = [aws_elasticache_user_group.test[%[3]d].id]
 }
 `, rName, userGroup, flag)
+}
+
+func testAccReplicationGroupConfig_pendingUserGroup(rName, userGroup string, groupIndex int, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  count = 2
+
+  user_id       = "%[2]s-${count.index}"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  count = 2
+
+  user_group_id = "%[2]s-${count.index}"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test[count.index].user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test pending user group"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[4]t
+  maintenance_window         = "tue:06:30-tue:07:30"
+  snapshot_window            = "01:00-02:00"
+  transit_encryption_enabled = true
+  user_group_ids             = [aws_elasticache_user_group.test[%[3]d].id]
+}
+`, rName, userGroup, groupIndex, applyImmediately)
 }
 
 func testAccReplicationGroupConfig_inVPC(rName string) string {
@@ -6562,4 +6920,18 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccReplicationGroupConfig_pendingNodeType(rName, nodeType string, applyImmediately bool, engineType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test pending node type"
+  node_type            = %[2]q
+  port                 = 6379
+  apply_immediately    = %[3]t
+  maintenance_window   = "sun:05:00-sun:09:00"
+  engine               = %[4]q
+}
+`, rName, nodeType, applyImmediately, engineType)
 }

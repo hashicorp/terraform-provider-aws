@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_accessanalyzer_analyzer: Add `configuration` configuration block
-```

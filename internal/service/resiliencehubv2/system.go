@@ -5,21 +5,25 @@ package resiliencehubv2
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -32,27 +36,52 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.System")
 // @Testing(hasNoPreExistingResource=true)
-func newResourceSystem(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSystem{}, nil
+func newSystemResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &systemResource{}, nil
 }
 
-type resourceSystem struct {
-	framework.ResourceWithModel[resourceSystemModel]
+type systemResource struct {
+	framework.ResourceWithModel[systemResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *resourceSystem) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *systemResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrName: fwschema.StringAttribute{
-				Required: true,
+			names.AttrDescription: fwschema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 615),
+				},
+			},
+			names.AttrKMSKeyID: fwschema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrDescription: fwschema.StringAttribute{
-				Optional: true,
+			names.AttrName: fwschema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					validResourceName,
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"organization_id": fwschema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"ou_id": fwschema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"sharing_enabled": fwschema.BoolAttribute{
 				Optional: true,
@@ -61,14 +90,15 @@ func (r *resourceSystem) Schema(ctx context.Context, req resource.SchemaRequest,
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"system_id":       framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func (r *resourceSystem) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceSystemModel
+func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan systemResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -77,11 +107,13 @@ func (r *resourceSystem) Create(ctx context.Context, req resource.CreateRequest,
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
 	var input resiliencehubv2.CreateSystemInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateSystem(ctx, &input)
@@ -90,18 +122,17 @@ func (r *resourceSystem) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.System, &plan))
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output.System, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ARN = types.StringValue(aws.ToString(output.System.SystemArn))
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceSystem) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceSystemModel
+func (r *systemResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state systemResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -109,13 +140,14 @@ func (r *resourceSystem) Read(ctx context.Context, req resource.ReadRequest, res
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	system, err := findSystemByARN(ctx, conn, state.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, state.SystemARN)
+	system, err := findSystemByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
@@ -124,18 +156,11 @@ func (r *resourceSystem) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	tags, err := listTags(ctx, conn, state.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
-		return
-	}
-	setTagsOut(ctx, tags.Map())
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
-func (r *resourceSystem) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceSystemModel
+func (r *systemResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state systemResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -144,30 +169,23 @@ func (r *resourceSystem) Update(ctx context.Context, req resource.UpdateRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	var input resiliencehubv2.UpdateSystemInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input.SystemArn = state.ARN.ValueStringPointer()
+	if diff.HasChanges() {
+		arn := fwflex.StringValueFromFramework(ctx, plan.SystemARN)
+		var input resiliencehubv2.UpdateSystemInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	output, err := conn.UpdateSystem(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.System, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.ARN = types.StringValue(aws.ToString(output.System.SystemArn))
-
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := updateTags(ctx, conn, state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		_, err := conn.UpdateSystem(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 	}
@@ -175,8 +193,8 @@ func (r *resourceSystem) Update(ctx context.Context, req resource.UpdateRequest,
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceSystem) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceSystemModel
+func (r *systemResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state systemResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -184,28 +202,28 @@ func (r *resourceSystem) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	arn := fwflex.StringValueFromFramework(ctx, state.SystemARN)
 	input := resiliencehubv2.DeleteSystemInput{
-		SystemArn: state.ARN.ValueStringPointer(),
+		SystemArn: aws.String(arn),
 	}
 	_, err := conn.DeleteSystem(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 	}
 }
 
-func (r *resourceSystem) flatten(ctx context.Context, system *awstypes.System, data *resourceSystemModel) diag.Diagnostics {
+func (r *systemResource) flatten(ctx context.Context, system *awstypes.System, data *systemResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(flex.Flatten(ctx, system, data)...)
+	diags.Append(fwflex.Flatten(ctx, system, data)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	data.ARN = types.StringValue(aws.ToString(system.SystemArn))
+	setTagsOut(ctx, system.Tags)
 
 	return diags
 }
@@ -214,26 +232,40 @@ func findSystemByARN(ctx context.Context, conn *resiliencehubv2.Client, arn stri
 	input := resiliencehubv2.GetSystemInput{
 		SystemArn: aws.String(arn),
 	}
-	output, err := conn.GetSystem(ctx, &input)
+
+	return findSystem(ctx, conn, &input)
+}
+
+func findSystem(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.GetSystemInput) (*awstypes.System, error) {
+	output, err := conn.GetSystem(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
-		}
 		return nil, smarterr.NewError(err)
 	}
+
 	if output == nil || output.System == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+
 	return output.System, nil
 }
 
-type resourceSystemModel struct {
+type systemResourceModel struct {
 	framework.WithRegionModel
-	ARN            types.String `tfsdk:"arn"`
 	Description    types.String `tfsdk:"description"`
+	KMSKeyID       fwtypes.ARN  `tfsdk:"kms_key_id"`
 	Name           types.String `tfsdk:"name"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	OUID           types.String `tfsdk:"ou_id"`
 	SharingEnabled types.Bool   `tfsdk:"sharing_enabled"`
+	SystemARN      types.String `tfsdk:"arn"`
+	SystemID       types.String `tfsdk:"system_id"`
 	Tags           tftags.Map   `tfsdk:"tags"`
 	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
