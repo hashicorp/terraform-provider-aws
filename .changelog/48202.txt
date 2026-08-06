@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_quicksight_data_set: Add `sub_type` argument to `physical_table_map.*.custom_sql.columns`, `physical_table_map.*.relational_table.input_columns`, `physical_table_map.*.s3_source.input_columns`, and `logical_table_map.*.data_transforms.*.cast_column_type_operation`
+```
