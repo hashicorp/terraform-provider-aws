@@ -305,6 +305,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the connection.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
+* `state` - The state of the connection. Valid values are `CREATING`, `UPDATING`, `DELETING`, `AUTHORIZED`, `DEAUTHORIZED`, `AUTHORIZING`, `DEAUTHORIZING`, `ACTIVE`, and `FAILED_CONNECTIVITY`.
 
 ## Import
 
