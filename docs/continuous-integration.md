@@ -384,6 +384,16 @@ Use the `gen` target to run all the generators associated with the provider. Unl
 make gen
 ```
 
+The full run covers every package plus the provider-level and sweeper generators, and can take several minutes. When your change is confined to a single service (for example, editing annotations or registering a new resource in an existing service), scope generation to that package with `PKG`/`K`:
+
+```console
+make gen PKG=<service>
+```
+
+Scoped generation runs only that service's generators (equivalent to `go generate ./internal/service/<service>/...`). It does not run the provider-level (`./internal/provider/...`) or sweeper generators, so changes that affect provider-level registration — such as adding a new service — still require the full `make gen`.
+
+If you changed anything under `internal/generate/` (templates or generator code), scoped `make gen PKG=<service>` is insufficient — run the full `make gen`, since generator changes affect every service.
+
 !!! note
     While running the generators, you may see hundreds or thousands of code changes as `make` and the generators delete and recreate files.
 

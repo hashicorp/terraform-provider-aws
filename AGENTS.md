@@ -33,7 +33,16 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | [breaking-changes](./.agents/skills/breaking-changes/SKILL.md) | Review a PR for possible breaking changes. |
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
-| [reviewdocs](./.agents/skills/reviewdocs/SKILL.md) | Review a PR's end user documentation updates. |
+| [review-pr](./.agents/skills/review-pr/SKILL.md) | Review a Terraform AWS Provider PR. Router: holds cross-cutting principles and routes to the scoped `review-*` leaf skills below based on the files a PR changes. |
+| [review-lifecycle](./.agents/skills/review-lifecycle/SKILL.md) | Review resource CRUD, errors, and AutoFlex (`internal/service/**/*.go`). |
+| [review-schema](./.agents/skills/review-schema/SKILL.md) | Review Plugin Framework schema shape (`internal/service/**/*.go`). |
+| [review-helpers](./.agents/skills/review-helpers/SKILL.md) | Review finders, waiters, sweepers, data sources, list resources (`internal/service/**/*.go`). |
+| [review-identity](./.agents/skills/review-identity/SKILL.md) | Review Resource Identity annotations and import-ID handlers (`internal/service/**/*.go`). |
+| [review-tags](./.agents/skills/review-tags/SKILL.md) | Review tag schema attributes, wiring, and the `@Tags` annotation (`internal/service/**/*.go`). |
+| [review-generated](./.agents/skills/review-generated/SKILL.md) | Review generated code (`internal/service/**/*_gen.go`). |
+| [review-tests](./.agents/skills/review-tests/SKILL.md) | Review acceptance/unit test basics (`internal/service/**/*_test.go`). |
+| [review-tests-helpers](./.agents/skills/review-tests-helpers/SKILL.md) | Review Exists/Destroy, data source, list, and unit tests (`internal/service/**/*_test.go`). |
+| [review-docs](./.agents/skills/review-docs/SKILL.md) | Review a PR's end user documentation updates (`website/docs/**/*.markdown`). |
 
 ## Stack
 - Go 1.26+, AWS SDK for Go v2.
@@ -79,7 +88,7 @@ terraform-provider-aws/
 │   │   ├── generate.go     # Code generation instructions
 │   │   └── sweep.go        # This service's resource sweepers
 │   ├── slices/             # Go slice utilities
-│   ├── smerr/              # Smart error utilities
+│   ├── smerr/              # Smarterr utilities
 │   ├── sweep/              # Resource sweeper utilities
 │   ├── tags/               # Resource tagging utilities
 │   ├── types/              # Go types
@@ -103,26 +112,12 @@ When creating a new resource, use the Terraform Plugin Framework.
 ## Conventions
 
 ### Non-negotiable Rules
-- Verification is a hard exit criterion for every task. Without it, the task is not done.
-- Prefer the boring, obvious solution.
-- Touch only what you’re asked to touch.
-- Code quality must not be compromised.
-  - Every change must build successfully and pass all tests. Use `make test` to run unit tests.
-  - Code must be lint-free. Use `make lint` to check for linting issues.
-- Follow existing conventions.
-  - Consistency is key to maintaining a readable and maintainable codebase.
-  - Before writing any code, analyze the existing codebase to understand and adopt its naming conventions, coding style, and language usage.
-- This repository contains a comprehensive set of utility packages. Look for opportunities to use them before writing new code.
-  - Look in the `internal/` directory (excluding `internal/generate/` and `internal/services/`) for broadly reusable utilities.
-  - Only add new dependencies as a last resort, or when explicitly requested.
-
-#### AI usage policy
-
-Per `docs/ai-usage.md`:
-- Disclose AI use in the PR description.
-- Include `🤖🤖🤖` in the PR title if an LLM agent is directly involved in submitting it.
-- The human PR author is fully responsible for all submitted code and must understand it completely.
-- Human reviewers own the final code and must understand it fully.
+- Verification is a hard exit criterion for every PR (see [Development workflow](#development-workflow)). Without it, the task is not done.
+- Prefer the boring, obvious solution. Touch only what you're asked to touch.
+- Every PR must build, pass tests, and be lint-free.
+- Follow existing conventions for naming, style, and idioms.
+- Follow current best practices and conventions for naming, style, idioms. Legacy patterns should be avoided.
+- Reuse the repository's utility packages (in `internal/`, excluding `internal/generate/` and `internal/service/`) before writing new utility code. Add new dependencies only after exhausting these.
 
 ### Coding Conventions (Follow These)
 
@@ -131,51 +126,10 @@ Per `docs/ai-usage.md`:
 - **Use elegant Go, modern (Go 1.26+) idioms** (e.g., `slices.Contains()`)
 - **Go nuance**: Don't build single files, **build a package**
 
-#### Code generation
-- Run `make gen` after making changes to any annotations (`// @...` comments in Go files), any `internal/service/*/generate.go` source files, or `names/data/names_data.hcl`.
-
 #### Error handling
-- Wrap AWS errors with `fmt.Errorf("reading X (%s): %w", id, err)`.
+- Use smarterr/smerr
 - Use `retry.NotFound()` to check for missing resources during Read.
 - Return early on error; don't accumulate diagnostics past the first fatal error.
-
-### Guidelines
-
-#### Running commands
-- Confirm that any commands you intend to run are safe before running them.
-- Commands that are safe to run in the repository are:
-  - Any command that invokes `make`.
-  - Any command that invokes `go`.
-- Do not prompt for confirmation before running any of the safe commands above.
-  - Any other commands may be unsafe and should not be run without confirmation.
-
-#### Running tests
-- Every PR must leave tests in a passing state.
-- All existing tests must pass.
-  - Use `make test` to run unit tests.
-  - If your change breaks an existing test, fix it.
-- CI is the gate. Run `make ci-quick`.
-  - PRs with failing tests do not merge.
-
-#### Documentation checklist
-- Authoritative reference: `./docs/end-user-documentation.md`.
-- New features require new documentation.
-- Correct spelling and grammar are important.
-- Run `make swissshepherd` to verify.
-
-#### Copyright headers
-- All applicable files must have a copyright header.
-- Run `make copyright-fix` to ensure headers are correct.
-
-#### Commit messages
-- Each commit should be small and address a single change.
-- The commit message describes the change.
-
-#### CHANGELOG entries
-- CHANGELOG entries are required for:
-  - New resources, data sources, ephemeral resources, action, list resources and functions.
-  - Bug fixes.
-  - Enhancements.
 
 ### Common Patterns
 
@@ -203,20 +157,33 @@ func (r *thingResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 ```
 
+## Development workflow
+
+### Overview
+- Substantive changes and correctness first, lint after: run `make quick-fix PKG=<service>` near the end, before raising PR. Avoid the tiny change → lint → tiny change → lint loop. `make fmt` is the cheap exception — run it freely.
+- Scope most commands to the package changed — the provider is very large. CI is the provider-wide gate for build, lint, and semgrep.
+
+### AI usage
+When you help prepare a PR, disclose the AI's role in the description and add `🤖🤖🤖` to the title. See [`docs/ai-usage.md`](docs/ai-usage.md) for the full policy. **Humans are fully responsible for the code regardless of AI usage.**
+
+### Running commands
+- `make t` and `make testacc`: Run acceptance tests and create real AWS resources. Get explicit approval before running.
+- `make …` (except acceptance tests), `go …`, and read-only commands (`awk`, `grep`, `ls`, `rg`) are safe to run without confirmation.
+
+### Regenerate, test, and verify (scoped to your package)
+- **Regenerate** after changing annotations or a service's `generate.go`: `make gen PKG=<service>`. Run the provider-wide `make gen` only after changing `names/data/names_data.hcl`, anything under `internal/generate/` — it affects every service and takes many minutes.
+- **Test** with `make test PKG=<service>` (unit test) (`T=<pattern>` filters by name); for non-service changes, e.g., `go test ./internal/conns/...`.
+- **Fix and verify** with `make quick-fix PKG=<service>` — the default final pass. It applies formatting, imports, lint, semgrep fixes, and `copyright-fix`, and fails if the build is broken (no separate build step needed).
+- **Documentation**: run `make swissshepherd` to verify changes align with docs. Run `make swissshepherd-refresh` only once at the beginning of a session.
+
+### Commits, CHANGELOG, and docs
+- Keep each commit small, atomic, and single-purpose; the message describes the change.
+- Add a `.changelog/` entry for new features, bug fixes, and enhancements.
+- New features require new documentation; `./docs/end-user-documentation.md` is authoritative.
+
 ## Boundaries
 - Never edit `CHANGELOG.md` directly — use `.changelog/` entries.
-- Never edit generated files by hand — modify the generator or annotations, then run `make gen`.
+- Never edit generated files by hand — modify the generator or annotations, then run `make gen PKG=<service>` or `make gen` (provider level).
 - Do not modify `go.mod`/`go.sum` without running `go mod tidy`.
 - Do not add new external dependencies without explicit approval.
-- Beware of running acceptance tests (`make testacc`) without explicit approval — they create real AWS resources.
 - The `website/` directory follows different conventions; see `docs/end-user-documentation.md`.
-
-## Verification
-
-Before finishing:
-- `make build` — must compile cleanly.
-- `make ci-quick` — zero warnings.
-- `make test` — all unit tests pass.
-- `make gen` — if you changed annotations or generators.
-- `make copyright-fix` — if you added new files.
-- `make swissshepherd` — if you changed documentation.
