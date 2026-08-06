@@ -618,6 +618,58 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupIngressRule_moveWithSingleSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SecurityGroupRule
+	var group awstypes.SecurityGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	fromResourceName := "aws_security_group_rule.test"
+	toResourceName := "aws_vpc_security_group_ingress_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_moveFrom(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, sgResourceName, &group),
+					resource.TestCheckResourceAttr(fromResourceName, names.AttrType, "ingress"),
+					resource.TestCheckResourceAttr(fromResourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(fromResourceName, "self", acctest.CtTrue),
+					resource.TestCheckResourceAttr(fromResourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(fromResourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(fromResourceName, names.AttrProtocol, "tcp"),
+					resource.TestCheckResourceAttr(fromResourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckNoResourceAttr(fromResourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(fromResourceName, "to_port", "8080"),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_moveTo(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, t, toResourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, toResourceName, names.AttrARN, "ec2", "security-group-rule/{id}"),
+					resource.TestCheckNoResourceAttr(toResourceName, "cidr_ipv4"),
+					resource.TestCheckNoResourceAttr(toResourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(toResourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(toResourceName, "from_port", "80"),
+					resource.TestCheckResourceAttrPair(toResourceName, names.AttrID, toResourceName, "security_group_rule_id"),
+					resource.TestCheckResourceAttr(toResourceName, "ip_protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(toResourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(toResourceName, "referenced_security_group_id", sgResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(toResourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(toResourceName, names.AttrTags),
+					resource.TestCheckResourceAttr(toResourceName, "to_port", "8080"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecurityGroupRuleNotRecreated(i, j *awstypes.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(i.SecurityGroupRuleId) != aws.ToString(j.SecurityGroupRuleId) {
@@ -757,6 +809,29 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   from_port   = 53
   ip_protocol = "udp"
   to_port     = 53
+}
+`)
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_moveFrom(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
+resource "aws_security_group_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  type      = "ingress"
+  from_port = 80
+  protocol  = "tcp"
+  to_port   = 8080
+  self      = true
+}
+`)
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_moveTo(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupID(rName), `
+moved {
+  from = aws_security_group_rule.test
+  to   = aws_vpc_security_group_ingress_rule.test
 }
 `)
 }
