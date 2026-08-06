@@ -439,7 +439,7 @@ func waitIngressPointActive(ctx context.Context, conn *mailmanager.Client, id st
 			awstypes.IngressPointStatusUpdating,
 		),
 		Target:                    enum.Slice(awstypes.IngressPointStatusActive),
-		Refresh:                   statusIngressPoint(ctx, conn, id),
+		Refresh:                   statusIngressPoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -459,7 +459,7 @@ func waitIngressPointDeleted(ctx context.Context, conn *mailmanager.Client, id s
 			awstypes.IngressPointStatusDeprovisioning,
 		),
 		Target:  []string{},
-		Refresh: statusIngressPoint(ctx, conn, id),
+		Refresh: statusIngressPoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -471,8 +471,8 @@ func waitIngressPointDeleted(ctx context.Context, conn *mailmanager.Client, id s
 	return nil, smarterr.NewError(err)
 }
 
-func statusIngressPoint(ctx context.Context, conn *mailmanager.Client, id string) retry.StateRefreshFunc {
-	return func(context.Context) (any, string, error) {
+func statusIngressPoint(conn *mailmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findIngressPointByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
