@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -25,11 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -42,8 +41,6 @@ import (
 )
 
 const (
-	senderIDResourceIDSeparator = ","
-
 	// A sender ID re-requested immediately after being released returns a
 	// ValidationException with Reason="SENDER_ID_REQUIRES_REGISTRATION" until the
 	// release propagates. This is the window Create retries over, e.g. when a change
@@ -55,11 +52,12 @@ const (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("sender_id")
 // @IdentityAttribute("iso_country_code")
-// @ImportIDHandler("senderIDImportID", setIDAttribute=true)
+// @ImportIDHandler("senderIDImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckSenderID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.SenderIdInformation")
 // @Testing(generator="testAccRandomSenderID(t)")
+// @Testing(importStateIdAttributes="sender_id;iso_country_code", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newSenderIDResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &senderIDResource{}
 
@@ -82,7 +80,6 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"iso_country_code": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -172,10 +169,9 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// RequestSenderId does not return a registration ID, and the composite ID is
-	// derived locally, so set both explicitly after flattening the response.
+	// RequestSenderId does not return a registration ID, so set it explicitly after
+	// flattening the response.
 	data.RegistrationID = types.StringNull()
-	data.setID()
 
 	// DescribeSenderIds (used on Read/import) returns message types in mixed case
 	// (e.g. "Transactional"), while the canonical enum values are upper case. Normalize
@@ -192,11 +188,6 @@ func (r *senderIDResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
-		return
-	}
-
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	out, err := findSenderIDByTwoPartKey(ctx, conn, data.SenderID.ValueString(), data.ISOCountryCode.ValueString())
@@ -209,7 +200,7 @@ func (r *senderIDResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.SenderID.String())
 		return
 	}
 
@@ -244,7 +235,7 @@ func (r *senderIDResource) Update(ctx context.Context, request resource.UpdateRe
 		_, err := conn.UpdateSenderId(ctx, &input)
 
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.SenderID.String())
 			return
 		}
 	}
@@ -273,7 +264,7 @@ func (r *senderIDResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.SenderID.String())
 		return
 	}
 }
@@ -281,7 +272,6 @@ func (r *senderIDResource) Delete(ctx context.Context, request resource.DeleteRe
 type senderIDResourceModel struct {
 	framework.WithRegionModel
 	DeletionProtectionEnabled types.Bool                                    `tfsdk:"deletion_protection_enabled"`
-	ID                        types.String                                  `tfsdk:"id"`
 	ISOCountryCode            types.String                                  `tfsdk:"iso_country_code"`
 	MessageTypes              fwtypes.SetOfStringEnum[awstypes.MessageType] `tfsdk:"message_types"`
 	MonthlyLeasingPrice       types.String                                  `tfsdk:"monthly_leasing_price"`
@@ -293,50 +283,22 @@ type senderIDResourceModel struct {
 	TagsAll                   tftags.Map                                    `tfsdk:"tags_all"`
 }
 
-func (model *senderIDResourceModel) InitFromID() error {
-	parts := strings.Split(model.ID.ValueString(), senderIDResourceIDSeparator)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", model.ID.ValueString(), senderIDResourceIDSeparator))
-	}
-
-	model.SenderID = types.StringValue(parts[0])
-	model.ISOCountryCode = types.StringValue(parts[1])
-
-	return nil
-}
-
-func (model *senderIDResourceModel) setID() {
-	model.ID = types.StringValue(model.SenderID.ValueString() + senderIDResourceIDSeparator + model.ISOCountryCode.ValueString())
-}
-
 var (
-	_ inttypes.ImportIDParser           = senderIDImportID{}
-	_ inttypes.FrameworkImportIDCreator = senderIDImportID{}
+	_ inttypes.ImportIDParser = senderIDImportID{}
 )
 
 type senderIDImportID struct{}
 
 func (senderIDImportID) Parse(id string) (string, map[string]any, error) {
-	senderID, isoCountryCode, found := strings.Cut(id, senderIDResourceIDSeparator)
+	senderID, isoCountryCode, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found || senderID == "" || isoCountryCode == "" {
-		return "", nil, smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", id, senderIDResourceIDSeparator))
+		return "", nil, smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected SenderID%[2]sISOCountryCode", id, intflex.ResourceIdSeparator))
 	}
 
 	return id, map[string]any{
 		"sender_id":        senderID,
 		"iso_country_code": isoCountryCode,
 	}, nil
-}
-
-func (senderIDImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var senderID types.String
-	state.GetAttribute(ctx, path.Root("sender_id"), &senderID)
-
-	var isoCountryCode types.String
-	state.GetAttribute(ctx, path.Root("iso_country_code"), &isoCountryCode)
-
-	return senderID.ValueString() + senderIDResourceIDSeparator + isoCountryCode.ValueString()
 }
 
 func (model *senderIDResourceModel) flatten(ctx context.Context, out *awstypes.SenderIdInformation) diag.Diagnostics {
@@ -351,8 +313,6 @@ func (model *senderIDResourceModel) flatten(ctx context.Context, out *awstypes.S
 	// while the canonical enum values are upper case. Normalize so state matches the
 	// configured value and stays stable across refresh and import.
 	model.MessageTypes = normalizeMessageTypes(ctx, out.MessageTypes)
-
-	model.setID()
 
 	return diags
 }

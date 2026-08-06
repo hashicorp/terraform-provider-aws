@@ -139,7 +139,6 @@ func TestAccPinpointSMSVoiceV2SenderID_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_pinpointsmsvoicev2_sender_id.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("iso_country_code"), knownvalue.StringExact("GB")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("message_types"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("monthly_leasing_price"), knownvalue.NotNull()),

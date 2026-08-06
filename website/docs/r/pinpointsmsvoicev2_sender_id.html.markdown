@@ -52,7 +52,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sender ID.
-* `id` - Sender ID and ISO country code separated by a comma (`,`).
 * `monthly_leasing_price` - Monthly leasing price, in US dollars.
 * `registered` - Whether the sender ID is registered.
 * `registration_id` - Unique identifier for the registration.

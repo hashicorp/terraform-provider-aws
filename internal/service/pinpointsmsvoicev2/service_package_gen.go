@@ -97,7 +97,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      senderIDImportID{},
-				SetIDAttr:     true,
 			},
 		},
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -63,9 +64,11 @@ func TestAccPinpointSMSVoiceV2SenderID_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "sender_id", "iso_country_code"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "sender_id",
 			},
 		},
 	})
@@ -133,9 +136,11 @@ func TestAccPinpointSMSVoiceV2SenderID_deletionProtection(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "sender_id", "iso_country_code"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "sender_id",
 			},
 			{
 				Config: testAccSenderIDConfig_deletionProtection(senderIDName, isoCountryCode, false),
