@@ -48,21 +48,33 @@ func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, 
 
 // ResourceOptionalComputedSingleNestedObjectAttribute returns a schema attribute that
 // is equivalent to a Terraform Plugin SDKv2 Optional+Computed list nested block with a maximum size of 1.
-func ResourceOptionalComputedSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseStateForUnknown()))
+func ResourceOptionalComputedSingleNestedObjectAttribute[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
+	optFns = append([]ResourceListOfObjectsOptionsFunc[T]{
+		WithValidators[T](listvalidator.SizeAtMost(1)),
+		WithPlanModifiers[T](listplanmodifier.UseStateForUnknown()),
+	}, optFns...)
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, optFns...)
 }
 
 // ResourceOptionalComputedForceNewSingleNestedObjectAttribute returns a schema attribute that
 // is equivalent to a Terraform Plugin SDKv2 Optional+Computed+ForceNew list nested block with a maximum size of 1.
-func ResourceOptionalComputedForceNewSingleNestedObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()))
+func ResourceOptionalComputedForceNewSingleNestedObjectAttribute[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
+	optFns = append([]ResourceListOfObjectsOptionsFunc[T]{
+		WithValidators[T](listvalidator.SizeAtMost(1)),
+		WithPlanModifiers[T](listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
+	}, optFns...)
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, optFns...)
 }
 
 // ResourceOptionalComputedSingleNestedChildObjectAttribute returns a schema attribute that
 // is equivalent to a Terraform Plugin SDKv2 Optional+Computed list nested block with a maximum size of 1.
 // The single nested block should be a child (as opposed to top-level) attribute.
-func ResourceOptionalComputedSingleNestedChildObjectAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return ResourceOptionalComputedListOfObjectsAttribute(ctx, WithValidators[T](listvalidator.SizeAtMost(1)), WithPlanModifiers[T](listplanmodifier.UseNonNullStateForUnknown()))
+func ResourceOptionalComputedSingleNestedChildObjectAttribute[T any](ctx context.Context, optFns ...ResourceListOfObjectsOptionsFunc[T]) schema.ListAttribute {
+	optFns = append([]ResourceListOfObjectsOptionsFunc[T]{
+		WithValidators[T](listvalidator.SizeAtMost(1)),
+		WithPlanModifiers[T](listplanmodifier.UseNonNullStateForUnknown()),
+	}, optFns...)
+	return ResourceOptionalComputedListOfObjectsAttribute(ctx, optFns...)
 }
 
 type resourceListOfObjectsOptions[T any] struct {
