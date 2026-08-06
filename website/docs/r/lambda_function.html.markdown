@@ -774,15 +774,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `last_modified` - Date this resource was last modified.
-* `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
-* `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
+* `qualified_arn` - ARN identifying your Lambda Function Version. Only populated if versioning is enabled via `publish = true` or a `qualifier` is configured.
+* `qualified_invoke_arn` - Qualified ARN (ARN with Lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`. Only populated if versioning is enabled via `publish = true` or a `qualifier` is configured.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `version` - Latest published version of your Lambda Function.
+* `version` - Latest published version of your Lambda Function. Only populated if versioning is enabled via `publish = true` or a `qualifier` is configured.
 * `vpc_config.vpc_id` - ID of the VPC.
 
 ## Timeouts
