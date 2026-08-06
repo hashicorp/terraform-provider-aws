@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -299,14 +300,11 @@ func resourceInstance() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrEngine: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ForceNew: true,
-					StateFunc: func(v any) string {
-						value := v.(string)
-						return strings.ToLower(value)
-					},
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
 				},
 				"engine_lifecycle_support": {
 					Type:         schema.TypeString,
@@ -470,6 +468,18 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Computed: true,
+				},
+				"multi_tenant": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ConflictsWith: []string{
+						"replicate_source_db",
+						"s3_import",
+						"restore_to_point_in_time",
+						"snapshot_identifier",
+					},
 				},
 				"nchar_character_set_name": {
 					Type:     schema.TypeString,
@@ -1801,6 +1811,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("multi_tenant"); ok {
+			input.MultiTenant = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("nchar_character_set_name"); ok {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
@@ -1976,7 +1990,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("database_insights_mode", v.DatabaseInsightsMode)
-	d.Set("db_name", v.DBName)
+	// CDB (multi-tenant) instances do not return DBName from the API.
+	// Guard the set so we don't erase existing state for those instances.
+	if v.DBName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("db_name", v.DBName)
+	}
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -2037,6 +2055,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
+	d.Set("multi_tenant", v.MultiTenant)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 {
@@ -2078,7 +2097,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
-	d.Set(names.AttrUsername, v.MasterUsername)
+	// CDB (multi-tenant) instances do not return MasterUsername from the API.
+	// Guard the set so we don't erase existing state for those instances.
+	if v.MasterUsername != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrUsername, v.MasterUsername)
+	}
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
