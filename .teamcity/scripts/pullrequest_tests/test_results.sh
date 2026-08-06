@@ -26,7 +26,23 @@ done
 
 # Authenticate internally using TeamCity's system-provided tokens
 results=$(echo "${response}" |
-	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status | if . == "SUCCESS" then "PASS" elif . == "FAILURE" then "FAIL" elif . == "UNKNOWN" then "SKIP" else . end)] \(.duration/1000)s\(if (.status == "FAILURE" or .status == "UNKNOWN") and .details != null then "\n\(.details)" else "" end)"')
+	jq -r '.testOccurrence[] | "\(.name | sub(".*(?<t>TestAcc.*)"; "\(.t)")): [\(.status | if . == "SUCCESS" then "PASS" elif . == "FAILURE" then "FAIL" elif . == "UNKNOWN" then "SKIP" else . end)] \(.duration/1000)s\(if (.status == "FAILURE" or .status == "UNKNOWN") and .details != null then "\n\(.details)" else "" end)"' |
+	sed -E -e '/^[0-9]{4}\/[0-9]{2}\/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} (Initializing|Creating) Terraform AWS Provider \((Framework|SDKv2)-style\)\.\.\./d' -e '/^=== (RUN|PAUSE|CONT) /d' -e 's/arn:aws:([^:]*):([^:]*):([0-9]{12}):/arn:aws:\1:\2:###:/g' -e 's|test_terraform_path=[^ ]*||g' -e 's|test_working_directory=[^ ]*||g' |
+	awk '
+		/^TestAcc.*: \[(PASS|FAIL|SKIP)\]/ { 
+			if (in_test && line_count > 5) print "    [... truncated ...]"
+			print; 
+			in_test=1; 
+			line_count=0; 
+			next 
+		}
+		in_test { 
+			line_count++; 
+			if (line_count <= 5) print; 
+			next 
+		}
+		{ print }
+	')
 
 echo "${results}"
 
