@@ -61,6 +61,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `community_version` - Community engine version that the (Aurora) engine version is compatible with, parsed from `version_description` (e.g., `8.0.44` for the Aurora MySQL version described as "compatible with MySQL 8.0.44"). Empty if the description does not contain a compatible community version.
 * `default_character_set` - Default character set for new instances of the engine version.
 * `engine_description` - Description of the engine.
 * `exportable_log_types` - Set of log types that the engine version has available for export to CloudWatch Logs.

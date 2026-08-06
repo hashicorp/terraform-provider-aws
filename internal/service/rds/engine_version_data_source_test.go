@@ -437,6 +437,32 @@ func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccRDSEngineVersionDataSource_communityVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_communityVersion(tfrds.ClusterEngineAuroraMySQL),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "community_version", regexache.MustCompile(`^\d+(\.\d+)+$`)),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_communityVersion(tfrds.ClusterEngineAuroraPostgreSQL),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "community_version", regexache.MustCompile(`^\d+(\.\d+)+$`)),
+				),
+			},
+		},
+	})
+}
+
 func testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
@@ -445,6 +471,15 @@ data "aws_rds_engine_version" "test" {
   parameter_group_family = %[3]q
 }
 `, engine, version, paramGroup)
+}
+
+func testAccEngineVersionDataSourceConfig_communityVersion(engine string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine = %[1]q
+  latest = true
+}
+`, engine)
 }
 
 func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
