@@ -1115,15 +1115,15 @@ func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
 		{memoryManagedEmpty, memoryNone},
 	}
 
-	for _, tc := range testcases {
+	for _, tc := range testcases { //nolint:paralleltest // false positive
 		t.Run(fmt.Sprintf("%s_to_%s", tc.from, tc.to), func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var harness awstypes.Harness
 			rName := testAccRandomHarnessName(t)
 			resourceName := "aws_bedrockagentcore_harness.test"
 
-			fromConfig := testAccHarnessConfig_Memory_byType(rName, tc.from)
-			toConfig := testAccHarnessConfig_Memory_byType(rName, tc.to)
+			fromConfig := testAccHarnessConfig_Memory_byType(t, rName, tc.from)
+			toConfig := testAccHarnessConfig_Memory_byType(t, rName, tc.to)
 
 			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck: func() {
@@ -1140,7 +1140,7 @@ func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 						),
-						ConfigStateChecks: memoryConfigStateChecks(resourceName, tc.from),
+						ConfigStateChecks: memoryConfigStateChecks(t, resourceName, tc.from),
 					},
 					{
 						Config: toConfig,
@@ -1152,7 +1152,7 @@ func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 							},
 						},
-						ConfigStateChecks: memoryConfigStateChecks(resourceName, tc.to),
+						ConfigStateChecks: memoryConfigStateChecks(t, resourceName, tc.to),
 					},
 				},
 			})
@@ -1399,7 +1399,8 @@ func testAccPreCheckHarness(ctx context.Context, t *testing.T) {
 	}
 }
 
-func memoryConfigStateChecks(resourceName string, memType memoryConfigType) []statecheck.StateCheck {
+func memoryConfigStateChecks(t *testing.T, resourceName string, memType memoryConfigType) []statecheck.StateCheck {
+	t.Helper()
 	memoryPath := tfjsonpath.New("memory")
 	switch memType {
 	case memoryNone:
@@ -1467,7 +1468,8 @@ func memoryConfigStateChecks(resourceName string, memType memoryConfigType) []st
 			})),
 		}
 	default:
-		panic(fmt.Sprintf("unknown memory config type: %s", memType))
+		t.Fatalf("unknown memory config type: %s", memType)
+		return nil
 	}
 }
 
@@ -1941,7 +1943,8 @@ resource "aws_kms_key" "test" {
 `, rName))
 }
 
-func testAccHarnessConfig_Memory_byType(rName string, memType memoryConfigType) string {
+func testAccHarnessConfig_Memory_byType(t *testing.T, rName string, memType memoryConfigType) string {
+	t.Helper()
 	switch memType {
 	case memoryNone:
 		return testAccHarnessConfig_Memory_byType_none(rName)
@@ -1954,7 +1957,8 @@ func testAccHarnessConfig_Memory_byType(rName string, memType memoryConfigType) 
 	case memoryManaged:
 		return testAccHarnessConfig_Memory_managedMemoryConfiguration_options(rName, 7, `["SEMANTIC"]`)
 	default:
-		panic(fmt.Sprintf("unknown memory config type: %s", memType))
+		t.Fatalf("unknown memory config type: %s", memType)
+		return ""
 	}
 }
 
