@@ -81,7 +81,7 @@ func sweepServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, svc := range page.ServiceSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceService, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newServiceResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(svc.ServiceArn)),
 			))
 		}

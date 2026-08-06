@@ -64,6 +64,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the service.
+* `kms_key_id` - (Optional) KMS key ARN.
 * `permission_model` - (Optional) Permission model for resource discovery. See [`permission_model` Block](#permission_model-block) below.
 * `policy_arn` - (Optional) ARN of the resilience policy to associate with this service.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -90,7 +91,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_resiliencehubv2_service.example
   identity = {
-    "arn" = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
+    arn = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
   }
 }
 

@@ -28,7 +28,7 @@ func newResourceServiceAsListResource() list.ListResourceWithConfigure {
 var _ list.ListResource = &serviceListResource{}
 
 type serviceListResource struct {
-	resourceService
+	serviceResource
 	framework.WithList
 }
 
@@ -64,7 +64,7 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 
 			result := request.NewListResult(ctx)
 
-			var data resourceServiceModel
+			var data serviceResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 				if result.Diagnostics.HasError() {
