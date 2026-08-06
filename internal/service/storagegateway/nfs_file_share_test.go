@@ -646,6 +646,14 @@ func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccNFSFileShareConfig_cacheAttributes(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNFSFileShareExists(ctx, t, resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
+				),
+			},
+			{
 				Config: testAccNFSFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, t, resourceName, &nfsFileShare),
