@@ -323,6 +323,10 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
+							"advertised_scope_mapping": schema.MapAttribute{
+								CustomType: fwtypes.MapOfStringType,
+								Optional:   true,
+							},
 							"allowed_audience": schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Optional:   true,
@@ -1306,6 +1310,7 @@ func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.Li
 }
 
 type customJWTAuthorizerConfigurationModel struct {
+	AdvertisedScopeMapping       fwtypes.MapOfString                                                 `tfsdk:"advertised_scope_mapping"`
 	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
 	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
 	AllowedScopes                fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
