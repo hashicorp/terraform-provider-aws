@@ -1,0 +1,113 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: CHANGELOG Entries
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
+      - reopened
+
+permissions:
+  pull-requests: read
+
+jobs:
+  missing-fragment:
+    name: Missing Fragment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .changie.yaml
+
+      - name: Get Changes Directory
+        id: changes-dir
+        shell: bash
+        run: echo "changes_dir=$(yq eval '.changesDir' .changie.yaml)" >> $GITHUB_OUTPUT
+
+      - name: Check File Changes
+        id: filter
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        with:
+          list-files: json
+          predicate-quantifier: 'every'
+          filters: |
+            service_files:
+              - 'internal/service/**/*.go'
+              - '!internal/service/**/*_test.go'
+            changie_fragments:
+              - added:'${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
+
+      - name: Warn of Missing Change Fragment(s)
+        if: |
+          steps.filter.outputs.service_files == 'true'
+          && steps.filter.outputs.changie_fragments != 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed')
+        shell: bash
+        run: |
+          FILES=$(echo '${{ steps.filter.outputs.service_files_files }}' | jq -r '.[] | "* `\(.)`"')
+          echo "::error title=CHANGELOG Entry Required::This pull request contains modifications that require a CHANGELOG entry. Please create a change fragment using \`changie new\`.
+
+          Files that require a CHANGELOG entry:
+          $FILES"
+          exit 1
+
+  direct-edits:
+    name: Direct CHANGELOG Edits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check File Changes
+        id: filter
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        with:
+          filters: |
+            changelog:
+              - 'CHANGELOG.md'
+
+      - name: Warn of Direct CHANGELOG Edits
+        if: steps.filter.outputs.changelog == 'true'
+        shell: bash
+        run: |
+          echo "::error title=Direct CHANGELOG Edits::Direct edits to \`CHANGELOG.md\` are not allowed. The file is regenerated on every PR merge and any manual edits will be overwritten. Refer to the [CHANGELOG Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) for more information."
+          exit 1
+
+  go-changelog:
+    name: go-changelog Fragment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check File Changes
+        id: filter
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        with:
+          list-files: json
+          predicate-quantifier: 'every'
+          filters: |
+            go_changelog_fragments:
+              - added:'.changelog/*.txt'
+
+      - name: Warn of go-changelog Fragment(s)
+        if: steps.filter.outputs.go_changelog_fragments == 'true'
+        shell: bash
+        run: |
+          FILES=$(echo '${{ steps.filter.outputs.go_changelog_fragments_files }}' | jq -r '.[] | "* `\(.)`"')
+          echo "::error title=Old CHANGELOG Format Detected::This pull request includes \`go-changelog\` style change fragments. We have migrated to using Changie for CHANGELOG management.
+
+          To convert your existing fragments, run:
+
+          \`\`\`bash
+          make convert-changelog FILE=.changelog/<pr-number>.txt
+          \`\`\`
+
+          This will automatically convert the \`go-changelog\` change fragment to one compatible with Changie.
+
+          Alternatively:
+          1. Remove the \`go-changelog\` style change fragment file(s)
+          2. Create new change fragment(s) using \`changie new\`
+
+          Files using old format:
+          $FILES"
+          exit 1
