@@ -39,9 +39,17 @@ The following arguments are optional:
 
 A `data-filter-expression` block supports the following:
 
+* `cost_categories` - (Optional) Cost Category values to use for `expression`. Refer to [#cost-categories](#cost-categories) for more details.
 * `dimensions` - (Optional) Dimension to use for `expression`. Refer to [#dimensions](#dimensions) for more details.
 * `tags` - (Optional) Tags to use for `expression`. Refer to [#tags](#tags) for more details.
 * `time_range` - (Optional) Time range to use for `expression`. Refer to [#time-range](#time-range) for more details.
+
+#### cost-categories
+
+A `cost_categories` block supports the following:
+
+* `key` - (Required) Unique name of the Cost Category.
+* `values` - (Required) List of Cost Category values.
 
 #### dimensions
 
