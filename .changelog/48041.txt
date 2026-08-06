@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_backup_plan: Add `rule.index_action` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_backup_plan: Add `rule.index_action` attribute
+```
