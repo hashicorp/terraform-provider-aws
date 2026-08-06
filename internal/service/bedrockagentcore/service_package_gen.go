@@ -266,6 +266,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
 		},
 		{
+			Factory:  newGatewayRuleResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
+		},
+		{
 			Factory:  newHarnessResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_harness",
 			Name:     "Harness",

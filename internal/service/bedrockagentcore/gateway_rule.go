@@ -460,7 +460,7 @@ func (r *gatewayRuleResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, rule, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, rule, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -489,7 +489,7 @@ func (r *gatewayRuleResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -571,6 +571,12 @@ func (r *gatewayRuleResource) Delete(ctx context.Context, request resource.Delet
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleID)
 		return
 	}
+}
+
+func (r *gatewayRuleResource) flatten(ctx context.Context, rule any, data *gatewayRuleResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, rule, data)...)
+	return diags
 }
 
 const gatewayRuleImportIDSeparator = intflex.ResourceIdSeparator
