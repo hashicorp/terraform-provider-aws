@@ -1,0 +1,3 @@
+```release-note:new-resource
+resource/aws_media_convert_job_template: New resource
+```
