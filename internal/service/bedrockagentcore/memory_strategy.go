@@ -75,10 +75,18 @@ type resourceMemoryStrategy struct {
 func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			// Optional+Computed: The UpdateMemory API treats a nil
+			// description as "leave unchanged" (it never clears), so removing
+			// the argument keeps the prior value rather than erroring with
+			// "inconsistent result after apply".
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 4096),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
