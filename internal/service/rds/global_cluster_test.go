@@ -579,6 +579,29 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccRDSGlobalCluster_sourceDBClusterIdentifier_writerMemberPromoted(t *testing.T) {
+	ctx := acctest.Context(t)
+	var globalCluster1 types.GlobalCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
+					testAccCheckGlobalClusterHasWriterMember(&globalCluster1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var globalCluster1 types.GlobalCluster
@@ -736,6 +759,17 @@ func testAccCheckGlobalClusterExists(ctx context.Context, t *testing.T, n string
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckGlobalClusterHasWriterMember(globalCluster *types.GlobalCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, m := range globalCluster.GlobalClusterMembers {
+			if aws.ToBool(m.IsWriter) && aws.ToString(m.DBClusterArn) != "" {
+				return nil
+			}
+		}
+		return errors.New("expected global cluster to have a writer member after create, but none found")
 	}
 }
 

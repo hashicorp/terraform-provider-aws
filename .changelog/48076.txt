@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_global_cluster: Wait for source cluster promotion to complete when `source_db_cluster_identifier` is specified, fixing race condition with downstream resources
+```
