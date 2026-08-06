@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_emr_cluster: Add `monitoring_configuration` argument
+```
+
+```release-note:bug
+resource/aws_emr_cluster: Mark `os_release_label` as `Computed`, preventing spurious resource replacement when the argument is not configured
+```
