@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rolesanywhere_profile: Add `attribute_mappings` argument
+```
