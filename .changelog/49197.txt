@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_db_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters (was incorrectly capped at 255 with a message stating 226)
+```
+
+```release-note:bug
+resource/aws_rds_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters
+```
+
+```release-note:bug
+resource/aws_docdb_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters (was incorrectly capped at 255 with a message stating 226)
+```
