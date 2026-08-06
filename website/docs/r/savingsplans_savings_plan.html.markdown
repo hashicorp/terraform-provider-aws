@@ -54,6 +54,7 @@ The following arguments are optional:
 
 * `purchase_time` - (Optional) The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ). If not specified, the plan is purchased immediately. Plans with a future purchase time are placed in `queued` state and can be deleted before they become active.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `upfront_payment_amount` - (Optional) The up-front payment amount. Required for offerings with an `All Upfront` or `Partial Upfront` payment option. Must be omitted for `No Upfront` offerings, where AWS always sets it to `0`.
 
 ## Attribute Reference
 
@@ -67,7 +68,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `savings_plan_type` - The type of Savings Plan (e.g., `Compute`, `EC2Instance`).
 * `payment_option` - The payment option for the Savings Plan (e.g., `All Upfront`, `Partial Upfront`, `No Upfront`).
 * `currency` - The currency of the Savings Plan (e.g., `USD`).
-* `upfront_payment_amount` - The up-front payment amount.
 * `recurring_payment_amount` - The recurring payment amount.
 * `term_duration_in_seconds` - The duration of the term, in seconds.
 * `ec2_instance_family` - The EC2 instance family for the Savings Plan (only applicable to EC2 Instance Savings Plans).
