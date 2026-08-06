@@ -116,8 +116,10 @@ This resource supports the following arguments:
 * `global_replication_group_description` - (Optional) A user-created description for the global replication group.
 * `num_node_groups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameter_group_name` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
-  Required when upgrading an engine or major engine version, but will be ignored if left configured after the upgrade is complete.
+  Required when upgrading a major engine version, but will be ignored if left configured after the upgrade is complete.
   Specifying without a major version upgrade will fail.
+  Note that when a replication group joins a global datastore, AWS auto-generates a new parameter group (prefixed `global-datastore-`) derived from the primary's parameter group.
+  Subsequent parameter group changes must be made via a major engine version upgrade.
   Note that ElastiCache creates a copy of this parameter group for each member replication group.
 
 ## Attribute Reference
