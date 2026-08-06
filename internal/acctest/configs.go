@@ -869,33 +869,41 @@ func ConfigRandomPassword(overrides ...string) string {
 		}
 	}
 
+	// Collect the keys to emit in a stable order: default keys first, then
+	// any optional keys that were provided.
+	keys := []string{"password_length", "exclude_punctuation"}
+	for _, key := range optionalKeys {
+		if _, exists := config[key]; exists {
+			keys = append(keys, key)
+		}
+	}
+
+	// Align the "=" signs to the widest attribute name, matching the
+	// canonical `terraform fmt` output so the generated configuration stays
+	// lint-clean regardless of which optional keys are present.
+	maxKeyLen := 0
+	for _, key := range keys {
+		maxKeyLen = max(maxKeyLen, len(key))
+	}
+
 	// Build the Terraform configuration string
 	var builder strings.Builder
 	builder.WriteString(`
 ephemeral "aws_secretsmanager_random_password" "test" {
 `)
 
-	// Add default keys
-	fmt.Fprintf(&builder, "  password_length     = %s\n", config["password_length"])
-	fmt.Fprintf(&builder, "  exclude_punctuation = %s\n", config["exclude_punctuation"])
-
-	// Add optional keys in a consistent order
-	for _, key := range optionalKeys {
-		if value, exists := config[key]; exists {
-			if key == "exclude_characters" {
-				// Special handling for exclude_characters
-				if strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`) {
-					// Trim surrounding quotes
-					value = value[1 : len(value)-1]
-				}
-				value = strings.ReplaceAll(value, `\"`, `"`)
-				fmt.Fprintf(&builder, "  %s = %q\n", key, value)
-				continue
+	for _, key := range keys {
+		value := config[key]
+		if key == "exclude_characters" {
+			// exclude_characters is a string attribute. Normalize any
+			// surrounding quotes, then emit a properly quoted HCL string.
+			if strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`) {
+				value = value[1 : len(value)-1]
 			}
-
-			// Default handling for other keys
-			fmt.Fprintf(&builder, "  %s = %s\n", key, value)
+			value = strings.ReplaceAll(value, `\"`, `"`)
+			value = fmt.Sprintf("%q", value)
 		}
+		fmt.Fprintf(&builder, "  %-*s = %s\n", maxKeyLen, key, value)
 	}
 
 	builder.WriteString("}\n")

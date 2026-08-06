@@ -182,7 +182,7 @@ Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
-OpenSearch Ingestion
+OpenSearch Ingestion (OSIS)
 OpenSearch Serverless
 Oracle Database@AWS
 Organizations
@@ -204,6 +204,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging

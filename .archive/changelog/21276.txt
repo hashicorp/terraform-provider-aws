@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_connect_lambda_function_association
-```
-
-```release-note:new-data-source
-aws_connect_lambda_function_association
-```

@@ -33,7 +33,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the resource share.
+* `id` - Amazon Resource Name (ARN) of the resource share.
 
 ## Import
 

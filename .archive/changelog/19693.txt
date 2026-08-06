@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_transfer_user: Add `posix_profile` argument.
-```

@@ -83,25 +83,16 @@ resource "aws_s3tables_table_bucket" "example" {
 
 The following arguments are required:
 
-* `format` - (Required) Format of the table.
-  Must be `ICEBERG`.
-* `name` - (Required) Name of the table.
-  Must be between 1 and 255 characters in length.
-  Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
-  A full list of table naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#naming-rules-table).
-* `namespace` - (Required) Name of the namespace for this table.
-  Must be between 1 and 255 characters in length.
-  Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+* `format` - (Required) Format of the table. Must be `ICEBERG`.
+* `name` - (Required) Name of the table. Must be between 1 and 255 characters in length. Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number. A full list of table naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#naming-rules-table).
+* `namespace` - (Required) Name of the namespace for this table. Must be between 1 and 255 characters in length. Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
-  [See `encryption_configuration` below](#encryption_configuration).
-* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
-  [See `maintenance_configuration` below](#maintenance_configuration).
-* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format.
-  [See `metadata` below](#metadata).
+* `encryption_configuration` - (Optional) Single table bucket encryption configuration object. [See `encryption_configuration` below](#encryption_configuration).
+* `maintenance_configuration` - (Optional) Single table bucket maintenance configuration object. [See `maintenance_configuration` below](#maintenance_configuration).
+* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format. [See `metadata` below](#metadata).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -109,81 +100,69 @@ The following arguments are optional:
 
 The `encryption_configuration` object supports the following arguments:
 
-* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `kms_key_arn` - (Optional) ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
 * `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 
 The `maintenance_configuration` object supports the following arguments:
 
-* `iceberg_compaction` - (Required) A single Iceberg compaction settings object.
-  [See `iceberg_compaction` below](#iceberg_compaction).
-* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings object.
-  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
+* `iceberg_compaction` - (Required) Single Iceberg compaction settings object. [See `iceberg_compaction` below](#iceberg_compaction).
+* `iceberg_snapshot_management` - (Required) Single Iceberg snapshot management settings object. [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
 The `iceberg_compaction` object supports the following arguments:
 
-* `settings` - (Required) Settings object for compaction.
-  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
-* `status` - (Required) Whether the configuration is enabled.
-  Valid values are `enabled` and `disabled`.
+* `settings` - (Required) Settings object for compaction. [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
+* `status` - (Required) Whether the configuration is enabled. Valid values are `enabled` and `disabled`.
 
 ### `iceberg_compaction.settings`
 
 The `iceberg_compaction.settings` object supports the following argument:
 
-* `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
-  Must be between `64` and `512`.
+* `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance. Must be between `64` and `512`.
 
 ### `iceberg_snapshot_management`
 
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
-* `settings` - (Required) Settings object for snapshot management.
-  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
-* `status` - (Required) Whether the configuration is enabled.
-  Valid values are `enabled` and `disabled`.
+* `settings` - (Required) Settings object for snapshot management. [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
+* `status` - (Required) Whether the configuration is enabled. Valid values are `enabled` and `disabled`.
 
 ### `iceberg_snapshot_management.settings`
 
 The `iceberg_snapshot_management.settings` object supports the following argument:
 
-* `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletion.
-  Must be at least `1`.
-* `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep.
-  Must be at least `1`.
+* `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletion. Must be at least `1`.
+* `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep. Must be at least `1`.
 
-### `metadata`
+### `metadata` Block
 
 The `metadata` configuration block supports the following argument:
 
-* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format.
-  [See `iceberg` below](#iceberg).
+* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format. [See `iceberg` below](#iceberg).
 
-### `iceberg`
+### `iceberg` Block
 
 The `iceberg` configuration block supports the following arguments:
 
 * `properties` - (Optional, Forces new resource) Map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.
-* `schema` - (Required) Schema configuration for the Iceberg table.
-  [See `schema` below](#schema).
+* `schema` - (Required) Schema configuration for the Iceberg table. [See `schema` below](#schema).
 
-### `schema`
+### `schema` Block
 
 The `schema` configuration block supports the following argument:
 
-* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema.
-  [See `field` below](#field).
+* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema. [See `field` below](#field).
 
-### `field`
+### `field` Block
 
 The `field` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the field.
-* `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
-* `required` - (Optional) A Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
+* `name` - (Required) Name of the field.
+* `required` - (Optional) Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
+* `type` - (Required) Field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
 
 ## Attribute Reference
 
@@ -196,9 +175,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `modified_at` - Date and time when the namespace was last modified.
 * `modified_by` - Account ID of the account that last modified the namespace.
 * `owner_account_id` - Account ID of the account that owns the namespace.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `type` - Type of the table.
-  One of `customer` or `aws`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `type` - Type of the table. One of `customer` or `aws`.
 * `version_token` - Identifier for the current version of table data.
 * `warehouse_location` - S3 URI pointing to the S3 Bucket that contains the table data.
 
