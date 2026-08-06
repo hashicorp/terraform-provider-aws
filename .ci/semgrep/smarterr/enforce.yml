@@ -155,6 +155,8 @@ rules:
       - pattern-not-inside: |
           return nil, smarterr.NewError(...)
       - pattern-not-inside: |
+          return nil, smarterr.Errorf(...)
+      - pattern-not-inside: |
           func $FUNC(...) (..., diag.Diagnostics) {
             ...
             return nil, $ERR
@@ -183,6 +185,8 @@ rules:
           return $VALUE, nil
       - pattern-not-inside: |
           return $VALUE, smarterr.NewError(...)
+      - pattern-not-inside: |
+          return $VALUE, smarterr.Errorf(...)
       - pattern-not-inside: |
           func $FUNC(...) (..., diag.Diagnostics) {
             ...
