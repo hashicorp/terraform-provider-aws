@@ -28,6 +28,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type memoryConfigType string
+
+const (
+	memoryNone         memoryConfigType = "none"
+	memoryAgentCore    memoryConfigType = "agentcore"
+	memoryDisabled     memoryConfigType = "disabled"
+	memoryManagedEmpty memoryConfigType = "managed_empty"
+	memoryManaged      memoryConfigType = "managed"
+)
+
 func testAccRandomHarnessName(t *testing.T) string {
 	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
@@ -1077,6 +1087,79 @@ func TestAccBedrockAgentCoreHarness_Memory_disabled(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_Memory_changeType(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		from memoryConfigType
+		to   memoryConfigType
+	}{
+		{memoryNone, memoryAgentCore},
+		{memoryNone, memoryDisabled},
+		{memoryNone, memoryManagedEmpty},
+		{memoryNone, memoryManaged},
+
+		{memoryAgentCore, memoryDisabled},
+		{memoryAgentCore, memoryManagedEmpty},
+		{memoryAgentCore, memoryManaged},
+		// {memoryAgentCore, memoryNone},
+
+		{memoryDisabled, memoryAgentCore},
+		{memoryDisabled, memoryManagedEmpty},
+		{memoryDisabled, memoryManaged},
+		{memoryDisabled, memoryNone},
+
+		{memoryManagedEmpty, memoryAgentCore},
+		{memoryManagedEmpty, memoryDisabled},
+		{memoryManagedEmpty, memoryManaged},
+		{memoryManagedEmpty, memoryNone},
+	}
+
+	for _, tc := range testcases {
+		t.Run(fmt.Sprintf("%s_to_%s", tc.from, tc.to), func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var harness awstypes.Harness
+			rName := testAccRandomHarnessName(t)
+			resourceName := "aws_bedrockagentcore_harness.test"
+
+			fromConfig := testAccHarnessConfig_Memory_byType(rName, tc.from)
+			toConfig := testAccHarnessConfig_Memory_byType(rName, tc.to)
+
+			acctest.ParallelTest(ctx, t, resource.TestCase{
+				PreCheck: func() {
+					acctest.PreCheck(ctx, t)
+					acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+					testAccPreCheckHarness(ctx, t)
+				},
+				ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+				Steps: []resource.TestStep{
+					{
+						Config: fromConfig,
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+						),
+						ConfigStateChecks: memoryConfigStateChecks(resourceName, tc.from),
+					},
+					{
+						Config: toConfig,
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+						),
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							},
+						},
+						ConfigStateChecks: memoryConfigStateChecks(resourceName, tc.to),
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -1313,6 +1396,78 @@ func testAccPreCheckHarness(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func memoryConfigStateChecks(resourceName string, memType memoryConfigType) []statecheck.StateCheck {
+	memoryPath := tfjsonpath.New("memory")
+	switch memType {
+	case memoryNone:
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue(resourceName, memoryPath, knownvalue.ListSizeExact(0)),
+		}
+	case memoryAgentCore:
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue(resourceName, memoryPath.AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"agentcore_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:      knownvalue.NotNull(),
+						"actor_id":         knownvalue.Null(),
+						"messages_count":   knownvalue.Null(),
+						"retrieval_config": knownvalue.ListSizeExact(0),
+					}),
+				}),
+				"disabled":                     knownvalue.ListSizeExact(0),
+				"managed_memory_configuration": knownvalue.ListSizeExact(0),
+			})),
+		}
+	case memoryDisabled:
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue(resourceName, memoryPath.AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+				"disabled": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{}),
+				}),
+				"managed_memory_configuration": knownvalue.ListSizeExact(0),
+			})),
+		}
+	case memoryManagedEmpty:
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue(resourceName, memoryPath.AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+				"disabled":                       knownvalue.ListSizeExact(0),
+				"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           knownvalue.NotNull(),
+						"encryption_key_arn":    knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(30),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
+					}),
+				}),
+			})),
+		}
+	case memoryManaged:
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue(resourceName, memoryPath.AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+				"disabled":                       knownvalue.ListSizeExact(0),
+				"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           knownvalue.NotNull(),
+						"encryption_key_arn":    knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(7),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+						}),
+					}),
+				}),
+			})),
+		}
+	default:
+		panic(fmt.Sprintf("unknown memory config type: %s", memType))
 	}
 }
 
@@ -1786,6 +1941,44 @@ resource "aws_kms_key" "test" {
 `, rName))
 }
 
+func testAccHarnessConfig_Memory_byType(rName string, memType memoryConfigType) string {
+	switch memType {
+	case memoryNone:
+		return testAccHarnessConfig_Memory_byType_none(rName)
+	case memoryAgentCore:
+		return testAccHarnessConfig_Memory_agentCoreMemoryConfiguration_basic(rName)
+	case memoryDisabled:
+		return testAccHarnessConfig_Memory_disabled(rName)
+	case memoryManagedEmpty:
+		return testAccHarnessConfig_Memory_managedMemoryConfiguration_empty(rName)
+	case memoryManaged:
+		return testAccHarnessConfig_Memory_managedMemoryConfiguration_options(rName, 7, `["SEMANTIC"]`)
+	default:
+		panic(fmt.Sprintf("unknown memory config type: %s", memType))
+	}
+}
+
+func testAccHarnessConfig_Memory_byType_none(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
 func testAccHarnessConfig_Memory_disabled(rName string) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
@@ -1805,6 +1998,8 @@ resource "aws_bedrockagentcore_harness" "test" {
   system_prompt {
     text = "You are a helpful assistant."
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -1888,11 +2083,11 @@ resource "aws_bedrockagentcore_harness" "test" {
     text = "You are a helpful assistant."
   }
 
+  depends_on = [aws_iam_role_policy.test]
+
   tags = {
     %[2]q = %[3]q
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1))
 }
