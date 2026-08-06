@@ -172,7 +172,7 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 												"crl_content": schema.StringAttribute{
 													Optional: true,
 												},
-												"kms_key_arn": schema.StringAttribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Optional:   true,
 												},
@@ -185,7 +185,7 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 					},
 				},
 			},
-			"network_configuration": schema.ListNestedBlock{
+			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -202,7 +202,7 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"vpc_endpoint_id": schema.StringAttribute{
+									names.AttrVPCEndpointID: schema.StringAttribute{
 										Required: true,
 									},
 								},
