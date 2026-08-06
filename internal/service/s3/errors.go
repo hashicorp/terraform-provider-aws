@@ -5,6 +5,9 @@ package s3
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 )
 
 // Error code constants missing from AWS Go SDK:
@@ -12,6 +15,7 @@ import (
 
 const (
 	errCodeAccessDenied                         = "AccessDenied"
+	errCodeAuthorizationHeaderMalformed         = "AuthorizationHeaderMalformed"
 	errCodeBucketAlreadyExists                  = "BucketAlreadyExists"
 	errCodeBucketAlreadyOwnedByYou              = "BucketAlreadyOwnedByYou"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
@@ -40,6 +44,7 @@ const (
 	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
 	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
+	errCodePermanentRedirect                         = "PermanentRedirect"
 	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
@@ -53,4 +58,18 @@ const (
 
 func errDirectoryBucket(err error) error {
 	return fmt.Errorf("directory buckets are not supported: %w", err)
+}
+
+func errBucketRegionMismatch(bucket string, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMovedPermanently) ||
+		tfawserr.ErrCodeEquals(err, errCodePermanentRedirect) ||
+		tfawserr.ErrCodeEquals(err, errCodeAuthorizationHeaderMalformed) {
+		return fmt.Errorf("S3 Bucket (%s) was redirected to another Region; verify that the bucket name is the actual S3 bucket name and that the resource's `region` argument matches the bucket Region: %w", bucket, err)
+	}
+
+	return err
 }
