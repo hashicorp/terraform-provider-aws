@@ -1639,7 +1639,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.HasChange("manage_master_user_password") {
-			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+			if d.Get("manage_master_user_password").(bool) {
+				// Enabling Secrets Manager management is always valid.
+				input.ManageMasterUserPassword = aws.Bool(true)
+			} else {
+				// manage_master_user_password is a virtual attribute not returned by the
+				// RDS API on read. After an out-of-band snapshot restore, DescribeDBClusters
+				// may still report a non-nil MasterUserSecret (inherited from the snapshot
+				// source cluster metadata), even though the restored cluster's password is NOT
+				// actually managed by Secrets Manager. Sending ManageMasterUserPassword=false
+				// to such a cluster causes InvalidParameterCombination from ModifyDBCluster.
+				// That error is handled in the RetryWhen block below: when it fires while
+				// ManageMasterUserPassword is false, we drop the parameter and retry so that
+				// the remaining changes (e.g. MasterUserPassword) are still applied.
+				input.ManageMasterUserPassword = aws.Bool(false)
+			}
 		}
 
 		if d.HasChange("master_password") {
@@ -1747,11 +1761,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return true, err
 				}
 
+				// AWS rejects ManageMasterUserPassword=false when the cluster's password is not
+				// currently managed by Secrets Manager. This can happen after an out-of-band
+				// snapshot restore: DescribeDBClusters may report a non-nil MasterUserSecret
+				// (inherited from the snapshot source) even though the restored cluster is not
+				// actually managed. The desired state — unmanaged — is already in effect, so
+				// strip the parameter and retry to apply any remaining changes (e.g. MasterUserPassword).
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "ManageMasterUserPassword") &&
+					input.ManageMasterUserPassword != nil && !*input.ManageMasterUserPassword {
+					input.ManageMasterUserPassword = nil
+					return true, err
+				}
+
 				return false, err
 			},
 		)
 
 		if err != nil {
+			// manage_master_user_password is a virtual attribute not returned by the RDS API
+			// on read. If the update fails, revert it in state so the next plan reflects the
+			// value that was actually in effect before the attempt — matching the pattern
+			// established by the equivalent aws_db_instance fix in PR #40538.
+			if input.ManageMasterUserPassword != nil {
+				old, _ := d.GetChange("manage_master_user_password")
+				d.Set("manage_master_user_password", old.(bool))
+			}
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
