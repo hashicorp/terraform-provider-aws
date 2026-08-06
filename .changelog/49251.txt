@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Fix `IllegalUpdate: The specified list of custom error responses does not exist or is not valid` errors on update when a `custom_error_response` block omits `response_code` and `response_page_path`
+```
