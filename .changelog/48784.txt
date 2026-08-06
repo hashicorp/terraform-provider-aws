@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Populate `cluster_address` for Redis clusters
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_cluster: Populate `cluster_address` for Redis clusters
+```
