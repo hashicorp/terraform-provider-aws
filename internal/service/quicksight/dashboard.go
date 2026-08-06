@@ -156,6 +156,10 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.SourceEntity = quicksightschema.ExpandDashboardSourceEntity(v.([]any))
 	}
 
+	if v, ok := d.GetOk("theme_arn"); ok {
+		input.ThemeArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("version_description"); ok {
 		input.VersionDescription = aws.String(v.(string))
 	}
@@ -222,6 +226,8 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting dashboard_publish_options: %s", err)
 	}
 
+	d.Set("theme_arn", outputDDD.ThemeArn)
+
 	permissions, err := findDashboardPermissionsByTwoPartKey(ctx, conn, awsAccountID, dashboardID)
 
 	if err != nil {
@@ -264,6 +270,10 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			inputUD.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
+		}
+
+		if v, ok := d.GetOk("theme_arn"); ok {
+			inputUD.ThemeArn = aws.String(v.(string))
 		}
 
 		output, err := conn.UpdateDashboard(ctx, inputUD)
