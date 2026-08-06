@@ -80,7 +80,6 @@ func (d *dataSourceServiceNetworkServiceAssociations) Read(ctx context.Context, 
 		}
 
 		input.ServiceNetworkIdentifier = data.ServiceNetworkIdentifier.ValueStringPointer()
-
 	} else if !data.ServiceIdentifier.IsNull() {
 		sID := data.ServiceIdentifier.ValueString()
 		if _, err := findServiceByID(ctx, conn, sID); err != nil {
