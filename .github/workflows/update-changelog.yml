@@ -36,15 +36,19 @@ permissions:
   pull-requests: write  # required to create a pull request
 
 jobs:
-  pr-merge:
-    name: Update Changelog (Post-Merge)
-    if: github.event_name == 'pull_request_target' && github.event.pull_request.merged
+  update-unreleased:
+    name: Update CHANGELOG (Unreleased)
+    if: |
+      (github.event_name == 'pull_request_target' && github.event.pull_request.merged)
+      || (github.event_name == 'workflow_dispatch' && !inputs.final_for_version)
     runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.ref || github.ref_name }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
           sparse-checkout: |
             .changie.yaml
@@ -52,7 +56,7 @@ jobs:
             .ci/scripts/
             CHANGELOG.md
 
-      - name: Get Changie Config
+      - name: Get changesDir from Changie Config
         id: changie-config
         shell: bash
         run: echo "changes_dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
@@ -63,6 +67,7 @@ jobs:
       # to Changie fragments. This handles PRs that predated the Changie migration.
       - name: Detect go-changelog Fragments and Changie Fragments
         id: filter
+        if: github.event_name == 'pull_request_target'
         uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         with:
           list-files: json
@@ -74,7 +79,7 @@ jobs:
 
       - name: Validate and Convert go-changelog Fragments
         id: convert
-        if: steps.filter.outputs.go_changelog_fragments == 'true'
+        if: github.event_name == 'pull_request_target' && steps.filter.outputs.go_changelog_fragments == 'true'
         shell: bash
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -105,7 +110,7 @@ jobs:
           echo "conversion_failed=false" >> "$GITHUB_OUTPUT"
 
       - name: Notify of Conversion Failure
-        if: failure() && steps.convert.outputs.conversion_failed == 'true'
+        if: failure() && steps.convert.outcome == 'failure'
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -141,7 +146,7 @@ jobs:
       # key, write the PR number in. This runs after go-changelog conversion so that
       # converted fragments (which already have PullRequest set) are a no-op.
       - name: Backfill PullRequest Key in Changie Fragments
-        if: steps.filter.outputs.changie_fragments == 'true'
+        if: github.event_name == 'pull_request_target' && steps.filter.outputs.changie_fragments == 'true'
         shell: bash
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -182,14 +187,14 @@ jobs:
           git add -A CHANGELOG.md .changes/
           if ! git diff --cached --quiet; then
             git commit -m "Update CHANGELOG for v${NEXT_MINOR} (Unreleased)"
-            git push origin HEAD:${{ github.event.pull_request.base.ref }}
+            git push origin "HEAD:${TARGET_BRANCH}"
           else
             echo "::notice::No changes to commit"
           fi
 
-  workflow-dispatch:
-    name: Update Changelog (Manual)
-    if: github.event_name == 'workflow_dispatch'
+  update-final:
+    name: Update CHANGELOG (Final for Version)
+    if: github.event_name == 'workflow_dispatch' && inputs.final_for_version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -199,9 +204,7 @@ jobs:
 
       # Version resolution
       # -------------------------------------------------------------------------------------
-      # On the final_for_version=true path: resolve version from input or changie next minor.
-      # On the final_for_version=false path: we still need a version label for the
-      # unreleased header, so always compute it with changie next minor.
+      # Resolve version from input or changie next minor.
       - name: Install Changie and Get Next Minor Version
         id: changie
         uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
@@ -212,15 +215,8 @@ jobs:
         id: version
         shell: bash
         env:
-          INPUT_VERSION: ${{ inputs.version }}
-          FINAL_FOR_VERSION: ${{ inputs.final_for_version }}
-          CHANGIE_NEXT_MINOR: ${{ steps.changie.outputs.output }}
+          VERSION: ${{ inputs.version != '' && inputs.version || steps.changie.outputs.output }}
         run: |
-          if [[ -n "$INPUT_VERSION" && "$FINAL_FOR_VERSION" == "true" ]]; then
-            VERSION="$INPUT_VERSION"
-          else
-            VERSION="$CHANGIE_NEXT_MINOR"
-          fi
           if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
           else
@@ -229,7 +225,6 @@ jobs:
           fi
 
       - name: Batch and Generate Final Per-Version CHANGELOG
-        if: inputs.final_for_version
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -240,18 +235,7 @@ jobs:
           changie merge
           cat .changes/footer.md >> CHANGELOG.md
 
-      - name: Regenerate CHANGELOG (Unreleased)
-        if: ${{ !inputs.final_for_version }}
-        shell: bash
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          changie merge --include-unreleased "## $VERSION (Unreleased)"
-          .ci/scripts/sort-changelog-entries.sh CHANGELOG.md
-          cat .changes/footer.md >> CHANGELOG.md
-
       - name: Create and Checkout Branch
-        if: inputs.final_for_version
         shell: bash
         env:
           BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
@@ -262,45 +246,27 @@ jobs:
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          FINAL: ${{ inputs.final_for_version }}
         run: |
           git config --local user.email "changelogbot@hashicorp.com"
           git config --local user.name "changelogbot"
-          # version/VERSION is only written by `changie batch`, which runs on the
-          # final_for_version=true path only. Stage it before the diff check so it
-          # is included in the commit on that path; skip it on the unreleased path
-          # to avoid a misleading no-op add.
-          if [[ "$FINAL" == "true" ]]; then
-            git add -A CHANGELOG.md .changes/ version/VERSION
-          else
-            git add -A CHANGELOG.md .changes/
-          fi
+          git add -A CHANGELOG.md .changes/ version/VERSION
           if ! git diff --cached --quiet; then
-            if [[ "$FINAL" == "true" ]]; then
-              git commit -m "Update CHANGELOG for v${VERSION}"
-            else
-              git commit -m "Update CHANGELOG for v${VERSION} (Unreleased)"
-            fi
+            git commit -m "Update CHANGELOG for v${VERSION}"
             echo "committed=true" >> "$GITHUB_OUTPUT"
           else
             echo "::notice::No changes to commit"
             echo "committed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push to main (unreleased path)
-        if: ${{ !inputs.final_for_version && steps.commit.outputs.committed == 'true' }}
-        shell: bash
-        run: git push origin HEAD:main
-
-      - name: Push Branch (release path)
-        if: inputs.final_for_version && steps.commit.outputs.committed == 'true'
+      - name: Push Branch
+        if: steps.commit.outputs.committed == 'true'
         shell: bash
         env:
           BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
         run: git push origin "$BRANCH_NAME"
 
-      - name: Create Pull Request (release path)
-        if: inputs.final_for_version && steps.commit.outputs.committed == 'true'
+      - name: Create Pull Request
+        if: steps.commit.outputs.committed == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -323,8 +289,10 @@ jobs:
           ## Description
 
           This PR:
-          - Creates a per-version CHANGELOG for v${VERSION}
-          - Updates the main CHANGELOG for v${VERSION}
+          - Batches unreleased change fragments into `.changes/6.x/v${VERSION}.md`
+          - Removes the batched change fragments from `.changes/6.x/unreleased/`
+          - Updates `version/VERSION` to `${VERSION}`
+          - Updates the main `CHANGELOG.md` for v${VERSION}
 
           ### Relations
           EOF
