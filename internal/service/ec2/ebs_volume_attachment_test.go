@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -418,5 +419,63 @@ func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.Impo
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 		return fmt.Sprintf("%s:%s:%s", rs.Primary.Attributes[names.AttrDeviceName], rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID]), nil
+	}
+}
+
+// sequenceRefreshFunc returns a StateRefreshFunc that walks through states one
+// by one on each call. The final call returns an empty state (not-found).
+func sequenceRefreshFunc(states []awstypes.VolumeAttachmentState) retry.StateRefreshFunc {
+	i := 0
+	return func(_ context.Context) (any, string, error) {
+		if i >= len(states) {
+			return nil, "", nil
+		}
+		s := states[i]
+		i++
+		return &awstypes.VolumeAttachment{State: s}, string(s), nil
+	}
+}
+
+func TestVolumeAttachmentWaiterDeleted_attachedTransitionSucceeds(t *testing.T) {
+	t.Parallel()
+
+	conf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.VolumeAttachmentStateAttached,
+			awstypes.VolumeAttachmentStateDetaching,
+		),
+		Target: []string{},
+		Refresh: sequenceRefreshFunc([]awstypes.VolumeAttachmentState{
+			awstypes.VolumeAttachmentStateAttached,
+			awstypes.VolumeAttachmentStateDetaching,
+		}),
+		Timeout:    5 * time.Second,
+		Delay:      0,
+		MinTimeout: 0,
+	}
+
+	_, err := conf.WaitForStateContext(context.Background())
+	if err != nil {
+		t.Fatalf("expected no error, got: %s", err)
+	}
+}
+
+func TestVolumeAttachmentWaiterDeleted_attachedOnlyPending_fails(t *testing.T) {
+	t.Parallel()
+
+	conf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VolumeAttachmentStateDetaching),
+		Target:  []string{},
+		Refresh: sequenceRefreshFunc([]awstypes.VolumeAttachmentState{
+			awstypes.VolumeAttachmentStateAttached,
+		}),
+		Timeout:    5 * time.Second,
+		Delay:      0,
+		MinTimeout: 0,
+	}
+
+	_, err := conf.WaitForStateContext(context.Background())
+	if err == nil {
+		t.Fatal("expected an error for unexpected 'attached' state, got none")
 	}
 }
