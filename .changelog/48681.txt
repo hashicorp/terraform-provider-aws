@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_bedrockagent_agent: Fix `Provider produced inconsistent result after apply` error when making non-guardrail changes to an existing agent with guardrail configuration
+```
+
