@@ -59,6 +59,35 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSVolume_availabilityZoneID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Volume
+	resourceName := "aws_ebs_volume.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeConfig_availabilityZoneID,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+		},
+	})
+}
+
 func TestAccEC2EBSVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
@@ -1058,6 +1087,14 @@ resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
   size              = 1
+}
+`)
+
+var testAccEBSVolumeConfig_availabilityZoneID = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+resource "aws_ebs_volume" "test" {
+  availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
+  type                 = "gp2"
+  size                 = 1
 }
 `)
 
