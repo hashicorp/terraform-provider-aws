@@ -37,4 +37,8 @@ var (
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
 	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
+	GSICreateAsyncByName                         = gsiCreateAsyncByName
+	FlattenTableGlobalSecondaryIndex             = flattenTableGlobalSecondaryIndex
+	GSIModificationsBlockedByCreating            = gsiModificationsBlockedByCreating
+	SortGSICreatesAsyncLast                      = sortGSICreatesAsyncLast
 )
