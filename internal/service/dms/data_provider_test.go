@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -22,18 +21,18 @@ import (
 func TestAccDMSDataProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_data_provider.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, resourceName),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "data_provider_arn"),
 					resource.TestCheckResourceAttr(resourceName, "data_provider_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "postgres"),
@@ -56,25 +55,25 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 func TestAccDMSDataProvider_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_data_provider.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, resourceName),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgres_settings.0.port", "5432"),
 				),
 			},
 			{
 				Config: testAccDataProviderConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, resourceName),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgres_settings.0.port", "5433"),
 				),
 			},
@@ -85,34 +84,42 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 func TestAccDMSDataProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_data_provider.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, resourceName),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdms.ResourceDataProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDataProviderExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 		_, err := tfdms.FindDataProviderByARN(ctx, conn, rs.Primary.Attributes["data_provider_arn"])
 
@@ -120,9 +127,9 @@ func testAccCheckDataProviderExists(ctx context.Context, n string) resource.Test
 	}
 }
 
-func testAccCheckDataProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_data_provider" {

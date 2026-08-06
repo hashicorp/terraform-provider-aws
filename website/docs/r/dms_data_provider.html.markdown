@@ -55,39 +55,139 @@ resource "aws_dms_data_provider" "mysql" {
 
 This resource supports the following arguments:
 
-* `engine` - (Required) Database engine type. Valid values: `aurora`, `aurora-postgresql`, `mysql`, `oracle`, `postgres`, `sqlserver`, `redshift`, `mariadb`, `mongodb`, `db2`, `db2-zos`, `docdb`, `sybase`.
-* `settings` - (Required) Configuration block for data provider settings. See [`settings`](#settings) below.
 * `data_provider_name` - (Optional) User-friendly name for the data provider.
 * `description` - (Optional) Description of the data provider.
+* `engine` - (Required) Database engine type. Valid values: `aurora`, `aurora-postgresql`, `mysql`, `oracle`, `postgres`, `sqlserver`, `redshift`, `mariadb`, `mongodb`, `db2`, `db2-zos`, `docdb`, `sybase`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `virtual` - (Optional) Indicates whether the data provider is virtual.
+* `settings` - (Required) Configuration block for data provider settings. See [`settings`](#settings-block) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `virtual` - (Optional) Whether the data provider is virtual.
 
-### settings
+### `settings` Block
 
 The `settings` block supports one of the following:
 
-* `docdb_settings` - (Optional) Configuration for DocumentDB. See [common settings](#common-settings) below.
-* `ibm_db2_luw_settings` - (Optional) Configuration for IBM DB2 LUW. See [common settings](#common-settings) below.
-* `ibm_db2_zos_settings` - (Optional) Configuration for IBM DB2 for z/OS. See [common settings](#common-settings) below.
-* `mariadb_settings` - (Optional) Configuration for MariaDB. See [common settings](#common-settings) below.
-* `microsoft_sql_server_settings` - (Optional) Configuration for Microsoft SQL Server. See [common settings](#common-settings) below.
-* `mongodb_settings` - (Optional) Configuration for MongoDB. See [common settings](#common-settings) below.
-* `mysql_settings` - (Optional) Configuration for MySQL. See [common settings](#common-settings) below.
-* `oracle_settings` - (Optional) Configuration for Oracle. See [common settings](#common-settings) below.
-* `postgres_settings` - (Optional) Configuration for PostgreSQL. See [common settings](#common-settings) below.
-* `redshift_settings` - (Optional) Configuration for Redshift. See [common settings](#common-settings) below.
-* `sybase_ase_settings` - (Optional) Configuration for SAP ASE. See [common settings](#common-settings) below.
+* `docdb_settings` - (Optional) Configuration for DocumentDB. See [`docdb_settings` Block](#docdb_settings-block) below.
+* `ibm_db2_luw_settings` - (Optional) Configuration for IBM DB2 LUW. See [`ibm_db2_luw_settings` Block](#ibm_db2_luw_settings-block) below.
+* `ibm_db2_zos_settings` - (Optional) Configuration for IBM DB2 for z/OS. See [`ibm_db2_zos_settings` Block](#ibm_db2_zos_settings-block) below.
+* `mariadb_settings` - (Optional) Configuration for MariaDB. See [`mariadb_settings` Block](#mariadb_settings-block) below.
+* `microsoft_sql_server_settings` - (Optional) Configuration for Microsoft SQL Server. See [`microsoft_sql_server_settings` Block](#microsoft_sql_server_settings-block) below.
+* `mongodb_settings` - (Optional) Configuration for MongoDB. See [`mongodb_settings` Block](#mongodb_settings-block) below.
+* `mysql_settings` - (Optional) Configuration for MySQL. See [`mysql_settings` Block](#mysql_settings-block) below.
+* `oracle_settings` - (Optional) Configuration for Oracle. See [`oracle_settings` Block](#oracle_settings-block) below.
+* `postgres_settings` - (Optional) Configuration for PostgreSQL. See [`postgres_settings` Block](#postgres_settings-block) below.
+* `redshift_settings` - (Optional) Configuration for Redshift. See [`redshift_settings` Block](#redshift_settings-block) below.
+* `sybase_ase_settings` - (Optional) Configuration for SAP ASE. See [`sybase_ase_settings` Block](#sybase_ase_settings-block) below.
 
-### Common Settings
+### `docdb_settings` Block
 
-All settings blocks support the following common attributes:
+The `docdb_settings` block supports the following:
 
-* `server_name` - (Optional) Server name.
-* `port` - (Optional) Port number.
-* `database_name` - (Optional) Database name.
-* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
 * `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `ibm_db2_luw_settings` Block
+
+The `ibm_db2_luw_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `ibm_db2_zos_settings` Block
+
+The `ibm_db2_zos_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `mariadb_settings` Block
+
+The `mariadb_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `microsoft_sql_server_settings` Block
+
+The `microsoft_sql_server_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `mongodb_settings` Block
+
+The `mongodb_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `mysql_settings` Block
+
+The `mysql_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `oracle_settings` Block
+
+The `oracle_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `postgres_settings` Block
+
+The `postgres_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `redshift_settings` Block
+
+The `redshift_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
+
+### `sybase_ase_settings` Block
+
+The `sybase_ase_settings` block supports the following:
+
+* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
+* `database_name` - (Optional) Database name.
+* `port` - (Optional) Port number.
+* `server_name` - (Optional) Server name.
+* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
 
 ## Attribute Reference
 

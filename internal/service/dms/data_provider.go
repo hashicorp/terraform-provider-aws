@@ -11,6 +11,8 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -52,6 +54,13 @@ func (r *dataProviderResource) Schema(ctx context.Context, request resource.Sche
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"aurora", "aurora-postgresql", "mysql", "oracle", "postgres",
+						"sqlserver", "redshift", "mariadb", "mongodb", "db2", "db2-zos",
+						"docdb", "sybase",
+					),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -110,6 +119,9 @@ func dataProviderSettingsBlock(ctx context.Context) schema.Block {
 				},
 				"ssl_mode": schema.StringAttribute{
 					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.OneOf("none", "require", "verify-ca", "verify-full"),
+					},
 				},
 			},
 		},
@@ -130,6 +142,10 @@ func (r *dataProviderResource) Create(ctx context.Context, request resource.Crea
 		Description:      fwflex.StringFromFramework(ctx, data.Description),
 		Engine:           fwflex.StringFromFramework(ctx, data.Engine),
 		Tags:             getTagsIn(ctx),
+	}
+
+	if !data.Virtual.IsNull() {
+		input.Virtual = data.Virtual.ValueBoolPointer()
 	}
 
 	if !data.Settings.IsNull() {
@@ -174,6 +190,14 @@ func (r *dataProviderResource) Read(ctx context.Context, request resource.ReadRe
 	data.DataProviderName = fwflex.StringToFramework(ctx, output.DataProviderName)
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.Engine = fwflex.StringToFramework(ctx, output.Engine)
+	data.Virtual = types.BoolPointerValue(output.Virtual)
+
+	settingsModel, diags := flattenDataProviderSettings(ctx, output.Settings)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Settings = settingsModel
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -199,6 +223,10 @@ func (r *dataProviderResource) Update(ctx context.Context, request resource.Upda
 			DataProviderIdentifier: new.DataProviderARN.ValueStringPointer(),
 			DataProviderName:       fwflex.StringFromFramework(ctx, new.DataProviderName),
 			Description:            fwflex.StringFromFramework(ctx, new.Description),
+		}
+
+		if !new.Virtual.IsNull() {
+			input.Virtual = new.Virtual.ValueBoolPointer()
 		}
 
 		if !new.Settings.IsNull() {
@@ -371,6 +399,20 @@ func expandDataProviderSettings(ctx context.Context, settings *dataProviderSetti
 		if s, diags := settings.IBMDB2LUWSettings.ToPtr(ctx); diags == nil && s != nil {
 			return &awstypes.DataProviderSettingsMemberIbmDb2LuwSettings{
 				Value: *expandIBMDB2LUWDataProviderSettings(ctx, s),
+			}
+		}
+	}
+	if !settings.IBMDB2ZOSSettings.IsNull() {
+		if s, diags := settings.IBMDB2ZOSSettings.ToPtr(ctx); diags == nil && s != nil {
+			return &awstypes.DataProviderSettingsMemberIbmDb2zOsSettings{
+				Value: *expandIBMDB2ZOSDataProviderSettings(ctx, s),
+			}
+		}
+	}
+	if !settings.SybaseASESettings.IsNull() {
+		if s, diags := settings.SybaseASESettings.ToPtr(ctx); diags == nil && s != nil {
+			return &awstypes.DataProviderSettingsMemberSybaseAseSettings{
+				Value: *expandSybaseASEDataProviderSettings(ctx, s),
 			}
 		}
 	}
@@ -574,5 +616,131 @@ func expandIBMDB2LUWDataProviderSettings(ctx context.Context, settings *dataProv
 		result.SslMode = awstypes.DmsSslModeValue(settings.SSLMode.ValueString())
 	}
 
+	return result
+}
+
+func expandIBMDB2ZOSDataProviderSettings(ctx context.Context, settings *dataProviderDBSettingsModel) *awstypes.IbmDb2zOsDataProviderSettings { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	if settings == nil {
+		return nil
+	}
+
+	result := &awstypes.IbmDb2zOsDataProviderSettings{
+		DatabaseName: fwflex.StringFromFramework(ctx, settings.DatabaseName),
+		ServerName:   fwflex.StringFromFramework(ctx, settings.ServerName),
+	}
+
+	if !settings.CertificateARN.IsNull() {
+		result.CertificateArn = settings.CertificateARN.ValueStringPointer()
+	}
+	if !settings.Port.IsNull() {
+		result.Port = aws.Int32(int32(settings.Port.ValueInt64()))
+	}
+	if !settings.SSLMode.IsNull() {
+		result.SslMode = awstypes.DmsSslModeValue(settings.SSLMode.ValueString())
+	}
+
+	return result
+}
+
+func expandSybaseASEDataProviderSettings(ctx context.Context, settings *dataProviderDBSettingsModel) *awstypes.SybaseAseDataProviderSettings { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	if settings == nil {
+		return nil
+	}
+
+	result := &awstypes.SybaseAseDataProviderSettings{
+		DatabaseName: fwflex.StringFromFramework(ctx, settings.DatabaseName),
+		ServerName:   fwflex.StringFromFramework(ctx, settings.ServerName),
+	}
+
+	if !settings.CertificateARN.IsNull() {
+		result.CertificateArn = settings.CertificateARN.ValueStringPointer()
+	}
+	if !settings.Port.IsNull() {
+		result.Port = aws.Int32(int32(settings.Port.ValueInt64()))
+	}
+	if !settings.SSLMode.IsNull() {
+		result.SslMode = awstypes.DmsSslModeValue(settings.SSLMode.ValueString())
+	}
+
+	return result
+}
+
+func flattenDataProviderSettings(ctx context.Context, settings awstypes.DataProviderSettings) (fwtypes.ListNestedObjectValueOf[dataProviderSettingsModel], diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	var diags diag.Diagnostics
+
+	if settings == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[dataProviderSettingsModel](ctx), diags
+	}
+
+	model := &dataProviderSettingsModel{
+		DocDBSettings:              fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		IBMDB2LUWSettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		IBMDB2ZOSSettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		MariaDBSettings:            fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		MicrosoftSQLServerSettings: fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		MongoDBSettings:            fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		MySQLSettings:              fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		OracleSettings:             fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		PostgresSettings:           fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		RedshiftSettings:           fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+		SybaseASESettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderDBSettingsModel](ctx),
+	}
+
+	switch v := settings.(type) {
+	case *awstypes.DataProviderSettingsMemberDocDbSettings:
+		model.DocDBSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
+		model.IBMDB2LUWSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
+		model.IBMDB2ZOSSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberMariaDbSettings:
+		model.MariaDBSettings = flattenDBSettings(ctx, v.Value.CertificateArn, nil, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
+		model.MicrosoftSQLServerSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberMongoDbSettings:
+		model.MongoDBSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberMySqlSettings:
+		model.MySQLSettings = flattenDBSettings(ctx, v.Value.CertificateArn, nil, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberOracleSettings:
+		model.OracleSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberPostgreSqlSettings:
+		model.PostgresSettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	case *awstypes.DataProviderSettingsMemberRedshiftSettings:
+		model.RedshiftSettings = flattenDBSettings(ctx, nil, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, "")
+	case *awstypes.DataProviderSettingsMemberSybaseAseSettings:
+		model.SybaseASESettings = flattenDBSettings(ctx, v.Value.CertificateArn, v.Value.DatabaseName, v.Value.Port, v.Value.ServerName, string(v.Value.SslMode))
+	}
+
+	result, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, model)
+	diags.Append(d...)
+	return result, diags
+}
+
+func flattenDBSettings(ctx context.Context, certARN, dbName *string, port *int32, serverName *string, sslMode string) fwtypes.ListNestedObjectValueOf[dataProviderDBSettingsModel] { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+	model := &dataProviderDBSettingsModel{
+		CertificateARN: fwtypes.ARNNull(),
+		DatabaseName:   types.StringNull(),
+		Port:           types.Int64Null(),
+		ServerName:     types.StringNull(),
+		SSLMode:        types.StringNull(),
+	}
+
+	if certARN != nil {
+		model.CertificateARN = fwtypes.ARNValue(aws.ToString(certARN))
+	}
+	if dbName != nil {
+		model.DatabaseName = types.StringValue(aws.ToString(dbName))
+	}
+	if port != nil {
+		model.Port = types.Int64Value(int64(aws.ToInt32(port)))
+	}
+	if serverName != nil {
+		model.ServerName = types.StringValue(aws.ToString(serverName))
+	}
+	if sslMode != "" {
+		model.SSLMode = types.StringValue(sslMode)
+	}
+
+	result, _ := fwtypes.NewListNestedObjectValueOfPtr(ctx, model)
 	return result
 }
