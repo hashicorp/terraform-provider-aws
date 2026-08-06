@@ -8,6 +8,7 @@ resource "aws_mailmanager_ingress_point" "test" {
 }
 
 resource "aws_mailmanager_traffic_policy" "test" {
+{{- template "region" }}
   default_action = "ALLOW"
   name           = var.rName
 
@@ -28,6 +29,7 @@ resource "aws_mailmanager_traffic_policy" "test" {
 }
 
 resource "aws_mailmanager_rule_set" "test" {
+{{- template "region" }}
   name = var.rName
 
   rule {
