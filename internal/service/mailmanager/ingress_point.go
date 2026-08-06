@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -188,6 +189,9 @@ func (r *ingressPointResource) Schema(ctx context.Context, _ resource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -373,6 +377,9 @@ func (r *ingressPointResource) Update(ctx context.Context, req resource.UpdateRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		plan.LastUpdatedTimestamp = state.LastUpdatedTimestamp
+		plan.TLSPolicy = state.TLSPolicy
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
