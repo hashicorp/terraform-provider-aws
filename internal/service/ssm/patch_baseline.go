@@ -8,12 +8,12 @@ package ssm
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -325,30 +325,34 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
+	meta.(conns.AWSClient).RegionalARN()
+	if err = resourcePatchBaselineFlatten(ctx, meta.(*conns.AWSClient), d, output); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return diags
+}
+
+func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *ssm.GetPatchBaselineOutput) error {
 	jsonDoc, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 	jsonString := string(tfjson.RemoveEmptyFields(jsonDoc))
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
+		return fmt.Errorf("setting approval_rule: %s", err)
 	}
 	d.Set("approved_patches", output.ApprovedPatches)
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "ssm",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "patchbaseline/" + strings.TrimPrefix(d.Id(), "/"),
-	}.String()
+
+	arn := awsClient.RegionalARN(ctx, "ssm", "patchbaseline/"+strings.TrimPrefix(d.Id(), "/"))
 	d.Set(names.AttrARN, arn)
 	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
+		return fmt.Errorf("setting global_filter: %s", err)
 	}
 	d.Set(names.AttrJSON, jsonString)
 	d.Set(names.AttrName, output.Name)
@@ -356,10 +360,9 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("rejected_patches", output.RejectedPatches)
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
 	if err := d.Set(names.AttrSource, flattenPatchSource(output.Sources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
+		return fmt.Errorf("setting source: %s", err)
 	}
-
-	return diags
+	return nil
 }
 
 func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
