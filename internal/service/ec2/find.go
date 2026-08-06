@@ -5530,6 +5530,56 @@ func findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx context.Context, conn
 	return output, nil
 }
 
+func findTransitGatewayPolicyTableEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableEntriesInput) ([]awstypes.TransitGatewayPolicyTableEntry, error) {
+	var output []awstypes.TransitGatewayPolicyTableEntry
+
+	err := getTransitGatewayPolicyTableEntriesPages(ctx, conn, input, func(page *ec2.GetTransitGatewayPolicyTableEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.TransitGatewayPolicyTableEntries...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPolicyTableEntryByTwoPartKey(ctx context.Context, conn *ec2.Client, policyTableID, ruleNumber string) (*awstypes.TransitGatewayPolicyTableEntry, error) {
+	input := ec2.GetTransitGatewayPolicyTableEntriesInput{
+		TransitGatewayPolicyTableId: aws.String(policyTableID),
+	}
+
+	transitGatewayPolicyTableEntries, err := findTransitGatewayPolicyTableEntries(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := tfresource.AssertSingleValueResult(tfslices.Filter(transitGatewayPolicyTableEntries, func(v awstypes.TransitGatewayPolicyTableEntry) bool {
+		return aws.ToString(v.PolicyRuleNumber) == ruleNumber
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayPolicyTableEntryStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	return output, nil
+}
+
 func findTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*awstypes.TransitGatewayPolicyTable, error) {
 	output, err := findTransitGatewayPolicyTables(ctx, conn, input)
 

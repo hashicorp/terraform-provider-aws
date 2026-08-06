@@ -104,6 +104,7 @@ var (
 	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
+	ResourceTransitGatewayPolicyTableEntry                = newTransitGatewayPolicyTableEntryResource
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
 	ResourceTransitGatewayRoute                           = resourceTransitGatewayRoute
 	ResourceTransitGatewayRouteTable                      = resourceTransitGatewayRouteTable
@@ -255,6 +256,7 @@ var (
 	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
+	FindTransitGatewayPolicyTableEntryByTwoPartKey              = findTransitGatewayPolicyTableEntryByTwoPartKey
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
 	FindTransitGatewayRouteTableAssociationByTwoPartKey         = findTransitGatewayRouteTableAssociationByTwoPartKey
 	FindTransitGatewayRouteTableByID                            = findTransitGatewayRouteTableByID
