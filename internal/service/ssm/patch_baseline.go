@@ -325,7 +325,6 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
-	meta.(conns.AWSClient).RegionalARN()
 	if err = resourcePatchBaselineFlatten(ctx, meta.(*conns.AWSClient), d, output); err != nil {
 		return diag.FromErr(err)
 	}
