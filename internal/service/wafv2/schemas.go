@@ -737,6 +737,100 @@ var countConfigSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
+var monetizeConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"price_multiplier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 3),
+						validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]?|100)$`), "must be an integer between 1 and 100"),
+					),
+				},
+			},
+		},
+	}
+})
+
+// monetizationConfigSchema is the WebACL/RuleGroup-level monetization configuration.
+// Required by the API when any rule uses the monetize action.
+var monetizationConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"crypto_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"payment_network": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"chain": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.BlockchainChain](),
+										},
+										"prices": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"amount": {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 13),
+															validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*(\.[0-9]{1,3})?|0\.([1-9][0-9]{0,2}|0[1-9][0-9]?|00[1-9]))$`), "must be a decimal amount between 0.001 and 999999999.999 with up to 3 decimal places"),
+														),
+													},
+													"currency": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CryptoCurrency](),
+													},
+												},
+											},
+										},
+										"wallet_address": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(26, 44),
+												validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "must not be blank"),
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"currency_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CurrencyMode](),
+				},
+			},
+		},
+	}
+})
+
 var blockConfigSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
