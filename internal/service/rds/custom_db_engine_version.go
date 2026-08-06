@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -75,6 +75,14 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
+				"database_installation_files": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
 				"db_parameter_group_family": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -82,16 +90,14 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
+					Computed:     true,
 					ValidateFunc: validation.StringLenBetween(1, 1000),
 				},
 				names.AttrEngine: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
-						validation.StringLenBetween(1, 35),
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 35),
 				},
 				names.AttrEngineVersion: {
 					Type:         schema.TypeString,
@@ -187,6 +193,10 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		input.DatabaseInstallationFilesS3Prefix = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("database_installation_files"); ok && v.(*schema.Set).Len() > 0 {
+		input.DatabaseInstallationFiles = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -277,11 +287,14 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("database_installation_files_s3_bucket_name", out.DatabaseInstallationFilesS3BucketName)
 	d.Set("database_installation_files_s3_prefix", out.DatabaseInstallationFilesS3Prefix)
+	d.Set("database_installation_files", flex.FlattenStringValueSet(out.DatabaseInstallationFiles))
 	d.Set("db_parameter_group_family", out.DBParameterGroupFamily)
 	d.Set(names.AttrDescription, out.DBEngineVersionDescription)
 	d.Set(names.AttrEngine, out.Engine)
 	d.Set(names.AttrEngineVersion, out.EngineVersion)
-	d.Set("image_id", out.Image.ImageId)
+	if out.Image != nil {
+		d.Set("image_id", out.Image.ImageId)
+	}
 	d.Set(names.AttrKMSKeyID, out.KMSKeyId)
 	d.Set("major_engine_version", out.MajorEngineVersion)
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
@@ -432,6 +445,7 @@ const (
 	statusDeprecated        = "deprecated"
 	statusFailed            = "failed"
 	statusPendingValidation = "pending-validation" // Custom for SQL Server, ready for validation by an instance
+	statusValidating        = "validating"         // SQL Server Developer Edition only
 )
 
 func statusDBEngineVersion(conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
@@ -451,9 +465,17 @@ func statusDBEngineVersion(conn *rds.Client, engine, engineVersion string) retry
 }
 
 func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.Client, engine, engineVersion string, timeout time.Duration) (*types.DBEngineVersion, error) {
+	// Engine sqlserver-dev-ee has different statuses, so a condition is needed here
+	pending := []string{statusCreating}
+	target := []string{statusAvailable, statusPendingValidation}
+	if engine == "sqlserver-dev-ee" {
+		pending = []string{statusPendingValidation, statusValidating}
+		target = []string{statusAvailable}
+	}
+
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusCreating},
-		Target:                    []string{statusAvailable, statusPendingValidation},
+		Pending:                   pending,
+		Target:                    target,
 		Refresh:                   statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
