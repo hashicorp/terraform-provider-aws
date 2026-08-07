@@ -1390,9 +1390,9 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
     parameters {
       exclude_boot_volume = true
-	  exclude_data_volume_tags = {
+      exclude_data_volume_tags = {
         test = "exclude"
-	  }
+      }
     }
 
     schedule {
