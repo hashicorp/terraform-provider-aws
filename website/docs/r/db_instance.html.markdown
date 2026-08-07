@@ -33,7 +33,7 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 
 Amazon RDS supports instance classes for General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads use cases. For more information see [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html).
 
-By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
+By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`. Storage changes (allocated storage, storage type, IOPS, and storage throughput) are also performed via the Blue/Green deployment.
 
 ## Example Usage
 
@@ -460,6 +460,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
+* `upgrade_target_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the green DB instance. This migrates the green DB instance from the older 32-bit file system to the preferred configuration. Default is `false`.
 
 [instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
