@@ -27,10 +27,6 @@ func newDataSourceServiceNetworkServiceAssociations(context.Context) (datasource
 	return &dataSourceServiceNetworkServiceAssociations{}, nil
 }
 
-const (
-	DSNameServiceNetworkServiceAssociations = "Service Network Service Associations Data Source"
-)
-
 type dataSourceServiceNetworkServiceAssociations struct {
 	framework.DataSourceWithModel[dataSourceServiceNetworkServiceAssociationsModel]
 }
