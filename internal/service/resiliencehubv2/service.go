@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -90,12 +91,35 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 		},
 		Blocks: map[string]fwschema.Block{
 			"permission_model": fwschema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[permissionModelModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
-						// TODO cross_account_role.
 						"invoker_role_name": fwschema.StringAttribute{
 							Required: true,
+						},
+					},
+					Blocks: map[string]fwschema.Block{
+						"cross_account_role": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[crossAccountRoleModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeBetween(0, 5),
+							},
+							NestedObject: fwschema.NestedBlockObject{
+								Attributes: map[string]fwschema.Attribute{
+									"cross_account_role_arn": fwschema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"external_id": fwschema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -281,5 +305,11 @@ type serviceResourceModel struct {
 }
 
 type permissionModelModel struct {
-	InvokerRoleName types.String `tfsdk:"invoker_role_name"`
+	CrossAccountRole fwtypes.ListNestedObjectValueOf[crossAccountRoleModel] `tfsdk:"cross_account_role"`
+	InvokerRoleName  types.String                                           `tfsdk:"invoker_role_name"`
+}
+
+type crossAccountRoleModel struct {
+	CrossAccountRoleARN fwtypes.ARN  `tfsdk:"cross_account_role_arn"`
+	ExternalID          types.String `tfsdk:"external_id"`
 }

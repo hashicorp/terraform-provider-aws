@@ -63,7 +63,8 @@ func TestAccResilienceHubV2Service_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("permission_model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"invoker_role_name": knownvalue.StringExact(rName + "-invoker"),
+						"cross_account_role": knownvalue.ListSizeExact(0),
+						"invoker_role_name":  knownvalue.StringExact(rName + "-invoker"),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetSizeExact(1)),
