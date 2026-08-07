@@ -86,7 +86,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 				},
 			},
 			names.AttrARN:         framework.ARNAttributeComputedOnly(),
-			names.AttrEnvironment: framework.ResourceOptionalComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrEnvironment: framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessEnvironmentProviderModel](ctx),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -125,7 +125,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			"truncation": framework.ResourceOptionalComputedListOfObjectsAttribute[harnessTruncationConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"truncation": framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessTruncationConfigurationModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
