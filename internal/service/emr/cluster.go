@@ -647,6 +647,121 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monitoring_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloud_watch_log_configuration": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								ForceNew:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								AtLeastOneOf: []string{
+									"monitoring_configuration.0.cloud_watch_log_configuration",
+									"monitoring_configuration.0.s3_logging_configuration",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+											ForceNew: true,
+										},
+										"encryption_key_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrLogGroupName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+										"log_stream_name_prefix": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+										"log_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+											Set:      sdkv2.SimpleSchemaSetFunc(names.AttrName),
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringInSlice([]string{"STEP_LOGS", "SPARK_DRIVER", "SPARK_EXECUTOR"}, false),
+													},
+													names.AttrValues: {
+														Type:     schema.TypeSet,
+														Required: true,
+														ForceNew: true,
+														MinItems: 1,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringInSlice([]string{"STDOUT", "STDERR"}, false),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"s3_logging_configuration": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								ForceNew:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								AtLeastOneOf: []string{
+									"monitoring_configuration.0.cloud_watch_log_configuration",
+									"monitoring_configuration.0.s3_logging_configuration",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_type_upload_policy": {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											MinItems: 1,
+											Set:      sdkv2.SimpleSchemaSetFunc("log_type"),
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"log_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.LogType](),
+													},
+													"upload_policy": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ForceNew:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.LogUploadPolicyValue](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					ForceNew: true,
@@ -656,6 +771,7 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					ForceNew: true,
 					Optional: true,
+					Computed: true,
 				},
 				"placement_group_config": {
 					Type:       schema.TypeList,
@@ -995,6 +1111,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.LogUri = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("os_release_label"); ok {
 		input.OSReleaseLabel = aws.String(v.(string))
 	}
@@ -1215,6 +1335,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(autoTerminationPolicy)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_termination_policy: %s", err)
 		}
+	}
+
+	if err := d.Set("monitoring_configuration", flattenMonitoringConfiguration(cluster.MonitoringConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_configuration: %s", err)
 	}
 
 	if err := d.Set("placement_group_config", flattenPlacementGroupConfigs(cluster.PlacementGroups)); err != nil {
@@ -2474,6 +2598,222 @@ func flattenPlacementGroupConfigs(apiObjects []awstypes.PlacementGroupConfig) []
 		tfMap["placement_strategy"] = apiObject.PlacementStrategy
 
 		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandMonitoringConfiguration(tfMap map[string]any) *awstypes.MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MonitoringConfiguration{}
+
+	if v, ok := tfMap["cloud_watch_log_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogConfiguration = expandCloudWatchLogConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_logging_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3LoggingConfiguration = expandS3LoggingConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogConfiguration(tfMap map[string]any) *awstypes.CloudWatchLogConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	// Enabled is required by the API, so it is always sent.
+	apiObject := &awstypes.CloudWatchLogConfiguration{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_stream_name_prefix"].(string); ok && v != "" {
+		apiObject.LogStreamNamePrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LogTypes = expandLogTypes(v.List())
+	}
+
+	return apiObject
+}
+
+func expandLogTypes(tfList []any) map[string][]string {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObject := make(map[string][]string, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		name, ok := tfMap[names.AttrName].(string)
+		if !ok || name == "" {
+			continue
+		}
+
+		if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+			apiObject[name] = flex.ExpandStringValueSet(v)
+		}
+	}
+
+	return apiObject
+}
+
+func expandS3LoggingConfiguration(tfMap map[string]any) *awstypes.S3LoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3LoggingConfiguration{}
+
+	if v, ok := tfMap["log_type_upload_policy"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LogTypeUploadPolicy = expandLogTypeUploadPolicy(v.List())
+	}
+
+	return apiObject
+}
+
+func expandLogTypeUploadPolicy(tfList []any) map[string]awstypes.LogUploadPolicyValue {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObject := make(map[string]awstypes.LogUploadPolicyValue, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		logType, ok := tfMap["log_type"].(string)
+		if !ok || logType == "" {
+			continue
+		}
+
+		if v, ok := tfMap["upload_policy"].(string); ok && v != "" {
+			apiObject[logType] = awstypes.LogUploadPolicyValue(v)
+		}
+	}
+
+	return apiObject
+}
+
+func flattenMonitoringConfiguration(apiObject *awstypes.MonitoringConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLogConfiguration; v != nil {
+		tfMap["cloud_watch_log_configuration"] = []any{flattenCloudWatchLogConfiguration(v)}
+	}
+
+	// Amazon EMR returns an empty S3LoggingConfiguration even when only CloudWatch
+	// logging was configured. Setting it would write a block that is absent from the
+	// configuration into state, causing a perpetual diff, so only set it when upload
+	// policies are actually present.
+	if v := apiObject.S3LoggingConfiguration; v != nil && len(v.LogTypeUploadPolicy) > 0 {
+		tfMap["s3_logging_configuration"] = []any{flattenS3LoggingConfiguration(v)}
+	}
+
+	// Likewise, avoid writing a phantom monitoring_configuration block into state.
+	if len(tfMap) == 0 {
+		return []any{}
+	}
+
+	return []any{tfMap}
+}
+
+func flattenCloudWatchLogConfiguration(apiObject *awstypes.CloudWatchLogConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogStreamNamePrefix; v != nil {
+		tfMap["log_stream_name_prefix"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogTypes; len(v) > 0 {
+		tfMap["log_types"] = flattenLogTypes(v)
+	}
+
+	return tfMap
+}
+
+func flattenLogTypes(apiObject map[string][]string) []any {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObject))
+
+	for name, values := range apiObject {
+		tfList = append(tfList, map[string]any{
+			names.AttrName:   name,
+			names.AttrValues: flex.FlattenStringValueSet(values),
+		})
+	}
+
+	return tfList
+}
+
+func flattenS3LoggingConfiguration(apiObject *awstypes.S3LoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogTypeUploadPolicy; len(v) > 0 {
+		tfMap["log_type_upload_policy"] = flattenLogTypeUploadPolicy(v)
+	}
+
+	return tfMap
+}
+
+func flattenLogTypeUploadPolicy(apiObject map[string]awstypes.LogUploadPolicyValue) []any {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObject))
+
+	for logType, uploadPolicy := range apiObject {
+		tfList = append(tfList, map[string]any{
+			"log_type":      logType,
+			"upload_policy": string(uploadPolicy),
+		})
 	}
 
 	return tfList
