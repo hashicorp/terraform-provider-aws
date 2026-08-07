@@ -467,15 +467,15 @@ This resource supports the following arguments:
 - `min_size` - (Required) Minimum size of the Auto Scaling Group.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 - `availability_zones` - (Optional) A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the `vpc_zone_identifier` attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with `vpc_zone_identifier`.
-- `availability_zone_distribution` (Optional) The instance capacity distribution across Availability Zones. See [Availability Zone Distribution](#availability_zone_distribution) below for more details.
-- `capacity_reservation_specification` (Optional) The capacity reservation specification for the Auto Scaling group allows you to prioritize launching into On-Demand Capacity Reservations. See [Capacity Reservation Specification](#capacity_reservation_specification) below for more details.
+- `availability_zone_distribution` (Optional) The instance capacity distribution across Availability Zones. See [`availability_zone_distribution` Block](#availability_zone_distribution-block) below for more details.
+- `capacity_reservation_specification` (Optional) The capacity reservation specification for the Auto Scaling group allows you to prioritize launching into On-Demand Capacity Reservations. See [`capacity_reservation_specification` Block](#capacity_reservation_specification-block) below for more details.
 - `capacity_rebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 - `context` - (Optional) Reserved.
 - `default_cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 - `default_instance_warmup` - (Optional) Amount of time, in seconds, until a newly launched instance can contribute to the Amazon CloudWatch metrics. This delay lets an instance finish initializing before Amazon EC2 Auto Scaling aggregates instance metrics, resulting in more reliable usage data. Set this value equal to the amount of time that it takes for resource consumption to become stable after an instance reaches the InService state. (See [Set the default instance warmup for an Auto Scaling group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-default-instance-warmup.html))
 - `launch_configuration` - (Optional) Name of the launch configuration to use.
-- `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [Launch Template](#launch_template) below for more details.
-- `mixed_instances_policy` - (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. See [Mixed Instances Policy](#mixed_instances_policy) below for more details.
+- `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [`launch_template` Block](#launch_template-block) below for more details.
+- `mixed_instances_policy` - (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. See [`mixed_instances_policy` Block](#mixed_instances_policy-block) below for more details.
 - `ignore_failed_scaling_activities` - (Optional) Whether to ignore failed [Auto Scaling scaling activities](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-verify-scaling-activity.html) while [waiting for capacity](#waiting-for-capacity). The default is `false` -- failed scaling activities cause errors to be returned.
 - `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
@@ -486,8 +486,8 @@ This resource supports the following arguments:
   a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
-- `instance_lifecycle_policy` - (Optional) If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined [below](#instance_lifecycle_policy).
-- `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
+- `instance_lifecycle_policy` - (Optional) If this block is configured, adds an instance lifecycle policy to the specified Auto Scaling Group. Defined [below](#instance_lifecycle_policy-block).
+- `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy-block).
 - `desired_capacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
   Capacity](#waiting-for-capacity) below.)
@@ -505,7 +505,7 @@ This resource supports the following arguments:
 - `termination_policies` - (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 - `suspended_processes` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
   Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
-- `tag` - (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
+- `tag` - (Optional) Configuration block(s) containing resource tags. See [`tag` Block](#tag-block) below for more details.
 - `placement_group` - (Optional) Name of the placement group into which you'll launch your instances, if any.
 - `metrics_granularity` - (Optional) Granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 - `enabled_metrics` - (Optional) List of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
@@ -532,28 +532,28 @@ This resource supports the following arguments:
 - `max_instance_lifetime` - (Optional) Maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
 - `instance_refresh` - (Optional) If this block is configured, start an
   [Instance Refresh](https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html)
-  when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
+  when this Auto Scaling Group is updated. Defined [below](#instance_refresh-block).
 - `warm_pool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
-  to the specified Auto Scaling group. Defined [below](#warm_pool)
+  to the specified Auto Scaling group. Defined [below](#warm_pool-block)
 - `force_delete_warm_pool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
-### availability_zone_distribution
+### `availability_zone_distribution` Block
 
 - `capacity_distribution_strategy` - (Required) The strategy to use for distributing capacity across the Availability Zones. Valid values are `balanced-only`, `balanced-best-effort`, and `reservations-then-balanced`. Default is `balanced-best-effort`. When `reservations-then-balanced` is set, you must also specify Capacity Reservations to prioritize through `capacity_reservation_specification` (or via a launch template) using a Capacity Reservation ID or Capacity Reservation resource group ARN.
 
-### capacity_reservation_specification
+### `capacity_reservation_specification` Block
 
 - `capacity_reservation_preference` - (Required) Capacity Reservation preference helps you use Capacity Reservations efficiently by prioritizing reserved capacity in a Capacity Reservation before using On-Demand capacity. Valid values are `default`, `capacity-reservations-only`, `capacity-reservations-first` and `none`. Default is `default`.
 - `capacity_reservation_target` - (Optional) Describes a target Capacity Reservation or Capacity Reservation resource group.
 
-#### capacity_reservation_specification capacity_reservation_target
+#### `capacity_reservation_specification.capacity_reservation_target` Block
 
 This configuration block supports the following:
 
 - `capacity_reservation_ids` - (Optional) List of On-Demand Capacity Reservation Ids. Conflicts with `capacity_reservation_resource_group_arns`.
 - `capacity_reservation_resource_group_arns` - (Optional) List of On-Demand Capacity Reservation Resource Group Arns. Conflicts with `capacity_reservation_ids`.
 
-### launch_template
+### `launch_template` Block
 
 ~> **NOTE:** Either `id` or `name` must be specified.
 
@@ -563,12 +563,12 @@ The top-level `launch_template` block supports the following:
 - `name` - (Optional) Name of the launch template. Conflicts with `id`.
 - `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-### mixed_instances_policy
+### `mixed_instances_policy` Block
 
 - `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
 - `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types and weights. Defined below.
 
-#### mixed_instances_policy instances_distribution
+#### `mixed_instances_policy.instances_distribution` Block
 
 This configuration block supports the following:
 
@@ -579,14 +579,14 @@ This configuration block supports the following:
 - `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Only available with `spot_allocation_strategy` set to `lowest-price`. Otherwise it must be set to `0`, if it has been defined before. Default: `2`.
 - `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.
 
-#### mixed_instances_policy launch_template
+#### `mixed_instances_policy.launch_template` Block
 
 This configuration block supports the following:
 
 - `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
 - `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
-##### mixed_instances_policy launch_template launch_template_specification
+##### `mixed_instances_policy.launch_template.launch_template_specification` Block
 
 ~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
 
@@ -596,7 +596,7 @@ This configuration block supports the following:
 - `launch_template_name` - (Optional) Name of the launch template. Conflicts with `launch_template_id`.
 - `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-##### mixed_instances_policy launch_template override
+##### `mixed_instances_policy.launch_template.override` Block
 
 This configuration block supports the following:
 
@@ -605,7 +605,7 @@ This configuration block supports the following:
 - `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
 - `weighted_capacity` - (Optional) Number of capacity units, which gives the instance type a proportional weight to other instance types.
 
-###### mixed_instances_policy launch_template override instance_requirements
+###### `mixed_instances_policy.launch_template.override.instance_requirements` Block
 
 This configuration block supports the following:
 
@@ -721,7 +721,7 @@ This configuration block supports the following:
     - `min` - (Required) Minimum.
     - `max` - (Optional) Maximum.
 
-### tag
+### `tag` Block
 
 The `tag` attribute accepts exactly one tag declaration with the following fields:
 
@@ -734,7 +734,7 @@ To declare multiple tags, additional `tag` blocks can be specified.
 
 ~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `min_size` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
 
-### instance_refresh
+### `instance_refresh` Block
 
 This configuration block supports the following:
 
@@ -761,7 +761,7 @@ This configuration block supports the following:
 
 ~> **NOTE:** Depending on health check settings and group size, an instance refresh may take a long time or fail. This resource does not wait for the instance refresh to complete.
 
-### warm_pool
+### `warm_pool` Block
 
 This configuration block supports the following:
 
@@ -770,26 +770,26 @@ This configuration block supports the following:
 - `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 
-### instance_lifecycle_policy
+### `instance_lifecycle_policy` Block
 
 This configuration block supports the following:
 
-- `retention_triggers` - (Optional) Conditions that trigger instance retention behavior. Defined [below](#retention_triggers).
+- `retention_triggers` - (Optional) Conditions that trigger instance retention behavior. Defined [below](#retention_triggers-block).
 
-#### retention_triggers
+#### `retention_triggers` Block
 
 This configuration block supports the following:
 
 - `terminate_hook_abandon` - (Optional) Action to take when a termination lifecycle hook is abandoned due to failure, timeout, or explicit abandonment. Valid values are `retain` and `terminate`. Set to `retain` to move instances to a retained state instead of terminating them. Retained instances don't count toward desired capacity and remain until you terminate them.
 
-### instance_maintenance_policy
+### `instance_maintenance_policy` Block
 
 This configuration block supports the following:
 
 - `min_healthy_percentage` - (Required) Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
 - `max_healthy_percentage` - (Required) Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 
-### traffic_source
+### `traffic_source` Block
 
 - `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 - `type` - Provides additional context for the value of Identifier.
@@ -798,7 +798,7 @@ This configuration block supports the following:
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
   `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
-##### instance_reuse_policy
+##### `warm_pool.instance_reuse_policy` Block
 
 This configuration block supports the following:
 
