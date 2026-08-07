@@ -5,9 +5,9 @@ package ssm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"iter"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -62,7 +62,7 @@ func (l *patchBaselineListResource) List(ctx context.Context, request list.ListR
 				return
 			}
 
-			baselineID, err := extractBaselineIDFromARN(aws.ToString(baselineIdentity.BaselineId))
+			baselineID, err := extractPatchBaselineIDFromARN(aws.ToString(baselineIdentity.BaselineId))
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -84,7 +84,6 @@ func (l *patchBaselineListResource) List(ctx context.Context, request list.ListR
 					continue
 				}
 
-				log.Printf("[DEBUG] baselineID is here: %s", baselineID)
 				if err := resourcePatchBaselineFlatten(ctx, awsClient, rd, baseline); err != nil {
 					tflog.Error(ctx, "Flattening SSM Patch Baseline", map[string]any{
 						"error": err,
@@ -127,8 +126,11 @@ func listPatchBaselines(ctx context.Context, conn *ssm.Client, input *ssm.Descri
 	}
 }
 
-// extractBaselineIDFromARN extracts the baseline ID (pb-xxx) from an ARN or returns the input if it's already a baseline ID
-func extractBaselineIDFromARN(arnOrID string) (string, error) {
+// extractPatchBaselineIDFromARN extracts the baseline ID (pb-xxx) from an ARN or returns the input if it's already a baseline ID
+func extractPatchBaselineIDFromARN(arnOrID string) (string, error) {
+	if arnOrID == "" {
+		return "", errors.New("empty string")
+	}
 	if !arn.IsARN(arnOrID) {
 		return arnOrID, nil
 	}
@@ -136,6 +138,10 @@ func extractBaselineIDFromARN(arnOrID string) (string, error) {
 	arnParts, err := arn.Parse(arnOrID)
 	if err != nil {
 		return "", err
+	}
+
+	if !strings.HasPrefix(arnParts.Resource, "patchbaseline/") {
+		return "", fmt.Errorf("arn resource %s is not a patchbaseline", arnOrID)
 	}
 
 	return strings.TrimPrefix(arnParts.Resource, "patchbaseline/"), nil
