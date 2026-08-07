@@ -310,3 +310,155 @@ resource "aws_datasync_location_azure_blob" "test" {
 }
 `)
 }
+
+func TestAccDataSyncLocationAzureBlob_preservation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationAzureBlobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datasync_location_azure_blob.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationAzureBlobConfig_preservationBase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_arns.0"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
+					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
+					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
+					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
+				),
+			},
+			{
+				Config: testAccLocationAzureBlobConfig_preservationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_arns.0"),
+					resource.TestCheckResourceAttr(resourceName, "access_tier", "COOL"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/updated/"),
+				),
+			},
+		},
+	})
+}
+
+func testAccLocationAzureBlobConfig_preservationBase(rName string) string {
+	return acctest.ConfigCompose(testAccLocationAzureBlobConfig_base(rName), `
+resource "aws_datasync_location_azure_blob" "test" {
+  agent_arns          = [aws_datasync_agent.test.arn]
+  authentication_type = "SAS"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+  subdirectory        = "/preserve/test"
+
+  sas_configuration {
+    token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
+  }
+}
+`)
+}
+
+func testAccLocationAzureBlobConfig_preservationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccLocationAzureBlobConfig_base(rName), `
+resource "aws_datasync_location_azure_blob" "test" {
+  access_tier         = "COOL"
+  agent_arns          = [aws_datasync_agent.test.arn]
+  authentication_type = "SAS"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+  subdirectory        = "/updated/"
+
+  sas_configuration {
+    token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
+  }
+}
+`)
+}
+
+func TestAccDataSyncLocationAzureBlob_agentless(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationAzureBlobOutput
+	resourceName := "aws_datasync_location_azure_blob.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationAzureBlobConfig_agentless(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
+					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
+					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"sas_configuration"},
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationAzureBlob_modeTransition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 datasync.DescribeLocationAzureBlobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datasync_location_azure_blob.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationAzureBlobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+				),
+			},
+			{
+				Config: testAccLocationAzureBlobConfig_agentless(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccLocationAzureBlobConfig_agentless() string {
+	return `
+resource "aws_datasync_location_azure_blob" "test" {
+  authentication_type = "SAS"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+
+  sas_configuration {
+    token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
+  }
+}
+`
+}
