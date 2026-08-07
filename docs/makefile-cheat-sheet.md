@@ -33,13 +33,7 @@ make testacc TESTS=TestAccIAMRole_basic PKG=iam
 ```
 
 !!! tip
-    The `t` target (a shorthand for acceptance testing) can auto-detect the package containing a test. When you use `T` and omit both `PKG` and `K`, the package is found by scanning `_test.go` files under `internal/` for the test:
-
-    ```console
-    make t T=TestAccIAMRole_basic
-    ```
-
-    This is equivalent to `make t T=TestAccIAMRole_basic PKG=iam`, but saves you from typing (and remembering) increasingly long service names. See the [`T`](#variables) variable for details.
+    The `t` target (a shorthand for acceptance testing) can auto-detect the package containing a test. When you use `T` and omit both `PKG` and `K`, the package is found by scanning `_test.go` files under `internal/`. For example, `make t T=TestAccIAMRole_basic` is equivalent to `make t T=TestAccIAMRole_basic PKG=iam`, but saves you from typing (and remembering) increasingly long service names. See the [`T`](#variables) variable for details.
 
 ### Meta Targets and Dependent Targets
 
