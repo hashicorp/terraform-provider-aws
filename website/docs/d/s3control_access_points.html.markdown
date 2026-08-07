@@ -40,9 +40,9 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `access_points` - List of access points matching the search criteria. See [`access_points`](#access_points-attribute-reference) below.
+* `access_points` - List of access points matching the search criteria. See [`access_points`](#access_points-block) below.
 
-### `access_points` Attribute Reference
+### `access_points` Block
 
 * `access_point_arn` - Access point ARN.
 * `alias` - Access point alias.
@@ -52,8 +52,8 @@ This data source exports the following attributes in addition to the arguments a
 * `data_source_type` - Type of the data source that the access point is attached to.
 * `name` - Name of the access point.
 * `network_origin` - Whether the access point allows access from the public Internet.
-* `vpc_configuration` - VPC configuration for the access point. See [`vpc_configuration`](#vpc_configuration-attribute-reference) below.
+* `vpc_configuration` - VPC configuration for the access point. See [`vpc_configuration`](#vpc_configuration-block) below.
 
-#### `vpc_configuration` Attribute Reference
+#### `vpc_configuration` Block
 
 * `vpc_id` - Access point will only allow connections from this VPC.
