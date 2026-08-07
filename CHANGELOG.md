@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_rds_snapshots` ([#49259](https://github.com/hashicorp/terraform-provider-aws/issues/49259))
 * **New Data Source:** `aws_vpclattice_service_network_service_associations` ([#42680](https://github.com/hashicorp/terraform-provider-aws/issues/42680))
+* **New List Resource:** `aws_backup_plan` ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
 * **New List Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
 * **New List Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
@@ -17,6 +18,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_backup_plan: Add resource identity support ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
 * resource/aws_backup_selection: Add resource identity support ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server.mcp_tool_schema` configuration block and `target_configuration.mcp.mcp_server.resource_priority` argument ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
 * resource/aws_dlm_lifecycle_policy: Add `policy_details.parameters.exclude_data_volume_tags` argument ([#45113](https://github.com/hashicorp/terraform-provider-aws/issues/45113))
