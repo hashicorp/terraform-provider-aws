@@ -56,7 +56,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "description" {
+variable "policy_name" {
   type     = string
   nullable = false
 }
