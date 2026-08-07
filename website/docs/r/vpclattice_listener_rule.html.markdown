@@ -154,7 +154,7 @@ The `match.http_match.header_matches.match` block supports the following:
 
 Exactly one of `contains`, `exact`, or `prefix` is required.
 
-* `contains` - (Optional) Contains type match.
+* `contains` - (Optional) Value that the header must contain to match.
 * `exact` - (Optional) Exact type match.
 * `prefix` - (Optional) Prefix type match. Matches the value with the prefix.
 
