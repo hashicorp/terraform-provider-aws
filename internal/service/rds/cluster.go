@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -708,27 +707,19 @@ func resourceCluster() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
-				// Aurora supports mutation of the storage_type parameter, other engines do not
-				return !strings.HasPrefix(d.Get(names.AttrEngine).(string), "aurora")
-			}),
-			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-				if diff.Id() == "" {
-					return nil
-				}
-				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
-				old, new := diff.GetChange(names.AttrStorageType)
-
-				if new.(string) == "aurora" && old.(string) == "" {
-					if err := diff.SetNew(names.AttrStorageType, ""); err != nil {
-						return err
-					}
-					return nil
-				}
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+			if diff.Id() == "" {
 				return nil
-			},
-		),
+			}
+			// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
+			old, new := diff.GetChange(names.AttrStorageType)
+			if new.(string) == "aurora" && old.(string) == "" {
+				if err := diff.SetNew(names.AttrStorageType, ""); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
 	}
 }
 
