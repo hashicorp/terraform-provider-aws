@@ -29,7 +29,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `standards_subscriptions` - List of controls that apply to the specified standard. See below for details.
 
-### `standards_subscriptions`
+### `standards_subscriptions` Block
 
 Each standard has the following attributes:
 
@@ -40,6 +40,6 @@ Each standard has the following attributes:
 * `standards_status_reason` - Reason for the current status. See below for details.
 * `standards_subscription_arn` - ARN of the resource that represents your subscription to the standard.
 
-### `standards_status_reason`
+### `standards_status_reason` Block
 
 * `status_reason_code` - Reason code that represents the reason for the current status of a standard subscription. Valid values: `NO_AVAILABLE_CONFIGURATION_RECORDER`, `MAXIMUM_NUMBER_OF_CONFIG_RULES_EXCEEDED`, `INTERNAL_ERROR`.
