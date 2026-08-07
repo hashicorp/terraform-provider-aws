@@ -15,13 +15,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_resiliencehubv2_service")
-func newResourceServiceAsListResource() list.ListResourceWithConfigure {
+func newServiceResourceAsListResource() list.ListResourceWithConfigure {
 	return &serviceListResource{}
 }
 
@@ -55,20 +58,27 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 			arn := aws.ToString(item.ServiceArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			output, err := findServiceByARN(ctx, conn, arn)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
 			result := request.NewListResult(ctx)
 
 			var data serviceResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
-				if result.Diagnostics.HasError() {
-					return
+				data.ServiceARN = fwflex.StringValueToFramework(ctx, arn)
+
+				if request.IncludeResource {
+					output, err := findServiceByARN(ctx, conn, arn)
+					if retry.NotFound(err) {
+						return
+					}
+					if err != nil {
+						result := fwdiag.NewListResultErrorDiagnostic(err)
+						yield(result)
+						return
+					}
+
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
 				}
 
 				result.DisplayName = aws.ToString(item.Name)
@@ -85,20 +95,22 @@ type listServiceModel struct {
 	framework.WithRegionModel
 }
 
-func listServices(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput) iter.Seq2[awstypes.ServiceSummary, error] {
-	return func(yield func(awstypes.ServiceSummary, error) bool) {
+func listServices(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.ServiceSummary, error] {
+	return tfiter.ConcatValuesWithError(listServicePages(ctx, conn, input, optFns...))
+}
+
+func listServicePages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.ServiceSummary, error] {
+	return func(yield func([]awstypes.ServiceSummary, error) bool) {
 		pages := resiliencehubv2.NewListServicesPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(awstypes.ServiceSummary{}, fmt.Errorf("listing Resilience Hub V2 Service resources: %w", err))
+				yield(nil, fmt.Errorf("listing Resilience Hub V2 Services: %w", err))
 				return
 			}
 
-			for _, item := range page.ServiceSummaries {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.ServiceSummaries, nil) {
+				return
 			}
 		}
 	}
