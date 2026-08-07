@@ -19,14 +19,14 @@ var (
 )
 
 func ConflictsWithWhenValidator(when When, expressions ...path.Expression) conflictsWithWhenValidator {
-	return conflictsWithWhenValidator{allOfWhenValidator{
+	return conflictsWithWhenValidator{conditionalPerMatchedPathValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
 type conflictsWithWhenValidator struct {
-	allOfWhenValidator
+	conditionalPerMatchedPathValidator
 }
 
 func (v conflictsWithWhenValidator) Description(ctx context.Context) string {
@@ -52,7 +52,7 @@ func (v conflictsWithWhenValidator) ValidateString(ctx context.Context, request 
 }
 
 func (v conflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.allOfWhenValidator.validate(ctx, request, response, v.eval)
+	v.conditionalPerMatchedPathValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v conflictsWithWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
