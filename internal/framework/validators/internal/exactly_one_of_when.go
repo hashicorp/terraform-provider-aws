@@ -34,6 +34,9 @@ func (v exactlyOneOfWhenValidator) Description(ctx context.Context) string {
 }
 
 func (v exactlyOneOfWhenValidator) MarkdownDescription(context.Context) string {
+	if v.when.String() == "" {
+		return fmt.Sprintf("Ensure that one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
+	}
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
 }
 
@@ -57,17 +60,32 @@ func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request Validat
 
 func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path, expressions path.Expressions, count int) diag.Diagnostics {
 	var diags diag.Diagnostics
+	when := v.when.String()
 	switch {
 	case count == 0:
-		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-			requestPath,
-			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. No attribute configured.", expressions, requestPath, v.when.String()),
-		))
+		if when == "" {
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("One (and only one) of %[1]s must be configured. No attribute configured.", expressions),
+			))
+		} else {
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. No attribute configured.", expressions, requestPath, v.when.String()),
+			))
+		}
 	case count > 1:
-		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-			requestPath,
-			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. %[4]d attributes configured.", expressions, requestPath, v.when.String(), count),
-		))
+		if when == "" {
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("One (and only one) of %[1]s must be configured. %[2]d attributes configured.", expressions, count),
+			))
+		} else {
+			diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+				requestPath,
+				fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. %[4]d attributes configured.", expressions, requestPath, v.when.String(), count),
+			))
+		}
 	}
 	return diags
 }

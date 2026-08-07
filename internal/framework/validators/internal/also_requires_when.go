@@ -29,7 +29,7 @@ type ValidatorResponse struct {
 type When interface {
 	// Eval returns true if the condition is met for the given attribute value.
 	Eval(context.Context, attr.Value) bool
-	// String returns a string representation of the condition, usable in an error message.
+	// String returns a string representation of the condition, usable in an error message. Can be empty.
 	String() string
 }
 
