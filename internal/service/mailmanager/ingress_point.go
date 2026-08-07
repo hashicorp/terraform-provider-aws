@@ -599,19 +599,7 @@ func (m *networkConfigurationModel) Flatten(ctx context.Context, v any) diag.Dia
 		}
 		m.PublicNetworkConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pub)
 
-	case *awstypes.NetworkConfigurationMemberPublicNetworkConfiguration:
-		pub := publicNetworkConfigurationModel{
-			IPType: fwtypes.StringEnumValue(t.Value.IpType),
-		}
-		m.PublicNetworkConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pub)
-
 	case awstypes.NetworkConfigurationMemberPrivateNetworkConfiguration:
-		priv := privateNetworkConfigurationModel{
-			VPCEndpointID: types.StringPointerValue(t.Value.VpcEndpointId),
-		}
-		m.PrivateNetworkConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &priv)
-
-	case *awstypes.NetworkConfigurationMemberPrivateNetworkConfiguration:
 		priv := privateNetworkConfigurationModel{
 			VPCEndpointID: types.StringPointerValue(t.Value.VpcEndpointId),
 		}
