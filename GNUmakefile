@@ -41,6 +41,51 @@ TEST_COUNT                   ?= 1
 #   make quick-fix PKG=ses     # Fix code in SES service
 #   make quick-fix K=lambda    # Same as above, but shorter (both work)
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
+#   make t T=TestAccRole          # Same: PKG=iam is auto-detected from the test name
+
+# Auto-discover the package containing a test when neither PKG nor K is
+# provided. This lets `make t T=TestAccExampleThing_basic` work without having
+# to remember and type the (increasingly long) AWS service name.
+#
+# T may be a regular expression (e.g. 'TestAccFooSenderID_(basic|disappears)'),
+# so we emulate `go test -run` matching rather than a literal lookup, but do it
+# cheaply WITHOUT compiling anything (`go test -list` would compile the whole
+# tree, defeating the purpose): read only `_test.go` files under internal/,
+# take the first `/`-separated segment of T (subtest names never appear in func
+# names), and match it, unanchored, against test function names the way
+# `go test` does. The test's own directory is used as the scope, so tests
+# outside internal/service (e.g. internal/conns) resolve correctly too.
+#
+# Scoped to T only (not the legacy TESTS alias) so existing TESTS-based
+# workflows are unaffected. Only runs when T is given and no package was
+# specified, so it adds no overhead to package-scoped or non-test targets.
+# Guard: non-empty only when PKG is undefined AND K is undefined AND T is
+# defined. Make's ifeq/ifneq have no `&&`, but the $(and ...) function does the
+# job, letting us use one conditional instead of three nested ones.
+AUTODETECT_PKG := $(and $(filter undefined,$(origin PKG)),$(filter undefined,$(origin K)),$(filter-out undefined,$(origin T)))
+ifneq ($(AUTODETECT_PKG),)
+  AUTO_DIRS := $(shell seg=$$(printf '%s' '$(T)' | cut -d/ -f1); grep -rHE '^func Test' --include='*_test.go' internal 2>/dev/null | awk -F: -v re="$$seg" '{ fn=$$2; sub("^func ","",fn); sub("[^A-Za-z0-9_].*","",fn); if (fn ~ re) { d=$$1; sub("/[^/]*$$","",d); print d } }' | sort -u)
+  ifeq ($(words $(AUTO_DIRS)),0)
+    $(error make: no test matching T='$(T)' found under internal/ (check the test name/regex). Scope it yourself with PKG=<service> or K=<service>, or use TESTS instead of T to skip autodetection)
+  else
+    AUTO_DIR := $(firstword $(AUTO_DIRS))
+    ifneq ($(words $(AUTO_DIRS)),1)
+      $(warning make: T='$(T)' matches tests in multiple packages ($(AUTO_DIRS)); using $(AUTO_DIR). Set PKG=<service> to choose another, or use TESTS to skip autodetection)
+    endif
+    AUTO_SVC := $(patsubst internal/service/%,%,$(AUTO_DIR))
+    ifeq ($(AUTO_SVC),$(AUTO_DIR))
+      # Not a service package (e.g. internal/conns): scope directly to the directory.
+      PKG_NAME := $(AUTO_DIR)
+      SVC_DIR := ./$(AUTO_DIR)
+      TEST := ./$(AUTO_DIR)/...
+      $(info make: auto-detected package $(AUTO_DIR) from T=$(T))
+    else
+      # Service package: set PKG and let the consolidation below derive the rest.
+      PKG := $(AUTO_SVC)
+      $(info make: auto-detected PKG=$(AUTO_SVC) from T=$(T))
+    endif
+  endif
+endif
 
 # Variable consolidation for backward compatibility and user convenience:
 # - PKG and K both refer to service names (e.g., 'ses', 'lambda')

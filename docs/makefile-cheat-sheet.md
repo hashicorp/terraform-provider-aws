@@ -32,6 +32,15 @@ For example, `testacc` is a phony target to simplify the command for running acc
 make testacc TESTS=TestAccIAMRole_basic PKG=iam
 ```
 
+!!! tip
+    The `t` target (a shorthand for acceptance testing) can auto-detect the package containing a test. When you use `T` and omit both `PKG` and `K`, the package is found by scanning `_test.go` files under `internal/` for the test:
+
+    ```console
+    make t T=TestAccIAMRole_basic
+    ```
+
+    This is equivalent to `make t T=TestAccIAMRole_basic PKG=iam`, but saves you from typing (and remembering) increasingly long service names. See the [`T`](#variables) variable for details.
+
 ### Meta Targets and Dependent Targets
 
 _Meta_ targets are `make` targets that only run other targets. They aggregate the functionality of other targets for convenience. In the [Cheat Sheet](#cheat-sheet), meta targets are marked with <sup>M</sup>.
@@ -60,8 +69,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
 * `K` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `PKG` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
 * `P` - (Default: `20`) Number of concurrent acceptance tests to run. Assigns a value to `ACCTEST_PARALLELISM` overridding any value set.
-* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
-* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set.
+* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set. When neither `PKG` nor `K` is set, `PKG` is auto-detected from `T` (see the `T` variable).
+* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set, including when `PKG` is auto-detected from `T`.
 * `RUNARGS` - (Default: _None_) Raw arguments passed to Go when running acceptance tests. For example, `RUNARGS=-run=TestMyTest`. Overridden if `TESTS` or `T` is set.
 * `SEMGREP_ARGS` - (Default: `--error`) Semgrep arguments. See the [Semgrep reference](https://semgrep.dev/docs/cli-reference#semgrep-scan-command-options).
 * `SEMGREP_ENABLE_VERSION_CHECK` - (Default: `false`) Whether to check Semgrep servers to verify you are running the latest Semgrep version.
@@ -73,10 +82,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `SWEEP_TIMEOUT` - (Default: `360m`) Time Go will spend sweeping resources before panicking.
 * `SWEEPARGS` - (Default: _None_) Raw arguments that define what to sweep, including dependencies. Similar to `SWEEPERS`. For example, `SWEEPARGS=-sweep-run=aws_example_thing`.
 * `SWEEPERS` - (Default: _None_) Resources to sweep, including dependencies. Similar to `SWEEPARGS`. For example, `SWEEPERS=aws_example_thing`. Assigns a value to `SWEEPARGS` overridding any value set.
-* `T` - (Default: _None_) Names of tests to run. Equivalent to `TESTS`. Assigns a value to `RUNARGS` overridding any value set.
+* `T` - (Default: _None_) Names of tests to run; may be a regular expression, just like `go test -run`. Similar to `TESTS`, but with an extra convenience: when neither `PKG` nor `K` is set, the package containing the test is auto-detected by scanning `_test.go` files under `internal/` (no compilation) and matching test function names the same way `go test -run` does. This means `make t T=TestAccIAMRole_basic` scopes to the `iam` package automatically, without typing `PKG=iam`. Tests outside `internal/service` (for example `make t T=TestAddIsErrorRetryables`, which lives in `internal/conns`) resolve to their own directory. If the pattern matches tests in more than one package, the first is used and a warning lists the alternatives; set `PKG` explicitly to choose another. If no matching test is found, `make` stops with an error rather than running the entire codebase; specify `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
 * `TEST` - (Default: `./...`) Limit tests to this directory and dependencies. Overridden if `PKG` or `K` is set.
 * `TEST_COUNT` - (Default: `1`) Number of times to run each acceptance or unit test.
-* `TESTS` - (Default: _None_) Names of tests to run. Equivalent to `T`. Assigns a value to `RUNARGS` overridding any value set.
+* `TESTS` - (Default: _None_) Names of tests to run. Similar to `T`, but does _not_ auto-detect the service package; you must still set `PKG` or `K` to scope processing. Use `T` if you want package auto-detection. Assigns a value to `RUNARGS` overridding any value set.
 * `TESTARGS` - (Default: _None_) Raw arguments passed to Go when running tests. Unlike `RUNARGS`, this is _not_ overridden if `TESTS` or `T` is set.
 
 ## Cheat Sheet
