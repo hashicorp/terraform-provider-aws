@@ -78,13 +78,13 @@ The `self_managed_active_directory_configuration` configuration block supports t
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the storage virtual machine.
-* `endpoints` - Endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
+* `endpoints` - Endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [`endpoints`](#endpoints-block) below.
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
 * `subtype` - SVM's subtype, e.g. `DEFAULT`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - SVM's UUID (universally unique identifier).
 
-### Endpoints
+### `endpoints` Block
 
 * `iscsi` - Endpoint for accessing data on your storage virtual machine via iSCSI protocol. See [Endpoint](#endpoint).
 * `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
