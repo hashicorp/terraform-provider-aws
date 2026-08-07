@@ -35,11 +35,20 @@ jobs:
         if: steps.community_check.outputs.maintainer == 'true'
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version-file: .ci/tools/go.mod
+
+      - name: Cache Go modules
+        if: steps.community_check.outputs.maintainer == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('.ci/tools/go.sum') }}
 
       - name: Install tctest
         if: steps.community_check.outputs.maintainer == 'true'
-        run: go install github.com/katbyte/tctest@v1.0.1
+        run: cd .ci/tools && go install github.com/katbyte/tctest
 
       - name: Determine Changed Packages
         if: steps.community_check.outputs.maintainer == 'true'
