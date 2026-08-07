@@ -37,12 +37,13 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `applications` - Application object that contains the following:
-    * `app_block_arn` - The app block ARN of the application.
-    * `created_time` - The time at which the application was created within the app block.
-    * `description` - The description of the application.
-    * `display_name` - The application name to display.
+    * `app_block_arn` - App block ARN of the application.
+    * `arn` - ARN of the application.
+    * `created_time` - Time at which the application was created within the app block.
+    * `description` - Description of the application.
+    * `display_name` - Application name to display.
     * `enabled` - Bool based on if the application is enabled.
-    * `icon_s3_location` - A list named icon_s3_location that contains the following:
+    * `icon_s3_location` - List named `icon_s3_location` that contains the following:
         * `s3_bucket` - S3 bucket of the S3 object.
         * `s3_key` - S3 key of the S3 object.
     * `icon_url` - URL of the application icon. This URL may be time-limited.
