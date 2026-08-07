@@ -15,6 +15,8 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_networkfirewall_container_association", sweepContainerAssociations)
+
 	resource.AddTestSweepers("aws_networkfirewall_firewall_policy", &resource.Sweeper{
 		Name: "aws_networkfirewall_firewall_policy",
 		F:    sweepFirewallPolicies,
