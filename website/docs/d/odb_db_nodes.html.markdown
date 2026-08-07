@@ -38,31 +38,31 @@ This data source exports the following attributes in addition to the arguments a
 
 * `db_nodes` - List of DB nodes along with their properties.
 
-### db_nodes
+### `db_nodes` Block
 
 * `additional_details` - Additional information about the planned maintenance.
+* `arn` - Amazon Resource Name (ARN) of the DB node.
 * `backup_ip_id` - Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
-* `backup_vnic_2_id` - OCID of the second backup virtual network interface card (VNIC) for the DB node.
+* `backup_vnic2_id` - OCID of the second backup virtual network interface card (VNIC) for the DB node.
 * `backup_vnic_id` - OCID of the backup VNIC for the DB node.
 * `cpu_core_count` - Number of CPU cores enabled on the DB node.
 * `created_at` - Date and time when the DB node was created.
-* `db_node_arn` - Amazon Resource Name (ARN) of the DB node.
-* `db_node_id` - Unique identifier of the DB node.
-* `db_node_storage_size_in_gbs` - Amount of local node storage, in gigabytes (GB), that's allocated on the DB node.
+* `db_node_storage_size` - Amount of local node storage, in gigabytes (GB), that's allocated on the DB node.
 * `db_server_id` - Unique identifier of the database server that's associated with the DB node.
 * `db_system_id` - OCID of the DB system.
 * `fault_domain` - Name of the fault domain where the DB node is located.
 * `host_ip_id` - OCID of the host IP address that's associated with the DB node.
 * `hostname` - Host name for the DB node.
+* `id` - Unique identifier of the DB node.
 * `maintenance_type` - Type of maintenance the DB node is undergoing.
-* `memory_size_in_gbs` - Amount of memory, in gigabytes (GB), that's allocated on the DB node.
+* `memory_size` - Amount of memory, in gigabytes (GB), that's allocated on the DB node.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the DB node.
 * `ocid` - OCID of the DB node.
-* `software_storage_size_in_gb` - Size of the block storage volume, in gigabytes (GB), that's allocated for the DB system. This attribute applies only for virtual machine DB systems.
+* `software_storage_size` - Size of the block storage volume, in gigabytes (GB), that's allocated for the DB system. This attribute applies only for virtual machine DB systems.
 * `status` - Current status of the DB node.
 * `status_reason` - Additional information about the status of the DB node.
 * `time_maintenance_window_end` - End date and time of the maintenance window.
 * `time_maintenance_window_start` - Start date and time of the maintenance window.
 * `total_cpu_core_count` - Total number of CPU cores reserved on the DB node.
-* `vnic_2_id` - OCID of the second VNIC.
+* `vnic2_id` - OCID of the second VNIC.
 * `vnic_id` - OCID of the VNIC.
