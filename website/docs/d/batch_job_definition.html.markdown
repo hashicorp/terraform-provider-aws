@@ -243,7 +243,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### volumes
 
-* `efs_volume_configuration` - This [parameter](#efs_volume_configuration) is specified when you're using an Amazon Elastic File System file system for job storage.
+* `efs_volume_configuration` - [Parameter](#efs_volume_configuration) specified when you're using an Amazon Elastic File System file system for job storage.
 * `host` - Contents of the host parameter determine whether your data volume persists on the host container instance and where it's stored.
 * `name` - Name of the volume.
 
@@ -256,7 +256,7 @@ This data source exports the following attributes in addition to the arguments a
 * `authorization_config` - [Authorization configuration](#authorization_config) details for the Amazon EFS file system.
 * `file_system_id` - Amazon EFS file system ID to use.
 * `root_directory` - Directory within the Amazon EFS file system to mount as the root directory inside the host.
-* `transit_encryption` - Determines whether to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server
+* `transit_encryption` - Whether to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server
 * `transit_encryption_port` - Port to use when sending encrypted data between the Amazon ECS host and the Amazon EFS server.
 
 ### authorization_config
@@ -272,9 +272,9 @@ This data source exports the following attributes in addition to the arguments a
 ### evaluate_on_exit
 
 * `action` - Action to take if all of the specified conditions (onStatusReason, onReason, and onExitCode) are met. The values aren't case sensitive.
-* `on_exit_code` - Contains a glob pattern to match against the decimal representation of the ExitCode returned for a job.
-* `on_reason` - Contains a glob pattern to match against the Reason returned for a job.
-* `on_status_reason` - Contains a glob pattern to match against the StatusReason returned for a job.
+* `on_exit_code` - Glob pattern to match against the decimal representation of the ExitCode returned for a job.
+* `on_reason` - Glob pattern to match against the Reason returned for a job.
+* `on_status_reason` - Glob pattern to match against the StatusReason returned for a job.
 
 ### timeout
 
