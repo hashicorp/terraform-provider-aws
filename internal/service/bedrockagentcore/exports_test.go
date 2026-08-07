@@ -3,15 +3,6 @@
 
 package bedrockagentcore
 
-type (
-	InvocationConfigurationModel  = invocationConfigurationModel
-	MessageBasedTriggerModel      = messageBasedTriggerModel
-	SelfManagedConfigurationModel = selfManagedConfigurationModel
-	TimeBasedTriggerModel         = timeBasedTriggerModel
-	TokenBasedTriggerModel        = tokenBasedTriggerModel
-	TriggerConditionsModel        = triggerConditionsModel
-)
-
 // Exports for use in tests only.
 var (
 	ResourceAgentRuntime             = newAgentRuntimeResource

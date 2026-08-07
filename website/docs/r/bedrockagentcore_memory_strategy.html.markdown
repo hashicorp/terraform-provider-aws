@@ -184,12 +184,6 @@ resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
     self_managed {
       historical_context_window_size = 10
 
-      trigger_conditions = {
-        message_based_trigger = {
-          message_count = 12
-        }
-      }
-
       invocation_configuration {
         topic_arn                    = aws_sns_topic.example.arn
         payload_delivery_bucket_name = aws_s3_bucket.example.bucket
@@ -233,7 +227,6 @@ The `self_managed` block supports the following:
 
 * `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
 * `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
-* `trigger_conditions` - (Optional) Conditions that trigger memory processing. See [`trigger_conditions` Block](#trigger_conditions-block) below. When omitted, the service supplies the documented defaults for all three trigger types.
 
 ### `invocation_configuration` Block
 
@@ -241,16 +234,6 @@ The `invocation_configuration` block supports the following:
 
 * `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
 * `topic_arn` - (Required) ARN of the SNS topic for job notifications.
-
-### `trigger_conditions` Block
-
-The `trigger_conditions` object supports any combination of the following:
-
-* `message_based_trigger` - (Optional) Message-based condition. Its `message_count` argument accepts values from `1` to `50` and defaults to `6`.
-* `token_based_trigger` - (Optional) Token-based condition. Its `token_count` argument accepts values from `100` to `500000` and defaults to `5000`.
-* `time_based_trigger` - (Optional) Idle-time condition. Its `idle_session_timeout` argument accepts values from `10` to `3000` seconds and defaults to `20`.
-
-The service returns all three normalized conditions even when only a subset is configured. Unconfigured conditions are retained in state as computed values.
 
 ### `consolidation` Block
 
@@ -285,6 +268,7 @@ The `reflection_configuration` supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
+* `configuration.self_managed.trigger_conditions` - Normalized set of conditions that trigger memory processing, as returned by the service. Each element contains one of `message_based_trigger` (`message_count`), `token_based_trigger` (`token_count`), or `time_based_trigger` (`idle_session_timeout`). The service populates the full set with defaults, so this is read-only.
 
 ## Timeouts
 

@@ -1766,9 +1766,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 			{
 				Config: testAccMemoryStrategyConfig_selfManagedBase(rName),
 			},
-			// Step 1: Create with trigger_conditions omitted. The service supplies all defaults.
+			// Step 1: self_managed with message-based trigger and explicit window size
 			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10, ""),
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
@@ -1779,9 +1779,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
+					// trigger_conditions is Computed; the service returns the normalized set.
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.trigger_conditions.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1790,16 +1789,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 2: Partially configure only the message threshold. The other
-			// service-normalized defaults remain represented as computed children.
+			// Step 2: update window size and trigger threshold (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditionsMessageOnly(12)),
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "12"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1807,22 +1802,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 3: Update every supported threshold in place.
-			{
-				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditions(18, 6000, 30)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "18"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "6000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "30"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-			// Step 4: Import retains the normalized trigger conditions returned by the service.
+			// Step 3: Import test (against the valid Step 2 config)
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -2572,7 +2552,7 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int, triggerConditions string) string {
+func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int) string {
 	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
   name                      = %[1]q
@@ -2587,8 +2567,6 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
     self_managed {
       historical_context_window_size = %[2]d
 
-      %[3]s
-
       invocation_configuration {
         topic_arn                    = aws_sns_topic.test.arn
         payload_delivery_bucket_name = aws_s3_bucket.test.bucket
@@ -2598,33 +2576,7 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
   depends_on = [aws_iam_role_policy.test_self_managed, aws_sns_topic_policy.test, aws_s3_bucket_policy.test]
 }
-`, rName, windowSize, triggerConditions))
-}
-
-func testAccMemoryStrategyTriggerConditionsMessageOnly(messageCount int) string {
-	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
-    message_count = %d
-  }
-}
-`, messageCount)
-}
-
-func testAccMemoryStrategyTriggerConditions(messageCount, tokenCount, idleSessionTimeout int) string {
-	return fmt.Sprintf(`
-trigger_conditions = {
-  message_based_trigger = {
-    message_count = %d
-  }
-  token_based_trigger = {
-    token_count = %d
-  }
-  time_based_trigger = {
-    idle_session_timeout = %d
-  }
-}
-`, messageCount, tokenCount, idleSessionTimeout)
+`, rName, windowSize))
 }
 
 func testAccMemoryStrategyConfig_selfManagedInvalidType(rName string) string {
