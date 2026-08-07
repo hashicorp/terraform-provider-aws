@@ -171,7 +171,7 @@ build: prereq-go fmt-check ## Build provider
 
 changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
-	@misspell -error -source text CHANGELOG.md .changelog
+	@misspell -error -source text CHANGELOG.md .changelog .changes
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
