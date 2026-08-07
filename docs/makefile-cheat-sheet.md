@@ -33,7 +33,7 @@ make testacc TESTS=TestAccIAMRole_basic PKG=iam
 ```
 
 !!! tip
-    The `t` target (a shorthand for acceptance testing) can auto-detect the package containing a test. When you use `T` and omit both `PKG` and `K`, the package is found by scanning `_test.go` files under `internal/`. For example, `make t T=TestAccIAMRole_basic` is equivalent to `make t T=TestAccIAMRole_basic PKG=iam`, but saves you from typing (and remembering) increasingly long service names. See the [`T`](#variables) variable for details.
+    The `t` target can auto-detect the package from the test name: with `T` set and both `PKG` and `K` omitted, `make t T=TestAccIAMRole_basic` scopes to `iam` automatically, so you needn't type long service names. See the [`T`](#variables) variable for details.
 
 ### Meta Targets and Dependent Targets
 
@@ -76,10 +76,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `SWEEP_TIMEOUT` - (Default: `360m`) Time Go will spend sweeping resources before panicking.
 * `SWEEPARGS` - (Default: _None_) Raw arguments that define what to sweep, including dependencies. Similar to `SWEEPERS`. For example, `SWEEPARGS=-sweep-run=aws_example_thing`.
 * `SWEEPERS` - (Default: _None_) Resources to sweep, including dependencies. Similar to `SWEEPARGS`. For example, `SWEEPERS=aws_example_thing`. Assigns a value to `SWEEPARGS` overridding any value set.
-* `T` - (Default: _None_) Names of tests to run; may be a regular expression, just like `go test -run`. Similar to `TESTS`, but with an extra convenience: when neither `PKG` nor `K` is set, the package containing the test is auto-detected by scanning `_test.go` files under `internal/` (no compilation) and matching test function names the same way `go test -run` does. This means `make t T=TestAccIAMRole_basic` scopes to the `iam` package automatically, without typing `PKG=iam`. Tests outside `internal/service` (for example `make t T=TestAddIsErrorRetryables`, which lives in `internal/conns`) resolve to their own directory. If the pattern matches tests in more than one package, the first is used and a warning lists the alternatives; set `PKG` explicitly to choose another. If no matching test is found, `make` stops with an error rather than running the entire codebase; specify `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
+* `T` - (Default: _None_) Names of tests to run; may be a regular expression, like `go test -run`. When neither `PKG` nor `K` is set, the package is auto-detected from the test name (scanning `_test.go` files under `internal/`, including non-service packages), so `make t T=TestAccIAMRole_basic` scopes to `iam` automatically. Multiple matches use the first, with a warning; no match stops with an error. Set `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
 * `TEST` - (Default: `./...`) Limit tests to this directory and dependencies. Overridden if `PKG` or `K` is set.
 * `TEST_COUNT` - (Default: `1`) Number of times to run each acceptance or unit test.
-* `TESTS` - (Default: _None_) Names of tests to run. Similar to `T`, but does _not_ auto-detect the service package; you must still set `PKG` or `K` to scope processing. Use `T` if you want package auto-detection. Assigns a value to `RUNARGS` overridding any value set.
+* `TESTS` - (Default: _None_) Names of tests to run. Like `T` but without package auto-detection; set `PKG` or `K` to scope. Assigns a value to `RUNARGS` overridding any value set.
 * `TESTARGS` - (Default: _None_) Raw arguments passed to Go when running tests. Unlike `RUNARGS`, this is _not_ overridden if `TESTS` or `T` is set.
 
 ## Cheat Sheet

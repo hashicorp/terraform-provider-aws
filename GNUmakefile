@@ -43,25 +43,18 @@ TEST_COUNT                   ?= 1
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
 #   make t T=TestAccRole          # Same: PKG=iam is auto-detected from the test name
 
-# Auto-discover the package containing a test when neither PKG nor K is
-# provided. This lets `make t T=TestAccExampleThing_basic` work without having
-# to remember and type the (increasingly long) AWS service name.
+# Auto-detect the package from the test name so `make t T=TestAccFoo_basic`
+# works without also typing PKG=<service>. Runs only when T is set and neither
+# PKG nor K is; the legacy TESTS variable is unaffected.
 #
-# T may be a regular expression (e.g. 'TestAccFooSenderID_(basic|disappears)'),
-# so we emulate `go test -run` matching rather than a literal lookup, but do it
-# cheaply WITHOUT compiling anything (`go test -list` would compile the whole
-# tree, defeating the purpose): read only `_test.go` files under internal/,
-# take the first `/`-separated segment of T (subtest names never appear in func
-# names), and match it, unanchored, against test function names the way
-# `go test` does. The test's own directory is used as the scope, so tests
-# outside internal/service (e.g. internal/conns) resolve correctly too.
+# T may be a regex, so we match test function names like `go test -run` does
+# (first `/`-segment, unanchored) by scanning _test.go files under internal/.
+# We grep rather than `go test -list` to avoid compiling the whole tree, and
+# scope to the test's own directory so non-service tests (e.g. internal/conns)
+# work too.
 #
-# Scoped to T only (not the legacy TESTS alias) so existing TESTS-based
-# workflows are unaffected. Only runs when T is given and no package was
-# specified, so it adds no overhead to package-scoped or non-test targets.
-# Guard: non-empty only when PKG is undefined AND K is undefined AND T is
-# defined. Make's ifeq/ifneq have no `&&`, but the $(and ...) function does the
-# job, letting us use one conditional instead of three nested ones.
+# $(and ...) stands in for the `&&` Make conditionals lack: the guard is
+# non-empty only when PKG and K are undefined and T is defined.
 AUTODETECT_PKG := $(and $(filter undefined,$(origin PKG)),$(filter undefined,$(origin K)),$(filter-out undefined,$(origin T)))
 ifneq ($(AUTODETECT_PKG),)
   AUTO_DIRS := $(shell seg=$$(printf '%s' '$(T)' | cut -d/ -f1); grep -rHE '^func Test' --include='*_test.go' internal 2>/dev/null | awk -F: -v re="$$seg" '{ fn=$$2; sub("^func ","",fn); sub("[^A-Za-z0-9_].*","",fn); if (fn ~ re) { d=$$1; sub("/[^/]*$$","",d); print d } }' | sort -u)

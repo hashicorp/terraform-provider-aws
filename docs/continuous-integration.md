@@ -36,7 +36,7 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a macOS terminal.
 
 !!! tip
-    Most targets scope their work to a single service package via the `PKG` (or `K`) variable, such as `PKG=iam`. When running acceptance tests with the `t` target, you can skip this: set `T` to the test name and omit `PKG`/`K`, and the package containing the test is auto-detected. For example, `make t T=TestAccIAMRole_basic` is equivalent to `make t T=TestAccIAMRole_basic PKG=iam`, and tests outside `internal/service` (such as `make t T=TestAddIsErrorRetryables` in `internal/conns`) resolve too. If nothing matches, `make` stops with an error instead of running the whole codebase. The legacy `TESTS` variable does _not_ auto-detect the package. See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for details.
+    With the `t` target you can omit `PKG`/`K`: set `T` to the test name and the package is auto-detected, including non-service packages like `internal/conns`. So `make t T=TestAccIAMRole_basic` equals `make t T=TestAccIAMRole_basic PKG=iam`. No match stops with an error; the legacy `TESTS` variable does not auto-detect. See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for details.
 
 !!! note
     See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
