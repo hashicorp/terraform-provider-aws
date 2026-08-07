@@ -19,14 +19,14 @@ var (
 )
 
 func ExactlyOneOfWhenValidator(when When, expressions ...path.Expression) exactlyOneOfWhenValidator {
-	return exactlyOneOfWhenValidator{oneOfWhenValidator{
+	return exactlyOneOfWhenValidator{conditionalMatchedPathCountValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
 type exactlyOneOfWhenValidator struct {
-	oneOfWhenValidator
+	conditionalMatchedPathCountValidator
 }
 
 func (v exactlyOneOfWhenValidator) Description(ctx context.Context) string {
@@ -52,7 +52,7 @@ func (v exactlyOneOfWhenValidator) ValidateString(ctx context.Context, request v
 }
 
 func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.oneOfWhenValidator.validate(ctx, request, response, v.eval)
+	v.conditionalMatchedPathCountValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path, expressions path.Expressions, count int) diag.Diagnostics {
@@ -72,12 +72,12 @@ func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path
 	return diags
 }
 
-type oneOfWhenValidator struct {
+type conditionalMatchedPathCountValidator struct {
 	when            When
 	pathExpressions path.Expressions
 }
 
-func (v oneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
+func (v conditionalMatchedPathCountValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
 	if request.ConfigValue.IsUnknown() {
 		return
 	}
