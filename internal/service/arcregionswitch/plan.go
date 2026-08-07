@@ -847,6 +847,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 								Blocks: map[string]fwschema.Block{
 									"arc_routing_control_config":                  arcRoutingControlConfigBlock(ctx),
+									"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
+									"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 									"custom_action_lambda_config":                 customActionLambdaConfigBlock(ctx),
 									"document_db_config":                          documentDBConfigBlock(ctx),
 									"ec2_asg_capacity_increase_config":            ec2ASGCapacityIncreaseConfigBlock(ctx),
@@ -854,8 +856,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 									"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 									"global_aurora_config":                        globalAuroraConfigBlock(ctx),
-									"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
-									"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 									"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
 									"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 									"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
@@ -882,6 +882,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 														Blocks: map[string]fwschema.Block{
 															"arc_routing_control_config":                  arcRoutingControlConfigBlock(ctx),
+															"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
+															"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 															"custom_action_lambda_config":                 customActionLambdaConfigBlock(ctx),
 															"document_db_config":                          documentDBConfigBlock(ctx),
 															"ec2_asg_capacity_increase_config":            ec2ASGCapacityIncreaseConfigBlock(ctx),
@@ -889,8 +891,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 															"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 															"global_aurora_config":                        globalAuroraConfigBlock(ctx),
-															"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
-															"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 															"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
 															"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 															"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
@@ -1263,6 +1263,8 @@ type s3ReportOutputConfigurationModel struct {
 
 type stepModel struct {
 	ArcRoutingControlConfig               fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]               `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
+	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	CustomActionLambdaConfig              fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]              `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                           types.String                                                                `tfsdk:"description"`
 	DocumentDbConfig                      fwtypes.ListNestedObjectValueOf[documentDbConfigModel]                      `tfsdk:"document_db_config" autoflex:"-"`
@@ -1272,12 +1274,10 @@ type stepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
-	Name                                  types.String                                                                `tfsdk:"name"`
-	ParallelConfig                        fwtypes.ListNestedObjectValueOf[parallelConfigModel]                        `tfsdk:"parallel_config" autoflex:"-"`
-	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
-	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
+	Name                                  types.String                                                                `tfsdk:"name"`
 	NeptuneGlobalDatabaseConfig           fwtypes.ListNestedObjectValueOf[neptuneGlobalDatabaseConfigModel]           `tfsdk:"neptune_global_database_config" autoflex:"-"`
+	ParallelConfig                        fwtypes.ListNestedObjectValueOf[parallelConfigModel]                        `tfsdk:"parallel_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
@@ -1310,6 +1310,30 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraProvisionedScalingConfig.IsNull():
+		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraServerlessScalingConfig.IsNull():
+		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -1399,54 +1423,6 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
-	case !m.ParallelConfig.IsNull():
-		config, d := m.ParallelConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberParallelConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
-	case !m.RegionSwitchPlanConfig.IsNull():
-		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
-	case !m.AuroraProvisionedScalingConfig.IsNull():
-		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
-	case !m.AuroraServerlessScalingConfig.IsNull():
-		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
 	case !m.LambdaEventSourceMappingConfig.IsNull():
 		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1466,6 +1442,30 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ParallelConfig.IsNull():
+		config, d := m.ParallelConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberParallelConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.RegionSwitchPlanConfig.IsNull():
+		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -1534,6 +1534,10 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 		switch v := step.ExecutionBlockConfiguration.(type) {
 		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
@@ -1548,18 +1552,14 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.ParallelConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.NeptuneGlobalDatabaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ParallelConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsCreateCrossRegionReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
@@ -1925,6 +1925,8 @@ type parallelConfigModel struct {
 
 type parallelStepModel struct {
 	ArcRoutingControlConfig               fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]               `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
+	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	CustomActionLambdaConfig              fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]              `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                           types.String                                                                `tfsdk:"description"`
 	DocumentDbConfig                      fwtypes.ListNestedObjectValueOf[documentDbConfigModel]                      `tfsdk:"document_db_config" autoflex:"-"`
@@ -1934,10 +1936,8 @@ type parallelStepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
-	Name                                  types.String                                                                `tfsdk:"name"`
-	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
-	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
+	Name                                  types.String                                                                `tfsdk:"name"`
 	NeptuneGlobalDatabaseConfig           fwtypes.ListNestedObjectValueOf[neptuneGlobalDatabaseConfigModel]           `tfsdk:"neptune_global_database_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
@@ -1971,6 +1971,30 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraProvisionedScalingConfig.IsNull():
+		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraServerlessScalingConfig.IsNull():
+		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -2060,42 +2084,6 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
-	case !m.RegionSwitchPlanConfig.IsNull():
-		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
-	case !m.AuroraProvisionedScalingConfig.IsNull():
-		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
-	case !m.AuroraServerlessScalingConfig.IsNull():
-		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
-		diags.Append(flex.Expand(ctx, config, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		result.ExecutionBlockConfiguration = &r
 	case !m.LambdaEventSourceMappingConfig.IsNull():
 		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -2115,6 +2103,18 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.RegionSwitchPlanConfig.IsNull():
+		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -2183,6 +2183,10 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 		switch v := step.ExecutionBlockConfiguration.(type) {
 		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
@@ -2197,16 +2201,12 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
-		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
-			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.NeptuneGlobalDatabaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsCreateCrossRegionReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
