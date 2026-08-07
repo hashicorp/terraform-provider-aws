@@ -179,7 +179,7 @@ The following arguments are required:
 * `execution_role` - (Required) ARN of the IAM role that ARC Region Switch will assume to execute the plan.
 * `name` - (Required) Name of the plan. Must be unique within the account.
 * `recovery_approach` - (Required) Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
-* `regions` - (Required) List of AWS regions involved in the plan.
+* `regions` - (Required) List of AWS regions involved in the plan. Must contain at least 2 regions.
 * `workflow` - (Required) Workflows that define the steps to execute. See [`workflow` Block](#workflow-block) for details.
 
 The following arguments are optional:
