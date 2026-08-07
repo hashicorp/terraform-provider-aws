@@ -286,6 +286,9 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
+convert-changelog: ## Convert go-changelog fragment to Changie format
+	@.ci/scripts/convert-changelog.sh $(FILE)
+
 copyright: ## [CI] Copyright Checks / headers check
 	@echo "make: Copyright Checks / headers check..."
 	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop
@@ -1234,6 +1237,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-go-cache-trim \
 	clean-make-tests \
 	clean-tidy \
+	convert-changelog \
 	copyright \
 	copyright-fix \
 	default \
