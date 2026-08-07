@@ -39,7 +39,6 @@ func TestFlattenMemoryStrategyPreservesTriggerConditionsShape(t *testing.T) {
 			Type:          fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 			Consolidation: fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx),
 			Extraction:    fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx),
-			Reflection:    fwtypes.NewListNestedObjectValueOfNull[episodicReflectionOverrideDetailsModel](ctx),
 			SelfManaged: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &selfManagedConfigurationModel{
 				HistoricalContextWindowSize: types.Int32Value(25),
 				InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &invocationConfigurationModel{
