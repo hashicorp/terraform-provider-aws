@@ -45,7 +45,14 @@ The `auth_request` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `app` - Name of the application.
-* `tenant` - Information about an application tenant, such as the application display name and identifier.
+* `tenant` - Information about an application tenant. See [`tenant` Block](#tenant-block) below.
+
+### `tenant` Block
+
+The `tenant` block exports the following attributes:
+
+* `tenant_display_name` - Display name of the tenant.
+* `tenant_identifier` - ID of the application tenant.
 
 ## Timeouts
 
