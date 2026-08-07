@@ -1069,6 +1069,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+	cd .ci/tools && $(GO_VER) install github.com/miniscruff/changie
 
 ts: testacc-short ## Alias to testacc-short
 
