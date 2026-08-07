@@ -27,7 +27,7 @@ import (
 // testAccRandomSenderID returns a random sender ID.
 //
 // Sender IDs must be 3-11 upper case characters of letters, numbers, and dashes, and
-// must contain at least one letter, so the standard `rName` generators cannot be used.
+// must contain at least one letter, so the standard acctest.RandomWithPrefix doesn't work
 func testAccRandomSenderID(t *testing.T) string {
 	t.Helper()
 
