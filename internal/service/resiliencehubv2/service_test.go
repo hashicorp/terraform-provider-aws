@@ -59,6 +59,7 @@ func TestAccResilienceHubV2Service_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dependency_discovery"), tfknownvalue.StringExact(awstypes.DependencyDiscoveryInputDisabled)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
@@ -327,6 +328,61 @@ func TestAccResilienceHubV2Service_regions(t *testing.T) {
 						knownvalue.StringExact(acctest.AlternateRegion()),
 						knownvalue.StringExact(acctest.ThirdRegion()),
 					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Service_dependencyDiscovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var svc awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/dependency_discovery/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					"dependency_discovery": config.StringVariable(string(awstypes.DependencyDiscoveryInputDisabled)),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dependency_discovery"), tfknownvalue.StringExact(awstypes.DependencyDiscoveryInputDisabled)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/dependency_discovery/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					"dependency_discovery": config.StringVariable(string(awstypes.DependencyDiscoveryInputEnabled)),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dependency_discovery"), tfknownvalue.StringExact(awstypes.DependencyDiscoveryInputEnabled)),
 				},
 			},
 		},

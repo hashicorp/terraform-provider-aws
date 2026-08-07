@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `dependency_discovery` - (Optional) Dependency discovery. Valid values: `ENABLED`, `DISABLED`.
 * `description` - (Optional) Description of the service.
 * `kms_key_id` - (Optional) KMS key ARN.
 * `policy_arn` - (Optional) ARN of the resilience policy to associate with this service.

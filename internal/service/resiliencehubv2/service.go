@@ -50,8 +50,15 @@ type serviceResource struct {
 func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
-			// TODO associated_system, dependency_discovery, report_configuration.
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"dependency_discovery": fwschema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DependencyDiscoveryInput](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: fwschema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -258,6 +265,16 @@ func (r *serviceResource) flatten(ctx context.Context, svc *awstypes.Service, da
 		return diags
 	}
 
+	data.DependencyDiscovery = fwtypes.StringEnumNull[awstypes.DependencyDiscoveryInput]()
+	if v := svc.DependencyDiscovery; v != nil {
+		switch v.Status {
+		case awstypes.DependencyDiscoveryStatusEnabled, awstypes.DependencyDiscoveryStatusInitializing:
+			data.DependencyDiscovery = fwtypes.StringEnumValue(awstypes.DependencyDiscoveryInputEnabled)
+		case awstypes.DependencyDiscoveryStatusDisabled:
+			data.DependencyDiscovery = fwtypes.StringEnumValue(awstypes.DependencyDiscoveryInputDisabled)
+		}
+	}
+
 	setTagsOut(ctx, svc.Tags)
 
 	return diags
@@ -293,15 +310,16 @@ func findService(ctx context.Context, conn *resiliencehubv2.Client, input *resil
 
 type serviceResourceModel struct {
 	framework.WithRegionModel
-	Description     types.String                                          `tfsdk:"description"`
-	KMSKeyID        fwtypes.ARN                                           `tfsdk:"kms_key_id"`
-	Name            types.String                                          `tfsdk:"name"`
-	PermissionModel fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
-	PolicyARN       fwtypes.ARN                                           `tfsdk:"policy_arn"`
-	Regions         fwtypes.SetOfString                                   `tfsdk:"regions"`
-	ServiceARN      types.String                                          `tfsdk:"arn"`
-	Tags            tftags.Map                                            `tfsdk:"tags"`
-	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
+	DependencyDiscovery fwtypes.StringEnum[awstypes.DependencyDiscoveryInput] `tfsdk:"dependency_discovery" autoflex:",noflatten"`
+	Description         types.String                                          `tfsdk:"description"`
+	KMSKeyID            fwtypes.ARN                                           `tfsdk:"kms_key_id"`
+	Name                types.String                                          `tfsdk:"name"`
+	PermissionModel     fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
+	PolicyARN           fwtypes.ARN                                           `tfsdk:"policy_arn"`
+	Regions             fwtypes.SetOfString                                   `tfsdk:"regions"`
+	ServiceARN          types.String                                          `tfsdk:"arn"`
+	Tags                tftags.Map                                            `tfsdk:"tags"`
+	TagsAll             tftags.Map                                            `tfsdk:"tags_all"`
 }
 
 type permissionModelModel struct {
