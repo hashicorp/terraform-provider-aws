@@ -96,51 +96,9 @@ resource "aws_dlm_lifecycle_policy" "example" {
   }
 }
 
-# ...example policy to exclude data volumes through tags...
-resource "aws_dlm_lifecycle_policy" "example" {
-  description        = "example DLM lifecycle policy"
-  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
-  state              = "ENABLED"
-  
-  policy_details {
-    resource_types = ["INSTANCE"]
-    parameters {
-      exclude_data_volume_tags = {
-        test = "exclude"
-	    }
-      
-    }
-
-    schedule {
-      name = "2 weeks of daily snapshots"
-
-      create_rule {
-        interval      = 24
-        interval_unit = "HOURS"
-        times         = ["23:45"]
-      }
-
-      retain_rule {
-        count = 14
-      }
-
-      tags_to_add = {
-        SnapshotCreator = "DLM"
-      }
-
-      copy_tags = false
-    }
-
-    target_tags = {
-      Snapshot = "true"
-    }
-  }
-}
-```
-
 ### Example Default Policy
 
-```
+```terraform
 resource "aws_dlm_lifecycle_policy" "example" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.example.arn
