@@ -20,6 +20,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -40,6 +42,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -555,68 +558,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"private_endpoint": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[privateEndpointModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"managed_vpc_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[managedVPCResourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("managed_vpc_resource"),
-									path.MatchRelative().AtParent().AtName("self_managed_lattice_resource"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"endpoint_ip_address_type": schema.StringAttribute{
-										Required:   true,
-										CustomType: fwtypes.StringEnumType[awstypes.EndpointIpAddressType](),
-									},
-									"routing_domain": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(3, 255),
-										},
-									},
-									names.AttrSecurityGroupIDs: schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-										Validators: []validator.Set{
-											setvalidator.SizeAtMost(5),
-										},
-									},
-									names.AttrSubnetIDs: schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Required:   true,
-									},
-									names.AttrTags: tftags.TagsAttribute(),
-									"vpc_identifier": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-						"self_managed_lattice_resource": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedLatticeResourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"resource_configuration_identifier": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"private_endpoint": privateEndpointSchema(ctx),
 			"target_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -624,15 +566,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("http"),
+							path.MatchRelative().AtName("mcp"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"http": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpTargetConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("http"),
-									path.MatchRelative().AtParent().AtName("mcp"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
@@ -819,6 +763,70 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													CustomType: fwtypes.StringEnumType[awstypes.ListingMode](),
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.UseStateForUnknown(),
+													},
+												},
+												"resource_priority": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													// The API enforces 0 <= resource_priority <= 1000; validate
+													// offline instead of failing mid-apply with a raw ValidationException.
+													Validators: []validator.Int32{
+														int32validator.Between(0, 1000),
+													},
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"mcp_tool_schema": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[mcpToolSchemaConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"inline_payload": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("inline_payload"),
+																		path.MatchRelative().AtParent().AtName("s3"),
+																	),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"payload": schema.StringAttribute{
+																			Required: true,
+																			// An empty payload is rejected by the API ("No MCP tool
+																			// schema found in target configuration"); require content offline.
+																			Validators: []validator.String{
+																				stringvalidator.LengthAtLeast(1),
+																			},
+																		},
+																	},
+																},
+															},
+															"s3": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"bucket_owner_account_id": schema.StringAttribute{
+																			Optional: true,
+																		},
+																		names.AttrURI: schema.StringAttribute{
+																			// uri is required for the mcp_tool_schema s3 source; an s3 {}
+																			// without it is rejected by the API ("No MCP tool schema found").
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
 													},
 												},
 											},
@@ -1112,7 +1120,7 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusCreating),
-		Target:                    enum.Slice(awstypes.TargetStatusReady),
+		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusCreatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -1130,7 +1138,7 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TargetStatusUpdating),
-		Target:                    enum.Slice(awstypes.TargetStatusReady),
+		Target:                    enum.Slice(awstypes.TargetStatusReady, awstypes.TargetStatusUpdatePendingAuth),
 		Refresh:                   statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -1148,7 +1156,9 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		// FAILED and SYNCHRONIZING can appear until AWS moves the target to DELETING.
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing),
+		// The *_PENDING_AUTH states (OAuth 3LO awaiting consent) also block delete until
+		// the auth window resolves, so treat them as pending rather than unexpected.
+		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing, awstypes.TargetStatusCreatePendingAuth, awstypes.TargetStatusUpdatePendingAuth, awstypes.TargetStatusSynchronizePendingAuth),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
@@ -2402,8 +2412,77 @@ type s3ConfigurationModel struct {
 }
 
 type mcpServerTargetConfigurationModel struct {
-	Endpoint    types.String                             `tfsdk:"endpoint"`
-	ListingMode fwtypes.StringEnum[awstypes.ListingMode] `tfsdk:"listing_mode"`
+	Endpoint         types.String                                                     `tfsdk:"endpoint"`
+	ListingMode      fwtypes.StringEnum[awstypes.ListingMode]                         `tfsdk:"listing_mode"`
+	McpToolSchema    fwtypes.ListNestedObjectValueOf[mcpToolSchemaConfigurationModel] `tfsdk:"mcp_tool_schema"`
+	ResourcePriority types.Int32                                                      `tfsdk:"resource_priority"`
+}
+
+type mcpToolSchemaConfigurationModel struct {
+	InlinePayload fwtypes.ListNestedObjectValueOf[inlinePayloadModel]   `tfsdk:"inline_payload"`
+	S3            fwtypes.ListNestedObjectValueOf[s3ConfigurationModel] `tfsdk:"s3"`
+}
+
+var (
+	_ fwflex.Expander  = mcpToolSchemaConfigurationModel{}
+	_ fwflex.Flattener = &mcpToolSchemaConfigurationModel{}
+)
+
+func (m *mcpToolSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.McpToolSchemaConfigurationMemberInlinePayload:
+		var model inlinePayloadModel
+		model.Payload = types.StringValue(t.Value)
+		m.InlinePayload = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		return diags
+
+	case awstypes.McpToolSchemaConfigurationMemberS3:
+		var model s3ConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("mcp tool schema configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m mcpToolSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.InlinePayload.IsNull():
+		inlinePayloadData, d := m.InlinePayload.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpToolSchemaConfigurationMemberInlinePayload
+		r.Value = inlinePayloadData.Payload.ValueString()
+		return &r, diags
+
+	case !m.S3.IsNull():
+		s3Data, d := m.S3.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpToolSchemaConfigurationMemberS3
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3Data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
 }
 
 type apiSchemaConfigurationModel struct {

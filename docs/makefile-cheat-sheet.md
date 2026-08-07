@@ -32,6 +32,9 @@ For example, `testacc` is a phony target to simplify the command for running acc
 make testacc TESTS=TestAccIAMRole_basic PKG=iam
 ```
 
+!!! tip
+    The `t` target can auto-detect the package from the test name: with `T` set and both `PKG` and `K` omitted, `make t T=TestAccIAMRole_basic` scopes to `iam` automatically, so you needn't type long service names. See the [`T`](#variables) variable for details.
+
 ### Meta Targets and Dependent Targets
 
 _Meta_ targets are `make` targets that only run other targets. They aggregate the functionality of other targets for convenience. In the [Cheat Sheet](#cheat-sheet), meta targets are marked with <sup>M</sup>.
@@ -60,8 +63,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
 * `K` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `PKG` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
 * `P` - (Default: `20`) Number of concurrent acceptance tests to run. Assigns a value to `ACCTEST_PARALLELISM` overridding any value set.
-* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
-* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set.
+* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set. When neither `PKG` nor `K` is set, `PKG` is auto-detected from `T` (see the `T` variable).
+* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set, including when `PKG` is auto-detected from `T`.
 * `RUNARGS` - (Default: _None_) Raw arguments passed to Go when running acceptance tests. For example, `RUNARGS=-run=TestMyTest`. Overridden if `TESTS` or `T` is set.
 * `SEMGREP_ARGS` - (Default: `--error`) Semgrep arguments. See the [Semgrep reference](https://semgrep.dev/docs/cli-reference#semgrep-scan-command-options).
 * `SEMGREP_ENABLE_VERSION_CHECK` - (Default: `false`) Whether to check Semgrep servers to verify you are running the latest Semgrep version.
@@ -73,10 +76,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `SWEEP_TIMEOUT` - (Default: `360m`) Time Go will spend sweeping resources before panicking.
 * `SWEEPARGS` - (Default: _None_) Raw arguments that define what to sweep, including dependencies. Similar to `SWEEPERS`. For example, `SWEEPARGS=-sweep-run=aws_example_thing`.
 * `SWEEPERS` - (Default: _None_) Resources to sweep, including dependencies. Similar to `SWEEPARGS`. For example, `SWEEPERS=aws_example_thing`. Assigns a value to `SWEEPARGS` overridding any value set.
-* `T` - (Default: _None_) Names of tests to run. Equivalent to `TESTS`. Assigns a value to `RUNARGS` overridding any value set.
+* `T` - (Default: _None_) Names of tests to run; may be a regular expression, like `go test -run`. When neither `PKG` nor `K` is set, the package is auto-detected from the test name (scanning `_test.go` files under `internal/`, including non-service packages), so `make t T=TestAccIAMRole_basic` scopes to `iam` automatically. Multiple matches use the first, with a warning; no match stops with an error. Set `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
 * `TEST` - (Default: `./...`) Limit tests to this directory and dependencies. Overridden if `PKG` or `K` is set.
 * `TEST_COUNT` - (Default: `1`) Number of times to run each acceptance or unit test.
-* `TESTS` - (Default: _None_) Names of tests to run. Equivalent to `T`. Assigns a value to `RUNARGS` overridding any value set.
+* `TESTS` - (Default: _None_) Names of tests to run. Like `T` but without package auto-detection; set `PKG` or `K` to scope. Assigns a value to `RUNARGS` overridding any value set.
 * `TESTARGS` - (Default: _None_) Raw arguments passed to Go when running tests. Unlike `RUNARGS`, this is _not_ overridden if `TESTS` or `T` is set.
 
 ## Cheat Sheet
@@ -100,9 +103,11 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `ci-quick`<sup>M</sup> | Run quicker CI checks (no docker) | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
 | `clean`<sup>M</sup> | Clean up Go cache, tidy and re-install tools |  |  | `GO_VER` |
 | `clean-go`<sup>D</sup> | Clean up Go cache |  |  | `GO_VER` |
+| `clean-go-cache-trim` | Trim Go build cache to manageable size |  |  |  |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
 | `clean-tidy`<sup>D</sup> | Clean up tidy |  |  | `GO_VER` |
 | `copyright` | Copyright Checks / headers check | ✔️ |  |  |
+| `copyright-fix` | Fix copyright headers |  |  |  |
 | _default_ | = `build` |  |  | `GO_VER` |
 | `deps-check`<sup>D</sup> | Dependency Checks / go_mod | ✔️ |  | `GO_VER` |
 | `docs`<sup>M</sup> | Run all CI documentation checks | ✔️ |  |  |
@@ -115,11 +120,14 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `fix-imports` | Fixing source code imports with goimports |  |  |  |
+| `fix-imports-core` | Fixing core directory imports with goimports |  |  |  |
 | `fmt` | Fix Go source formatting |  |  | `K`, `PKG`, `PKG_NAME` |
 | `fmt-check` | Verify Go source is formatted |  |  | `CURDIR` |
+| `fmt-core` | Fix Go source formatting in core directories |  |  |  |
 | `fumpt` | Run gofumpt |  |  | `K`, `PKG`, `PKG_NAME` |
-| `gen`<sup>D</sup> | Run all Go generators |  |  | `GO_VER` |
+| `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
+| `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
@@ -134,32 +142,37 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
-| `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
+| `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  |  |  |
+| `makefile-lint` | Makefile Linting / alignment check | ✔️ |  |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
+| `modern-fix-core` | Fix checks for modern Go in core directories |  |  |  |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
-| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
-| `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `sane`<sup>D</sup> | Run sane check |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `sanity`<sup>D</sup> | Run sanity check (failures allowed) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `schema-validate` | Validate schemas | | | `GO_VER` |
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
-| `semgrep-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-constants`<sup>D</sup> | Semgrep Checks / Constants Check | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-docker`<sup>D</sup> | Run Semgrep |  | ✔️ |  |
 | `semgrep-fix`<sup>D</sup> | Fix Semgrep issues that have fixes |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-fix-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-fix-core` | Fix Semgrep issues in core directories |  |  | `SEMGREP_ARGS` |
 | `semgrep-naming`<sup>D</sup> | Semgrep Checks / Test Configs Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-service-naming`<sup>D</sup> | Semgrep Checks / Service Name Scan A-Z | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-test` | Test Semgrep configuration files |  |  |  |
 | `semgrep-validate` | Validate Semgrep configuration files |  |  |  |
-| `semgrep-vcr` | Enable VCR support with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
+| `smoke` | Smoke tests (alias of `sane`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
 | `sweeper`<sup>D</sup> | Run sweepers with failures allowed |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP` |
 | `sweeper-check`<sup>M</sup> | Provider Checks / Sweeper Linked, Unlinked | ✔️ |  |  |
@@ -169,6 +182,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `swissshepherd-count` | Count all Swiss Shepherd findings | ✔️ |  |  |
 | `swissshepherd-refresh` | Run Swiss Shepherd checks and refresh schemas | ✔️ |  |  |
 | `t`<sup>D</sup> | Run acceptance tests  (similar to `testacc`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
+| `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `test`<sup>D</sup> | Run unit tests (auto-detects single service or full codebase, optimizes for macOS/CrowdStrike) |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS`, `TEST_P`, `TEST_PARALLEL` |
 | `test-compile`<sup>D</sup> | Test package compilation |  |  | `GO_VER`, `K`, `PKG`, `PKG_NAME`, `TEST`, `TESTARGS` |
 | `test-naming` | Check test function naming conventions | ✔️ |  |  |
@@ -176,14 +190,17 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc`<sup>D</sup> | Run acceptance tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-lint` | Acceptance Test Linting / terrafmt | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-lint-fix-core` | Fix acceptance test linter findings in core directories |  |  |  |
 | `testacc-short`<sup>D</sup> | Run acceptace tests with the -short flag |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-tflint` | Acceptance Test Linting / tflint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
+| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories |  |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories |  |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations |  |  | `K`, `PKG`, `SVC_DIR` |
+| `tflint-init` | Initialize tflint |  |  |  |
+| `tflint-opa-tests` | Run OPA policy tests |  |  |  |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
+| `update` | Update dependencies |  |  | `GO_VER` |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |
@@ -194,5 +211,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `website-markdown-lint` | Website Checks / markdown-lint | ✔️ |  |  |
 | `website-misspell` | Website Checks / misspell | ✔️ |  |  |
 | `website-terrafmt` | Website Checks / terrafmt | ✔️ |  |  |
+| `website-terrafmt-fix` | Fix Website / terrafmt |  |  |  |
 | `website-tflint` | Website Checks / tflint | ✔️ |  |  |
 | `yamllint` | `YAML` Linting / yamllint | ✔️ |  |  |

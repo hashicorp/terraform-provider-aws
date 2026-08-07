@@ -611,3 +611,7 @@ func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtec
 
 	return []any{tfMap}
 }
+
+func fileSystemARN(ctx context.Context, c *conns.AWSClient, fsID string) string {
+	return c.RegionalARN(ctx, "elasticfilesystem", "file-system/"+fsID)
+}

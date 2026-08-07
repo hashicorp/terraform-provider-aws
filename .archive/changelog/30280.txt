@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_activation: Fix IAM eventual consistency errors on resource Create
-```

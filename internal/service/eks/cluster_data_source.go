@@ -314,6 +314,10 @@ func dataSourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"control_plane_egress_mode": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							"endpoint_private_access": {
 								Type:     schema.TypeBool,
 								Computed: true,

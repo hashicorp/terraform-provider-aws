@@ -222,7 +222,7 @@ func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context, t *testing
 				return err
 			}
 
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingDestroyed, "Log Delivery Configuration", rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingDestroyed, "Log Delivery Configuration", rs.Primary.Attributes[names.AttrUserPoolID], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -236,7 +236,7 @@ func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, t *testing.
 			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrUserPoolID] == "" {
 			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", name, errors.New("not set"))
 		}
 
@@ -245,7 +245,7 @@ func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, t *testing.
 		resp, err := tfcognitoidp.FindLogDeliveryConfigurationByUserPoolID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID])
 
 		if err != nil {
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", rs.Primary.ID, err)
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", rs.Primary.Attributes[names.AttrUserPoolID], err)
 		}
 
 		*logDeliveryConfiguration = *resp

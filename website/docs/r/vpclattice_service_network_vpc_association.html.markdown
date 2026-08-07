@@ -26,16 +26,15 @@ resource "aws_vpclattice_service_network_vpc_association" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_identifier` - (Required) The ID of the VPC.
 * `dns_options` - (Optional) Configuration block for DNS option. See [`dns_options` block](#dns_options-block) below for details.
 * `private_dns_enabled` - (Optional) Boolean to indicate whether to enable private DNS for the VPC association. Defaults to `false`.
-* `service_network_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network. You must use the ARN if the resources specified in the operation are in different accounts.
-The following arguments are optional:
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `security_group_ids` - (Optional) IDs of the security groups.
+* `service_network_identifier` - (Required) ID or Amazon Resource Identifier (ARN) of the service network. You must use the ARN if the resources specified in the operation are in different accounts.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `security_group_ids` - (Optional) The IDs of the security groups.
+* `vpc_identifier` - (Required) ID of the VPC.
 
-### `dns_options` block
+### `dns_options` Block
 
 The `dns_options` configuration block supports the following arguments:
 
@@ -46,10 +45,10 @@ The `dns_options` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Association.
-* `created_by` - The account that created the association.
-* `id` - The ID of the association.
-* `status` - The operations status. Valid Values are CREATE_IN_PROGRESS | ACTIVE | DELETE_IN_PROGRESS | CREATE_FAILED | DELETE_FAILED
+* `arn` - ARN of the Association.
+* `created_by` - Account that created the association.
+* `id` - ID of the association.
+* `status` - Operations status. Valid Values are CREATE_IN_PROGRESS | ACTIVE | DELETE_IN_PROGRESS | CREATE_FAILED | DELETE_FAILED
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts

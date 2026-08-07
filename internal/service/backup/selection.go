@@ -26,19 +26,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_backup_selection", name="Selection")
+// @IdentityAttribute("plan_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("selectionImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup/types;awstypes;awstypes.BackupSelection")
+// @Testing(importStateIdFunc=testAccSelectionImportStateIDFunc)
+// @Testing(preIdentityVersion="v6.57.1")
 func resourceSelection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSelectionCreate,
 		ReadWithoutTimeout:   resourceSelectionRead,
 		DeleteWithoutTimeout: resourceSelectionDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceSelectionImportState,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -267,19 +271,27 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceSelectionFlatten(planID, d, output); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening Backup Selection (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceSelectionFlatten(planID string, d *schema.ResourceData, output *awstypes.BackupSelection) error {
 	if v := output.Conditions; v != nil {
 		if err := d.Set(names.AttrCondition, flattenConditions(v)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
+			return fmt.Errorf("setting condition: %w", err)
 		}
 	}
 	d.Set(names.AttrIAMRoleARN, output.IamRoleArn)
 	d.Set(names.AttrName, output.SelectionName)
 	if err := d.Set("not_resources", output.NotResources); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
+		return fmt.Errorf("setting not resources: %w", err)
 	}
 	d.Set("plan_id", planID)
 	if err := d.Set(names.AttrResources, output.Resources); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
+		return fmt.Errorf("setting resources: %w", err)
 	}
 	if v := output.ListOfTags; v != nil {
 		tfList := make([]any, 0)
@@ -295,11 +307,11 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if err := d.Set("selection_tag", tfList); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting selection tag: %s", err)
+			return fmt.Errorf("setting selection tag: %w", err)
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -324,19 +336,29 @@ func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func resourceSelectionImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "|")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())
+const selectionImportIDSeparator = "|"
+
+var (
+	_ inttypes.SDKv2ImportID = selectionImportID{}
+)
+
+type selectionImportID struct{}
+
+func (selectionImportID) Parse(id string) (string, map[string]any, error) {
+	planID, selectionID, found := strings.Cut(id, selectionImportIDSeparator)
+	if !found || planID == "" || selectionID == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", id)
 	}
 
-	planID := idParts[0]
-	selectionID := idParts[1]
+	result := map[string]any{
+		"plan_id": planID,
+	}
 
-	d.Set("plan_id", planID)
-	d.SetId(selectionID)
+	return selectionID, result, nil
+}
 
-	return []*schema.ResourceData{d}, nil
+func (selectionImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
 }
 
 func findSelectionByTwoPartKey(ctx context.Context, conn *backup.Client, planID, selectionID string) (*awstypes.BackupSelection, error) {
