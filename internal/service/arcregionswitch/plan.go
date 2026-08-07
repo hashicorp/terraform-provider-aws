@@ -711,6 +711,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"regions": fwschema.ListAttribute{
 				Required:   true,
 				CustomType: fwtypes.ListOfStringType,
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(2),
+				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},

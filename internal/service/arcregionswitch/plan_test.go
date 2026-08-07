@@ -645,7 +645,7 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 			},
 			{
 				Config:      testAccPlanConfig_singleRegion(rName),
-				ExpectError: regexache.MustCompile(`length\s+greater\s+than\s+or\s+equal\s+to\s+2`),
+				ExpectError: regexache.MustCompile(`must contain at least 2 elements`),
 			},
 		},
 	})
