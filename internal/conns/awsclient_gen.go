@@ -198,6 +198,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/polly"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/service/pricingplanmanager"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
@@ -1041,6 +1042,10 @@ func (c *AWSClient) PollyClient(ctx context.Context) *polly.Client {
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing.Client {
 	return errs.Must(client[*pricing.Client](ctx, c, names.Pricing, make(map[string]any)))
+}
+
+func (c *AWSClient) PricingPlanManagerClient(ctx context.Context) *pricingplanmanager.Client {
+	return errs.Must(client[*pricingplanmanager.Client](ctx, c, names.PricingPlanManager, make(map[string]any)))
 }
 
 func (c *AWSClient) QBusinessClient(ctx context.Context) *qbusiness.Client {

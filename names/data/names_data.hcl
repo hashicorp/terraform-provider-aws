@@ -6838,6 +6838,41 @@ service "pricing" {
   is_global = true
 }
 
+service "pricingplanmanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pricing-plan-manager"
+    aws_cli_v2_command_no_dashes = "pricingplanmanager"
+  }
+
+  sdk {
+    id            = "Pricing Plan Manager"
+    arn_namespace = "pricingplanmanager"
+  }
+
+  names {
+    provider_name_upper = "PricingPlanManager"
+    human_friendly      = "Pricing Plan Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListSubscriptions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+    use_fips_parameter = false
+  }
+
+  resource_prefix {
+    correct = "aws_pricingplanmanager_"
+  }
+
+  provider_package_correct = "pricingplanmanager"
+  doc_prefix               = ["pricingplanmanager_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
 service "proton" {
   sdk {
     id            = "Proton"

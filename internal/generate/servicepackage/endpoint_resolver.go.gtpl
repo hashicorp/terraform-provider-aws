@@ -5,6 +5,7 @@
 
 package {{ .ProviderPackage }}
 
+{{ if .UseFIPSParameter -}}
 import (
 	"context"
 	"errors"
@@ -18,6 +19,16 @@ import (
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+{{- else -}}
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+{{- end }}
 
 var _ {{ .GoV2Package }}.EndpointResolverV2 = resolverV2{}
 
@@ -31,6 +42,7 @@ func newEndpointResolverV2() resolverV2 {
 	}
 }
 
+{{ if .UseFIPSParameter -}}
 func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }}.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
 	useFIPS := aws.ToBool(params.UseFIPS)
@@ -59,11 +71,11 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 		})
 
 		hostname := endpoint.URI.Hostname()
-		
+
 		// Use a short timeout for DNS lookup to avoid hanging in restricted network environments
 		lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
-		
+
 		resolver := &net.Resolver{}
 		_, err = resolver.LookupHost(lookupCtx, hostname)
 		if err != nil {
@@ -83,6 +95,20 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }
+{{- else -}}
+// The {{ .GoV2Package }} endpoint parameters do not include UseFIPS.
+func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }}.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
+	params = params.WithDefaults()
+
+	if eps := params.Endpoint; aws.ToString(eps) != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+	}
+
+	return r.defaultResolver.ResolveEndpoint(ctx, params)
+}
+{{- end }}
 
 func withBaseEndpoint(endpoint string) func(*{{ .GoV2Package }}.Options) {
 	return func(o *{{ .GoV2Package }}.Options) {
