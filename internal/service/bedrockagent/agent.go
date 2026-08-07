@@ -14,7 +14,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -41,6 +43,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -748,12 +751,86 @@ type promptOverrideConfigurationModel struct {
 }
 
 type promptConfigurationModel struct {
-	BasePromptTemplate     types.String                                                 `tfsdk:"base_prompt_template"`
-	InferenceConfiguration fwtypes.ListNestedObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
-	ParserMode             fwtypes.StringEnum[parserMode]                               `tfsdk:"parser_mode"`
-	PromptCreationMode     fwtypes.StringEnum[promptCreationMode]                       `tfsdk:"prompt_creation_mode"`
-	PromptState            fwtypes.StringEnum[awstypes.PromptState]                     `tfsdk:"prompt_state"`
-	PromptType             fwtypes.StringEnum[awstypes.PromptType]                      `tfsdk:"prompt_type"`
+	AdditionalModelRequestFields jsontypes.Normalized                                         `tfsdk:"additional_model_request_fields" autoflex:"-"`
+	BasePromptTemplate           types.String                                                 `tfsdk:"base_prompt_template"`
+	InferenceConfiguration       fwtypes.ListNestedObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	ParserMode                   fwtypes.StringEnum[parserMode]                               `tfsdk:"parser_mode"`
+	PromptCreationMode           fwtypes.StringEnum[promptCreationMode]                       `tfsdk:"prompt_creation_mode"`
+	PromptState                  fwtypes.StringEnum[awstypes.PromptState]                     `tfsdk:"prompt_state"`
+	PromptType                   fwtypes.StringEnum[awstypes.PromptType]                      `tfsdk:"prompt_type"`
+}
+
+var (
+	_ fwflex.Expander  = promptConfigurationModel{}
+	_ fwflex.Flattener = &promptConfigurationModel{}
+)
+
+func (m promptConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var result any
+	var diags diag.Diagnostics
+
+	var r awstypes.PromptConfiguration
+	diags.Append(fwflex.Expand(ctx, m.BasePromptTemplate, &r.BasePromptTemplate)...)
+	diags.Append(fwflex.Expand(ctx, m.InferenceConfiguration, &r.InferenceConfiguration)...)
+	diags.Append(fwflex.Expand(ctx, m.ParserMode, &r.ParserMode)...)
+	diags.Append(fwflex.Expand(ctx, m.PromptCreationMode, &r.PromptCreationMode)...)
+	diags.Append(fwflex.Expand(ctx, m.PromptState, &r.PromptState)...)
+	diags.Append(fwflex.Expand(ctx, m.PromptType, &r.PromptType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.AdditionalModelRequestFields.IsNull() {
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Decoding JSON",
+				err.Error(),
+			))
+
+			return nil, diags
+		}
+
+		r.AdditionalModelRequestFields = json
+	}
+
+	result = &r
+
+	return result, diags
+}
+
+func (m *promptConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v, ok := v.(awstypes.PromptConfiguration); ok {
+		diags.Append(fwflex.Flatten(ctx, v.BasePromptTemplate, &m.BasePromptTemplate)...)
+		if v.InferenceConfiguration != nil {
+			diags.Append(fwflex.Flatten(ctx, v.InferenceConfiguration, &m.InferenceConfiguration)...)
+		}
+		diags.Append(fwflex.Flatten(ctx, v.ParserMode, &m.ParserMode)...)
+		diags.Append(fwflex.Flatten(ctx, v.PromptCreationMode, &m.PromptCreationMode)...)
+		diags.Append(fwflex.Flatten(ctx, v.PromptState, &m.PromptState)...)
+		diags.Append(fwflex.Flatten(ctx, v.PromptType, &m.PromptType)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if v.AdditionalModelRequestFields != nil {
+			json, err := tfsmithy.DocumentToJSONString(v.AdditionalModelRequestFields)
+			if err != nil {
+				diags.Append(diag.NewErrorDiagnostic(
+					"Encoding JSON",
+					err.Error(),
+				))
+
+				return diags
+			}
+
+			m.AdditionalModelRequestFields = jsontypes.NewNormalizedValue(json)
+		}
+	}
+
+	return diags
 }
 
 type inferenceConfigurationModel struct {
