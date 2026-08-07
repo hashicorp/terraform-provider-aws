@@ -1779,9 +1779,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "20"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
 					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1790,17 +1790,16 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					},
 				},
 			},
-			// Step 2: Partially configure only the message threshold. The service
-			// still applies defaults for omitted conditions, while Terraform state
-			// preserves the configured shape required by protocol version 5.
+			// Step 2: Partially configure only the message threshold. The other
+			// service-normalized defaults remain represented as computed children.
 			{
 				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditionsMessageOnly(12)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "12"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "12"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "20"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1813,9 +1812,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditions(18, 6000, 30)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "18"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "6000"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.message_based_trigger.message_count", "18"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.token_based_trigger.token_count", "6000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.time_based_trigger.idle_session_timeout", "30"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2604,8 +2603,8 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 
 func testAccMemoryStrategyTriggerConditionsMessageOnly(messageCount int) string {
 	return fmt.Sprintf(`
-trigger_conditions {
-  message_based_trigger {
+trigger_conditions = {
+  message_based_trigger = {
     message_count = %d
   }
 }
@@ -2614,14 +2613,14 @@ trigger_conditions {
 
 func testAccMemoryStrategyTriggerConditions(messageCount, tokenCount, idleSessionTimeout int) string {
 	return fmt.Sprintf(`
-trigger_conditions {
-  message_based_trigger {
+trigger_conditions = {
+  message_based_trigger = {
     message_count = %d
   }
-  token_based_trigger {
+  token_based_trigger = {
     token_count = %d
   }
-  time_based_trigger {
+  time_based_trigger = {
     idle_session_timeout = %d
   }
 }
