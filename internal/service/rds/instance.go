@@ -2228,6 +2228,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
+			if _, err := waitDBInstanceAvailableForBlueGreenSwitchover(ctx, conn, targetARN.Identifier, deadline.Remaining()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
 			dep, err = orchestrator.Switchover(ctx, aws.ToString(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
@@ -2926,6 +2930,58 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
+		Refresh: statusDBInstance(conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitDBInstanceAvailableForBlueGreenSwitchover waits for a DB instance to reach
+// "available" before a Blue/Green Deployment switchover. Unlike
+// waitDBInstanceAvailable, it treats "storage-optimization" as pending rather
+// than a target state: the SwitchoverBlueGreenDeployment API requires the green
+// instance to be truly available, and storage optimization can cause replication
+// lag that trips the switchover guardrails.
+func waitDBInstanceAvailableForBlueGreenSwitchover(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
+	options := tfresource.Options{
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
+			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
+			instanceStatusStorageOptimization,
+			instanceStatusUpgrading,
+		},
+		Target:  []string{instanceStatusAvailable},
 		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
