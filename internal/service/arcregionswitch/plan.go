@@ -502,7 +502,6 @@ func rdsPromoteReadReplicaConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
-
 func auroraProvisionedScalingConfigBlock(ctx context.Context) fwschema.Block {
 	return fwschema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[auroraProvisionedScalingConfigModel](ctx),
@@ -567,7 +566,7 @@ func lambdaEventSourceMappingConfigBlock(ctx context.Context) fwschema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEventSourceMappingConfigModel](ctx),
 		NestedObject: fwschema.NestedBlockObject{
 			Attributes: map[string]fwschema.Attribute{
-				"action": fwschema.StringAttribute{
+				names.AttrAction: fwschema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.EventSourceMappingAction](),
 					Required:   true,
 				},
@@ -580,8 +579,8 @@ func lambdaEventSourceMappingConfigBlock(ctx context.Context) fwschema.Block {
 					CustomType: fwtypes.NewSetNestedObjectTypeOf[regionEventSourceMappingModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
-							names.AttrRegion: fwschema.StringAttribute{Required: true},
-							names.AttrARN: fwschema.StringAttribute{CustomType: fwtypes.ARNType, Required: true},
+							names.AttrRegion:     fwschema.StringAttribute{Required: true},
+							names.AttrARN:        fwschema.StringAttribute{CustomType: fwtypes.ARNType, Required: true},
 							"cross_account_role": fwschema.StringAttribute{Optional: true},
 							names.AttrExternalID: fwschema.StringAttribute{Optional: true},
 						},
@@ -605,12 +604,12 @@ func neptuneGlobalDatabaseConfigBlock(ctx context.Context) fwschema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneGlobalDatabaseConfigModel](ctx),
 		NestedObject: fwschema.NestedBlockObject{
 			Attributes: map[string]fwschema.Attribute{
-				"behavior": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.NeptuneDefaultBehavior](), Required: true},
-				"cross_account_role": fwschema.StringAttribute{Optional: true},
-				names.AttrExternalID: fwschema.StringAttribute{Optional: true},
-				"global_cluster_identifier": fwschema.StringAttribute{Required: true},
+				"behavior":                     fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.NeptuneDefaultBehavior](), Required: true},
+				"cross_account_role":           fwschema.StringAttribute{Optional: true},
+				names.AttrExternalID:           fwschema.StringAttribute{Optional: true},
+				"global_cluster_identifier":    fwschema.StringAttribute{Required: true},
 				"region_database_cluster_arns": fwschema.MapAttribute{CustomType: fwtypes.MapOfStringType, Required: true},
-				"timeout_minutes": fwschema.Int32Attribute{Optional: true},
+				"timeout_minutes":              fwschema.Int32Attribute{Optional: true},
 			},
 			Blocks: map[string]fwschema.Block{
 				"ungraceful": fwschema.ListNestedBlock{
@@ -2429,7 +2428,7 @@ type neptuneGlobalDatabaseConfigModel struct {
 	CrossAccountRole          types.String                                            `tfsdk:"cross_account_role"`
 	ExternalID                types.String                                            `tfsdk:"external_id"`
 	GlobalClusterIdentifier   types.String                                            `tfsdk:"global_cluster_identifier"`
-	RegionDatabaseClusterArns fwtypes.MapOfString                                    `tfsdk:"region_database_cluster_arns"`
+	RegionDatabaseClusterArns fwtypes.MapOfString                                     `tfsdk:"region_database_cluster_arns"`
 	TimeoutMinutes            types.Int32                                             `tfsdk:"timeout_minutes"`
 	Ungraceful                fwtypes.ListNestedObjectValueOf[neptuneUngracefulModel] `tfsdk:"ungraceful"`
 }
@@ -2468,8 +2467,8 @@ func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, f
 	result.Action = m.Action.ValueEnum()
 	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
 	if diags.HasError() {
-			return nil, diags
-		}
+		return nil, diags
+	}
 	if !m.Ungraceful.IsNull() && !m.Ungraceful.IsUnknown() {
 		ungracefulModel, d := m.Ungraceful.ToPtr(ctx)
 		diags.Append(d...)
@@ -2485,9 +2484,13 @@ func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, f
 		}
 		result.RegionEventSourceMappings = make(map[string]awstypes.EventSourceMapping, len(mappingModels))
 		for _, model := range mappingModels {
-			esm := awstypes.EventSourceMapping{Arn: aws.String(model.ARN.ValueString())}
-			if !model.CrossAccountRole.IsNull() && !model.CrossAccountRole.IsUnknown() { esm.CrossAccountRole = model.CrossAccountRole.ValueStringPointer() }
-			if !model.ExternalID.IsNull() && !model.ExternalID.IsUnknown() { esm.ExternalId = model.ExternalID.ValueStringPointer() }
+			esm := awstypes.EventSourceMapping{Arn: model.ARN.ValueStringPointer()}
+			if !model.CrossAccountRole.IsNull() && !model.CrossAccountRole.IsUnknown() {
+				esm.CrossAccountRole = model.CrossAccountRole.ValueStringPointer()
+			}
+			if !model.ExternalID.IsNull() && !model.ExternalID.IsUnknown() {
+				esm.ExternalId = model.ExternalID.ValueStringPointer()
+			}
 			result.RegionEventSourceMappings[model.Region.ValueString()] = esm
 		}
 	}
@@ -2497,7 +2500,10 @@ func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, f
 func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 	var diags fwdiag.Diagnostics
 	config, ok := v.(awstypes.LambdaEventSourceMappingConfiguration)
-	if !ok { diags.AddError("Unexpected Type", "Expected awstypes.LambdaEventSourceMappingConfiguration"); return diags }
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.LambdaEventSourceMappingConfiguration")
+		return diags
+	}
 	m.Action = fwtypes.StringEnumValue(config.Action)
 	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
 	if config.Ungraceful != nil {
@@ -2507,8 +2513,16 @@ func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any
 		mappingModels := make([]regionEventSourceMappingModel, 0, len(config.RegionEventSourceMappings))
 		for region, esm := range config.RegionEventSourceMappings {
 			model := regionEventSourceMappingModel{Region: types.StringValue(region), ARN: fwtypes.ARNValue(aws.ToString(esm.Arn))}
-			if esm.CrossAccountRole != nil { model.CrossAccountRole = types.StringValue(*esm.CrossAccountRole) } else { model.CrossAccountRole = types.StringNull() }
-			if esm.ExternalId != nil { model.ExternalID = types.StringValue(*esm.ExternalId) } else { model.ExternalID = types.StringNull() }
+			if esm.CrossAccountRole != nil {
+				model.CrossAccountRole = types.StringValue(*esm.CrossAccountRole)
+			} else {
+				model.CrossAccountRole = types.StringNull()
+			}
+			if esm.ExternalId != nil {
+				model.ExternalID = types.StringValue(*esm.ExternalId)
+			} else {
+				model.ExternalID = types.StringNull()
+			}
 			mappingModels = append(mappingModels, model)
 		}
 		m.RegionEventSourceMappings, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, mappingModels)
