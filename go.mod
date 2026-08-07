@@ -253,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.66.4
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.45.4
 	github.com/aws/aws-sdk-go-v2/service/shield v1.37.4
-	github.com/aws/aws-sdk-go-v2/service/signer v1.35.3
+	github.com/aws/aws-sdk-go-v2/service/signer v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.73.3
