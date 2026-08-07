@@ -52,9 +52,6 @@ TEST_COUNT                   ?= 1
 # We grep rather than `go test -list` to avoid compiling the whole tree, and
 # scope to the test's own directory so non-service tests (e.g. internal/conns)
 # work too.
-#
-# $(and ...) stands in for the `&&` Make conditionals lack: the guard is
-# non-empty only when PKG and K are undefined and T is defined.
 AUTODETECT_PKG := $(and $(filter undefined,$(origin PKG)),$(filter undefined,$(origin K)),$(filter-out undefined,$(origin T)))
 ifneq ($(AUTODETECT_PKG),)
   AUTO_DIRS := $(shell seg=$$(printf '%s' '$(T)' | cut -d/ -f1); grep -rHE '^func Test' --include='*_test.go' internal 2>/dev/null | awk -F: -v re="$$seg" '{ fn=$$2; sub("^func ","",fn); sub("[^A-Za-z0-9_].*","",fn); if (fn ~ re) { d=$$1; sub("/[^/]*$$","",d); print d } }' | sort -u)
