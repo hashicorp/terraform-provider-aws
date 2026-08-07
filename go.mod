@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.48.4
-	github.com/aws/aws-sdk-go-v2/service/mpa v1.10.3
+	github.com/aws/aws-sdk-go-v2/service/mpa v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/mq v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.3.3
