@@ -10,7 +10,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
-func TestExtractBaselineIDFromARN(t *testing.T) {
+func TestExtractPatchBaselineIDFromARN(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
