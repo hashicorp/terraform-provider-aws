@@ -87,7 +87,7 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_securityGroups(t *testing.T) {
 				// The Neptune Analytics API does not return VpcSecurityGroupIds on Get/List,
 				// so Terraform cannot repopulate vpc_security_group_ids from a fresh import.
 				// See website/docs/r/neptunegraph_private_graph_endpoint.html.markdown.
-				ImportStateVerifyIgnore: []string{"vpc_security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrVPCSecurityGroupIDs},
 			},
 		},
 	})
