@@ -2695,6 +2695,23 @@ func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 						"execution_block_type": "LambdaEventSourceMapping",
 						names.AttrName:         "lambda-esm-step",
 					}),
+
+					// Verify config values (custom Expand/Flatten)
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  "enable",
+						"timeout_minutes": "10",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:aaaaaaaa-1111-2222-3333-444444444444", acctest.Region()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:bbbbbbbb-5555-6666-7777-888888888888", acctest.AlternateRegion()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.ungraceful.*", map[string]string{
+						"behavior": "skip",
+					}),
 				),
 			},
 			{
