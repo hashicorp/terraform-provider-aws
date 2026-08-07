@@ -256,6 +256,17 @@ func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
 	return nil
 }
 
+// UseFIPSParameter returns whether the service's AWS SDK for Go v2 endpoint
+// parameters include UseFIPS. It is true for almost all services; the rare
+// service whose endpoint rules define no FIPS variants sets
+// use_fips_parameter = false.
+func (sr ServiceRecord) UseFIPSParameter() bool {
+	if sr.service.ServiceEndpoints != nil && sr.service.ServiceEndpoints.UseFIPSParameter != nil {
+		return *sr.service.ServiceEndpoints.UseFIPSParameter
+	}
+	return true
+}
+
 func (sr ServiceRecord) Note() string {
 	return sr.service.Note
 }
@@ -340,6 +351,7 @@ type EndpointInfo struct {
 	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
 	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
 	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
+	UseFIPSParameter        *bool             `hcl:"use_fips_parameter,optional"`
 }
 
 type Service struct {

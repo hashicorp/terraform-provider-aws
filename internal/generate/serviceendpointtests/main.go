@@ -74,6 +74,7 @@ func main() {
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointRegionOverrides()[endpoints.AwsPartitionID],
+			UseFIPSParameter:  l.UseFIPSParameter(),
 		}
 		if strings.Contains(td.APICallParams, "awstypes") {
 			td.ImportAwsTypes = true
@@ -128,6 +129,7 @@ type TemplateData struct {
 	Aliases                           []string
 	ImportAwsTypes                    bool
 	OverrideRegion                    string
+	UseFIPSParameter                  bool
 	// The provider switches to the required region, but the service has a regional endpoint
 	OverrideRegionRegionalEndpoint bool
 }
