@@ -287,7 +287,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), ""),
 													},
 												},
-												names.AttrTopicARN: schema.StringAttribute{
+												"topic_arn": schema.StringAttribute{
 													Required:   true,
 													CustomType: fwtypes.ARNType,
 												},
