@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `destination_cidr_block` - (Required) The IPv4 or IPv6 address range, in CIDR notation, of the route destination.
 * `description` - (Optional) A brief description of the route.
-* `target_vpc_subnet_id` - (Required) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN.
+* `target_vpc_subnet_id` - (Optional) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN. Required for VPC-based Client VPN endpoints. Not applicable for Transit Gateway-based Client VPN endpoints.
 
 ## Attribute Reference
 
@@ -57,6 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the Client VPN endpoint.
 * `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
+* `transit_gateway_attachment_id` - The ID of the Transit Gateway attachment, if the route targets a Transit Gateway-based Client VPN endpoint.
 * `type` - The type of the route.
 
 ## Timeouts
