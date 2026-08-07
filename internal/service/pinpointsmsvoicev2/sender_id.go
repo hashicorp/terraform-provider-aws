@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -40,14 +41,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	// A sender ID re-requested immediately after being released returns a
-	// ValidationException with Reason="SENDER_ID_REQUIRES_REGISTRATION" until the
-	// release propagates. This is the window Create retries over, e.g. when a change
-	// to an immutable attribute forces a destroy-then-create on the same sender ID.
-	senderIDRegistrationPropagationTimeout = 2 * time.Minute
-)
-
 // @FrameworkResource("aws_pinpointsmsvoicev2_sender_id", name="Sender ID")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("sender_id")
@@ -61,12 +54,17 @@ const (
 func newSenderIDResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &senderIDResource{}
 
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
 type senderIDResource struct {
 	framework.ResourceWithModel[senderIDResourceModel]
 	framework.WithImportByIdentity
+	framework.WithTimeouts
 }
 
 func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -130,6 +128,13 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
@@ -152,7 +157,7 @@ func (r *senderIDResource) Create(ctx context.Context, request resource.CreateRe
 	// A fresh ClientToken is generated on each attempt: AWS pins the result of a
 	// request to its ClientToken, so reusing one token would replay the cached
 	// SENDER_ID_REQUIRES_REGISTRATION failure instead of re-evaluating the request.
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, senderIDRegistrationPropagationTimeout, func(ctx context.Context) (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, r.CreateTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		return conn.RequestSenderId(ctx, &input)
 	}, "ValidationException", "SENDER_ID_REQUIRES_REGISTRATION")
@@ -281,6 +286,7 @@ type senderIDResourceModel struct {
 	SenderIDARN               types.String                                  `tfsdk:"arn"`
 	Tags                      tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                    `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                `tfsdk:"timeouts"`
 }
 
 var (
