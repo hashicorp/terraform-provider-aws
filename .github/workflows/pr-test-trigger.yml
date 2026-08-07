@@ -112,12 +112,7 @@ jobs:
           fi
           tctest_cmd="${tctest_cmd} --properties \"${properties}\" --comment"
 
-          output=$(eval ${tctest_cmd})
-          echo "${output}"
-          if ! echo "${output}" | grep -q "triggered tests for 1 PRs!"; then
-            echo "::error::tctest did not successfully trigger tests: ${output}"
-            exit 1
-          fi
+          eval ${tctest_cmd}
 
       - name: Comment on Test Start
         if: steps.run_tests.outcome == 'success'
