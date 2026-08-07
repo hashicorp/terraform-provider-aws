@@ -194,7 +194,7 @@ func TestAccBackupPlan_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.57.1
+// Resource Identity was added after v6.58.0
 func TestAccBackupPlan_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -212,7 +212,7 @@ func TestAccBackupPlan_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Plan/basic_v6.57.1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Plan/basic_v6.58.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -252,7 +252,7 @@ func TestAccBackupPlan_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.57.1
+// Resource Identity was added after v6.58.0
 func TestAccBackupPlan_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -275,7 +275,7 @@ func TestAccBackupPlan_Identity_ExistingResource_noRefreshNoChange(t *testing.T)
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Plan/basic_v6.57.1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Plan/basic_v6.58.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

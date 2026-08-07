@@ -38,7 +38,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.GetBackupPlanOutput")
-// @Testing(preIdentityVersion="v6.57.1")
+// @Testing(preIdentityVersion="v6.58.0")
 func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
