@@ -54,6 +54,45 @@ func TestAccNeptuneGraphPrivateGraphEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneGraphPrivateGraphEndpoint_securityGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var privategraphendpoint neptunegraph.GetPrivateGraphEndpointOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_neptunegraph_private_graph_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneGraphServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateGraphEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrivateGraphEndpointConfig_securityGroups(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrivateGraphEndpointExists(ctx, t, resourceName, &privategraphendpoint),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_security_group_ids.0", "aws_security_group.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, "_", "graph_identifier", names.AttrVPCID),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "graph_identifier",
+				// The Neptune Analytics API does not return VpcSecurityGroupIds on Get/List,
+				// so Terraform cannot repopulate vpc_security_group_ids from a fresh import.
+				// See website/docs/r/neptunegraph_private_graph_endpoint.html.markdown.
+				ImportStateVerifyIgnore: []string{"vpc_security_group_ids"},
+			},
+		},
+	})
+}
+
 func TestAccNeptuneGraphPrivateGraphEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -147,6 +186,34 @@ resource "aws_neptunegraph_private_graph_endpoint" "test" {
   graph_identifier = aws_neptunegraph_graph.test.id
   vpc_id           = aws_vpc.test.id
   subnet_ids       = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccPrivateGraphEndpointConfig_securityGroups(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name_prefix = %[1]q
+  vpc_id      = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_neptunegraph_graph" "test" {
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  deletion_protection = false
+}
+
+resource "aws_neptunegraph_private_graph_endpoint" "test" {
+  graph_identifier       = aws_neptunegraph_graph.test.id
+  vpc_id                 = aws_vpc.test.id
+  subnet_ids             = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName))
 }
