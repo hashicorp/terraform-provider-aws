@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -2354,4 +2355,10 @@ func ListOfStrings[E ~string](s ...E) string {
 	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
 		return strconv.Quote(string(e))
 	}), ", ")
+}
+
+func ListOfStringVariables[E ~string](s ...E) []config.Variable {
+	return tfslices.ApplyToAll(s, func(e E) config.Variable {
+		return config.StringVariable(string(e))
+	})
 }
