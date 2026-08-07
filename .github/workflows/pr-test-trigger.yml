@@ -39,7 +39,7 @@ jobs:
 
       - name: Install tctest
         if: steps.community_check.outputs.maintainer == 'true'
-        run: go install github.com/katbyte/tctest@v0.9.0
+        run: go install github.com/katbyte/tctest@v1.0.1
 
       - name: Determine Changed Packages
         if: steps.community_check.outputs.maintainer == 'true'
