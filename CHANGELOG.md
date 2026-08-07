@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_rds_snapshots` ([#49259](https://github.com/hashicorp/terraform-provider-aws/issues/49259))
+* **New Data Source:** `aws_vpclattice_service_network_service_associations` ([#42680](https://github.com/hashicorp/terraform-provider-aws/issues/42680))
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
 * **New List Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
 * **New List Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
@@ -22,7 +23,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US) ([#49340](https://github.com/hashicorp/terraform-provider-aws/issues/49340))
 * resource/aws_bedrockagentcore_gateway_target: Treat OAuth `CREATE_PENDING_AUTH` and `UPDATE_PENDING_AUTH` statuses as successful terminal states ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
+* resource/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US) ([#49340](https://github.com/hashicorp/terraform-provider-aws/issues/49340))
+* resource/aws_route53domains_registered_domain: Fix `UpdateDomainContactPrivacy` being incorrectly triggered when `billing_contact` changes ([#49314](https://github.com/hashicorp/terraform-provider-aws/issues/49314))
 
 ## 6.58.0 (August 5, 2026)
 
