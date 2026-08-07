@@ -42,6 +42,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the service.
 * `dns_entry` - DNS name of the service.
+    * `domain_name` - Domain name of the service.
+    * `hosted_zone_id` - ID of the hosted zone.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
