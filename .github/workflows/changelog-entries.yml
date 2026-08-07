@@ -4,7 +4,7 @@
 name: CHANGELOG Entries
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize
@@ -47,9 +47,11 @@ jobs:
           steps.filter.outputs.service_files == 'true'
           && steps.filter.outputs.changie_fragments != 'true'
           && !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed')
+        env:
+          SERVICE_FILES_JSON: ${{ steps.filter.outputs.service_files_files }}
         shell: bash
         run: |
-          FILES=$(echo '${{ steps.filter.outputs.service_files_files }}' | jq -r '.[] | "* `\(.)`"')
+          FILES=$(echo "$SERVICE_FILES_JSON" | jq -r '.[] | "* `\(.)`"')
           echo "::error title=CHANGELOG Entry Required::This pull request contains modifications that require a CHANGELOG entry. Please create a change fragment using \`changie new\`.
 
           Files that require a CHANGELOG entry:
@@ -91,9 +93,11 @@ jobs:
 
       - name: Warn of go-changelog Fragment(s)
         if: steps.filter.outputs.go_changelog_fragments == 'true'
+        env:
+          GO_CHANGELOG_FILES_JSON: ${{ steps.filter.outputs.go_changelog_fragments_files }}
         shell: bash
         run: |
-          FILES=$(echo '${{ steps.filter.outputs.go_changelog_fragments_files }}' | jq -r '.[] | "* `\(.)`"')
+          FILES=$(echo "$GO_CHANGELOG_FILES_JSON" | jq -r '.[] | "* `\(.)`"')
           echo "::error title=Old CHANGELOG Format Detected::This pull request includes \`go-changelog\` style change fragments. We have migrated to using Changie for CHANGELOG management.
 
           To convert your existing fragments, run:
