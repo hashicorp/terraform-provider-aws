@@ -50,6 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `multi_region_properties` - Multi-region properties of the DSQL Cluster.
     * `clusters` - List of DSQL Cluster ARNs peered to this cluster.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `vpc_endpoint` - The fully-qualified VPC connection endpoint for the cluster, in the form `<identifier>.<service-identifier>.<region>.on.aws`. Use this hostname when connecting to the cluster from a VPC over an AWS PrivateLink interface endpoint.
 * `vpc_endpoint_service_name` - The DSQL Cluster's VPC endpoint service name.
 
 ## Timeouts
