@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix `engine_version` being incorrectly sent in ModifyDBCluster API calls when unchanged, causing downgrade errors after auto-minor-version-upgrade or when using `ignore_changes`
+```
