@@ -72,6 +72,11 @@ func dataSourceAMIIDs() *schema.Resource {
 					Default:  false,
 					Optional: true,
 				},
+				"watermark_keys": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 			}
 		},
 	}
@@ -121,6 +126,20 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	} else {
 		filteredImages = images[:]
+	}
+
+	if v, ok := d.GetOk("watermark_keys"); ok {
+		wantKeys := flex.ExpandStringValueList(v.([]any))
+		var watermarkFiltered []awstypes.Image
+		for _, image := range filteredImages {
+			for _, wm := range image.ImageWatermarks {
+				if slices.Contains(wantKeys, aws.ToString(wm.WatermarkKey)) {
+					watermarkFiltered = append(watermarkFiltered, image)
+					break
+				}
+			}
+		}
+		filteredImages = watermarkFiltered
 	}
 
 	slices.SortFunc(filteredImages, func(a, b awstypes.Image) int {

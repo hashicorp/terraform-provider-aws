@@ -134,6 +134,41 @@ data "aws_ami_ids" "test" {
 `, sortAscending, creationDate)
 }
 
+func TestAccEC2AMIIDsDataSource_watermarkKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	datasourceName := "data.aws_ami_ids.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIIDsDataSourceConfig_watermarkKeys(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "aws_ami_copy.test", names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func testAccAMIIDsDataSourceConfig_watermarkKeys(rName string) string {
+	return acctest.ConfigCompose(testAccAMIWatermarkConfig_base(rName), fmt.Sprintf(`
+resource "aws_ami_watermark" "test" {
+  image_id       = aws_ami_copy.test.id
+  watermark_name = %[1]q
+}
+
+data "aws_ami_ids" "test" {
+  owners         = ["self"]
+  watermark_keys = [aws_ami_watermark.test.watermark_key]
+}
+`, rName))
+}
+
 func testAccAMIIDsDataSourceConfig_includeDeprecated(includeDeprecated bool) string {
 	return fmt.Sprintf(`
 data "aws_ami_ids" "test" {
