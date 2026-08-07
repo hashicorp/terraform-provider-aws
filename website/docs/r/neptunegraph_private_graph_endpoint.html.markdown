@@ -94,7 +94,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `subnet_ids` - (Optional) Subnets in which private graph endpoint ENIs are created.
-* `vpc_security_group_ids` - (Optional) Security groups to be attached to the private graph endpoint.
+* `vpc_security_group_ids` - (Optional) Security groups to be attached to the private graph endpoint. The Neptune Analytics API does not return this value, so Terraform cannot detect drift or repopulate it on import; the value present at creation persists in state until changed in configuration.
 
 ## Attribute Reference
 
