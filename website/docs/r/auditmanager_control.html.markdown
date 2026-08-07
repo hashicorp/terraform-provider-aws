@@ -30,47 +30,46 @@ resource "aws_auditmanager_control" "example" {
 
 The following arguments are required:
 
+* `control_mapping_sources` - (Required) Data mapping sources. See [`control_mapping_sources`](#control_mapping_sources-block) below.
 * `name` - (Required) Name of the control.
-* `control_mapping_sources` - (Required) Data mapping sources. See [`control_mapping_sources`](#control_mapping_sources) below.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action_plan_instructions` - (Optional) Recommended actions to carry out if the control isn't fulfilled.
 * `action_plan_title` - (Optional) Title of the action plan for remediating the control.
 * `description` - (Optional) Description of the control.
-* `tags` - (Optional) A map of tags to assign to the control. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the control. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `testing_information` - (Optional) Steps to follow to determine if the control is satisfied.
 
-### control_mapping_sources
+### `control_mapping_sources` Block
 
 The following arguments are required:
 
 * `source_name` - (Required) Name of the source.
-* `source_set_up_option` - (Required) The setup option for the data source. This option reflects if the evidence collection is automated or manual. Valid values are `System_Controls_Mapping` (automated) and `Procedural_Controls_Mapping` (manual).
+* `source_set_up_option` - (Required) Setup option for the data source. This option reflects if the evidence collection is automated or manual. Valid values are `System_Controls_Mapping` (automated) and `Procedural_Controls_Mapping` (manual).
 * `source_type` - (Required) Type of data source for evidence collection. If `source_set_up_option` is manual, the only valid value is `MANUAL`. If `source_set_up_option` is automated, valid values are `AWS_Cloudtrail`, `AWS_Config`, `AWS_Security_Hub`, or `AWS_API_Call`.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_description` - (Optional) Description of the source.
 * `source_frequency` - (Optional) Frequency of evidence collection. Valid values are `DAILY`, `WEEKLY`, or `MONTHLY`.
-* `source_keyword` - (Optional) The keyword to search for in CloudTrail logs, Config rules, Security Hub checks, and Amazon Web Services API names. See [`source_keyword`](#source_keyword) below.
+* `source_keyword` - (Optional) Keyword to search for in CloudTrail logs, Config rules, Security Hub checks, and Amazon Web Services API names. See [`source_keyword`](#source_keyword-block) below.
 * `troubleshooting_text` - (Optional) Instructions for troubleshooting the control.
 
-### source_keyword
+### `source_keyword` Block
 
 The following arguments are required:
 
 * `keyword_input_type` - (Required) Input method for the keyword. Valid values are `INPUT_TEXT`, `SELECT_FROM_LIST`, or `UPLOAD_FILE`.
-* `keyword_value` - (Required) The value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
+* `keyword_value` - (Required) Value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the control.
-* `control_mapping_sources.*.source_id` - Unique identifier for the source.
+* `control_mapping_sources.source_id` - Unique identifier for the source.
 * `id` - Unique identifier for the control.
 * `type` - Type of control, such as a custom control or a standard control.
 
