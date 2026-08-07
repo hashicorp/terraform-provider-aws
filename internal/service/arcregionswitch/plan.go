@@ -2485,11 +2485,10 @@ func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, f
 		result.RegionEventSourceMappings = make(map[string]awstypes.EventSourceMapping, len(mappingModels))
 		for _, model := range mappingModels {
 			esm := awstypes.EventSourceMapping{Arn: model.ARN.ValueStringPointer()}
-			if !model.CrossAccountRole.IsNull() && !model.CrossAccountRole.IsUnknown() {
-				esm.CrossAccountRole = model.CrossAccountRole.ValueStringPointer()
-			}
-			if !model.ExternalID.IsNull() && !model.ExternalID.IsUnknown() {
-				esm.ExternalId = model.ExternalID.ValueStringPointer()
+			diags.Append(flex.Expand(ctx, model.CrossAccountRole, &esm.CrossAccountRole)...)
+			diags.Append(flex.Expand(ctx, model.ExternalID, &esm.ExternalId)...)
+			if diags.HasError() {
+				return nil, diags
 			}
 			result.RegionEventSourceMappings[model.Region.ValueString()] = esm
 		}
@@ -2507,7 +2506,12 @@ func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any
 	m.Action = fwtypes.StringEnumValue(config.Action)
 	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
 	if config.Ungraceful != nil {
-		m.Ungraceful, _ = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []lambdaEsmUngracefulModel{{Behavior: fwtypes.StringEnumValue(config.Ungraceful.Behavior)}})
+		ungraceful, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []lambdaEsmUngracefulModel{{Behavior: fwtypes.StringEnumValue(config.Ungraceful.Behavior)}})
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Ungraceful = ungraceful
 	}
 	if len(config.RegionEventSourceMappings) > 0 {
 		mappingModels := make([]regionEventSourceMappingModel, 0, len(config.RegionEventSourceMappings))
@@ -2520,7 +2524,12 @@ func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any
 			}
 			mappingModels = append(mappingModels, model)
 		}
-		m.RegionEventSourceMappings, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, mappingModels)
+		mappings, d := fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, mappingModels)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.RegionEventSourceMappings = mappings
 	}
 	return diags
 }
