@@ -42,6 +42,7 @@ This data source exports the following attributes in addition to the arguments a
 * `domain` - The domain prefix, if the user pool has a domain associated with it.
 * [email_configuration](#email-configuration) - The email configuration of your user pool. The email configuration type sets your preferred sending method, AWS Region, and sender for messages from your user pool.
 * `estimated_number_of_users` - A number estimating the size of the user pool.
+* [key_configuration](#key-configuration) - Configuration block for the user pool's encryption key.
 * [lambda_config](#lambda-config) - The AWS Lambda triggers associated with the user pool.
 * `last_modified_date` - The date and time, in ISO 8601 format, when the item was modified.
 * `mfa_configuration` - Can be one of the following values: `OFF` | `ON` | `OPTIONAL`
@@ -88,6 +89,11 @@ This data source exports the following attributes in addition to the arguments a
 * `from` - Email sender address.
 * `reply_to_email_address` - Reply-to email address.
 * `source_arn` - Source Amazon Resource Name (ARN) for emails.
+
+### key configuration
+
+* `key_type` - Type of encryption key for the user pool.
+* `kms_key_arn` - ARN of the KMS key used when `key_type` is `CUSTOMER_MANAGED_KEY`.
 
 ### lambda config
 
