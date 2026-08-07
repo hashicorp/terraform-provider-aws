@@ -129,7 +129,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
 | `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
-| `generate-changelog` | Generate changelog |  |  | `CURDIR` |
+| `generate-changelog` | [DEPRECATED] Generate changelog; use Changie workflows instead |  | ✔️ |  |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-misspell` | Provider Checks / misspell | ✔️ |  |  |
