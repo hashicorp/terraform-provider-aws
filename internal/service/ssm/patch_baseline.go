@@ -326,7 +326,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err = resourcePatchBaselineFlatten(ctx, meta.(*conns.AWSClient), d, output); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
