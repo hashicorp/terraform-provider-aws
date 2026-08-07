@@ -10,6 +10,7 @@ var (
 	ResourcePullTimeUpdateExclusion       = newPullTimeUpdateExclusionResource
 	ResourceRegistryPolicy                = resourceRegistryPolicy
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
+	ResourceSigningConfiguration          = resourceSigningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
 	ResourceRepository                    = resourceRepository
 	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
@@ -21,6 +22,7 @@ var (
 	FindPullTimeUpdateExclusionByPrincipalARN        = findPullTimeUpdateExclusionByPrincipalARN
 	FindRegistryPolicy                               = findRegistryPolicy
 	FindRegistryScanningConfiguration                = findRegistryScanningConfiguration
+	FindSigningConfiguration                         = findSigningConfiguration
 	FindReplicationConfiguration                     = findReplicationConfiguration
 	FindRepositoryByName                             = findRepositoryByName
 	FindRepositoryCreationTemplateByRepositoryPrefix = findRepositoryCreationTemplateByRepositoryPrefix
