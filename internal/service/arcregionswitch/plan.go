@@ -2513,15 +2513,10 @@ func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any
 		mappingModels := make([]regionEventSourceMappingModel, 0, len(config.RegionEventSourceMappings))
 		for region, esm := range config.RegionEventSourceMappings {
 			model := regionEventSourceMappingModel{Region: types.StringValue(region), ARN: fwtypes.ARNValue(aws.ToString(esm.Arn))}
-			if esm.CrossAccountRole != nil {
-				model.CrossAccountRole = types.StringValue(*esm.CrossAccountRole)
-			} else {
-				model.CrossAccountRole = types.StringNull()
-			}
-			if esm.ExternalId != nil {
-				model.ExternalID = types.StringValue(*esm.ExternalId)
-			} else {
-				model.ExternalID = types.StringNull()
+			diags.Append(flex.Flatten(ctx, esm.CrossAccountRole, &model.CrossAccountRole)...)
+			diags.Append(flex.Flatten(ctx, esm.ExternalId, &model.ExternalID)...)
+			if diags.HasError() {
+				return diags
 			}
 			mappingModels = append(mappingModels, model)
 		}
