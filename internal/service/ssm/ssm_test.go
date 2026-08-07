@@ -26,17 +26,17 @@ func TestExtractPatchBaselineIDFromARN(t *testing.T) {
 		},
 		{
 			name:     "full ARN",
-			input:    "arn:aws:ssm:us-west-2:280605243866:patchbaseline/pb-0123def04827e4e93",
+			input:    "arn:aws:ssm:us-west-2:280605243866:patchbaseline/pb-0123def04827e4e93", //lintignore:AWSAT003,AWSAT005
 			expected: "pb-0123def04827e4e93",
 		},
 		{
 			name:     "ARN with different region",
-			input:    "arn:aws:ssm:eu-west-1:123456789012:patchbaseline/pb-abcdef1234567890",
+			input:    "arn:aws:ssm:eu-west-1:123456789012:patchbaseline/pb-abcdef1234567890", //lintignore:AWSAT003,AWSAT005
 			expected: "pb-abcdef1234567890",
 		},
 		{
 			name:     "ARN with aws-us-gov partition",
-			input:    "arn:aws-us-gov:ssm:us-gov-west-1:123456789012:patchbaseline/pb-fedcba0987654321",
+			input:    "arn:aws-us-gov:ssm:us-gov-west-1:123456789012:patchbaseline/pb-fedcba0987654321", //lintignore:AWSAT003,AWSAT005
 			expected: "pb-fedcba0987654321",
 		},
 		{
@@ -46,7 +46,7 @@ func TestExtractPatchBaselineIDFromARN(t *testing.T) {
 		},
 		{
 			name:      "malformed ARN without slash",
-			input:     "arn:aws:ssm:us-west-2:280605243866:patchbaseline",
+			input:     "arn:aws:ssm:us-west-2:280605243866:patchbaseline", //lintignore:AWSAT003,AWSAT005
 			expectErr: true,
 		},
 	}
