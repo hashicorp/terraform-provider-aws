@@ -12,12 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-var (
-	_ validator.Bool   = (*alsoRequiresWhenValidator)(nil)
-	_ validator.String = (*alsoRequiresWhenValidator)(nil)
-)
+type ValidatorRequest struct {
+	Config         tfsdk.Config
+	ConfigValue    attr.Value
+	Path           path.Path
+	PathExpression path.Expression
+}
+
+type ValidatorResponse struct {
+	Diagnostics diag.Diagnostics
+}
 
 type When interface {
 	// Eval returns true if the condition is met for the given attribute value.
@@ -27,21 +34,26 @@ type When interface {
 }
 
 func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRequiresWhenValidator {
-	return alsoRequiresWhenValidator{whenValidator{
+	return alsoRequiresWhenValidator{allOfWhenValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
+var (
+	_ validator.Bool   = (*alsoRequiresWhenValidator)(nil)
+	_ validator.String = (*alsoRequiresWhenValidator)(nil)
+)
+
 type alsoRequiresWhenValidator struct {
-	whenValidator
+	allOfWhenValidator
 }
 
 func (v alsoRequiresWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v alsoRequiresWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v alsoRequiresWhenValidator) MarkdownDescription(context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are also configured: %[1]q", v.pathExpressions)
 }
 
@@ -74,7 +86,7 @@ func (v alsoRequiresWhenValidator) ValidateString(ctx context.Context, request v
 }
 
 func (v alsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.whenValidator.validate(ctx, request, response, v.eval)
+	v.allOfWhenValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
@@ -82,19 +94,19 @@ func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path
 	if matchedValue.IsNull() {
 		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 			requestPath,
-			fmt.Sprintf("Attribute %[1]q must be configured when %[2]q %[3]s", matchedPath, requestPath, v.when.String()),
+			fmt.Sprintf("Attribute %[1]s must be configured when %[2]s %[3]s", matchedPath, requestPath, v.when.String()),
 		))
 	}
 	return diags
 }
 
-type whenValidator struct {
+type allOfWhenValidator struct {
 	when            When
 	pathExpressions path.Expressions
 }
 
-func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+func (v allOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
+	if request.ConfigValue.IsUnknown() {
 		return
 	}
 
@@ -112,7 +124,6 @@ func (v whenValidator) validate(ctx context.Context, request ValidatorRequest, r
 		}
 
 		for _, mp := range matchedPaths {
-			// Skip self.
 			if mp.Equal(request.Path) {
 				continue
 			}

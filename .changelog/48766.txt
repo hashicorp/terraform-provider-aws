@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add plan-time validation of `description`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Change `description` to Optional and Computed
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_memory_strategy: Force resource replacement when `name` is modified
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_registry: Correct plan-time validation of `name`
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Correct plan-time validation of `name`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_browser: Add plan-time validation of `name`
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add `configuration.self_managed_configuration` argument in support of self-managed strategies
+```

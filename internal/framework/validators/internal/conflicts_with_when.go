@@ -19,21 +19,21 @@ var (
 )
 
 func ConflictsWithWhenValidator(when When, expressions ...path.Expression) conflictsWithWhenValidator {
-	return conflictsWithWhenValidator{whenValidator{
+	return conflictsWithWhenValidator{allOfWhenValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
 type conflictsWithWhenValidator struct {
-	whenValidator
+	allOfWhenValidator
 }
 
 func (v conflictsWithWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v conflictsWithWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v conflictsWithWhenValidator) MarkdownDescription(context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are not also configured: %[1]q", v.pathExpressions)
 }
 
@@ -52,7 +52,7 @@ func (v conflictsWithWhenValidator) ValidateString(ctx context.Context, request 
 }
 
 func (v conflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.whenValidator.validate(ctx, request, response, v.eval)
+	v.allOfWhenValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v conflictsWithWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {
