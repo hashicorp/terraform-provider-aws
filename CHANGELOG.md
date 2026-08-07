@@ -4,7 +4,11 @@ FEATURES:
 
 * **New Data Source:** `aws_rds_snapshots` ([#49259](https://github.com/hashicorp/terraform-provider-aws/issues/49259))
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+* **New List Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
+* **New List Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
 * **New List Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
+* **New Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
+* **New Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
 * **New Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
 
 ENHANCEMENTS:
