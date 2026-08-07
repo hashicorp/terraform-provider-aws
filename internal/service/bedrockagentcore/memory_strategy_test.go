@@ -154,9 +154,10 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -194,8 +195,9 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -237,8 +239,9 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -285,7 +288,8 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -547,9 +551,10 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -586,8 +591,9 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -632,8 +638,9 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -683,7 +690,8 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -923,9 +931,10 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -975,8 +984,9 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -1026,8 +1036,9 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -1091,7 +1102,8 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManaged: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:        fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -1746,6 +1758,219 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Setup: memory + SNS topic + S3 bucket + execution role permissions
+			{
+				Config: testAccMemoryStrategyConfig_selfManagedBase(rName),
+			},
+			// Step 1: Create with trigger_conditions omitted. The service supplies all defaults.
+			{
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 10, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", "SELF_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.invocation_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.self_managed.0.invocation_configuration.0.payload_delivery_bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "20"),
+					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: Partially configure only the message threshold. The service
+			// still applies defaults for omitted conditions, while Terraform state
+			// preserves the configured shape required by protocol version 5.
+			{
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditionsMessageOnly(12)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.historical_context_window_size", "25"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "12"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 3: Update every supported threshold in place.
+			{
+				Config: testAccMemoryStrategyConfig_selfManaged(rName, 25, testAccMemoryStrategyTriggerConditions(18, 6000, 30)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.message_based_trigger.0.message_count", "18"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.token_based_trigger.0.token_count", "6000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.self_managed.0.trigger_conditions.0.time_based_trigger.0.idle_session_timeout", "30"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Step 4: Import retains the normalized trigger conditions returned by the service.
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManagedInvalidType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomMemoryName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// self_managed under a non-SELF_MANAGED type → ValidateConfig error.
+			// Isolated in its own test so the plan-time validation error leaves no
+			// resource to destroy.
+			{
+				Config:      testAccMemoryStrategyConfig_selfManagedInvalidType(rName),
+				ExpectError: regexache.MustCompile(`self_managed block is only valid`),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_rename verifies that changing `name` forces
+// replacement. The service's ModifyMemoryStrategyInput has no Name field, so a rename
+// cannot be sent — an in-place update would leave the server name unchanged and
+// produce "inconsistent result after apply".
+func TestAccBedrockAgentCoreMemoryStrategy_rename(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	rNameNew := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_withDescription(rName, awstypes.MemoryStrategyTypeSemantic, "Rename test", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccMemoryStrategyConfig_withDescription(rNameNew, awstypes.MemoryStrategyTypeSemantic, "Rename test", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameNew),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreMemoryStrategy_descriptionClearConverges verifies that
+// removing `description` from configuration after it was set does not produce
+// "inconsistent result after apply" or a perpetual diff. The PATCH API ignores
+// a nil Description and retains the prior value; Optional+Computed absorbs it so
+// the resource still converges (documented limitation: a description cannot be
+// cleared once set via this API).
+func TestAccBedrockAgentCoreMemoryStrategy_descriptionClearConverges(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_withDescription(rName, awstypes.MemoryStrategyTypeSemantic, "Initial description", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Remove description from config. The API retains the prior value; Optional+Computed
+				// absorbs it, so this must apply cleanly. The step's implicit post-apply refresh
+				// asserts no "inconsistent result" and no perpetual diff.
+				Config: testAccMemoryStrategyConfig_noDescription(rName, "SEMANTIC", "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+					// Server retains the original description; state absorbs it.
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
@@ -2136,6 +2361,29 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
 `, rName, strategyType, acctest.ListOfStrings(nss...)))
 }
 
+func testAccMemoryStrategyConfig_withDescription(rName string, strategyType awstypes.MemoryStrategyType, description string, nss ...string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = %[2]q
+  description         = %[3]q
+  namespace_templates = [%[4]s]
+}
+`, rName, strategyType, description, acctest.ListOfStrings(nss...)))
+}
+
+func testAccMemoryStrategyConfig_noDescription(rName string, strategyType awstypes.MemoryStrategyType, nss ...string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = %[2]q
+  namespace_templates = [%[3]s]
+}
+`, rName, strategyType, acctest.ListOfStrings(nss...)))
+}
+
 func testAccMemoryStrategyConfig_withExecutionRole(rName string, strategyType awstypes.MemoryStrategyType, description string, nss ...string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_memory_strategy" "test" {
@@ -2253,6 +2501,177 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   type                = "CUSTOM"
   description         = "Test custom strategy"
   namespace_templates = ["default"]
+}
+`, rName))
+}
+
+// testAccMemoryStrategyConfig_selfManagedBase provisions the memory plus the SNS
+// topic and S3 bucket that a self-managed strategy's invocation_configuration
+// requires, granting the memory execution role permission to use them.
+func testAccMemoryStrategyConfig_selfManagedBase(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket_prefix = "tf-acc-test-agentcore"
+  force_destroy = true
+}
+
+resource "aws_iam_role_policy" "test_self_managed" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish",
+          "sns:GetTopicAttributes",
+          "sns:Subscribe",
+        ]
+        Resource = aws_sns_topic.test.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:DeleteObject",
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn = aws_sns_topic.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock-agentcore.amazonaws.com" }
+      Action    = ["sns:Publish"]
+      Resource  = aws_sns_topic.test.arn
+    }]
+  })
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock-agentcore.amazonaws.com" }
+      Action = [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+      ]
+      Resource = [
+        aws_s3_bucket.test.arn,
+        "${aws_s3_bucket.test.arn}/*",
+      ]
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_memory" "test" {
+  name                      = %[1]q
+  event_expiry_duration     = 7
+  memory_execution_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test_self_managed]
+}
+`, rName))
+}
+
+func testAccMemoryStrategyConfig_selfManaged(rName string, windowSize int, triggerConditions string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test self-managed strategy"
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed {
+      historical_context_window_size = %[2]d
+
+      %[3]s
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.test.arn
+        payload_delivery_bucket_name = aws_s3_bucket.test.bucket
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test_self_managed, aws_sns_topic_policy.test, aws_s3_bucket_policy.test]
+}
+`, rName, windowSize, triggerConditions))
+}
+
+func testAccMemoryStrategyTriggerConditionsMessageOnly(messageCount int) string {
+	return fmt.Sprintf(`
+trigger_conditions {
+  message_based_trigger {
+    message_count = %d
+  }
+}
+`, messageCount)
+}
+
+func testAccMemoryStrategyTriggerConditions(messageCount, tokenCount, idleSessionTimeout int) string {
+	return fmt.Sprintf(`
+trigger_conditions {
+  message_based_trigger {
+    message_count = %d
+  }
+  token_based_trigger {
+    token_count = %d
+  }
+  time_based_trigger {
+    idle_session_timeout = %d
+  }
+}
+`, messageCount, tokenCount, idleSessionTimeout)
+}
+
+func testAccMemoryStrategyConfig_selfManagedInvalidType(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_selfManagedBase(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                      = %[1]q
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Test self-managed invalid type"
+  namespaces                = ["{sessionId}"]
+
+  configuration {
+    type = "SEMANTIC_OVERRIDE"
+
+    self_managed {
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.test.arn
+        payload_delivery_bucket_name = aws_s3_bucket.test.bucket
+      }
+    }
+  }
 }
 `, rName))
 }
