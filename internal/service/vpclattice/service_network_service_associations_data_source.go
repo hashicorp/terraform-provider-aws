@@ -78,7 +78,6 @@ func (d *dataSourceServiceNetworkServiceAssociations) Read(ctx context.Context, 
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 			return
 		}
-
 		input.ServiceNetworkIdentifier = data.ServiceNetworkIdentifier.ValueStringPointer()
 	} else if !data.ServiceIdentifier.IsNull() {
 		sID := data.ServiceIdentifier.ValueString()
@@ -86,7 +85,6 @@ func (d *dataSourceServiceNetworkServiceAssociations) Read(ctx context.Context, 
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 			return
 		}
-
 		input.ServiceIdentifier = data.ServiceIdentifier.ValueStringPointer()
 	}
 
