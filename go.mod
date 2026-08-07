@@ -182,7 +182,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/mq v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.3.3
+	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.67.0
