@@ -244,13 +244,13 @@ The `invocation_configuration` block supports the following:
 
 ### `trigger_conditions` Block
 
-When `trigger_conditions` is omitted or the resource is imported, all normalized conditions returned by the service are recorded in state. When only a subset is configured, Terraform state retains that subset while the service applies its defaults to the omitted conditions.
-
 The `trigger_conditions` block supports any combination of the following blocks:
 
 * `message_based_trigger` - (Optional) Message-based condition. Its `message_count` argument accepts values from `1` to `50` and defaults to `6`.
-* `time_based_trigger` - (Optional) Idle-time condition. Its `idle_session_timeout` argument accepts values from `10` to `3000` seconds and defaults to `20`.
 * `token_based_trigger` - (Optional) Token-based condition. Its `token_count` argument accepts values from `100` to `500000` and defaults to `5000`.
+* `time_based_trigger` - (Optional) Idle-time condition. Its `idle_session_timeout` argument accepts values from `10` to `3000` seconds and defaults to `20`.
+
+When `trigger_conditions` is omitted or the resource is imported, all normalized conditions returned by the service are recorded in state. When only a subset is configured, Terraform state retains that subset while the service applies its defaults to the omitted conditions.
 
 ### `consolidation` Block
 
