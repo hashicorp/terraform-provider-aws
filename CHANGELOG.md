@@ -8,6 +8,7 @@ FEATURES:
 * **New List Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
 * **New List Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
 * **New List Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
+* **New List Resource:** `aws_ssm_patch_baseline` ([#49332](https://github.com/hashicorp/terraform-provider-aws/issues/49332))
 * **New Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
 * **New Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
 * **New Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
