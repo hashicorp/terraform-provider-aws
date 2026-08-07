@@ -122,7 +122,7 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"external_id": fwschema.StringAttribute{
+									names.AttrExternalID: fwschema.StringAttribute{
 										Optional: true,
 									},
 								},
