@@ -27,6 +27,25 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAppResource,
+			TypeName: "aws_resiliencehub_app",
+			Name:     "App",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newAppVersionResource,
+			TypeName: "aws_resiliencehub_app_version",
+			Name:     "App Version",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResiliencyPolicyResource,
 			TypeName: "aws_resiliencehub_resiliency_policy",
 			Name:     "Resiliency Policy",
