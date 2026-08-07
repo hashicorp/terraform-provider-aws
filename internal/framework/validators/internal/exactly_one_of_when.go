@@ -17,6 +17,7 @@ import (
 type invalidAttributeCombinationDiagnosticFunc func(path.Path, string) diag.Diagnostic
 
 var (
+	_ validator.Object = (*exactlyOneOfWhenValidator)(nil)
 	_ validator.String = (*exactlyOneOfWhenValidator)(nil)
 )
 
@@ -44,6 +45,20 @@ func (v exactlyOneOfWhenValidator) MarkdownDescription(context.Context) string {
 		return fmt.Sprintf("Ensure that one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
 	}
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
+}
+
+func (v exactlyOneOfWhenValidator) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
+	validateRequest := ValidatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse ValidatorResponse
+
+	v.validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
 func (v exactlyOneOfWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
