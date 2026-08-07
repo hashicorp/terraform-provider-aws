@@ -95,6 +95,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
     }
   }
 }
+```
 
 ### Example Default Policy
 
