@@ -92,7 +92,7 @@ The following arguments are optional:
 
 * `encryption_configuration` - (Optional) Single table bucket encryption configuration object. [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) Single table bucket maintenance configuration object. [See `maintenance_configuration` below](#maintenance_configuration).
-* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format. [See `metadata` below](#metadata).
+* `metadata` - (Optional) Details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format. [See `metadata` below](#metadata).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -141,7 +141,7 @@ The `iceberg_snapshot_management.settings` object supports the following argumen
 
 The `metadata` configuration block supports the following argument:
 
-* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format. [See `iceberg` below](#iceberg).
+* `iceberg` - (Optional) Details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format. [See `iceberg` below](#iceberg).
 
 ### `iceberg` Block
 
