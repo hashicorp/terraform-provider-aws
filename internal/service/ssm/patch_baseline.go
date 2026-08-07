@@ -340,7 +340,7 @@ func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClien
 	jsonString := string(tfjson.RemoveEmptyFields(jsonDoc))
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
-		return fmt.Errorf("setting approval_rule: %s", err)
+		return fmt.Errorf("setting approval_rule: %w", err)
 	}
 	d.Set("approved_patches", output.ApprovedPatches)
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
@@ -351,7 +351,7 @@ func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClien
 	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
-		return fmt.Errorf("setting global_filter: %s", err)
+		return fmt.Errorf("setting global_filter: %w", err)
 	}
 	d.Set(names.AttrJSON, jsonString)
 	d.Set(names.AttrName, output.Name)
@@ -359,7 +359,7 @@ func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClien
 	d.Set("rejected_patches", output.RejectedPatches)
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
 	if err := d.Set(names.AttrSource, flattenPatchSource(output.Sources)); err != nil {
-		return fmt.Errorf("setting source: %s", err)
+		return fmt.Errorf("setting source: %w", err)
 	}
 	return nil
 }
