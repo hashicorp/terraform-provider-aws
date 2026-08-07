@@ -82,7 +82,7 @@ jobs:
           PKGS: ${{ steps.pkgs.outputs.pkgs }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
-          TCTEST_BUILDTYPEID: ${{ secrets.TCTEST_BUILDTYPEID }}
+          TCTEST_BUILD_TYPE_ID: ${{ secrets.TCTEST_BUILD_TYPE_ID }}
           TCTEST_REPO: hashicorp/terraform-provider-aws
           TCTEST_FILEREGEX: "^internal/.*"
           TCTEST_SKIP_QUEUE: 1
