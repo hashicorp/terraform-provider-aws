@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -300,7 +299,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 										},
 									},
 									// TODO https://github.com/hashicorp/terraform-provider-aws/pull/49306
-									"trigger_condition": framework.ResourceOptionalComputedListOfObjectsAttribute[triggerConditionModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+									"trigger_condition": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute[triggerConditionModel](ctx),
 								},
 								Blocks: map[string]schema.Block{
 									"invocation_configuration": schema.ListNestedBlock{

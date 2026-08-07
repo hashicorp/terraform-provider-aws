@@ -94,7 +94,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
-			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,

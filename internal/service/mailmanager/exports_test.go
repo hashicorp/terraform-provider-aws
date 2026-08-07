@@ -6,4 +6,7 @@ package mailmanager
 var (
 	ResourceTrafficPolicy = newTrafficPolicyResource
 	FindTrafficPolicyByID = findTrafficPolicyByID
+
+	FindRuleSetByID = findRuleSetByID
+	ResourceRuleSet = newRuleSetResource
 )

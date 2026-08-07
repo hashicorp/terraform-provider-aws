@@ -14,19 +14,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
+type invalidAttributeCombinationDiagnosticFunc func(path.Path, string) diag.Diagnostic
+
 var (
+	_ validator.Object = (*exactlyOneOfWhenValidator)(nil)
 	_ validator.String = (*exactlyOneOfWhenValidator)(nil)
 )
 
-func ExactlyOneOfWhenValidator(when When, expressions ...path.Expression) exactlyOneOfWhenValidator {
-	return exactlyOneOfWhenValidator{oneOfWhenValidator{
-		when:            when,
-		pathExpressions: expressions,
-	}}
+func ExactlyOneOfWhenValidator(when when, expressions ...path.Expression) exactlyOneOfWhenValidator {
+	return exactlyOneOfWhenValidator{
+		conditionalMatchedPathCountValidator{
+			when:            when,
+			pathExpressions: expressions,
+		},
+		validatordiag.InvalidAttributeCombinationDiagnostic,
+	}
 }
 
 type exactlyOneOfWhenValidator struct {
-	oneOfWhenValidator
+	conditionalMatchedPathCountValidator
+	invalidAttributeCombinationDiagnosticFunc
 }
 
 func (v exactlyOneOfWhenValidator) Description(ctx context.Context) string {
@@ -34,50 +41,78 @@ func (v exactlyOneOfWhenValidator) Description(ctx context.Context) string {
 }
 
 func (v exactlyOneOfWhenValidator) MarkdownDescription(context.Context) string {
+	if v.when.String() == "" {
+		return fmt.Sprintf("Ensure that one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
+	}
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, one and only one attribute from this collection is configured: %[1]q", v.pathExpressions)
 }
 
-func (v exactlyOneOfWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
+func (v exactlyOneOfWhenValidator) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.oneOfWhenValidator.validate(ctx, request, response, v.eval)
+func (v exactlyOneOfWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	validateRequest := validatorRequest{
+		Config:         request.Config,
+		ConfigValue:    request.ConfigValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var validateResponse validatorResponse
+
+	v.validate(ctx, validateRequest, &validateResponse)
+
+	response.Diagnostics.Append(validateResponse.Diagnostics...)
+}
+
+func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
+	v.conditionalMatchedPathCountValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path, expressions path.Expressions, count int) diag.Diagnostics {
-	var diags diag.Diagnostics
-	switch {
+	var (
+		diags       diag.Diagnostics
+		description string
+	)
+
+	switch when := v.when.String(); {
 	case count == 0:
-		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-			requestPath,
-			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. No attribute configured.", expressions, requestPath, v.when.String()),
-		))
+		if when == "" {
+			description = fmt.Sprintf("One (and only one) of %[1]s must be configured. No attribute configured.", expressions)
+		} else {
+			description = fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. No attribute configured.", expressions, requestPath, when)
+		}
 	case count > 1:
-		diags.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
-			requestPath,
-			fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. %[4]d attributes configured.", expressions, requestPath, v.when.String(), count),
-		))
+		if when == "" {
+			description = fmt.Sprintf("One (and only one) of %[1]s must be configured. %[2]d attributes configured.", expressions, count)
+		} else {
+			description = fmt.Sprintf("One (and only one) of %[1]s must be configured when %[2]s %[3]s. %[4]d attributes configured.", expressions, requestPath, when, count)
+		}
 	}
+
+	if description != "" {
+		diags.Append(v.invalidAttributeCombinationDiagnosticFunc(requestPath, description))
+	}
+
 	return diags
 }
 
-type oneOfWhenValidator struct {
-	when            When
+type conditionalMatchedPathCountValidator struct {
+	when            when
 	pathExpressions path.Expressions
 }
 
-func (v oneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
+func (v conditionalMatchedPathCountValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
 	if request.ConfigValue.IsUnknown() {
 		return
 	}
