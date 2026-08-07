@@ -103,7 +103,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `vpc_id` - (Required)  This access point will only allow connections from the specified VPC ID.
+* `vpc_id` - (Required) VPC ID from which the access point allows connections.
 
 ## Attribute Reference
 
