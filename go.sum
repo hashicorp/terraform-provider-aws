@@ -307,8 +307,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.35 h1:BBEElKh4
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.35/go.mod h1:zaZk983w//8beSruBVec/mr4CmDwgZitW/qzGhAAX0g=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.36 h1:EUIwBoN+q7UmhAejxgD27APiRjh1vwCFo53gSqdT0BM=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.36/go.mod h1:6u00gmlTGR6W0b2k9NBrld7MnOEmf1Spqx0VVt6AqyE=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.29.3 h1:HSdIB725uVSfI0yFgsbNXhdob2y7e2K7hRuIg7tJsok=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.29.3/go.mod h1:r8EQe1C/y1S2dGVACCzijPhH10rHl1lGYxrqlebXbX8=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.29.4 h1:1wue4keirU1w/drlOYtDnzfbR+QNVovTgKTA5FAv/94=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.29.4/go.mod h1:6Os7+dPcKdRredre4B8TiqYDJNLNxLqYcKqQiO2ve1Q=
 github.com/aws/aws-sdk-go-v2/service/invoicing v1.13.3 h1:/TPncEHtQaVvOwm4vBornYhcNfvUPALQQ1w35TJI6nY=
 github.com/aws/aws-sdk-go-v2/service/invoicing v1.13.3/go.mod h1:di2PGO1q+KXNpMADDFlqs20vLdBCeuFI6ZIVuc409j0=
 github.com/aws/aws-sdk-go-v2/service/iot v1.77.3 h1:XxO2nWDtZBfGgUIdFvoe42sXyEiYiu189KJj15h4Yf4=
