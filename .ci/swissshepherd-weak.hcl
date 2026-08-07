@@ -196,6 +196,8 @@ check "schema_docs" {
   labels      = true
   ordering    = true
 
+  nested_object_attributes = true
+
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
     "`{Path}` Block",
