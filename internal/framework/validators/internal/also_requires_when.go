@@ -15,25 +15,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-type ValidatorRequest struct {
+type validatorRequest struct {
 	Config         tfsdk.Config
 	ConfigValue    attr.Value
 	Path           path.Path
 	PathExpression path.Expression
 }
 
-type ValidatorResponse struct {
+type validatorResponse struct {
 	Diagnostics diag.Diagnostics
 }
 
-type When interface {
+type when interface {
 	// Eval returns true if the condition is met for the given attribute value.
 	Eval(context.Context, attr.Value) bool
 	// String returns a string representation of the condition, usable in an error message. Can be empty.
 	String() string
 }
 
-func AlsoRequiresWhenValidator(when When, expressions ...path.Expression) alsoRequiresWhenValidator {
+func AlsoRequiresWhenValidator(when when, expressions ...path.Expression) alsoRequiresWhenValidator {
 	return alsoRequiresWhenValidator{conditionalPerMatchedPathValidator{
 		when:            when,
 		pathExpressions: expressions,
@@ -58,13 +58,13 @@ func (v alsoRequiresWhenValidator) MarkdownDescription(context.Context) string {
 }
 
 func (v alsoRequiresWhenValidator) ValidateBool(ctx context.Context, request validator.BoolRequest, response *validator.BoolResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
@@ -72,20 +72,20 @@ func (v alsoRequiresWhenValidator) ValidateBool(ctx context.Context, request val
 }
 
 func (v alsoRequiresWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v alsoRequiresWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v alsoRequiresWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
 	v.conditionalPerMatchedPathValidator.validate(ctx, request, response, v.eval)
 }
 
@@ -101,11 +101,11 @@ func (v alsoRequiresWhenValidator) eval(_ context.Context, requestPath path.Path
 }
 
 type conditionalPerMatchedPathValidator struct {
-	when            When
+	when            when
 	pathExpressions path.Expressions
 }
 
-func (v conditionalPerMatchedPathValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
+func (v conditionalPerMatchedPathValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse, cb func(context.Context, path.Path, path.Path, attr.Value) diag.Diagnostics) {
 	if request.ConfigValue.IsUnknown() {
 		return
 	}

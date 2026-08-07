@@ -18,7 +18,7 @@ var (
 	_ validator.String = (*conflictsWithWhenValidator)(nil)
 )
 
-func ConflictsWithWhenValidator(when When, expressions ...path.Expression) conflictsWithWhenValidator {
+func ConflictsWithWhenValidator(when when, expressions ...path.Expression) conflictsWithWhenValidator {
 	return conflictsWithWhenValidator{conditionalPerMatchedPathValidator{
 		when:            when,
 		pathExpressions: expressions,
@@ -38,20 +38,20 @@ func (v conflictsWithWhenValidator) MarkdownDescription(context.Context) string 
 }
 
 func (v conflictsWithWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v conflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v conflictsWithWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
 	v.conditionalPerMatchedPathValidator.validate(ctx, request, response, v.eval)
 }
 

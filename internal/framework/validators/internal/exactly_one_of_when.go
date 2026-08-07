@@ -21,7 +21,7 @@ var (
 	_ validator.String = (*exactlyOneOfWhenValidator)(nil)
 )
 
-func ExactlyOneOfWhenValidator(when When, expressions ...path.Expression) exactlyOneOfWhenValidator {
+func ExactlyOneOfWhenValidator(when when, expressions ...path.Expression) exactlyOneOfWhenValidator {
 	return exactlyOneOfWhenValidator{
 		conditionalMatchedPathCountValidator{
 			when:            when,
@@ -48,13 +48,13 @@ func (v exactlyOneOfWhenValidator) MarkdownDescription(context.Context) string {
 }
 
 func (v exactlyOneOfWhenValidator) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
@@ -62,20 +62,20 @@ func (v exactlyOneOfWhenValidator) ValidateObject(ctx context.Context, request v
 }
 
 func (v exactlyOneOfWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v exactlyOneOfWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
 	v.conditionalMatchedPathCountValidator.validate(ctx, request, response, v.eval)
 }
 
@@ -108,11 +108,11 @@ func (v exactlyOneOfWhenValidator) eval(_ context.Context, requestPath path.Path
 }
 
 type conditionalMatchedPathCountValidator struct {
-	when            When
+	when            when
 	pathExpressions path.Expressions
 }
 
-func (v conditionalMatchedPathCountValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
+func (v conditionalMatchedPathCountValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse, cb func(context.Context, path.Path, path.Expressions, int) diag.Diagnostics) {
 	if request.ConfigValue.IsUnknown() {
 		return
 	}

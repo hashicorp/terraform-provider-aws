@@ -43,20 +43,20 @@ func (v atMostOneOfWhenValidator) MarkdownDescription(context.Context) string {
 }
 
 func (v atMostOneOfWhenValidator) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v atMostOneOfWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
+func (v atMostOneOfWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
 	v.conditionalMatchedPathCountValidator.validate(ctx, request, response, v.eval)
 }
 
