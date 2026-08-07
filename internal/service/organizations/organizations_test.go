@@ -82,6 +82,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_S3":                testAccPolicy_type_S3,
 			"Type_Bedrock":           testAccPolicy_type_Bedrock,
 			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
+			"ContentEquivalent":      testAccPolicy_contentEquivalent,
 			"Identity":               testAccOrganizationsPolicy_identitySerial,
 		},
 		"PolicyAttachment": {
