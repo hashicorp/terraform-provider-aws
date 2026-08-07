@@ -325,7 +325,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter metadata (%s): %s", d.Id(), err)
 	}
 
-	resourceParameterFlatten(d, paramMetadata)
+	resourceParameterFlatten(d, param, paramMetadata)
 
 	hasWriteOnly := d.Get("has_value_wo").(bool)
 	rawConfig := d.GetRawConfig()
@@ -362,16 +362,17 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceParameterFlatten(d *schema.ResourceData, paramMetadata *awstypes.ParameterMetadata) {
+func resourceParameterFlatten(d *schema.ResourceData, param *awstypes.Parameter, paramMetadata *awstypes.ParameterMetadata) {
+	d.Set(names.AttrARN, param.ARN)
+	d.Set(names.AttrName, param.Name)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
+
 	d.Set("allowed_pattern", paramMetadata.AllowedPattern)
-	d.Set(names.AttrARN, paramMetadata.ARN)
 	d.Set("data_type", paramMetadata.DataType)
 	d.Set(names.AttrDescription, paramMetadata.Description)
 	d.Set(names.AttrKeyID, paramMetadata.KeyId)
-	d.Set(names.AttrName, paramMetadata.Name)
 	d.Set("tier", paramMetadata.Tier)
-	d.Set(names.AttrType, paramMetadata.Type)
-	d.Set(names.AttrVersion, paramMetadata.Version)
 }
 
 func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
