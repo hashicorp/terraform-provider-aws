@@ -33,11 +33,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `service_updates` - Set of Service Updates. Each element has the following attributes:
     * `auto_update_after_recommended_apply_by_date` - Whether the update will be applied after `recommended_apply_by_date`.
+    * `description` - Description of the update.
+    * `end_date` - Date the update will no longer be available.
     * `engine` - Engine this update applies to.
     * `engine_version` - Engine version this update applies to.
     * `estimated_update_time` - Estimated duration of update.
-    * `description` - Description of the update.
-    * `end_date` - Date the update will no longer be available.
     * `name` - Name of the update.
     * `recommended_apply_by_date` - Date the update should be applied by.
     * `release_date` - Date the update was released.
