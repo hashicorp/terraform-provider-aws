@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Verified Permissions Policy.
 
+~> **NOTE:** When the target policy store uses `STRICT` validation mode, a schema must already exist in the policy store before a policy can be created; otherwise the policy is rejected. Define an [`aws_verifiedpermissions_schema`](verifiedpermissions_schema.html) for the same `policy_store_id` and use `depends_on` to ensure the schema is created first.
+
 ## Example Usage
 
 ### Basic Usage

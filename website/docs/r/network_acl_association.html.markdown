@@ -41,6 +41,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network ACL associations using the `id`. For example:
 
+~> **NOTE:** The `aclassoc-*` association ID is not shown in the AWS Management Console. Retrieve it with `aws ec2 describe-network-acls` — it is the `NetworkAclAssociationId` value under `Associations` for the network ACL.
+
 ```terraform
 import {
   to = aws_network_acl_association.main
