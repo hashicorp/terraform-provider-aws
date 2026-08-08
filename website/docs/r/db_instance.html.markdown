@@ -35,6 +35,7 @@ Amazon RDS supports instance classes for General-purpose, Memory-optimized, Burs
 
 By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
+~> **Important:** When using low-downtime updates with a custom parameter group, the `aws_db_parameter_group` resource must use `name_prefix` (not `name`) and set `lifecycle { create_before_destroy = true }`. Without this, Terraform will attempt to delete the old parameter group before the Blue/Green switchover completes, causing the apply to fail because the DB instance still references it. See the [Blue/Green Deployment Usage](#blue-green-deployment-usage) example below and the [Upgrade an Amazon RDS instance](https://developer.hashicorp.com/terraform/tutorials/aws/rds-upgrade) tutorial for more details.
 ## Example Usage
 
 ### Basic Usage
@@ -50,6 +51,38 @@ resource "aws_db_instance" "default" {
   password             = "foobarbaz"
   parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
+}
+```
+
+### Blue/Green Deployment Usage
+
+When performing major version upgrades with [low-downtime updates](#low-downtime-updates), the parameter group must use `name_prefix` and `create_before_destroy` so that Terraform can create the new parameter group before switching over and deleting the old one.
+
+```terraform
+resource "aws_db_parameter_group" "example" {
+  name_prefix = "example-"
+  family      = "postgres16"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_db_instance" "example" {
+  allocated_storage      = 20
+  engine                 = "postgres"
+  engine_version         = "16"
+  instance_class         = "db.t3.micro"
+  username               = "foo"
+  password               = "foobarbaz"
+  parameter_group_name   = aws_db_parameter_group.example.name
+  backup_retention_period = 1
+  skip_final_snapshot    = true
+  allow_major_version_upgrade = true
+
+  blue_green_update {
+    enabled = true
+  }
 }
 ```
 
@@ -461,12 +494,16 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
 
+~> **Note:** When using `blue_green_update` with a custom `aws_db_parameter_group`, the parameter group must use [`name_prefix`](/docs/providers/aws/r/db_parameter_group.html) instead of `name` and include `lifecycle { create_before_destroy = true }`. This ensures Terraform creates the new parameter group before the Blue/Green switchover and only deletes the old one after the instance has been migrated. See the [Blue/Green Deployment Usage](#blue-green-deployment-usage) example and the [Upgrade an Amazon RDS instance][rds-upgrade] tutorial.
+
 [instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [instance-maintenance]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 [blue-green]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html
+[rds-upgrade]:
+https://developer.hashicorp.com/terraform/tutorials/aws/rds-upgrade
 
 ## Attribute Reference
 
