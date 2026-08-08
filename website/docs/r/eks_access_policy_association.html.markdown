@@ -33,9 +33,9 @@ This resource supports the following arguments:
 * `cluster_name` - (Required) Name of the EKS Cluster.
 * `policy_arn` - (Required) The ARN of the access policy that you're associating.
 * `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ~> **NOTE:** An [`aws_eks_access_entry`](eks_access_entry.html) for the same `cluster_name` and `principal_arn` must exist before the policy association can be created. Reference the access entry (or add a `depends_on`) so Terraform creates the access entry first.
-* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ### `access_scope` Block
 
