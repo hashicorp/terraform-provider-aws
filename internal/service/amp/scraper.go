@@ -132,16 +132,17 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
-			"exporters": schema.ListNestedBlock{
+			"exporter": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[exporterConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"open_search_exporter": schema.ListNestedBlock{
+						"opensearch": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchExporterConfigurationModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
@@ -485,7 +486,7 @@ type scraperResourceModel struct {
 	Alias               types.String                                                `tfsdk:"alias"`
 	ARN                 types.String                                                `tfsdk:"arn"`
 	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]           `tfsdk:"destination"`
-	Exporters           fwtypes.ListNestedObjectValueOf[exporterConfigurationModel] `tfsdk:"exporters"`
+	Exporters           fwtypes.ListNestedObjectValueOf[exporterConfigurationModel] `tfsdk:"exporter"`
 	ID                  types.String                                                `tfsdk:"id"`
 	RoleARN             types.String                                                `tfsdk:"role_arn"`
 	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel]     `tfsdk:"role_configuration"`
@@ -572,7 +573,7 @@ type cloudWatchConfigurationModel struct {
 }
 
 type exporterConfigurationModel struct {
-	OpenSearchExporter fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"open_search_exporter"`
+	OpenSearchExporter fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
 }
 
 var (

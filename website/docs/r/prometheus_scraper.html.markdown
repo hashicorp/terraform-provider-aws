@@ -175,8 +175,8 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-  exporters {
-    open_search_exporter {
+  exporter {
+    opensearch {
       domain_arn = aws_opensearch_domain.example.arn
     }
   }
@@ -308,7 +308,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alias` - (Optional) Name to associate with the managed scraper. This is for your use, and does not need to be unique.
-* `exporters` - (Optional) Configuration block for additional exporters. See [`exporters` Block](#exporters-block) for details.
+* `exporter` - (Optional) Configuration block for additional exporters. See [`exporter` Block](#exporter-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration` Block](#role_configuration-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -358,15 +358,15 @@ The `vpc` configuration block supports the following arguments:
 * `security_group_ids` - (Required) List of security group IDs for the VPC configuration.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 
-### `exporters` Block
+### `exporter` Block
 
-The `exporters` configuration block supports the following arguments:
+The `exporter` configuration block supports the following arguments:
 
-* `open_search_exporter` - (Required) Configuration block for an OpenSearch exporter. See [`open_search_exporter` Block](#open_search_exporter-block) for details.
+* `opensearch` - (Required) Configuration block for an OpenSearch exporter. See [`opensearch` Block](#opensearch-block) for details.
 
-### `open_search_exporter` Block
+### `opensearch` Block
 
-The `open_search_exporter` configuration block supports the following arguments:
+The `opensearch` configuration block supports the following arguments:
 
 * `domain_arn` - (Required) ARN of the OpenSearch domain.
 

@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_prometheus_scraper: Add `exporters` configuration block with OpenSearch exporter support
+resource/aws_prometheus_scraper: Add `exporter` configuration block with OpenSearch exporter support
 ```

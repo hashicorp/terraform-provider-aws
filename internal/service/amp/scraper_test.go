@@ -67,6 +67,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 						"amp":        knownvalue.ListSizeExact(1),
 						"cloudwatch": knownvalue.ListSizeExact(0),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRoleARN), knownvalue.NotNull()),
@@ -270,12 +271,19 @@ func TestAccAMPScraper_openSearchExporter(t *testing.T) {
 				Config: testAccScraperConfig_openSearchExporter(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "exporters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exporters.0.open_search_exporter.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "exporters.0.open_search_exporter.0.domain_arn"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"opensearch": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"domain_arn": knownvalue.NotNull(),
+						})}),
+					})})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -838,8 +846,8 @@ EOT
     }
   }
 
-  exporters {
-    open_search_exporter {
+  exporter {
+    opensearch {
       domain_arn = aws_opensearch_domain.test.arn
     }
   }
