@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ec2_client_vpn_route: `target_vpc_subnet_id` is now optional to support Transit Gateway-based Client VPN endpoints, and adds a new `transit_gateway_attachment_id` attribute
-```
