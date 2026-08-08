@@ -41,6 +41,41 @@ TEST_COUNT                   ?= 1
 #   make quick-fix PKG=ses     # Fix code in SES service
 #   make quick-fix K=lambda    # Same as above, but shorter (both work)
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
+#   make t T=TestAccRole          # Same: PKG=iam is auto-detected from the test name
+
+# Auto-detect the package from the test name so `make t T=TestAccFoo_basic`
+# works without also typing PKG=<service>. Runs only when T is set and neither
+# PKG nor K is; the legacy TESTS variable is unaffected.
+#
+# T may be a regex, so we match test function names like `go test -run` does
+# (first `/`-segment, unanchored) by scanning _test.go files under internal/.
+# We grep rather than `go test -list` to avoid compiling the whole tree, and
+# scope to the test's own directory so non-service tests (e.g. internal/conns)
+# work too.
+AUTODETECT_PKG := $(and $(filter undefined,$(origin PKG)),$(filter undefined,$(origin K)),$(filter-out undefined,$(origin T)))
+ifneq ($(AUTODETECT_PKG),)
+  AUTO_DIRS := $(shell seg=$$(printf '%s' '$(T)' | cut -d/ -f1); grep -rHE '^func Test' --include='*_test.go' internal 2>/dev/null | awk -F: -v re="$$seg" '{ fn=$$2; sub("^func ","",fn); sub("[^A-Za-z0-9_].*","",fn); if (fn ~ re) { d=$$1; sub("/[^/]*$$","",d); print d } }' | sort -u)
+  ifeq ($(words $(AUTO_DIRS)),0)
+    $(error make: no test matching T='$(T)' found under internal/ (check the test name/regex). Scope it yourself with PKG=<service> or K=<service>, or use TESTS instead of T to skip autodetection)
+  else
+    AUTO_DIR := $(firstword $(AUTO_DIRS))
+    ifneq ($(words $(AUTO_DIRS)),1)
+      $(warning make: T='$(T)' matches tests in multiple packages ($(AUTO_DIRS)); using $(AUTO_DIR). Set PKG=<service> to choose another, or use TESTS to skip autodetection)
+    endif
+    AUTO_SVC := $(patsubst internal/service/%,%,$(AUTO_DIR))
+    ifeq ($(AUTO_SVC),$(AUTO_DIR))
+      # Not a service package (e.g. internal/conns): scope directly to the directory.
+      PKG_NAME := $(AUTO_DIR)
+      SVC_DIR := ./$(AUTO_DIR)
+      TEST := ./$(AUTO_DIR)/...
+      $(info make: auto-detected package $(AUTO_DIR) from T=$(T))
+    else
+      # Service package: set PKG and let the consolidation below derive the rest.
+      PKG := $(AUTO_SVC)
+      $(info make: auto-detected PKG=$(AUTO_SVC) from T=$(T))
+    endif
+  endif
+endif
 
 # Variable consolidation for backward compatibility and user convenience:
 # - PKG and K both refer to service names (e.g., 'ses', 'lambda')
