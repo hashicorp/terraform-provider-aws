@@ -108,9 +108,9 @@ This resource supports the following arguments:
 
 #### invite_message_template
 
-* `email_message` - (Optional) Message template for email messages. Must contain `{username}` and `{####}` placeholders, for username and temporary password, respectively.
+* `email_message` - (Optional) Message template for email messages. Must contain the `{username}` placeholder. Must also contain the `{####}` placeholder when creating users with passwords; the `{####}` placeholder can be omitted for [passwordless users](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-create-user-accounts.html).
 * `email_subject` - (Optional) Subject line for email messages.
-* `sms_message` - (Optional) Message template for SMS messages. Must contain `{username}` and `{####}` placeholders, for username and temporary password, respectively.
+* `sms_message` - (Optional) Message template for SMS messages. Must contain the `{username}` placeholder. Must also contain the `{####}` placeholder when creating users with passwords; the `{####}` placeholder can be omitted for [passwordless users](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-create-user-accounts.html).
 
 ### device_configuration
 

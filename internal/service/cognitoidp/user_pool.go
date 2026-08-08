@@ -1604,15 +1604,15 @@ func expandAdminCreateUserConfigType(tfMap map[string]any) *awstypes.AdminCreate
 			if tfMap, ok := tfList[0].(map[string]any); ok {
 				imt := &awstypes.MessageTemplateType{}
 
-				if v, ok := tfMap["email_message"]; ok {
+				if v, ok := tfMap["email_message"]; ok && v.(string) != "" {
 					imt.EmailMessage = aws.String(v.(string))
 				}
 
-				if v, ok := tfMap["email_subject"]; ok {
+				if v, ok := tfMap["email_subject"]; ok && v.(string) != "" {
 					imt.EmailSubject = aws.String(v.(string))
 				}
 
-				if v, ok := tfMap["sms_message"]; ok {
+				if v, ok := tfMap["sms_message"]; ok && v.(string) != "" {
 					imt.SMSMessage = aws.String(v.(string))
 				}
 
