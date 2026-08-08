@@ -96,12 +96,12 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		DestinationCidrBlock: aws.String(destinationCIDR),
 	}
 
-	if targetSubnetID != "" {
-		input.TargetVpcSubnetId = aws.String(targetSubnetID)
-	}
-
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if targetSubnetID != "" {
+		input.TargetVpcSubnetId = aws.String(targetSubnetID)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
