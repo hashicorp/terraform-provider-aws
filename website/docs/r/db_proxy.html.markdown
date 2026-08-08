@@ -118,7 +118,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A user-specified description about the authentication used by a proxy to log in as a specific database user.
 * `iam_auth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. One of `DISABLED`, `REQUIRED`.
 * `secret_arn` - (Optional) The Amazon Resource Name (ARN) representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster. These secrets are stored within Amazon Secrets Manager.
-* `username` - (Optional) The name of the database user to which the proxy connects. Do not set `username` when `auth_scheme = "SECRETS"`; in that case the user name is taken from the Secrets Manager secret referenced by `secret_arn`, and specifying `username` as well causes an error.
+* `username` - (Optional) The name of the database user to which the proxy connects. When `auth_scheme` is `SECRETS` (the only supported scheme), the credentials — including the user name — are read from the Secrets Manager secret referenced by `secret_arn`, so `username` typically does not need to be set.
 
 ## Attribute Reference
 
