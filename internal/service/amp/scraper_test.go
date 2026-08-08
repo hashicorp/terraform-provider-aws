@@ -8,16 +8,26 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+var (
+	checkScraperARN                knownvalue.Check = tfknownvalue.RegionalARNRegexp("aps", regexache.MustCompile(`scraper/s-.+`))
+	checkScraperARNAlternateRegion knownvalue.Check = tfknownvalue.RegionalARNAlternateRegionRegexp("aps", regexache.MustCompile(`scraper/s-.+`))
 )
 
 func TestAccAMPScraper_basic(t *testing.T) {
@@ -38,26 +48,42 @@ func TestAccAMPScraper_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Scraper/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "0"),
-					func(s *terraform.State) error {
-						return resource.TestCheckResourceAttr(resourceName, names.AttrID, aws.ToString(scraper.ScraperId))(s)
-					},
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAlias), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkScraperARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDestination), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"amp":        knownvalue.ListSizeExact(1),
+						"cloudwatch": knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRoleARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("role_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scrape_configuration"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSource), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"eks": knownvalue.ListSizeExact(1),
+						"vpc": knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Scraper/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -84,7 +110,10 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Scraper/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraper, resourceName),

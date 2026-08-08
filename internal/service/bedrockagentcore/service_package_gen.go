@@ -111,6 +111,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newGatewayRuleResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayRuleImportID{},
+			},
+		},
+		{
 			Factory:  newGatewayTargetResource,
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
@@ -250,6 +264,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region: inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
 				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
+		},
+		{
+			Factory:  newGatewayRuleResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
 		},
 		{
 			Factory:  newHarnessResourceAsListResource,
