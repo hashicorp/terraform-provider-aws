@@ -56,12 +56,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lb_listener_certificate.example
-  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:iam::123456789012:server-certificate/tf-acc-test-6453083910015726063"
+  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:acm:us-west-2:123456789012:certificate/f0d3a5b1-2c4d-4e6f-8a9b-0123456789ab"
 }
 ```
 
 Using `terraform import`, import Listener Certificates using the listener arn and certificate arn, separated by an underscore (`_`). For example:
 
 ```console
-% terraform import aws_lb_listener_certificate.example arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:iam::123456789012:server-certificate/tf-acc-test-6453083910015726063
+% terraform import aws_lb_listener_certificate.example arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:acm:us-west-2:123456789012:certificate/f0d3a5b1-2c4d-4e6f-8a9b-0123456789ab
 ```

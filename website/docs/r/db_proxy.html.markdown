@@ -104,7 +104,7 @@ This resource supports the following arguments:
 * `endpoint_network_type` - (Optional) Network type of the DB proxy endpoint. Valid values are `IPV4`, `IPV6` and `DUAL`. Defaults to `IPV4`. If `IPV6` is specified, the subnets associated with the proxy must be IPv6-only, and `target_connection_network_type` must be `IPV6`.
 * `engine_family` - (Required, Forces new resource) The kinds of databases that the proxy can connect to. This value determines which database network protocol the proxy recognizes when it interprets network traffic to and from the database. For Aurora MySQL, RDS for MariaDB, and RDS for MySQL databases, specify `MYSQL`. For Aurora PostgreSQL and RDS for PostgreSQL databases, specify `POSTGRESQL`. For RDS for Microsoft SQL Server, specify `SQLSERVER`. Valid values are `MYSQL`, `POSTGRESQL`, and `SQLSERVER`.
 * `idle_client_timeout` - (Optional) The number of seconds that a connection to the proxy can be inactive before the proxy disconnects it. You can set this value higher or lower than the connection timeout limit for the associated database.
-* `require_tls` - (Optional) A Boolean parameter that specifies whether Transport Layer Security (TLS) encryption is required for connections to the proxy. By enabling this setting, you can enforce encrypted TLS connections to the proxy.
+* `require_tls` - (Optional) A Boolean parameter that specifies whether Transport Layer Security (TLS) encryption is required for connections *from clients to the proxy*. When `true`, the proxy rejects any client connection that does not use TLS. This setting does not affect the separately configured connections from the proxy to the underlying database. Defaults to `false`.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that the proxy uses to access secrets in AWS Secrets Manager.
 * `target_connection_network_type` - (Optional) Network type that the proxy uses to connect to the target database. Valid values are `IPV4` and `IPV6`. Defaults to `IPV4`.
 * `vpc_security_group_ids` - (Optional) One or more VPC security group IDs to associate with the new proxy.
@@ -118,7 +118,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A user-specified description about the authentication used by a proxy to log in as a specific database user.
 * `iam_auth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. One of `DISABLED`, `REQUIRED`.
 * `secret_arn` - (Optional) The Amazon Resource Name (ARN) representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster. These secrets are stored within Amazon Secrets Manager.
-* `username` - (Optional) The name of the database user to which the proxy connects.
+* `username` - (Optional) The name of the database user to which the proxy connects. Do not set `username` when `auth_scheme = "SECRETS"`; in that case the user name is taken from the Secrets Manager secret referenced by `secret_arn`, and specifying `username` as well causes an error.
 
 ## Attribute Reference
 

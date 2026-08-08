@@ -111,7 +111,7 @@ The following arguments are required:
 * `cpu_core_count` - (Required) Number of CPU cores to enable on the VM cluster. Changing this will create a new resource.
 * `data_collection_options` - (Required) Set of preferences for the various diagnostic collection options for the VM cluster. See [`data_collection_options` Block](#data_collection_options-block) below. Changing this will create a new resource.
 * `data_storage_size_in_tbs` - (Required) Size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.
-* `db_servers` - (Required) List of database servers for the VM cluster. Changing this will create a new resource.
+* `db_servers` - (Required) List of database server **IDs** (for example `db-server-1a2b3c`) for the VM cluster, not their display names. Changing this will create a new resource.
 * `display_name` - (Required) User-friendly name for the VM cluster. Changing this will create a new resource.
 * `gi_version` - (Required) Valid Oracle Grid Infrastructure (GI) software version. To get valid values, use the ListGiVersions operation for the Exadata infrastructure shape. Example: `19.0.0.0`. Changing this creates a new resource. Prefer to provide `odb:input_gi_version` tag. If `odb:input_gi_version` tag is provided, its value must exactly match `gi_version`, otherwise Terraform returns an error. See the [`With GI Version Tag`](#with-gi-version-tag) example above.
 * `hostname_prefix` - (Required) Host name prefix for the VM cluster. Constraints: - Can't be "localhost" or "hostname". - Can't contain "-version". - Maximum length of the combined hostname and domain is 63 characters. - Hostname must be unique within the subnet. Changing this will create a new resource.

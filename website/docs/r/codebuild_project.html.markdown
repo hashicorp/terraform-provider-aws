@@ -625,6 +625,8 @@ resource "aws_codebuild_project" "example" {
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:
 
+~> **NOTE:** The import ID may be either the project **name** or the project **ARN** (`arn:aws:codebuild:<region>:<account-id>:project/<name>`); both are accepted.
+
 ```terraform
 import {
   to = aws_codebuild_project.name

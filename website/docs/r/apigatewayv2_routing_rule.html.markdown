@@ -77,9 +77,9 @@ The following arguments are optional:
 
 ### `invoke_api` Block
 
-* `api_id` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
-* `stage` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
-* `strip_base_path` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
+* `api_id` - (Required) Identifier of the target API to invoke when the routing rule matches. Only REST APIs are supported.
+* `stage` - (Required) Name of the stage of the target API to route matching requests to. Only REST APIs are supported.
+* `strip_base_path` - (Required) Whether to strip the matched base path from the request before forwarding it to the target API stage. Only REST APIs are supported.
 
 ## Attribute Reference
 

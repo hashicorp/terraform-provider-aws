@@ -66,6 +66,8 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv6" {
 
 ~> **NOTE on Egress rules:** By default, AWS creates an `ALLOW ALL` egress rule when creating a new Security Group inside of a VPC. When creating a new Security Group inside a VPC, **Terraform will remove this default rule**, and require you specifically re-create it if you desire that rule. We feel this leads to fewer surprises in terms of controlling your egress rules. If you desire this rule to be in place, you can use this `egress` block:
 
+~> **NOTE:** Security groups are *stateful*: response traffic for a connection that was allowed by an inbound (`ingress`) rule is automatically permitted back out, regardless of the outbound (`egress`) rules. You therefore do not need an explicit `egress` rule to allow replies to inbound requests. Egress rules only govern connections *initiated* from within the security group.
+
 ```terraform
 resource "aws_security_group" "example" {
   # ... other configuration ...

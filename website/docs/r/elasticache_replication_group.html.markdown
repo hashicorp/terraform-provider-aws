@@ -242,6 +242,7 @@ The following arguments are optional:
 * `durability` - (Optional) Specifies the durability mode for the replication group. Valid values are `default`, `async`, `sync`, or `disabled`. Requires cluster mode enabled and Valkey 9.0 or higher.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
   Valid values are `redis` or `valkey`.
+  When `engine` is `valkey`, `engine_version` must be set explicitly; Valkey has no default version, so omitting `engine_version` results in an error.
   Default is `redis`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
   If the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.

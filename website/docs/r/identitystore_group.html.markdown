@@ -26,7 +26,7 @@ resource "aws_identitystore_group" "this" {
 
 The following arguments are required:
 
-* `identity_store_id` - (Required) The globally unique identifier for the identity store.
+* `identity_store_id` - (Required) The globally unique identifier for the identity store. This is the identity store **ID** (for example, `d-1234567890`), not the ARN of the IAM Identity Center instance.
 
 The following arguments are optional:
 
