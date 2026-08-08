@@ -12,6 +12,7 @@ var (
 	ResourceResourceShareAccepter              = resourceResourceShareAccepter
 	ResourceResourceShareAssociationsExclusive = newResourceShareAssociationsExclusiveResource
 	ResourceSharingWithOrganization            = resourceSharingWithOrganization
+	ResourceResourceSharePermissionAssociation = newResourceSharePermissionAssociationResource
 
 	FindAssociationsForResourceShare         = findAssociationsForResourceShare
 	FindPermissionByARN                      = findPermissionByARN
@@ -19,6 +20,7 @@ var (
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
+	FindResourceSharePermissionByTwoPartKey  = findResourceSharePermissionByTwoPartKey
 
 	WaitResourceAssociationCreated = waitResourceAssociationCreated
 )
