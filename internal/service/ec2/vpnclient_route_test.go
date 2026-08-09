@@ -30,7 +30,7 @@ func testAccClientVPNRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test.0"
+	subnetResourceName := "aws_subnet.test[0]"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
