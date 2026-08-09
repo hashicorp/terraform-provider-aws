@@ -573,7 +573,7 @@ type cloudWatchConfigurationModel struct {
 }
 
 type exporterConfigurationModel struct {
-	OpenSearchExporter fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
+	OpenSearch fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
 }
 
 var (
@@ -586,8 +586,8 @@ func (m exporterConfigurationModel) Expand(ctx context.Context) (any, diag.Diagn
 	var v awstypes.ExporterConfiguration
 
 	switch {
-	case !m.OpenSearchExporter.IsNull():
-		data, d := m.OpenSearchExporter.ToPtr(ctx)
+	case !m.OpenSearch.IsNull():
+		data, d := m.OpenSearch.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -613,7 +613,7 @@ func (m *exporterConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 		if diags.HasError() {
 			return diags
 		}
-		m.OpenSearchExporter = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		m.OpenSearch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
 
 	return diags
