@@ -5,3 +5,7 @@ resource/aws_ec2_client_vpn_route: Change `target_vpc_subnet_id` to Optional
 ```release-note:enhancement
 resource/aws_ec2_client_vpn_route: Add `transit_gateway_attachment_id` attribute
 ```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_route: Increase default `timeouts` values to `30m`
+```
