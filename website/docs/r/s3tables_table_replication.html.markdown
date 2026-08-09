@@ -36,21 +36,23 @@ This resource supports the following arguments:
 * `rule` - (Optional) Replication rules. See [Rule](#rule) below for more details.
 * `table_arn` - (Required, Forces new resource) ARN referencing the Table that owns this replication configuration.
 
-### Rule
+### `rule` Block
 
 The `rule` block supports the following:
 
 * `destination` - (Required) Replication destination. See [Destination](#destination) below for more details.
 
-### Destination
+### `destination` Block
 
 The `destination` block supports the following:
 
-* `destination_table_bucket_arn` (Required) ARN of destination table bucket to replicate source tables to.
+* `destination_table_bucket_arn` - (Required) ARN of destination table bucket to replicate source tables to.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `version_token` - Identifier for the current version of the replication configuration.
 
 ## Import
 

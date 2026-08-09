@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ses_domain_mail_from: Correctly detect resources deleted outside of Terraform when refreshing state
-```

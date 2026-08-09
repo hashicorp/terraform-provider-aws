@@ -91,8 +91,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_cloudwatch_event_rule.example
   identity = {
-    name           = "capture-console-sign-in"
-    event_bus_name = "example-event-bus"
+    name = "capture-console-sign-in"
   }
 }
 
@@ -110,7 +109,6 @@ resource "aws_cloudwatch_event_rule" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `event_bus_name` (String) Name of the event bus.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:

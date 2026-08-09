@@ -636,10 +636,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						mapplanmodifier.RequiresReplace(),
 					},
 				},
-				"retry_strategy": framework.ResourceOptionalComputedListOfObjectsAttribute[retryStrategyModel](ctx, 1, nil,
-					listplanmodifier.UseStateForUnknown(),
-					listplanmodifier.RequiresReplace(),
-				),
+				"retry_strategy": framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[retryStrategyModel](ctx),
 				names.AttrRoleARN: schema.StringAttribute{
 					CustomType: fwtypes.ARNType,
 					Required:   true,

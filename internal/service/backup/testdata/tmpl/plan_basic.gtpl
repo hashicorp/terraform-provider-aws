@@ -1,4 +1,5 @@
 resource "aws_backup_plan" "test" {
+{{- template "region" }}
   name = var.rName
 
   rule {
@@ -11,5 +12,6 @@ resource "aws_backup_plan" "test" {
 }
 
 resource "aws_backup_vault" "test" {
+{{- template "region" }}
   name = var.rName
 }

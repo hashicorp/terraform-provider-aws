@@ -45,10 +45,17 @@ jobs:
           >
           > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed."
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: checkout
         if: github.event.pull_request.merged
         with:
+          # Explicitly check out the trusted base branch (not the fork PR head/merge
+          # commit). On a merged pull_request_target closed event, the default checkout
+          # ref resolves to github.sha, which equals pull_request.merge_commit_sha. Since
+          # checkout v7 (2026), that match on a fork PR is refused as a "pwn request".
+          # This workflow only needs the base repository's .ci scripts, so pin to the
+          # base ref, which is a branch name rather than a SHA and is always trusted.
+          ref: ${{ github.event.pull_request.base.ref }}
           sparse-checkout: .ci
 
       - name: Get Current Milestone Name

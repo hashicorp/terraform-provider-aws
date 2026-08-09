@@ -25,18 +25,18 @@ data "aws_appstream_image" "test" {
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `arn` - (Optional) ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
+* `most_recent` - (Optional) Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
 * `name` - (Optional) Name of the image being searched for. Cannot be used with `name_regex` or `arn`.
 * `name_regex` - (Optional) Regular expression name of the image being searched for. Cannot be used with `arn` or `name`.
-* `arn` - (Optional) ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
-* `type` - (Optional) The type of image which must be (`PUBLIC`, `PRIVATE`, or `SHARED`).
-* `most_recent` - (Optional) Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `type` - (Optional) Type of image which must be (`PUBLIC`, `PRIVATE`, or `SHARED`).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `applications` - A application object that contains the following:
+* `applications` - Application object that contains the following:
     * `app_block_arn` - The app block ARN of the application.
     * `created_time` - The time at which the application was created within the app block.
     * `description` - The description of the application.
@@ -59,14 +59,14 @@ This data source exports the following attributes in addition to the arguments a
 * `created_time` - Time at which this image was created.
 * `description` - Description of image.
 * `display_name` - Image name to display.
-* `image_builder_name` - The name of the image builder that was used to created the private image. If the image is sharedthen the value is null.
+* `image_builder_name` - Name of the image builder that was used to created the private image. If the image is sharedthen the value is null.
 * `image_builder_supported` - Boolean to indicate whether an image builder can be launched from this image.
-* `state_change_reason` - Reason for the last state change.
-    * `code` - State change reason code.
-    * `message` - State change reason message.
 * `image_permissions` - List of strings describing the image permissions containing the following:
     * `allow_fleet` - Boolean indicating if the image can be used for a fleet.
     * `allow_image_builder` - indicated whether the image can be used for an image builder.
 * `platform` - Operating system platform of the image. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
 * `public_base_image_released_date` - Release date of base image if public. For private images, it is the release date of the base image that it was created from.
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
+* `state_change_reason` - Reason for the last state change.
+    * `code` - State change reason code.
+    * `message` - State change reason message.

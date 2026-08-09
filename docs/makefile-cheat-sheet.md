@@ -32,6 +32,9 @@ For example, `testacc` is a phony target to simplify the command for running acc
 make testacc TESTS=TestAccIAMRole_basic PKG=iam
 ```
 
+!!! tip
+    The `t` target can auto-detect the package from the test name: with `T` set and both `PKG` and `K` omitted, `make t T=TestAccIAMRole_basic` scopes to `iam` automatically, so you needn't type long service names. See the [`T`](#variables) variable for details.
+
 ### Meta Targets and Dependent Targets
 
 _Meta_ targets are `make` targets that only run other targets. They aggregate the functionality of other targets for convenience. In the [Cheat Sheet](#cheat-sheet), meta targets are marked with <sup>M</sup>.
@@ -60,8 +63,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
 * `K` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `PKG` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
 * `P` - (Default: `20`) Number of concurrent acceptance tests to run. Assigns a value to `ACCTEST_PARALLELISM` overridding any value set.
-* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
-* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set.
+* `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set. When neither `PKG` nor `K` is set, `PKG` is auto-detected from `T` (see the `T` variable).
+* `PKG_NAME` - (Default: `internal`) Subdirectory (Go package) to use as the basis for Go processing. Overridden if `PKG` or `K` is set, including when `PKG` is auto-detected from `T`.
 * `RUNARGS` - (Default: _None_) Raw arguments passed to Go when running acceptance tests. For example, `RUNARGS=-run=TestMyTest`. Overridden if `TESTS` or `T` is set.
 * `SEMGREP_ARGS` - (Default: `--error`) Semgrep arguments. See the [Semgrep reference](https://semgrep.dev/docs/cli-reference#semgrep-scan-command-options).
 * `SEMGREP_ENABLE_VERSION_CHECK` - (Default: `false`) Whether to check Semgrep servers to verify you are running the latest Semgrep version.
@@ -73,10 +76,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `SWEEP_TIMEOUT` - (Default: `360m`) Time Go will spend sweeping resources before panicking.
 * `SWEEPARGS` - (Default: _None_) Raw arguments that define what to sweep, including dependencies. Similar to `SWEEPERS`. For example, `SWEEPARGS=-sweep-run=aws_example_thing`.
 * `SWEEPERS` - (Default: _None_) Resources to sweep, including dependencies. Similar to `SWEEPARGS`. For example, `SWEEPERS=aws_example_thing`. Assigns a value to `SWEEPARGS` overridding any value set.
-* `T` - (Default: _None_) Names of tests to run. Equivalent to `TESTS`. Assigns a value to `RUNARGS` overridding any value set.
+* `T` - (Default: _None_) Names of tests to run; may be a regular expression, like `go test -run`. When neither `PKG` nor `K` is set, the package is auto-detected from the test name (scanning `_test.go` files under `internal/`, including non-service packages), so `make t T=TestAccIAMRole_basic` scopes to `iam` automatically. Multiple matches use the first, with a warning; no match stops with an error. Set `PKG`/`K` or use `TESTS` to skip autodetection. Assigns a value to `RUNARGS` overridding any value set.
 * `TEST` - (Default: `./...`) Limit tests to this directory and dependencies. Overridden if `PKG` or `K` is set.
 * `TEST_COUNT` - (Default: `1`) Number of times to run each acceptance or unit test.
-* `TESTS` - (Default: _None_) Names of tests to run. Equivalent to `T`. Assigns a value to `RUNARGS` overridding any value set.
+* `TESTS` - (Default: _None_) Names of tests to run. Like `T` but without package auto-detection; set `PKG` or `K` to scope. Assigns a value to `RUNARGS` overridding any value set.
 * `TESTARGS` - (Default: _None_) Raw arguments passed to Go when running tests. Unlike `RUNARGS`, this is _not_ overridden if `TESTS` or `T` is set.
 
 ## Cheat Sheet
@@ -122,7 +125,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `fmt-check` | Verify Go source is formatted |  |  | `CURDIR` |
 | `fmt-core` | Fix Go source formatting in core directories |  |  |  |
 | `fumpt` | Run gofumpt |  |  | `K`, `PKG`, `PKG_NAME` |
-| `gen`<sup>D</sup> | Run all Go generators |  |  | `GO_VER` |
+| `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
 | `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |
@@ -157,9 +160,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
-| `semgrep-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-constants`<sup>D</sup> | Semgrep Checks / Constants Check | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-docker`<sup>D</sup> | Run Semgrep |  | ✔️ |  |
 | `semgrep-fix`<sup>D</sup> | Fix Semgrep issues that have fixes |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-fix-constants`<sup>D</sup> | Fix constants with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-fix-core` | Fix Semgrep issues in core directories |  |  | `SEMGREP_ARGS` |
 | `semgrep-naming`<sup>D</sup> | Semgrep Checks / Test Configs Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |

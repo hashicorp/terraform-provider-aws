@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -82,7 +82,10 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, nil, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx,
+				framework.WithValidators[contactDetailModel](listvalidator.SizeAtMost(1)),
+				framework.WithPlanModifiers[contactDetailModel](tflistplanmodifier.DefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -120,7 +123,10 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, nil, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx,
+				framework.WithValidators[nameserverModel](listvalidator.SizeAtMost(6)), //nolint:mnd // 6 is the maximum number of items
+				framework.WithPlanModifiers[nameserverModel](listplanmodifier.UseStateForUnknown()),
+			),
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,

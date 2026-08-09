@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rbin_rule: Fix crash when multiple `resource_tags` blocks are configured
-```
