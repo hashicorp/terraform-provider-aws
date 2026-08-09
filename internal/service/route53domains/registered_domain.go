@@ -470,7 +470,7 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChanges("admin_privacy", "billing_contact", "registrant_privacy", "tech_privacy") {
+	if d.HasChanges("admin_privacy", "billing_privacy", "registrant_privacy", "tech_privacy") {
 		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

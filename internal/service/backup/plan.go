@@ -7,6 +7,7 @@ package backup
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -35,17 +36,15 @@ const (
 
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.GetBackupPlanOutput")
+// @Testing(preIdentityVersion="v6.58.0")
 func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
 		ReadWithoutTimeout:   resourcePlanRead,
 		UpdateWithoutTimeout: resourcePlanUpdate,
 		DeleteWithoutTimeout: resourcePlanDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -299,22 +298,30 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", d.Id(), err)
 	}
 
+	if err := resourcePlanFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening Backup Plan (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourcePlanFlatten(ctx context.Context, output *backup.GetBackupPlanOutput, d *schema.ResourceData) error {
 	// AdvancedBackupSettings being read direct from output and not from under
 	// output.BackupPlan is deliberate - the latter always contains nil.
 	if err := d.Set("advanced_backup_setting", flattenAdvancedBackupSettings(output.AdvancedBackupSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
+		return fmt.Errorf("setting advanced_backup_setting: %w", err)
 	}
 	d.Set(names.AttrARN, output.BackupPlanArn)
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
 	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		return fmt.Errorf("setting rule: %w", err)
 	}
 	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting scan_setting: %s", err)
+		return fmt.Errorf("setting scan_setting: %w", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
 
-	return diags
+	return nil
 }
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
