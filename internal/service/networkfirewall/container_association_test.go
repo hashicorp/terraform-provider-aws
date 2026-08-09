@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,9 +55,8 @@ func TestAccNetworkFirewallContainerAssociation_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_association_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("EKS")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_monitoring_configurations"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_monitoring_configuration"), knownvalue.ListSizeExact(1)),
 				},
 			},
 			{
@@ -180,11 +178,11 @@ func TestAccNetworkFirewallContainerAssociation_attributeFilters(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("container_monitoring_configurations").AtSliceIndex(0).AtMapKey("attribute_filters").AtSliceIndex(0).AtMapKey(names.AttrKey),
+						tfjsonpath.New("container_monitoring_configuration").AtSliceIndex(0).AtMapKey("attribute_filter").AtSliceIndex(0).AtMapKey(names.AttrKey),
 						knownvalue.StringExact("ecs.instance-type"),
 					),
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("container_monitoring_configurations").AtSliceIndex(0).AtMapKey("attribute_filters").AtSliceIndex(0).AtMapKey(names.AttrValue),
+						tfjsonpath.New("container_monitoring_configuration").AtSliceIndex(0).AtMapKey("attribute_filter").AtSliceIndex(0).AtMapKey(names.AttrValue),
 						knownvalue.StringExact("c5.xlarge"),
 					),
 				},
@@ -316,8 +314,7 @@ func testAccCheckContainerAssociationDestroy(ctx context.Context, t *testing.T) 
 			if err != nil {
 				return err
 			}
-
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameContainerAssociation, rs.Primary.Attributes["container_association_arn"], errors.New("not destroyed"))
+			return fmt.Errorf("NetworkFirewall Container Association %s still exists", rs.Primary.Attributes["container_association_arn"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -328,14 +325,14 @@ func testAccCheckContainerAssociationExists(ctx context.Context, t *testing.T, n
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameContainerAssociation, n, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		out, err := tfnetworkfirewall.FindContainerAssociationByARN(ctx, conn, rs.Primary.Attributes["container_association_arn"])
 		if err != nil {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameContainerAssociation, rs.Primary.Attributes["container_association_arn"], err)
+			return err
 		}
 
 		*v = *out
@@ -408,7 +405,7 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = %[1]q
   type                       = "EKS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_eks_cluster.test.arn
   }
 }
@@ -421,7 +418,7 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = %[1]q
   type                       = "ECS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
 }
@@ -435,7 +432,7 @@ resource "aws_networkfirewall_container_association" "test" {
   type                       = "ECS"
   description                = %[2]q
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
 }
@@ -448,10 +445,10 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = %[1]q
   type                       = "ECS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
 
-    attribute_filters {
+    attribute_filter {
       key   = "ecs.instance-type"
       value = "c5.xlarge"
     }

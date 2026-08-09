@@ -4,14 +4,18 @@
 package networkfirewall
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
@@ -209,4 +213,25 @@ func sweepRuleGroups(region string) error {
 	}
 
 	return nil
+}
+
+func sweepContainerAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := networkfirewall.ListContainerAssociationsInput{}
+	conn := client.NetworkFirewallClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networkfirewall.NewListContainerAssociationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.ContainerAssociations {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newContainerAssociationResource, client,
+				sweepfw.NewAttribute("container_association_arn", aws.ToString(v.Arn))))
+		}
+	}
+
+	return sweepResources, nil
 }

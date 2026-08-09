@@ -7,7 +7,6 @@ package networkfirewall
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -27,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,8 +33,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,10 +54,6 @@ func newContainerAssociationResource(_ context.Context) (resource.ResourceWithCo
 
 	return r, nil
 }
-
-const (
-	ResNameContainerAssociation = "Container Association"
-)
 
 type containerAssociationResource struct {
 	framework.ResourceWithModel[containerAssociationResourceModel]
@@ -90,24 +81,10 @@ func (r *containerAssociationResource) Schema(ctx context.Context, req resource.
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrLastUpdatedTime: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"resolved_cidr_count": schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.ContainerAssociationStatus](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -127,7 +104,7 @@ func (r *containerAssociationResource) Schema(ctx context.Context, req resource.
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"container_monitoring_configurations": schema.ListNestedBlock{
+			"container_monitoring_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[containerMonitoringConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -141,7 +118,7 @@ func (r *containerAssociationResource) Schema(ctx context.Context, req resource.
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"attribute_filters": schema.ListNestedBlock{
+						"attribute_filter": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerAttributeModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -175,31 +152,25 @@ func (r *containerAssociationResource) Create(ctx context.Context, req resource.
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, plan.ContainerAssociationName)
 	var input networkfirewall.CreateContainerAssociationInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("ContainerAssociation")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateContainerAssociation(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ContainerAssociationName.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ContainerAssociationName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("ContainerAssociation")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	arn := aws.ToString(out.ContainerAssociationArn)
 
-	arn := plan.ContainerAssociationARN.ValueString()
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outD, err := waitContainerAssociationCreated(ctx, conn, arn, createTimeout)
+	outD, err := waitContainerAssociationCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
@@ -222,7 +193,7 @@ func (r *containerAssociationResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	arn := state.ContainerAssociationARN.ValueString()
+	arn := fwflex.StringValueFromFramework(ctx, state.ContainerAssociationARN)
 	out, err := findContainerAssociationByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -261,30 +232,24 @@ func (r *containerAssociationResource) Update(ctx context.Context, req resource.
 	}
 
 	if diff.HasChanges() {
-		arn := state.ContainerAssociationARN.ValueString()
-
+		arn := fwflex.StringValueFromFramework(ctx, state.ContainerAssociationARN)
 		var input networkfirewall.UpdateContainerAssociationInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("ContainerAssociation")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Additional fields.
 		input.ContainerAssociationArn = aws.String(arn)
 		input.UpdateToken = state.UpdateToken.ValueStringPointer()
 
-		out, err := conn.UpdateContainerAssociation(ctx, &input)
+		_, err := conn.UpdateContainerAssociation(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
-		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, arn)
-			return
-		}
 
-		plan.UpdateToken = fwflex.StringToFramework(ctx, out.UpdateToken)
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		outD, err := waitContainerAssociationUpdated(ctx, conn, arn, updateTimeout)
+		outD, err := waitContainerAssociationUpdated(ctx, conn, arn, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
@@ -312,31 +277,25 @@ func (r *containerAssociationResource) Delete(ctx context.Context, req resource.
 	input := networkfirewall.DeleteContainerAssociationInput{
 		ContainerAssociationArn: aws.String(arn),
 	}
-
 	_, err := conn.DeleteContainerAssociation(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitContainerAssociationDeleted(ctx, conn, arn, deleteTimeout)
-	if err != nil {
+	if _, err := waitContainerAssociationDeleted(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 }
 
-// flatten maps a DescribeContainerAssociationOutput onto the resource model. Both the
-// Create/Read/Update handlers and the wait functions share this so their view of the
-// resource stays consistent.
 func (r *containerAssociationResource) flatten(ctx context.Context, out *networkfirewall.DescribeContainerAssociationOutput, data *containerAssociationResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("ContainerAssociation"))...)
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
 
 	return diags
 }
@@ -347,7 +306,6 @@ func waitContainerAssociationCreated(ctx context.Context, conn *networkfirewall.
 		Target:                    enum.Slice(awstypes.ContainerAssociationStatusActive),
 		Refresh:                   statusContainerAssociation(conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -365,7 +323,6 @@ func waitContainerAssociationUpdated(ctx context.Context, conn *networkfirewall.
 		Target:                    enum.Slice(awstypes.ContainerAssociationStatusActive),
 		Refresh:                   statusContainerAssociation(conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -412,13 +369,19 @@ func findContainerAssociationByARN(ctx context.Context, conn *networkfirewall.Cl
 		ContainerAssociationArn: aws.String(arn),
 	}
 
-	out, err := conn.DescribeContainerAssociation(ctx, &input)
+	return findContainerAssociation(ctx, conn, &input)
+}
+
+func findContainerAssociation(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.DescribeContainerAssociationInput) (*networkfirewall.DescribeContainerAssociationOutput, error) {
+	out, err := conn.DescribeContainerAssociation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
 		return nil, smarterr.NewError(err)
 	}
 
@@ -429,36 +392,13 @@ func findContainerAssociationByARN(ctx context.Context, conn *networkfirewall.Cl
 	return out, nil
 }
 
-func sweepContainerAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := networkfirewall.ListContainerAssociationsInput{}
-	conn := client.NetworkFirewallClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := networkfirewall.NewListContainerAssociationsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.ContainerAssociations {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newContainerAssociationResource, client,
-				sweepfw.NewAttribute("container_association_arn", aws.ToString(v.Arn))))
-		}
-	}
-
-	return sweepResources, nil
-}
-
 type containerAssociationResourceModel struct {
 	framework.WithRegionModel
 	ContainerAssociationARN           types.String                                                           `tfsdk:"container_association_arn"`
 	ContainerAssociationName          types.String                                                           `tfsdk:"container_association_name"`
-	ContainerMonitoringConfigurations fwtypes.ListNestedObjectValueOf[containerMonitoringConfigurationModel] `tfsdk:"container_monitoring_configurations"`
+	ContainerMonitoringConfigurations fwtypes.ListNestedObjectValueOf[containerMonitoringConfigurationModel] `tfsdk:"container_monitoring_configuration"`
 	Description                       types.String                                                           `tfsdk:"description"`
-	LastUpdatedTime                   timetypes.RFC3339                                                      `tfsdk:"last_updated_time"`
 	ResolvedCIDRCount                 types.Int64                                                            `tfsdk:"resolved_cidr_count"`
-	Status                            fwtypes.StringEnum[awstypes.ContainerAssociationStatus]                `tfsdk:"status"`
 	Tags                              tftags.Map                                                             `tfsdk:"tags"`
 	TagsAll                           tftags.Map                                                             `tfsdk:"tags_all"`
 	Timeouts                          timeouts.Value                                                         `tfsdk:"timeouts"`
@@ -467,7 +407,7 @@ type containerAssociationResourceModel struct {
 }
 
 type containerMonitoringConfigurationModel struct {
-	AttributeFilters fwtypes.ListNestedObjectValueOf[containerAttributeModel] `tfsdk:"attribute_filters"`
+	AttributeFilters fwtypes.ListNestedObjectValueOf[containerAttributeModel] `tfsdk:"attribute_filter"`
 	ClusterARN       fwtypes.ARN                                              `tfsdk:"cluster_arn"`
 }
 
