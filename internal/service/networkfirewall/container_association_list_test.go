@@ -6,6 +6,7 @@ package networkfirewall_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,11 +24,9 @@ import (
 
 func TestAccNetworkFirewallContainerAssociation_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_networkfirewall_container_association.test[0]"
 	resourceName2 := "aws_networkfirewall_container_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -52,10 +51,10 @@ func TestAccNetworkFirewallContainerAssociation_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNExact("network-firewall", "container-association/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), checkContainerAssociationARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNExact("network-firewall", "container-association/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("container_association_arn"), checkContainerAssociationARN(rName+"-1")),
 				},
 			},
 
@@ -83,10 +82,8 @@ func TestAccNetworkFirewallContainerAssociation_List_basic(t *testing.T) {
 
 func TestAccNetworkFirewallContainerAssociation_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_networkfirewall_container_association.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -113,7 +110,7 @@ func TestAccNetworkFirewallContainerAssociation_List_includeResource(t *testing.
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNExact("network-firewall", "container-association/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), checkContainerAssociationARN(rName+"-0")),
 				},
 			},
 
@@ -132,11 +129,10 @@ func TestAccNetworkFirewallContainerAssociation_List_includeResource(t *testing.
 					tfquerycheck.ExpectIdentityFunc("aws_networkfirewall_container_association.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_networkfirewall_container_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_networkfirewall_container_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNExact("network-firewall", "container-association/"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_association_arn"), checkContainerAssociationARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("container_association_name"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), knownvalue.StringExact("ECS")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.ContainerMonitoringTypeEcs)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -152,11 +148,9 @@ func TestAccNetworkFirewallContainerAssociation_List_includeResource(t *testing.
 
 func TestAccNetworkFirewallContainerAssociation_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_networkfirewall_container_association.test[0]"
 	resourceName2 := "aws_networkfirewall_container_association.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -183,10 +177,10 @@ func TestAccNetworkFirewallContainerAssociation_List_regionOverride(t *testing.T
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNAlternateRegionExact("network-firewall", "container-association/"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("container_association_arn"), checkContainerAssociationARNAlternateRegion(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("container_association_arn"), tfknownvalue.RegionalARNAlternateRegionExact("network-firewall", "container-association/"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("container_association_arn"), checkContainerAssociationARNAlternateRegion(rName+"-1")),
 				},
 			},
 

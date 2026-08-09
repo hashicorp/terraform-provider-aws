@@ -8,7 +8,7 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = var.rName
   type                       = "ECS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
 {{- template "tags" . }}

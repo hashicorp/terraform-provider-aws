@@ -5,7 +5,6 @@ package networkfirewall_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,10 +16,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkContainerAssociationARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNExact("network-firewall", "container-association/"+name)
+}
+
+func checkContainerAssociationARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionExact("network-firewall", "container-association/"+name)
+}
 
 func TestAccNetworkFirewallContainerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -314,7 +322,7 @@ func testAccCheckContainerAssociationDestroy(ctx context.Context, t *testing.T) 
 			if err != nil {
 				return err
 			}
-			return fmt.Errorf("NetworkFirewall Container Association %s still exists", rs.Primary.Attributes["container_association_arn"], errors.New("not destroyed"))
+			return fmt.Errorf("NetworkFirewall Container Association %s still exists", rs.Primary.Attributes["container_association_arn"])
 		}
 
 		return nil
