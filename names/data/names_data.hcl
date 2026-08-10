@@ -5093,6 +5093,29 @@ service "lambda" {
   brand                    = "AWS"
 }
 
+service "lambdamicrovms" {
+  sdk {
+    id            = "Lambda Microvms"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaMicrovms"
+    human_friendly      = "Lambda MicroVMs"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMicrovms"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdamicrovms_"
+  }
+
+  doc_prefix = ["lambdamicrovms_"]
+  brand      = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
@@ -6306,7 +6329,7 @@ service "opensearch" {
 
   provider_package_correct = "opensearch"
   doc_prefix               = ["opensearch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opensearchserverless" {
@@ -6330,7 +6353,7 @@ service "opensearchserverless" {
 
   provider_package_correct = "opensearchserverless"
   doc_prefix               = ["opensearchserverless_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "osis" {
@@ -6342,7 +6365,7 @@ service "osis" {
   names {
     aliases             = ["opensearchingestion"]
     provider_name_upper = "OpenSearchIngestion"
-    human_friendly      = "OpenSearch Ingestion"
+    human_friendly      = "OpenSearch Ingestion (OSIS)"
   }
 
   endpoint_info {
@@ -6355,7 +6378,7 @@ service "osis" {
 
   provider_package_correct = "osis"
   doc_prefix               = ["osis_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opsworks" {
@@ -7206,6 +7229,35 @@ service "resiliencehub" {
 
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
+  brand                    = "AWS"
+}
+
+service "resiliencehubv2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "resilience-hub-v2"
+    aws_cli_v2_command_no_dashes = "resiliencehubv2"
+  }
+
+  sdk {
+    id            = "resiliencehubv2"
+    arn_namespace = "resiliencehub"
+  }
+
+  names {
+    provider_name_upper = "ResilienceHubV2"
+    human_friendly      = "Resilience Hub V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPolicies"
+  }
+
+  resource_prefix {
+    correct = "aws_resiliencehubv2_"
+  }
+
+  provider_package_correct = "resiliencehubv2"
+  doc_prefix               = ["resiliencehubv2_"]
   brand                    = "AWS"
 }
 
@@ -8143,6 +8195,30 @@ service "servicequotas" {
 
   provider_package_correct = "servicequotas"
   doc_prefix               = ["servicequotas_"]
+}
+
+service "mailmanager" {
+  sdk {
+    id            = "MailManager"
+    arn_namespace = "ses"
+  }
+
+  names {
+    provider_name_upper = "MailManager"
+    human_friendly      = "SES Mail Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIngressPoints"
+  }
+
+  resource_prefix {
+    correct = "aws_mailmanager_"
+  }
+
+  provider_package_correct = "mailmanager"
+  doc_prefix               = ["mailmanager_"]
+  brand                    = "Amazon"
 }
 
 service "ses" {

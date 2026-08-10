@@ -27,8 +27,8 @@ data "aws_odb_db_server" "example" {
 
 The following arguments are required:
 
-* `cloud_exadata_infrastructure_id` - (Required) The unique identifier of the cloud vm cluster.
-* `id` - (Required) The unique identifier of db node associated with vm cluster.
+* `cloud_exadata_infrastructure_id` - (Required) Unique identifier of the cloud vm cluster.
+* `id` - (Required) Unique identifier of db node associated with vm cluster.
 
 The following arguments are optional:
 
@@ -38,22 +38,22 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `autonomous_virtual_machine_ids` - The list of unique identifiers for the Autonomous VMs associated with this database server.
-* `autonomous_vm_cluster_ids` - The OCID of the autonomous VM clusters that are associated with the database server.
-* `compute_model` - The compute model of the database server.
-* `status` - The status of the database server.
+* `autonomous_virtual_machine_ids` - List of unique identifiers for the Autonomous VMs associated with this database server.
+* `autonomous_vm_cluster_ids` - OCID of the autonomous VM clusters that are associated with the database server.
+* `compute_model` - Compute model of the database server.
+* `cpu_core_count` - Number of CPU cores enabled on the database server.
+* `created_at` - Date and time when the database server was created.
+* `db_node_storage_size_in_gbs` - Allocated local node storage in GBs on the database server.
+* `db_server_patching_details` - Scheduling details for the quarterly maintenance window. Patching and system updates take place during the maintenance window.
+* `display_name` - Display name of the database server.
+* `exadata_infrastructure_id` - Exadata infrastructure ID of the database server.
+* `max_cpu_count` - Total number of CPU cores available.
+* `max_db_node_storage_in_gbs` - Total local node storage available in GBs.
+* `max_memory_in_gbs` - Total memory available in GBs.
+* `memory_size_in_gbs` - Allocated memory in GBs on the database server.
+* `oci_resource_anchor_name` - Name of the OCI resource anchor.
+* `ocid` - OCID of the database server to retrieve information about.
+* `shape` - Shape of the database server. The shape determines the amount of CPU, storage, and memory resources available.
+* `status` - Status of the database server.
 * `status_reason` - Additional information about the current status of the database server.
-* `cpu_core_count` - The number of CPU cores enabled on the database server.
-* `db_node_storage_size_in_gbs` - The allocated local node storage in GBs on the database server.
-* `db_server_patching_details` - The scheduling details for the quarterly maintenance window. Patching and system updates take place during the maintenance window.
-* `display_name` - The display name of the database server.
-* `exadata_infrastructure_id` - The exadata infrastructure ID of the database server.
-* `ocid` - The OCID of the database server to retrieve information about.
-* `oci_resource_anchor_name` - The name of the OCI resource anchor.
-* `max_cpu_count` - The total number of CPU cores available.
-* `max_db_node_storage_in_gbs` - The total local node storage available in GBs.
-* `max_memory_in_gbs` - The total memory available in GBs.
-* `memory_size_in_gbs` - The allocated memory in GBs on the database server.
-* `shape` - The shape of the database server. The shape determines the amount of CPU, storage, and memory resources available.
-* `created_at` - The date and time when the database server was created.
-* `vm_cluster_ids` - The OCID of the VM clusters that are associated with the database server.
+* `vm_cluster_ids` - OCID of the VM clusters that are associated with the database server.

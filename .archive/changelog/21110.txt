@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_cloudcontrolapi_resource
-```
-
-```release-note:new-data-source
-aws_cloudcontrolapi_resource
-```

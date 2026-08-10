@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_bedrockagentcore_policy
-```
-
-```release-note:new-list-resource
-aws_bedrockagentcore_policy
-```

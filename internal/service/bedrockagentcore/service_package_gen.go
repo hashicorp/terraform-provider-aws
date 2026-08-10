@@ -65,6 +65,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newBrowserProfileResource,
+			TypeName: "aws_bedrockagentcore_browser_profile",
+			Name:     "Browser Profile",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "profile_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("profile_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newCodeInterpreterResource,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",
@@ -96,6 +109,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "gateway_arn",
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newGatewayRuleResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayRuleImportID{},
+			},
 		},
 		{
 			Factory:  newGatewayTargetResource,
@@ -181,6 +208,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newRegistryResource,
+			TypeName: "aws_bedrockagentcore_registry",
+			Name:     "Registry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_bedrockagentcore_resource_policy",
 			Name:     "Resource Policy",
@@ -208,6 +245,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newBrowserProfileResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_browser_profile",
+			Name:     "Browser Profile",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "profile_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("profile_id", true)),
+		},
+		{
 			Factory:  newEvaluatorResourceAsListResource,
 			TypeName: "aws_bedrockagentcore_evaluator",
 			Name:     "Evaluator",
@@ -217,6 +264,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region: inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("evaluator_id", true),
 				inttypes.WithIdentityDuplicateAttrs("evaluator_id")),
+		},
+		{
+			Factory:  newGatewayRuleResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_gateway_rule",
+			Name:     "Gateway Rule",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("rule_id", true),
+			}),
 		},
 		{
 			Factory:  newHarnessResourceAsListResource,
@@ -257,6 +314,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("policy_engine_id", true)),
+		},
+		{
+			Factory:  newRegistryResourceAsListResource,
+			TypeName: "aws_bedrockagentcore_registry",
+			Name:     "Registry",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("registry_id", true)),
 		},
 		{
 			Factory:  newResourcePolicyResourceAsListResource,

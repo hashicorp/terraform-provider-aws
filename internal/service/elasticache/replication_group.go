@@ -101,6 +101,21 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					DiffSuppressFunc: func(_, old, _ string, d *schema.ResourceData) bool {
+						// For members of a global replication group, automatic_failover_enabled
+						// is controlled by the global replication group. Suppress diffs on
+						// existing members to avoid persistent plan churn and apply errors.
+						//
+						// Detect "create" via old=="" rather than d.IsNewResource() because
+						// IsNewResource is only set during Apply (the CRUD lifecycle) and is
+						// always false here, including during plan expansion when a previously
+						// unknown global_replication_group_id reference resolves.
+						if old == "" {
+							return false
+						}
+						v, ok := d.GetOk("global_replication_group_id")
+						return ok && v.(string) != ""
+					},
 				},
 				"cluster_enabled": {
 					Type:     schema.TypeBool,
@@ -895,12 +910,105 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
+		if err := applyReplicationGroupPendingModifications(d, rgp, &c); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): applying pending modifications: %s", d.Id(), err)
+		}
+
 		if c.AuthTokenEnabled != nil && !aws.ToBool(c.AuthTokenEnabled) {
-			d.Set("auth_token", nil)
+			// Do not clear auth_token if a pending auth token change is in progress
+			// (SETTING or ROTATING), as the token is being modified and will be applied
+			// during the next maintenance window.
+			if c.PendingModifiedValues == nil || c.PendingModifiedValues.AuthTokenStatus == "" {
+				d.Set("auth_token", nil)
+			}
 		}
 	}
 
 	return diags
+}
+
+func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awstypes.ReplicationGroup, c *awstypes.CacheCluster) error {
+	if c.PendingModifiedValues != nil {
+		nodeType := aws.ToString(c.PendingModifiedValues.CacheNodeType)
+		if nodeType != "" {
+			d.Set("node_type", nodeType)
+		}
+
+		if c.PendingModifiedValues.EngineVersion != nil {
+			switch aws.ToString(c.Engine) {
+			case engineRedis:
+				if err := setEngineVersionRedis(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			case engineValkey:
+				if err := setEngineVersionValkey(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			}
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(c.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", c.PendingModifiedValues.TransitEncryptionMode)
+		}
+	}
+
+	if rgp.PendingModifiedValues != nil {
+		if rgp.PendingModifiedValues.AutomaticFailoverStatus != "" {
+			switch rgp.PendingModifiedValues.AutomaticFailoverStatus {
+			case awstypes.PendingAutomaticFailoverStatusEnabled:
+				d.Set("automatic_failover_enabled", true)
+			case awstypes.PendingAutomaticFailoverStatusDisabled:
+				d.Set("automatic_failover_enabled", false)
+			}
+		}
+
+		if rgp.PendingModifiedValues.ClusterMode != "" {
+			d.Set("cluster_mode", rgp.PendingModifiedValues.ClusterMode)
+		}
+
+		// transit_encryption_enabled and transit_encryption_mode are written up to
+		// three times, and this ordering is intentional: first from the live cache
+		// cluster values in the Read function, then from the cache cluster's pending
+		// values above, and finally from the replication group's pending values here.
+		// The replication group-level pending values are authoritative, so they are
+		// applied last (last write wins). Do not reorder these writes.
+		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", rgp.PendingModifiedValues.TransitEncryptionMode)
+		}
+
+		// user_group_ids pending changes are expressed as add/remove deltas against
+		// the live UserGroupIds (see UserGroupsUpdateStatus), not as a full target
+		// set. Reconstruct the resulting set so state matches configuration while the
+		// change is applied during the next maintenance window.
+		if ug := rgp.PendingModifiedValues.UserGroups; ug != nil {
+			remove := make(map[string]struct{}, len(ug.UserGroupIdsToRemove))
+			for _, id := range ug.UserGroupIdsToRemove {
+				remove[id] = struct{}{}
+			}
+
+			userGroupIDs := make([]string, 0, len(rgp.UserGroupIds)+len(ug.UserGroupIdsToAdd))
+			for _, id := range rgp.UserGroupIds {
+				if _, ok := remove[id]; !ok {
+					userGroupIDs = append(userGroupIDs, id)
+				}
+			}
+			userGroupIDs = append(userGroupIDs, ug.UserGroupIdsToAdd...)
+
+			d.Set("user_group_ids", userGroupIDs)
+		}
+	}
+
+	return nil
 }
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -950,8 +1058,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("automatic_failover_enabled") {
-			input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-			requestUpdate = true
+			if _, isMember := d.GetOk("global_replication_group_id"); !isMember {
+				input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {

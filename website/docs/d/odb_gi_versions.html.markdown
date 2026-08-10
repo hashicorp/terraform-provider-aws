@@ -32,8 +32,8 @@ data "aws_odb_gi_versions" "example" {
 
 The following arguments are optional:
 
-* `shape` - (Optional) The system shape.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `shape` - (Optional) System shape.
 
 ## Attribute Reference
 
@@ -43,4 +43,4 @@ This data source exports the following attributes in addition to the arguments a
 
 ### gi_versions
 
-* `version` - The GI software version.
+* `version` - GI software version.
