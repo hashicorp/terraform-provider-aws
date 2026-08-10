@@ -327,10 +327,14 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					// With all three flags false the API returns interactiveConfiguration:
+					// null, and Read stores []any{flattenInteractiveConfiguration(nil)} —
+					// a one-element list holding null — so the count is 1 but none of the
+					// attributes exist in state.
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.session_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.studio_enabled"),
 				),
 			},
 		},
@@ -773,6 +777,13 @@ resource "aws_emrserverless_application" "test" {
     livy_endpoint_enabled = %[2]t
     session_enabled       = %[3]t
     studio_enabled        = %[4]t
+  }
+  # From emr-7.13.0 the API always returns a schedulerConfiguration, and
+  # scheduler_configuration is Optional without Computed at the block level, so
+  # declaring the API defaults is what keeps the post-apply plan empty.
+  scheduler_configuration {
+    max_concurrent_runs   = 15
+    queue_timeout_minutes = 360
   }
 }
 `, rName, livyEndpointEnabled, sessionEnabled, studioEnabled)
