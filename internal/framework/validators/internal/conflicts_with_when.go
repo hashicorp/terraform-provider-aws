@@ -18,41 +18,41 @@ var (
 	_ validator.String = (*conflictsWithWhenValidator)(nil)
 )
 
-func ConflictsWithWhenValidator(when When, expressions ...path.Expression) conflictsWithWhenValidator {
-	return conflictsWithWhenValidator{whenValidator{
+func ConflictsWithWhenValidator(when when, expressions ...path.Expression) conflictsWithWhenValidator {
+	return conflictsWithWhenValidator{conditionalPerMatchedPathValidator{
 		when:            when,
 		pathExpressions: expressions,
 	}}
 }
 
 type conflictsWithWhenValidator struct {
-	whenValidator
+	conditionalPerMatchedPathValidator
 }
 
 func (v conflictsWithWhenValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v conflictsWithWhenValidator) MarkdownDescription(ctx context.Context) string {
+func (v conflictsWithWhenValidator) MarkdownDescription(context.Context) string {
 	return fmt.Sprintf("Ensure that when this attribute value matches the condition, the following are not also configured: %[1]q", v.pathExpressions)
 }
 
 func (v conflictsWithWhenValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	validateRequest := ValidatorRequest{
+	validateRequest := validatorRequest{
 		Config:         request.Config,
 		ConfigValue:    request.ConfigValue,
 		Path:           request.Path,
 		PathExpression: request.PathExpression,
 	}
-	var validateResponse ValidatorResponse
+	var validateResponse validatorResponse
 
 	v.validate(ctx, validateRequest, &validateResponse)
 
 	response.Diagnostics.Append(validateResponse.Diagnostics...)
 }
 
-func (v conflictsWithWhenValidator) validate(ctx context.Context, request ValidatorRequest, response *ValidatorResponse) {
-	v.whenValidator.validate(ctx, request, response, v.eval)
+func (v conflictsWithWhenValidator) validate(ctx context.Context, request validatorRequest, response *validatorResponse) {
+	v.conditionalPerMatchedPathValidator.validate(ctx, request, response, v.eval)
 }
 
 func (v conflictsWithWhenValidator) eval(_ context.Context, requestPath path.Path, matchedPath path.Path, matchedValue attr.Value) diag.Diagnostics {

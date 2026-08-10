@@ -9,4 +9,7 @@ var (
 
 	FindRuleSetByID = findRuleSetByID
 	ResourceRuleSet = newRuleSetResource
+
+	FindIngressPointByID = findIngressPointByID
+	ResourceIngressPoint = newIngressPointResource
 )
