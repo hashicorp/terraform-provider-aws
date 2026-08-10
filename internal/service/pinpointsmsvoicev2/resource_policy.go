@@ -38,7 +38,6 @@ const (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2;pinpointsmsvoicev2.GetResourcePolicyOutput")
 // @Testing(generator=false)
-// @Testing(tagsTest=false)
 // @Testing(importIgnore="policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourcePolicyResource{}, nil
