@@ -12,7 +12,23 @@ Terraform resource for managing odb Network resource in AWS for Oracle Database@
 
 ## Example Usage
 
-### Basic Usage
+### Disabled S3 and Zero-ETL Access
+
+```terraform
+resource "aws_odb_network" "example" {
+  display_name         = "odb-my-net"
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+  tags = {
+    "env" = "dev"
+  }
+}
+```
+
+### Enabled S3 and Zero-ETL Access
 
 ```terraform
 resource "aws_odb_network" "example" {
