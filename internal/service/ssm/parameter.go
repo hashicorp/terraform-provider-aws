@@ -41,6 +41,7 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
 // @CustomImport
+// @Testing(identityTestCases="basic;leadingslash;path")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
