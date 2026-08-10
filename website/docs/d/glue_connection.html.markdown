@@ -46,8 +46,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `authentication_configuration` Block
 
-The `authentication_configuration` block exports the following attributes:
-
 * `authentication_type` - Type of authentication used for the connection.
 * `basic_authentication_credentials` - Basic authentication credentials. See [`basic_authentication_credentials` Block](#basic_authentication_credentials-block) for details.
 * `custom_authentication_credentials` - Map of credentials used when the authentication type is custom authentication.
@@ -57,14 +55,10 @@ The `authentication_configuration` block exports the following attributes:
 
 ### `basic_authentication_credentials` Block
 
-The `basic_authentication_credentials` block exports the following attributes:
-
 * `password` - Password used for basic authentication.
 * `username` - Username used for basic authentication.
 
 ### `oauth2_properties` Block
-
-The `oauth2_properties` block exports the following attributes:
 
 * `authorization_code_properties` - Authorization code properties. See [`authorization_code_properties` Block](#authorization_code_properties-block) for details.
 * `oauth2_client_application` - OAuth2 client application. See [`oauth2_client_application` Block](#oauth2_client_application-block) for details.
@@ -75,21 +69,15 @@ The `oauth2_properties` block exports the following attributes:
 
 ### `authorization_code_properties` Block
 
-The `authorization_code_properties` block exports the following attributes:
-
 * `authorization_code` - Authorization code used to obtain an access token.
 * `redirect_uri` - Redirect URI used in the authorization code request.
 
 ### `oauth2_client_application` Block
 
-The `oauth2_client_application` block exports the following attributes:
-
 * `aws_managed_client_application_reference` - Reference to the AWS managed client application.
 * `user_managed_client_application_client_id` - Client ID of the user-managed client application.
 
 ### `oauth2_credentials` Block
-
-The `oauth2_credentials` block exports the following attributes:
 
 * `access_token` - Access token used for OAuth2 authentication.
 * `jwt_token` - JWT token used for OAuth2 authentication.
@@ -97,8 +85,6 @@ The `oauth2_credentials` block exports the following attributes:
 * `user_managed_client_application_client_secret` - Client secret of the user-managed client application.
 
 ### `physical_connection_requirements` Block
-
-The `physical_connection_requirements` block exports the following attributes:
 
 * `availability_zone` - Availability Zone used by the connection.
 * `security_group_id_list` - List of security group IDs used by the connection.
