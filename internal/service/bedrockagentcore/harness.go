@@ -115,6 +115,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"max_tokens": schema.Int32Attribute{
 				Optional: true,
 			},
+			"memory_actual":   framework.ResourceComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, unknownWhenValueChanges{path: path.Root("memory")}),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"timeout_seconds": schema.Int32Attribute{
@@ -765,34 +766,39 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 		return diags
 	}
 
-	if populateMemory {
-		conn := r.Meta().BedrockAgentCoreClient(ctx)
-		diags.Append(r.flattenMemory(ctx, conn, harness, data)...)
-	}
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
 
 	return diags
 }
 
-func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
+func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
-	if diags.HasError() {
-		return diags
-	}
-
+	// Always flatten into memory (AutoFlex handles this via the Flattener interface since noflatten was removed).
+	// Now enrich and build memory_actual.
 	memoryBlock, d := data.Memory.ToPtr(ctx)
 	diags.Append(d...)
-	if diags.HasError() || memoryBlock == nil {
-		return diags
-	}
-
-	diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
+	if memoryBlock != nil {
+		diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
+	}
+
+	// Always populate memory_actual from the current memory state.
+	data.MemoryActual = data.Memory
+
+	// If memory was not configured by the user, null it out.
+	if !populateMemory {
+		data.Memory = fwtypes.NewListNestedObjectValueOfNull[harnessMemoryConfigurationModel](ctx)
+	}
 
 	return diags
 }
@@ -912,7 +918,8 @@ type harnessResourceModel struct {
 	HarnessName             types.String                                                         `tfsdk:"harness_name"`
 	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
 	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
-	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory" autoflex:",noflatten"`
+	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
+	MemoryActual            fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory_actual" autoflex:"-"`
 	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]      `tfsdk:"model"`
 	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                   `tfsdk:"skill"`
 	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]      `tfsdk:"system_prompt"`
@@ -1676,4 +1683,37 @@ func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Con
 	}
 
 	return diags
+}
+
+// memory_actual plan modifier.
+
+type unknownWhenValueChanges struct {
+	path path.Path
+}
+
+func (m unknownWhenValueChanges) Description(_ context.Context) string {
+	return "Uses state for unknown when the value at the given path is not changing."
+}
+
+func (m unknownWhenValueChanges) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unknownWhenValueChanges) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+
+	var configValue, stateValue attr.Value
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, m.path, &configValue)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, m.path, &stateValue)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !configValue.Equal(stateValue) {
+		return
+	}
+
+	resp.PlanValue = req.StateValue
 }
