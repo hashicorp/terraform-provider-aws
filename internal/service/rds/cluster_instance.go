@@ -484,14 +484,20 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
-			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+			enabled := d.Get("performance_insights_enabled").(bool)
+			input.EnablePerformanceInsights = aws.Bool(enabled)
 
-			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-				input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
-			}
+			// The API rejects the Performance Insights KMS key and retention period unless
+			// Performance Insights is enabled. Both are Computed, so they retain their prior
+			// values when Performance Insights is disabled and must be omitted here.
+			if enabled {
+				if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+					input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+				}
 
-			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-				input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
+				if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+					input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
+				}
 			}
 		}
 
