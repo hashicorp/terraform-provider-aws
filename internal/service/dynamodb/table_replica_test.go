@@ -651,6 +651,39 @@ resource "aws_dynamodb_table_replica" "test" {
 `, rName, key))
 }
 
+func testAccTableReplicaConfig_consistencyMode(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "awsalternate"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.test.arn
+  consistency_mode = "STRONG"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccTableReplicaConfig_deletionProtection(rName string, deletionProtection bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),

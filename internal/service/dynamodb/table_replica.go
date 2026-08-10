@@ -76,6 +76,13 @@ func resourceTableReplica() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
+				"consistency_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.MultiRegionConsistencyEventual,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
+				},
 				names.AttrKMSKeyARN: { // through main table
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -144,6 +151,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
 			Create: replicaInput,
 		}},
+	}
+
+	if v, ok := d.GetOk("consistency_mode"); ok && awstypes.MultiRegionConsistency(v.(string)) == awstypes.MultiRegionConsistencyStrong {
+		input.MultiRegionConsistency = awstypes.MultiRegionConsistencyStrong
 	}
 
 	err = tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func(ctx context.Context) *tfresource.RetryError {
@@ -256,6 +267,12 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrKMSKeyARN, nil)
 	} else {
 		d.Set(names.AttrKMSKeyARN, replica.KMSMasterKeyId)
+	}
+
+	if table.MultiRegionConsistency != "" {
+		d.Set("consistency_mode", string(table.MultiRegionConsistency))
+	} else {
+		d.Set("consistency_mode", string(awstypes.MultiRegionConsistencyEventual))
 	}
 
 	if replica.ReplicaTableClassSummary != nil {
