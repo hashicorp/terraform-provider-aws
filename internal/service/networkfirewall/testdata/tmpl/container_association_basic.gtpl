@@ -1,8 +1,3 @@
-resource "aws_ecs_cluster" "test" {
-{{- template "region" }}
-  name = var.rName
-}
-
 resource "aws_networkfirewall_container_association" "test" {
 {{- template "region" }}
   container_association_name = var.rName
@@ -11,5 +6,11 @@ resource "aws_networkfirewall_container_association" "test" {
   container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
+
 {{- template "tags" . }}
+}
+
+resource "aws_ecs_cluster" "test" {
+{{- template "region" }}
+  name = var.rName
 }
