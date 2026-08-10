@@ -99,7 +99,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_networkfirewall_container_association.example
   identity = {
-    "container_association_arn" = "arn:aws:network-firewall:us-west-2:123456789012:container-association/example"
+    container_association_arn = "arn:aws:network-firewall:us-west-2:123456789012:container-association/example"
   }
 }
 
