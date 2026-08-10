@@ -31,7 +31,8 @@ func (d *policyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: fwschema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"availability_slo": framework.DataSourceComputedListOfObjectAttribute[availabilitySLOModel](ctx),
 			"data_recovery":    framework.DataSourceComputedListOfObjectAttribute[dataRecoveryTargetsModel](ctx),
@@ -67,7 +68,7 @@ func (d *policyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, policy, data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, policy, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -82,10 +83,10 @@ type policyDataSourceModel struct {
 	AvailabilitySlo fwtypes.ListNestedObjectValueOf[availabilitySLOModel]     `tfsdk:"availability_slo"`
 	DataRecovery    fwtypes.ListNestedObjectValueOf[dataRecoveryTargetsModel] `tfsdk:"data_recovery"`
 	Description     types.String                                              `tfsdk:"description"`
-	KMSKeyID        fwtypes.ARN                                               `tfsdk:"kms_key_id"`
+	KMSKeyID        types.String                                              `tfsdk:"kms_key_id"`
 	MultiAz         fwtypes.ListNestedObjectValueOf[multiAZTargetsModel]      `tfsdk:"multi_az"`
 	MultiRegion     fwtypes.ListNestedObjectValueOf[multiRegionTargetsModel]  `tfsdk:"multi_region"`
 	Name            types.String                                              `tfsdk:"name"`
-	PolicyARN       types.String                                              `tfsdk:"arn"`
+	PolicyARN       fwtypes.ARN                                               `tfsdk:"arn"`
 	Tags            tftags.Map                                                `tfsdk:"tags"`
 }
