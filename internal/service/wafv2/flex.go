@@ -553,10 +553,11 @@ func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.ByteMatchStatement{
-		FieldToMatch:         expandFieldToMatch(m["field_to_match"].([]any)),
-		PositionalConstraint: awstypes.PositionalConstraint(m["positional_constraint"].(string)),
-		SearchString:         []byte(m["search_string"].(string)),
-		TextTransformations:  expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PositionalConstraint:        awstypes.PositionalConstraint(m["positional_constraint"].(string)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		SearchString:                []byte(m["search_string"].(string)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -818,6 +819,30 @@ func expandURIFragment(tfList []any) *awstypes.UriFragment {
 	return apiObject
 }
 
+func expandPreParseTextTransformations(l []any) []awstypes.PreParseTextTransformation {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]awstypes.PreParseTextTransformation, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandPreParseTextTransformation(rule.(map[string]any)))
+	}
+
+	return rules
+}
+
+func expandPreParseTextTransformation(m map[string]any) awstypes.PreParseTextTransformation {
+	return awstypes.PreParseTextTransformation{
+		Priority: int32(m[names.AttrPriority].(int)),
+		Type:     awstypes.PreParseTextTransformationType(m[names.AttrType].(string)),
+	}
+}
+
 func expandTextTransformations(l []any) []awstypes.TextTransformation {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -932,9 +957,10 @@ func expandRegexMatchStatement(l []any) *awstypes.RegexMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.RegexMatchStatement{
-		RegexString:         aws.String(m["regex_string"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		RegexString:                 aws.String(m["regex_string"].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -946,9 +972,10 @@ func expandRegexPatternSetReferenceStatement(l []any) *awstypes.RegexPatternSetR
 	m := l[0].(map[string]any)
 
 	return &awstypes.RegexPatternSetReferenceStatement{
-		ARN:                 aws.String(m[names.AttrARN].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		ARN:                         aws.String(m[names.AttrARN].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -960,10 +987,11 @@ func expandSizeConstraintStatement(l []any) *awstypes.SizeConstraintStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.SizeConstraintStatement{
-		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		Size:                int64(m[names.AttrSize].(int)),
-		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		ComparisonOperator:          awstypes.ComparisonOperator(m["comparison_operator"].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		Size:                        int64(m[names.AttrSize].(int)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -975,9 +1003,10 @@ func expandSQLiMatchStatement(l []any) *awstypes.SqliMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.SqliMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		SensitivityLevel:    awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
-		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		SensitivityLevel:            awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -989,8 +1018,9 @@ func expandXSSMatchStatement(l []any) *awstypes.XssMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.XssMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -2417,10 +2447,11 @@ func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":        flattenFieldToMatch(b.FieldToMatch),
-		"positional_constraint": b.PositionalConstraint,
-		"search_string":         string(b.SearchString),
-		attrTextTransformation:  flattenTextTransformations(b.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(b.FieldToMatch),
+		"positional_constraint":        b.PositionalConstraint,
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(b.PreParseTextTransformations),
+		"search_string":                string(b.SearchString),
+		attrTextTransformation:         flattenTextTransformations(b.TextTransformations),
 	}
 
 	return []any{m}
@@ -2654,6 +2685,17 @@ func flattenURIFragment(apiObject *awstypes.UriFragment) any {
 	return []any{tfMap}
 }
 
+func flattenPreParseTextTransformations(l []awstypes.PreParseTextTransformation) []any {
+	out := make([]any, len(l))
+	for i, t := range l {
+		m := make(map[string]any)
+		m[names.AttrPriority] = t.Priority
+		m[names.AttrType] = t.Type
+		out[i] = m
+	}
+	return out
+}
+
 func flattenTextTransformations(l []awstypes.TextTransformation) []any {
 	out := make([]any, len(l))
 	for i, t := range l {
@@ -2734,9 +2776,10 @@ func flattenRegexMatchStatement(r *awstypes.RegexMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"regex_string":         aws.ToString(r.RegexString),
-		"field_to_match":       flattenFieldToMatch(r.FieldToMatch),
-		attrTextTransformation: flattenTextTransformations(r.TextTransformations),
+		"regex_string":                 aws.ToString(r.RegexString),
+		"field_to_match":               flattenFieldToMatch(r.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(r.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(r.TextTransformations),
 	}
 
 	return []any{m}
@@ -2748,9 +2791,10 @@ func flattenRegexPatternSetReferenceStatement(r *awstypes.RegexPatternSetReferen
 	}
 
 	m := map[string]any{
-		names.AttrARN:          aws.ToString(r.ARN),
-		"field_to_match":       flattenFieldToMatch(r.FieldToMatch),
-		attrTextTransformation: flattenTextTransformations(r.TextTransformations),
+		names.AttrARN:                  aws.ToString(r.ARN),
+		"field_to_match":               flattenFieldToMatch(r.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(r.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(r.TextTransformations),
 	}
 
 	return []any{m}
@@ -2762,10 +2806,11 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) any {
 	}
 
 	m := map[string]any{
-		"comparison_operator":  s.ComparisonOperator,
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
-		names.AttrSize:         s.Size,
-		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
+		"comparison_operator":          s.ComparisonOperator,
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		names.AttrSize:                 s.Size,
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
@@ -2777,9 +2822,10 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
-		"sensitivity_level":    s.SensitivityLevel,
-		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		"sensitivity_level":            s.SensitivityLevel,
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
@@ -2791,8 +2837,9 @@ func flattenXSSMatchStatement(s *awstypes.XssMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":       flattenFieldToMatch(s.FieldToMatch),
-		attrTextTransformation: flattenTextTransformations(s.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
