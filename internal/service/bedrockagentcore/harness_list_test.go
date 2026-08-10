@@ -140,7 +140,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 								"disabled":                       knownvalue.ListSizeExact(0),
 								"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
 									knownvalue.ObjectExact(map[string]knownvalue.Check{
-										names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_0_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+										names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/`+rName+`_0-[a-zA-Z0-9]{10}`)),
 										"encryption_key_arn":    knownvalue.Null(),
 										"event_expiry_duration": knownvalue.Int32Exact(30),
 										"strategies": knownvalue.SetExact([]knownvalue.Check{
