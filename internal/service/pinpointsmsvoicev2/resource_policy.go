@@ -147,7 +147,16 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	output, err := conn.PutResourcePolicy(ctx, &input)
+	if _, err := conn.PutResourcePolicy(ctx, &input); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.ValueString())
+		return
+	}
+
+	// Post-Put readback tolerates AWS eventual-consistency propagation and
+	// captures the canonical AWS form of the policy for state.
+	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*pinpointsmsvoicev2.GetResourcePolicyOutput, error) {
+		return findResourcePolicyByARN(ctx, conn, plan.ResourceARN.ValueString())
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.ValueString())
 		return
