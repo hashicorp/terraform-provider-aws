@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_organizations_organizational_unit
-```

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2003,9 +2002,8 @@ func findServices(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServ
 	output, err := conn.DescribeServices(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -2020,9 +2018,8 @@ func findServices(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServ
 	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
 	for _, v := range output.Failures {
 		if aws.ToString(v.Reason) == failureReasonMissing {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   failureError(&v),
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: failureError(&v),
 			}
 		}
 	}
@@ -2106,7 +2103,7 @@ func findServiceByTwoPartKeyWaitForActive(ctx context.Context, conn *ecs.Client,
 	})
 
 	if errs.IsA[*expectServiceActiveError](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -2131,8 +2128,8 @@ var deploymentTerminalStates = enum.Slice(
 	awstypes.ServiceDeploymentStatusRollbackSuccessful,
 )
 
-func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusService(conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
 		if retry.NotFound(err) {
@@ -2147,13 +2144,16 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) sdkretry.StateRefreshFunc {
+// parentCtx is the parent waitServiceStable context. It must not be the per-poll
+// Refresh context: internal/retry wraps each Refresh in WithTimeout + defer
+// cancel(), and sigint_rollback treats context cancel as user SIGINT.
+func statusServiceWaitForStable(parentCtx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
 
-	return func() (any, string, error) {
-		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
+	return func(ctx context.Context) (any, string, error) {
+		outputRaw, serviceStatus, err := statusService(conn, serviceName, clusterNameOrARN)(ctx)
 		if err != nil {
 			return nil, "", err
 		}
@@ -2194,7 +2194,7 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
-				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
+				go rollbackRoutine(parentCtx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
 			}
 
@@ -2292,9 +2292,8 @@ func findServiceDeployments(ctx context.Context, conn *ecs.Client, input *ecs.De
 	output, err := conn.DescribeServiceDeployments(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -2323,9 +2322,8 @@ func findServiceDeploymentBriefs(ctx context.Context, conn *ecs.Client, input *e
 	})
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -2348,7 +2346,7 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 
 	select {
 	case <-ctx.Done():
-		log.Printf("[INFO] SIGINT detected. Initiating rollback for deployment: %s", *primaryDeploymentArn)
+		log.Printf("[INFO] Wait context cancelled. Checking whether deployment %s should be rolled back", *primaryDeploymentArn)
 		ctx, cancel := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
 		defer cancel()
 
@@ -2364,12 +2362,17 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 }
 
 func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
-	// Check if deployment is already in terminal state, meaning rollback is not needed
-	deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
+	// Check raw AWS deployment status. findDeploymentStatus maps SUCCESSFUL to
+	// the non-AWS sentinel "tfSTABLE", so it cannot be used with deploymentTerminalStates.
+	status, err := findRawServiceDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 	if err != nil {
 		return err
 	}
-	if slices.Contains(deploymentTerminalStates, deploymentStatus) {
+	// Empty status means Describe returned no deployment; nothing to roll back.
+	if status == "" || slices.Contains(deploymentTerminalStates, status) {
+		if status != "" {
+			log.Printf("[INFO] Deployment %s already terminal (%s); skipping rollback", *primaryDeploymentArn, status)
+		}
 		return nil
 	}
 
@@ -2388,8 +2391,25 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 	return waitForDeploymentTerminalStatus(ctx, conn, *primaryDeploymentArn)
 }
 
+func findRawServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentARN string) (string, error) {
+	input := ecs.DescribeServiceDeploymentsInput{
+		ServiceDeploymentArns: []string{deploymentARN},
+	}
+
+	output, err := findServiceDeployments(ctx, conn, &input)
+	if err != nil {
+		return "", err
+	}
+	if len(output) == 0 {
+		// Callers treat empty as "no deployment to act on".
+		return "", nil
+	}
+
+	return string(output[0].Status), nil
+}
+
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ServiceDeploymentStatusPending,
 			awstypes.ServiceDeploymentStatusInProgress,
@@ -2397,7 +2417,7 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 			awstypes.ServiceDeploymentStatusRollbackInProgress,
 		),
 		Target: deploymentTerminalStates,
-		Refresh: func() (any, string, error) {
+		Refresh: func(ctx context.Context) (any, string, error) {
 			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
 			return nil, status, err
 		},
@@ -2418,10 +2438,10 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 		waitGroup:              sync.WaitGroup{},
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime), // nosemgrep:ci.semgrep.pluginsdk.internal-retry-statechangeconf-refresh-remove-context
 		Timeout: timeout,
 	}
 
@@ -2441,10 +2461,10 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 // Does not return tags.
 func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
-		Refresh: statusService(ctx, conn, serviceName, clusterNameOrARN),
+		Refresh: statusService(conn, serviceName, clusterNameOrARN),
 		Timeout: timeout,
 	}
 
@@ -2459,10 +2479,10 @@ func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 // Does not return tags.
 func waitServiceInactive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
-		Refresh:    statusService(ctx, conn, serviceName, clusterNameOrARN),
+		Refresh:    statusService(conn, serviceName, clusterNameOrARN),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
@@ -3338,12 +3358,13 @@ func flattenServiceVolumeConfigurations(ctx context.Context, apiObjects []awstyp
 	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			names.AttrName: aws.ToString(apiObject.Name),
+		if apiObject.ManagedEBSVolume == nil {
+			continue
 		}
 
-		if v := apiObject.ManagedEBSVolume; v != nil {
-			tfMap["managed_ebs_volume"] = []any{flattenServiceManagedEBSVolumeConfiguration(ctx, v)}
+		tfMap := map[string]any{
+			names.AttrName:       aws.ToString(apiObject.Name),
+			"managed_ebs_volume": []any{flattenServiceManagedEBSVolumeConfiguration(ctx, apiObject.ManagedEBSVolume)},
 		}
 
 		tfList = append(tfList, tfMap)

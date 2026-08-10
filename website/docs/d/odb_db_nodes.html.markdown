@@ -26,7 +26,7 @@ data "aws_odb_db_nodes" "example" {
 
 The following arguments are required:
 
-* `cloud_vm_cluster_id` - (Required) The unique identifier of the cloud vm cluster.
+* `cloud_vm_cluster_id` - (Required) Unique identifier of the cloud vm cluster.
 
 The following arguments are optional:
 
@@ -36,33 +36,33 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `db_nodes` - The list of DB nodes along with their properties.
+* `db_nodes` - List of DB nodes along with their properties.
 
 ### db_nodes
 
 * `additional_details` - Additional information about the planned maintenance.
-* `backup_ip_id` - The Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
-* `backup_vnic_2_id` - The OCID of the second backup virtual network interface card (VNIC) for the DB node.
-* `backup_vnic_id` - The OCID of the backup VNIC for the DB node.
-* `cpu_core_count` - The number of CPU cores enabled on the DB node.
-* `created_at` - The date and time when the DB node was created.
-* `db_node_arn` - The Amazon Resource Name (ARN) of the DB node.
-* `db_node_id` - The unique identifier of the DB node.
-* `db_node_storage_size_in_gbs` - The amount of local node storage, in gigabytes (GB), that's allocated on the DB node.
-* `db_server_id` - The unique identifier of the database server that's associated with the DB node.
-* `db_system_id` - The OCID of the DB system.
-* `fault_domain` - The name of the fault domain where the DB node is located.
-* `host_ip_id` - The OCID of the host IP address that's associated with the DB node.
-* `hostname` - The host name for the DB node.
-* `maintenance_type` - The type of maintenance the DB node is undergoing.
-* `memory_size_in_gbs` - The amount of memory, in gigabytes (GB), that's allocated on the DB node.
-* `oci_resource_anchor_name` - The name of the OCI resource anchor for the DB node.
-* `ocid` - The OCID of the DB node.
-* `software_storage_size_in_gb` - The size of the block storage volume, in gigabytes (GB), that's allocated for the DB system. This attribute applies only for virtual machine DB systems.
-* `status` - The current status of the DB node.
+* `backup_ip_id` - Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
+* `backup_vnic_2_id` - OCID of the second backup virtual network interface card (VNIC) for the DB node.
+* `backup_vnic_id` - OCID of the backup VNIC for the DB node.
+* `cpu_core_count` - Number of CPU cores enabled on the DB node.
+* `created_at` - Date and time when the DB node was created.
+* `db_node_arn` - Amazon Resource Name (ARN) of the DB node.
+* `db_node_id` - Unique identifier of the DB node.
+* `db_node_storage_size_in_gbs` - Amount of local node storage, in gigabytes (GB), that's allocated on the DB node.
+* `db_server_id` - Unique identifier of the database server that's associated with the DB node.
+* `db_system_id` - OCID of the DB system.
+* `fault_domain` - Name of the fault domain where the DB node is located.
+* `host_ip_id` - OCID of the host IP address that's associated with the DB node.
+* `hostname` - Host name for the DB node.
+* `maintenance_type` - Type of maintenance the DB node is undergoing.
+* `memory_size_in_gbs` - Amount of memory, in gigabytes (GB), that's allocated on the DB node.
+* `oci_resource_anchor_name` - Name of the OCI resource anchor for the DB node.
+* `ocid` - OCID of the DB node.
+* `software_storage_size_in_gb` - Size of the block storage volume, in gigabytes (GB), that's allocated for the DB system. This attribute applies only for virtual machine DB systems.
+* `status` - Current status of the DB node.
 * `status_reason` - Additional information about the status of the DB node.
-* `time_maintenance_window_end` - The end date and time of the maintenance window.
-* `time_maintenance_window_start` - The start date and time of the maintenance window.
-* `total_cpu_core_count` - The total number of CPU cores reserved on the DB node.
-* `vnic_2_id` - The OCID of the second VNIC.
-* `vnic_id` - The OCID of the VNIC.
+* `time_maintenance_window_end` - End date and time of the maintenance window.
+* `time_maintenance_window_start` - Start date and time of the maintenance window.
+* `total_cpu_core_count` - Total number of CPU cores reserved on the DB node.
+* `vnic_2_id` - OCID of the second VNIC.
+* `vnic_id` - OCID of the VNIC.

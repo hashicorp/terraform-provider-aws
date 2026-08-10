@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_db_instance: Fix error modifying `allocated_storage` when `storage_type` is `"gp3"`
-```

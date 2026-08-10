@@ -48,7 +48,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourcePolicy,
+			Factory:  newPolicyResource,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -61,7 +61,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newResourceService,
+			Factory:  newServiceResource,
 			TypeName: "aws_resiliencehubv2_service",
 			Name:     "Service",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -74,7 +74,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newResourceSystem,
+			Factory:  newSystemResource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -92,7 +92,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  newResourcePolicyAsListResource,
+			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -102,7 +102,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
-			Factory:  newResourceServiceAsListResource,
+			Factory:  newServiceResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_service",
 			Name:     "Service",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -112,7 +112,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
-			Factory:  newResourceSystemAsListResource,
+			Factory:  newSystemResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

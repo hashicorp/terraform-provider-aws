@@ -39,10 +39,11 @@ func TestAccLogsAccountPolicy_basicSubscriptionFilter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAccountPolicyImportStateIDFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
 			},
 		},
 	})
@@ -99,10 +100,11 @@ func TestAccLogsAccountPolicy_basicDataProtection(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAccountPolicyImportStateIDFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
 			},
 		},
 	})
@@ -162,10 +164,11 @@ func TestAccLogsAccountPolicy_selectionCriteria(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAccountPolicyImportStateIDFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
 			},
 		},
 	})
@@ -180,7 +183,7 @@ func testAccCheckAccountPolicyExists(ctx context.Context, t *testing.T, n string
 
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		output, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, types.PolicyType(rs.Primary.Attributes["policy_type"]), rs.Primary.ID)
+		output, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy_name"], types.PolicyType(rs.Primary.Attributes["policy_type"]))
 
 		if err != nil {
 			return err
@@ -201,7 +204,7 @@ func testAccCheckAccountPolicyDestroy(ctx context.Context, t *testing.T) resourc
 				continue
 			}
 
-			_, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, types.PolicyType(rs.Primary.Attributes["policy_type"]), rs.Primary.ID)
+			_, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy_name"], types.PolicyType(rs.Primary.Attributes["policy_type"]))
 
 			if retry.NotFound(err) {
 				continue
@@ -219,18 +222,7 @@ func testAccCheckAccountPolicyDestroy(ctx context.Context, t *testing.T) resourc
 }
 
 func testAccAccountPolicyImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		policyName := rs.Primary.ID
-		policyType := rs.Primary.Attributes["policy_type"]
-		stateID := fmt.Sprintf("%s:%s", policyName, policyType)
-
-		return stateID, nil
-	}
+	return acctest.AttrsImportStateIdFunc(n, ":", "policy_name", "policy_type")
 }
 
 func testAccCheckAccountHasSubscriptionFilterPolicy(ctx context.Context, resourceName string, rName string) resource.TestCheckFunc {

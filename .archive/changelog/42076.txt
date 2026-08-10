@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_quicksight_data_set: Fix perpetual diff when `refresh_properties` is not configured
-```

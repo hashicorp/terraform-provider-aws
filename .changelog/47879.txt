@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpclattice_resource_gateway: Add `resource_config_dns_resolution` argument
-```

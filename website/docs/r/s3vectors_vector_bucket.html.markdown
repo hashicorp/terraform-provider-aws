@@ -58,10 +58,31 @@ The `encryption_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `creation_time` - Date and time when the vector bucket was created.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vector_bucket_arn` - ARN of the vector bucket.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3vectors_vector_bucket.example
+  identity = {
+    vector_bucket_arn = "arn:aws:s3vectors:us-west-2:123456789012:bucket/example-bucket"
+  }
+}
+
+resource "aws_s3vectors_vector_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `vector_bucket_arn` (String) ARN of the S3 Vectors Vector Bucket.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Vectors Vector Bucket using the `vector_bucket_arn`. For example:
 

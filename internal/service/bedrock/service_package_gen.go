@@ -7,6 +7,8 @@ package bedrock
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -41,6 +43,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newFoundationModelAgreementOffersDataSource,
+			TypeName: "aws_bedrock_foundation_model_agreement_offers",
+			Name:     "Foundation Model Agreement Offers",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newFoundationModelsDataSource,
 			TypeName: "aws_bedrock_foundation_models",
 			Name:     "Foundation Models",
@@ -58,6 +66,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Inference Profiles",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUseCaseForModelAccessDataSource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
@@ -72,6 +86,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newEvaluationJobResource,
+			TypeName: "aws_bedrock_evaluation_job",
+			Name:     "Evaluation Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "job_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFoundationModelAgreementResource,
+			TypeName: "aws_bedrock_foundation_model_agreement",
+			Name:     "Foundation Model Agreement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("model_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -123,7 +160,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newUseCaseForModelAccessResource,
+			TypeName: "aws_bedrock_use_case_for_model_access",
+			Name:     "Use Case For Model Access",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newEvaluationJobResourceAsListResource,
+			TypeName: "aws_bedrock_evaluation_job",
+			Name:     "Evaluation Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "job_arn",
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

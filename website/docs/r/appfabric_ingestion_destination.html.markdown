@@ -40,45 +40,62 @@ resource "aws_appfabric_ingestion_destination" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
+
+* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `destination_configuration` - (Required) Configuration for the destination of ingested data. See [`destination_configuration` Block](#destination_configuration-block) below.
+* `ingestion_arn` - (Required) Amazon Resource Name (ARN) of the ingestion to use for the request.
+* `processing_configuration` - (Required) Configuration for how ingested data is processed. See [`processing_configuration` Block](#processing_configuration-block) below.
+
+The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
-* `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
-* `destination_configuration` - (Required) Contains information about the destination of ingested data.
-* `processing_configuration` - (Required) Contains information about how ingested data is processed.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Destination Configuration support the following:
+### `destination_configuration` Block
 
-* `audit_log` - (Required) Contains information about an audit log destination configuration.
+The `destination_configuration` block supports the following arguments:
 
-Audit Log Destination Configuration support the following:
+* `audit_log` - (Required) Audit log destination configuration. See [`destination_configuration.audit_log` Block](#destination_configurationaudit_log-block) below.
 
-* `destination` - (Required) Contains information about an audit log destination. Only one destination (Firehose Stream) or (S3 Bucket) can be specified.
+### `destination_configuration.audit_log` Block
 
-Destination support the following:
+The `destination_configuration.audit_log` block supports the following arguments:
 
-* `firehose_stream` - (Optional) Contains information about an Amazon Data Firehose delivery stream.
-* `s3_bucket` - (Optional) Contains information about an Amazon S3 bucket.
+* `destination` - (Required) Destination for the audit log. Only one destination, either `firehose_stream` or `s3_bucket`, can be specified. See [`destination_configuration.audit_log.destination` Block](#destination_configurationaudit_logdestination-block) below.
 
-Firehose Stream support the following:
+### `destination_configuration.audit_log.destination` Block
 
-* `streamName` - (Required) The name of the Amazon Data Firehose delivery stream.
+The `destination_configuration.audit_log.destination` block supports the following arguments:
 
-S3 Bucket support the following:
+* `firehose_stream` - (Optional) Amazon Data Firehose delivery stream destination. See [`destination_configuration.audit_log.destination.firehose_stream` Block](#destination_configurationaudit_logdestinationfirehose_stream-block) below.
+* `s3_bucket` - (Optional) Amazon S3 bucket destination. See [`destination_configuration.audit_log.destination.s3_bucket` Block](#destination_configurationaudit_logdestinations3_bucket-block) below.
 
-* `bucketName` - (Required) The name of the Amazon S3 bucket.
-* `prefix` - (Optional) The object key to use.
+### `destination_configuration.audit_log.destination.firehose_stream` Block
 
-Processing Configuration support the following:
+The `destination_configuration.audit_log.destination.firehose_stream` block supports the following arguments:
 
-* `audit_log` - (Required) Contains information about an audit log processing configuration.
+* `stream_name` - (Required) Name of the Amazon Data Firehose delivery stream.
 
-Audit Log Processing Configuration support the following:
+### `destination_configuration.audit_log.destination.s3_bucket` Block
 
-* `format` - (Required) The format in which the audit logs need to be formatted. Valid values: `json`, `parquet`.
-* `schema` - (Required) The event schema in which the audit logs need to be formatted. Valid values: `ocsf`, `raw`.
+The `destination_configuration.audit_log.destination.s3_bucket` block supports the following arguments:
+
+* `bucket_name` - (Required) Name of the Amazon S3 bucket.
+* `prefix` - (Optional) Object key to use.
+
+### `processing_configuration` Block
+
+The `processing_configuration` block supports the following arguments:
+
+* `audit_log` - (Required) Audit log processing configuration. See [`processing_configuration.audit_log` Block](#processing_configurationaudit_log-block) below.
+
+### `processing_configuration.audit_log` Block
+
+The `processing_configuration.audit_log` block supports the following arguments:
+
+* `format` - (Required) Format in which the audit logs need to be formatted. Valid values: `json`, `parquet`.
+* `schema` - (Required) Event schema in which the audit logs need to be formatted. Valid values: `ocsf`, `raw`.
 
 ## Attribute Reference
 
