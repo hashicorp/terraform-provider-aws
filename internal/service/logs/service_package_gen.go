@@ -115,6 +115,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newStorageTierPolicyResource,
+			TypeName: "aws_cloudwatch_log_storage_tier_policy",
+			Name:     "Storage Tier Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTransformerResource,
 			TypeName: "aws_cloudwatch_log_transformer",
 			Name:     "Transformer",
@@ -315,6 +325,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newMetricFilterResourceAsListResource,
 			TypeName: "aws_cloudwatch_log_metric_filter",
 			Name:     "Metric Filter",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+		{
+			Factory:  newStreamResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Stream",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),

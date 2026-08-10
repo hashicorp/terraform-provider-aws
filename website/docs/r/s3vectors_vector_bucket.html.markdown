@@ -58,7 +58,7 @@ The `encryption_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `creation_time` - Date and time when the vector bucket was created.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vector_bucket_arn` - ARN of the vector bucket.
 
 ## Import

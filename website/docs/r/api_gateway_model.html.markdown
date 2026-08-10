@@ -34,11 +34,11 @@ resource "aws_api_gateway_model" "MyDemoModel" {
 
 This resource supports the following arguments:
 
+* `content_type` - (Required) Content type of the model
+* `description` - (Optional) Description of the model
+* `name` - (Required) Name of the model
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the associated REST API
-* `name` - (Required) Name of the model
-* `description` - (Optional) Description of the model
-* `content_type` - (Required) Content type of the model
 * `schema` - (Required) Schema of the model in a JSON form
 
 ## Attribute Reference

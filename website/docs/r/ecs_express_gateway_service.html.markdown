@@ -27,71 +27,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 }
 ```
 
-### Service Updates and Deletion
-
-### Updates
-
-When you update an Express service configuration, a new service revision is created and deployed using a canary deployment strategy with zero downtime. For more information, see [Updating an Express service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-update.html).
-
-### Deletion
-
-When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
-
-## Argument Reference
-
-The following arguments are required:
-
-* `execution_role_arn` - (Required) ARN of the IAM role that allows ECS to pull container images and publish container logs to Amazon CloudWatch.
-* `infrastructure_role_arn` - (Required) ARN of the IAM role that allows ECS to manage AWS infrastructure on your behalf. **Important:** The infrastructure role cannot be modified after the service is created. Changing this forces a new resource to be created.
-
-The following arguments are optional:
-
-* `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
-* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
-* `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
-* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`.
-* `region` - (Optional) AWS region where the service will be created. If not specified, the region configured in the provider will be used.
-* `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `task_role_arn` - (Optional) ARN of the IAM role that allows your Amazon ECS container task to make calls to other AWS services.
-* `wait_for_steady_state` - (Optional) Whether to wait for the service to reach a steady state before considering the operation complete. Defaults to `false`.
-
-### primary_container
-
-The `primary_container` configuration block supports the following:
-
-* `image` - (Required) Docker image to use for the container.
-* `command` - (Optional) Command to run in the container. Overrides the default command from the Docker image.
-* `container_port` - (Optional) Port on which the container listens for connections. Defaults to `80`.
-
-#### aws_logs_configuration
-
-The `aws_logs_configuration` configuration block supports the following:
-
-* `log_group` - (Required) CloudWatch log group name.
-* `log_stream_prefix` - (Optional) Prefix for log stream names. If not specified, a default prefix will be used.
-
-#### environment
-
-The `environment` configuration block supports the following:
-
-* `name` - (Required) Name of the environment variable.
-* `value` - (Required) Value of the environment variable.
-
-#### repository_credentials
-
-The `repository_credentials` configuration block supports the following:
-
-* `credentials_parameter` - (Required) ARN of the AWS Systems Manager parameter containing the repository credentials.
-
-#### secrets
-
-The `secrets` configuration block supports the following:
-
-* `name` - (Required) Name of the secret.
-* `value_from` - (Required) ARN of the AWS Secrets Manager secret or AWS Systems Manager parameter containing the secret value.
-
-### Example with Container Logging and Environment Variables
+### Container Logging, Environment Variables, and Secrets
 
 ```terraform
 resource "aws_ecs_express_gateway_service" "example" {
@@ -126,14 +62,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 }
 ```
 
-### network_configuration
-
-The `network_configuration` configuration block supports the following:
-
-* `security_groups` - (Optional) Security groups associated with the task. If not specified, the default security group for the VPC is used.
-* `subnets` - (Optional) Subnets associated with the task. At least 2 subnets must be specified when using network configuration. If not specified, default subnets will be used.
-
-### Example
+### Custom Networking
 
 ```terraform
 resource "aws_ecs_express_gateway_service" "example" {
@@ -155,6 +84,80 @@ resource "aws_ecs_express_gateway_service" "example" {
   }
 }
 ```
+
+### Service Updates and Deletion
+
+### Updates
+
+When you update an Express service configuration, a new service revision is created and deployed using a canary deployment strategy with zero downtime. For more information, see [Updating an Express service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-update.html).
+
+### Deletion
+
+When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
+
+## Argument Reference
+
+The following arguments are required:
+
+* `execution_role_arn` - (Required) ARN of the IAM role that allows ECS to pull container images and publish container logs to Amazon CloudWatch.
+* `infrastructure_role_arn` - (Required) ARN of the IAM role that allows ECS to manage AWS infrastructure on your behalf. **Important:** The infrastructure role cannot be modified after the service is created. Changing this forces a new resource to be created.
+
+The following arguments are optional:
+
+* `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
+* `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
+* `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
+* `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192. Defaults to `2048`.
+* `network_configuration` - (Optional) Network configuration for the service. See [`network_configuration` Block](#network_configuration-block) below.
+* `region` - (Optional) AWS region where the service will be created. If not specified, the region configured in the provider will be used.
+* `scaling_target` - (Optional) Auto-scaling configuration for the service. See [`scaling_target` Block](#scaling_target-block) below.
+* `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `task_role_arn` - (Optional) ARN of the IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `wait_for_steady_state` - (Optional) Whether to wait for the service to reach a steady state before considering the operation complete. Defaults to `false`.
+
+### `primary_container` Block
+
+The `primary_container` configuration block supports the following:
+
+* `aws_logs_configuration` - (Optional) CloudWatch Logs configuration for the container. See [`aws_logs_configuration` Block](#aws_logs_configuration-block) below.
+* `command` - (Optional) Command to run in the container. Overrides the default command from the Docker image.
+* `container_port` - (Optional) Port on which the container listens for connections. Defaults to `80`.
+* `image` - (Required) Docker image to use for the container.
+
+#### aws_logs_configuration
+
+The `aws_logs_configuration` configuration block supports the following:
+
+* `log_group` - (Required) CloudWatch log group name.
+* `log_stream_prefix` - (Optional) Prefix for log stream names. If not specified, a default prefix will be used.
+
+#### `environment` Block
+
+The `environment` configuration block supports the following:
+
+* `name` - (Required) Name of the environment variable.
+* `value` - (Required) Value of the environment variable.
+
+#### `repository_credentials` Block
+
+The `repository_credentials` configuration block supports the following:
+
+* `credentials_parameter` - (Required) ARN of the AWS Systems Manager parameter containing the repository credentials.
+
+#### `secret` Block
+
+The `secret` configuration block supports the following:
+
+* `name` - (Required) Name of the secret.
+* `value_from` - (Required) ARN of the AWS Secrets Manager secret or AWS Systems Manager parameter containing the secret value.
+
+### network_configuration
+
+The `network_configuration` configuration block supports the following:
+
+* `security_groups` - (Optional) Security groups associated with the task. If not specified, the default security group for the VPC is used.
+* `subnets` - (Optional) Subnets associated with the task. At least 2 subnets must be specified when using network configuration. If not specified, default subnets will be used.
 
 ### scaling_target
 

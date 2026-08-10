@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb_listener_rule: Allow blank string for `action.redirect.query` nested argument
-```

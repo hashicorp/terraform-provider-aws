@@ -240,7 +240,7 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 			TwoWayChannelRole:         fwflex.StringFromFramework(ctx, data.TwoWayChannelRole),
 		}
 
-		for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 			_, err := conn.UpdatePhoneNumber(ctx, input)
 
 			// IAM roles can take time to propagate in AWS.
@@ -332,7 +332,7 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 			_, err := conn.UpdatePhoneNumber(ctx, input)
 
 			// IAM roles can take time to propagate in AWS.

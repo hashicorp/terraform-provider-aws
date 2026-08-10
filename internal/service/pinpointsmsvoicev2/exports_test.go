@@ -11,6 +11,7 @@ var (
 	ResourcePhoneNumber      = newPhoneNumberResource
 	ResourcePool             = newPoolResource
 	ResourceResourcePolicy   = newResourcePolicyResource
+	ResourceSenderID         = newSenderIDResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey = findEventDestinationByTwoPartKey
@@ -18,6 +19,7 @@ var (
 	FindPhoneNumberByID              = findPhoneNumberByID
 	FindPoolByID                     = findPoolByID
 	FindResourcePolicyByARN          = findResourcePolicyByARN
+	FindSenderIDByTwoPartKey         = findSenderIDByTwoPartKey
 
 	ValidatePhoneIdentity  = validatePhoneIdentity
 	ValidateSenderIdentity = validateSenderIdentity

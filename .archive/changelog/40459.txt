@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_vpc_ipam
-```
-
-```release-note:new-data-source
-aws_vpc_ipams
-```

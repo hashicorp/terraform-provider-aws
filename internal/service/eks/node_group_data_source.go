@@ -205,6 +205,30 @@ func dataSourceNodeGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"warm_pool_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_group_prepared_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"min_size": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"pool_state": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"reuse_on_scale_in": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -263,6 +287,13 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("update_config", nil)
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
+	if nodeGroup.WarmPoolConfig != nil {
+		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_pool_config: %s", err)
+		}
+	} else {
+		d.Set("warm_pool_config", nil)
+	}
 
 	setTagsOut(ctx, nodeGroup.Tags)
 
