@@ -42,6 +42,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newServiceResource,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSystemResource,
 			TypeName: "aws_resiliencehubv2_system",
 			Name:     "System",
@@ -63,6 +76,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_policy",
 			Name:     "Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newServiceResourceAsListResource,
+			TypeName: "aws_resiliencehubv2_service",
+			Name:     "Service",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
