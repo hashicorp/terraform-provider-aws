@@ -312,6 +312,23 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 				),
 			},
 			{
+				// Regression test for #49281: interactive_configuration is unchanged from the
+				// previous step, but adding maximum_capacity still triggers
+				// resourceApplicationUpdate's main body (d.HasChangesExcept sees a change).
+				// session_enabled must survive that update rather than being silently reset
+				// to false by an InteractiveConfiguration payload built without it.
+				Config: testAccApplicationConfig_interactiveConfigurationMaxCapacity(rName, false, true, false, "2 vCPU"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.session_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "2 vCPU"),
+				),
+			},
+			{
 				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
@@ -787,6 +804,34 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName, livyEndpointEnabled, sessionEnabled, studioEnabled)
+}
+
+// testAccApplicationConfig_interactiveConfigurationMaxCapacity holds interactive_configuration
+// constant while adding a maximum_capacity block — an attribute unrelated to
+// interactive_configuration that still routes through resourceApplicationUpdate's main body
+// (unlike tags, which are excluded via d.HasChangesExcept and never reach it). Used to regression
+// test #49281: an update triggered by an unrelated attribute must not reset session_enabled.
+func testAccApplicationConfig_interactiveConfigurationMaxCapacity(rName string, livyEndpointEnabled, sessionEnabled, studioEnabled bool, cpu string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.13.0"
+  type          = "spark"
+  interactive_configuration {
+    livy_endpoint_enabled = %[2]t
+    session_enabled       = %[3]t
+    studio_enabled        = %[4]t
+  }
+  scheduler_configuration {
+    max_concurrent_runs   = 15
+    queue_timeout_minutes = 360
+  }
+
+  maximum_capacity {
+    cpu = %[5]q
+  }
+}
+`, rName, livyEndpointEnabled, sessionEnabled, studioEnabled, cpu)
 }
 
 func testAccApplicationConfig_maxCapacity(rName, cpu string) string {
