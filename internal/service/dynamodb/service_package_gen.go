@@ -76,6 +76,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newVectorIndexResource,
+			TypeName: "aws_dynamodb_vector_index",
+			Name:     "Vector Index",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("index_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      vectorIndexImportID{},
+			},
+		},
 	}
 }
 
