@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestIdentityInterceptor(t *testing.T) {
+func TestIdentityInterceptor_Create(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
@@ -98,7 +98,7 @@ func TestIdentityInterceptor(t *testing.T) {
 	}
 }
 
-func TestIdentityInterceptor_Read_Removed(t *testing.T) {
+func TestIdentityInterceptor_Read_RemovedFromState(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
