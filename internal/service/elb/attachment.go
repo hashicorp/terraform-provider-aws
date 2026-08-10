@@ -54,7 +54,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
-	input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
+	input := elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
 		Instances:        expandInstances([]any{instance}),
 		LoadBalancerName: aws.String(lbName),
 	}
@@ -63,7 +63,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		timeout = 10 * time.Minute
 	)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.RegisterInstancesWithLoadBalancer(ctx, input)
+		return conn.RegisterInstancesWithLoadBalancer(ctx, &input)
 	}, errCodeInvalidTarget)
 
 	if err != nil {
@@ -103,13 +103,13 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	lbName := d.Get("elb").(string)
 	instance := d.Get("instance").(string)
-	input := &elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
+	input := elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
 		Instances:        expandInstances([]any{instance}),
 		LoadBalancerName: aws.String(lbName),
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic Attachment: %s", d.Id())
-	_, err := conn.DeregisterInstancesFromLoadBalancer(ctx, input)
+	_, err := conn.DeregisterInstancesFromLoadBalancer(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Attachment (%s/%s): %s", lbName, instance, err)

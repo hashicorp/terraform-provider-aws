@@ -7,11 +7,8 @@ package elb
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +20,8 @@ import (
 )
 
 // @SDKDataSource("aws_elb", name="Classic Load Balancer")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func dataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
@@ -207,9 +206,9 @@ func dataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBClient(ctx)
-	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.ELBClient(ctx)
+	ec2conn := c.EC2Client(ctx)
 
 	lbName := d.Get(names.AttrName).(string)
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
@@ -220,26 +219,13 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(lb.LoadBalancerName))
 
-	input := &elasticloadbalancing.DescribeLoadBalancerAttributesInput{
-		LoadBalancerName: aws.String(d.Id()),
-	}
-
-	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
+	lbAttrs, err := findLoadBalancerAttributesByName(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
 	}
 
-	lbAttrs := output.LoadBalancerAttributes
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, loadBalancerARN(ctx, c, d.Id()))
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
@@ -309,16 +295,6 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		case loadBalancerAttributeDesyncMitigationMode:
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
-	}
-
-	tags, err := listTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ELB (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	// There's only one health check, so save that to state as we

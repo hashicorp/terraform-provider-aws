@@ -57,7 +57,7 @@ func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("load_balancer").(string)
-	input := &elasticloadbalancing.CreateLoadBalancerPolicyInput{
+	input := elasticloadbalancing.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyAttributes: []awstypes.PolicyAttribute{
 			{
@@ -69,7 +69,7 @@ func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		PolicyTypeName: aws.String("ProxyProtocolPolicyType"),
 	}
 
-	_, err := conn.CreateLoadBalancerPolicy(ctx, input)
+	_, err := conn.CreateLoadBalancerPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Proxy Protocol Policy (%s): %s", lbName, err)
@@ -180,10 +180,12 @@ func resourceProxyProtocolPolicyDelete(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	_, err = conn.DeleteLoadBalancerPolicy(ctx, &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
+	log.Printf("[DEBUG] Deleting ELB Classic Proxy Protocol Policy: %s", d.Id())
+	input := elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
-	})
+	}
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Proxy Protocol Policy (%s): %s", lbName, err)

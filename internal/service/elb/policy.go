@@ -86,7 +86,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	lbName := d.Get("load_balancer_name").(string)
 	policyName := d.Get("policy_name").(string)
 	id := policyCreateResourceID(lbName, policyName)
-	input := &elasticloadbalancing.CreateLoadBalancerPolicyInput{
+	input := elasticloadbalancing.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 		PolicyTypeName:   aws.String(d.Get("policy_type_name").(string)),
@@ -96,7 +96,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
 	}
 
-	_, err := conn.CreateLoadBalancerPolicy(ctx, input)
+	_, err := conn.CreateLoadBalancerPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer Policy (%s): %s", id, err)
@@ -163,12 +163,12 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	input := &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
+	input := elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	}
 
-	_, err = conn.DeleteLoadBalancerPolicy(ctx, input)
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)
@@ -221,10 +221,11 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic Load Balancer Policy: %s", d.Id())
-	_, err = conn.DeleteLoadBalancerPolicy(ctx, &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
+	input := elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
-	})
+	}
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
 		return diags
@@ -293,13 +294,13 @@ func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbNa
 				PolicyNames:      v.PolicyNames,
 			})
 
-			input := &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+			input := elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
 				InstancePort:     v.InstancePort,
 				LoadBalancerName: aws.String(lbName),
 				PolicyNames:      policies,
 			}
 
-			_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
+			_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, &input)
 
 			if err != nil {
 				return nil, fmt.Errorf("setting ELB Classic Backend Server Policy (%s): %w", lbName, err)
@@ -319,13 +320,13 @@ func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbNa
 				PolicyNames:      v.PolicyNames,
 			})
 
-			input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
+			input := elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 				LoadBalancerName: aws.String(lbName),
 				LoadBalancerPort: v.Listener.LoadBalancerPort,
 				PolicyNames:      policies,
 			}
 
-			_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+			_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, &input)
 
 			if err != nil {
 				return reassignments, fmt.Errorf("setting ELB Classic Listener Policy (%s): %w", lbName, err)

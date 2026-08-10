@@ -57,7 +57,7 @@ func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData,
 	instancePort := d.Get("instance_port").(int)
 	lbName := d.Get("load_balancer_name").(string)
 	id := backendServerPolicyCreateResourceID(lbName, instancePort)
-	input := &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+	input := elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
 		InstancePort:     aws.Int32(int32(instancePort)),
 		LoadBalancerName: aws.String(lbName),
 	}
@@ -66,7 +66,7 @@ func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData,
 		input.PolicyNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.SetLoadBalancerPoliciesForBackendServer(ctx, input)
+	_, err := conn.SetLoadBalancerPoliciesForBackendServer(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", id, err)
@@ -117,11 +117,12 @@ func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic Backend Server Policy: %s", d.Id())
-	_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, &elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
+	input := elasticloadbalancing.SetLoadBalancerPoliciesForBackendServerInput{
 		InstancePort:     aws.Int32(int32(instancePort)),
 		LoadBalancerName: aws.String(lbName),
 		PolicyNames:      []string{},
-	})
+	}
+	_, err = conn.SetLoadBalancerPoliciesForBackendServer(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", d.Id(), err)

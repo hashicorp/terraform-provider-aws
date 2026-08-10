@@ -776,6 +776,8 @@ This configuration block supports the following:
 
 - `retention_triggers` - (Optional) Conditions that trigger instance retention behavior. Defined [below](#retention_triggers).
 
+~> **Note:** The API does not support clearing the instance lifecycle policy. Removing this block from the configuration retains the last applied value rather than resetting it; set `terminate_hook_abandon` to `terminate` to restore the default termination behavior.
+
 #### retention_triggers
 
 This configuration block supports the following:

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -73,7 +74,7 @@ func (l *targetGroupAttachmentListResource) List(ctx context.Context, request li
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listTargetGroupAttachments(ctx, conn, &input) {
+		for item, err := range listTargetHealthDescriptions(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -112,20 +113,8 @@ func (l *targetGroupAttachmentListResource) List(ctx context.Context, request li
 	}
 }
 
-func listTargetGroupAttachments(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput) iter.Seq2[awstypes.TargetHealthDescription, error] {
-	return func(yield func(awstypes.TargetHealthDescription, error) bool) {
-		output, err := conn.DescribeTargetHealth(ctx, input)
-		if err != nil {
-			yield(awstypes.TargetHealthDescription{}, fmt.Errorf("listing ELB Target Group Attachment resources for target group (%s): %w", aws.ToString(input.TargetGroupArn), err))
-			return
-		}
-
-		for _, item := range output.TargetHealthDescriptions {
-			if !yield(item, nil) {
-				return
-			}
-		}
-	}
+func listTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, optFns ...func(*elasticloadbalancingv2.Options)) iter.Seq2[awstypes.TargetHealthDescription, error] {
+	return tfiter.ConcatValuesWithError(listTargetHealthDescriptionPages(ctx, conn, input, optFns...))
 }
 
 func flattenTargetGroupAttachment(d *schema.ResourceData, target *awstypes.TargetDescription) {
