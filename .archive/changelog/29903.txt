@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lightsail_instance: Fix `name` validation to allow instances to start with a numeric character
-```

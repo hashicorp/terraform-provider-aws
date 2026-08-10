@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_replication_subnet_group: Fix error ("Provider produced inconsistent result") when an error is encountered during creation
-```

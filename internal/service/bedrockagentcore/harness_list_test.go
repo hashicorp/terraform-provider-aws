@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -123,11 +125,35 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_bedrockagentcore_harness.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("allowed_tools"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkHarnessARN(rName+"_0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEnvironment), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_variables"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_name"), knownvalue.StringExact(rName+"_0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_iterations"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_tokens"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("memory"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agentcore_memory_configuration": knownvalue.ListSizeExact(0),
+								"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_0_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+										"encryption_key_arn":    knownvalue.Null(),
+										"event_expiry_duration": knownvalue.Int32Exact(30),
+										"strategies": knownvalue.SetExact([]knownvalue.Check{
+											knownvalue.StringExact("SEMANTIC"),
+											knownvalue.StringExact("SUMMARIZATION"),
+										}),
+									}),
+								}),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("model"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("skill"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("system_prompt"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -135,6 +161,8 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("timeout_seconds"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("tool"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("truncation"), knownvalue.NotNull()),
 					}),
 				},
 			},

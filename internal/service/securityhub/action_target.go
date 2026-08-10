@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_securityhub_action_target", name="Action Target")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")
 // @Testing(generator=false)

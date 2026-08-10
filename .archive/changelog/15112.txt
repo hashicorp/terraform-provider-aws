@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb_listener: Fix `default_action.forward.target_group` to have minimum of 1.
-```

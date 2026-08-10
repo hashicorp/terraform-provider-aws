@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_transfer_server: Fix error refreshing `protocol_details.as2_transports` value
-```

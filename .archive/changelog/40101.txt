@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_msk_replicator: Add `topic_replication.topic_name_configuration` argument
-```

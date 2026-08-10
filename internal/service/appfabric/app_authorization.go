@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -46,6 +46,8 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppAuthorization")
 // @Testing(importIgnore="credential")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 
@@ -215,13 +217,8 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
-	}
-
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)

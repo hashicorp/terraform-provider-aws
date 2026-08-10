@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_emr_cluster: Wait for the cluster to reach a terminated state on deletion
-```

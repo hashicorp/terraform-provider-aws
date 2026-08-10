@@ -51,7 +51,9 @@ This data source exports the following attributes in addition to the arguments a
 * `logs` - Configuration block for the logging configuration of the broker. See [Logs](#logs) below.
 * `maintenance_window_start_time` - Configuration block for the maintenance window start time. See [Maintenance Window Start Time](#maintenance-window-start-time) below.
 * `publicly_accessible` - Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
+* `resource_share_arns` - Set of AWS RAM resource share ARNs that grant the broker access to shared resources for private networking. Only populated for `engine_type` of `RabbitMQ`.
 * `security_groups` - List of security group IDs assigned to the broker.
+* `shared_resources` - List of resources shared with the broker. See [Shared Resources](#shared-resources) below. Only populated for `engine_type` of `RabbitMQ`.
 * `storage_type` - Storage type of the broker.
 * `subnet_ids` - List of subnet IDs in which to launch the broker.
 * `tags` - Map of tags assigned to the broker.
@@ -97,6 +99,13 @@ This data source exports the following attributes in addition to the arguments a
 * `day_of_week` - Day of the week.
 * `time_of_day` - Time, in 24-hour format.
 * `time_zone` - Time zone in either the Country/City format or the UTC offset format.
+
+### Shared Resources
+
+* `dns_names` - DNS names through which the broker reaches the shared resource.
+* `resource_arn` - ARN of the shared resource.
+* `status` - Status of the shared resource.
+* `type` - Type of the shared resource, either `RESOURCE_SHARE` or `RESOURCE`.
 
 ### User
 

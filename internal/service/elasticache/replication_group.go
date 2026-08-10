@@ -101,6 +101,21 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					DiffSuppressFunc: func(_, old, _ string, d *schema.ResourceData) bool {
+						// For members of a global replication group, automatic_failover_enabled
+						// is controlled by the global replication group. Suppress diffs on
+						// existing members to avoid persistent plan churn and apply errors.
+						//
+						// Detect "create" via old=="" rather than d.IsNewResource() because
+						// IsNewResource is only set during Apply (the CRUD lifecycle) and is
+						// always false here, including during plan expansion when a previously
+						// unknown global_replication_group_id reference resolves.
+						if old == "" {
+							return false
+						}
+						v, ok := d.GetOk("global_replication_group_id")
+						return ok && v.(string) != ""
+					},
 				},
 				"cluster_enabled": {
 					Type:     schema.TypeBool,
@@ -121,6 +136,13 @@ func resourceReplicationGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
+				},
+				"durability": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Durability](),
 				},
 				names.AttrDescription: {
 					Type:         schema.TypeString,
@@ -549,6 +571,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("durability"); ok {
+		input.Durability = awstypes.Durability(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
@@ -806,6 +832,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("cluster_mode", rgp.ClusterMode)
+	d.Set("durability", rgp.Durability)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", rgp.DataTiering == awstypes.DataTieringStatusEnabled)
@@ -883,12 +910,105 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
+		if err := applyReplicationGroupPendingModifications(d, rgp, &c); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): applying pending modifications: %s", d.Id(), err)
+		}
+
 		if c.AuthTokenEnabled != nil && !aws.ToBool(c.AuthTokenEnabled) {
-			d.Set("auth_token", nil)
+			// Do not clear auth_token if a pending auth token change is in progress
+			// (SETTING or ROTATING), as the token is being modified and will be applied
+			// during the next maintenance window.
+			if c.PendingModifiedValues == nil || c.PendingModifiedValues.AuthTokenStatus == "" {
+				d.Set("auth_token", nil)
+			}
 		}
 	}
 
 	return diags
+}
+
+func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awstypes.ReplicationGroup, c *awstypes.CacheCluster) error {
+	if c.PendingModifiedValues != nil {
+		nodeType := aws.ToString(c.PendingModifiedValues.CacheNodeType)
+		if nodeType != "" {
+			d.Set("node_type", nodeType)
+		}
+
+		if c.PendingModifiedValues.EngineVersion != nil {
+			switch aws.ToString(c.Engine) {
+			case engineRedis:
+				if err := setEngineVersionRedis(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			case engineValkey:
+				if err := setEngineVersionValkey(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			}
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(c.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", c.PendingModifiedValues.TransitEncryptionMode)
+		}
+	}
+
+	if rgp.PendingModifiedValues != nil {
+		if rgp.PendingModifiedValues.AutomaticFailoverStatus != "" {
+			switch rgp.PendingModifiedValues.AutomaticFailoverStatus {
+			case awstypes.PendingAutomaticFailoverStatusEnabled:
+				d.Set("automatic_failover_enabled", true)
+			case awstypes.PendingAutomaticFailoverStatusDisabled:
+				d.Set("automatic_failover_enabled", false)
+			}
+		}
+
+		if rgp.PendingModifiedValues.ClusterMode != "" {
+			d.Set("cluster_mode", rgp.PendingModifiedValues.ClusterMode)
+		}
+
+		// transit_encryption_enabled and transit_encryption_mode are written up to
+		// three times, and this ordering is intentional: first from the live cache
+		// cluster values in the Read function, then from the cache cluster's pending
+		// values above, and finally from the replication group's pending values here.
+		// The replication group-level pending values are authoritative, so they are
+		// applied last (last write wins). Do not reorder these writes.
+		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", rgp.PendingModifiedValues.TransitEncryptionMode)
+		}
+
+		// user_group_ids pending changes are expressed as add/remove deltas against
+		// the live UserGroupIds (see UserGroupsUpdateStatus), not as a full target
+		// set. Reconstruct the resulting set so state matches configuration while the
+		// change is applied during the next maintenance window.
+		if ug := rgp.PendingModifiedValues.UserGroups; ug != nil {
+			remove := make(map[string]struct{}, len(ug.UserGroupIdsToRemove))
+			for _, id := range ug.UserGroupIdsToRemove {
+				remove[id] = struct{}{}
+			}
+
+			userGroupIDs := make([]string, 0, len(rgp.UserGroupIds)+len(ug.UserGroupIdsToAdd))
+			for _, id := range rgp.UserGroupIds {
+				if _, ok := remove[id]; !ok {
+					userGroupIDs = append(userGroupIDs, id)
+				}
+			}
+			userGroupIDs = append(userGroupIDs, ug.UserGroupIdsToAdd...)
+
+			d.Set("user_group_ids", userGroupIDs)
+		}
+	}
+
+	return nil
 }
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -938,8 +1058,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("automatic_failover_enabled") {
-			input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-			requestUpdate = true
+			if _, isMember := d.GetOk("global_replication_group_id"); !isMember {
+				input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -970,7 +1092,40 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 					input.Engine = aws.String(engineRedis)
 				}
 			}
-			requestUpdate = true
+			if d.HasChange("log_delivery_configuration") {
+				_, n := d.GetChange("log_delivery_configuration")
+				nSet, ok := n.(*schema.Set)
+				if ok && checkIfLogTypeSlowLog(nSet.List()) &&
+					checkIfEngineSupportsSlowLog(input.Engine, input.EngineVersion) {
+					// log_type slow-log is supported in redis >= 6.0 and valkey >= 7.x .
+					// Apply the engine/engine_version change in a separate ModifyReplicationGroup
+					// call so that it completes before the subsequent update that adds the
+					// slow-log log_delivery_configuration. ApplyImmediately must be true here
+					// regardless of the user's apply_immediately setting; otherwise the engine
+					// upgrade is deferred to the next maintenance window and the immediately
+					// following log_delivery_configuration modification would fail because the
+					// running engine still does not support slow-log delivery.
+					engineVersionInput := elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						Engine:             input.Engine,
+						EngineVersion:      input.EngineVersion,
+						ReplicationGroupId: aws.String(d.Id()),
+					}
+					updateFuncs = append(updateFuncs, func() error {
+						_, err := conn.ModifyReplicationGroup(ctx, &engineVersionInput)
+						if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+							return nil
+						}
+
+						if err != nil {
+							return fmt.Errorf("modifying ElastiCache Replication Group (%s) engine version: %w", d.Id(), err)
+						}
+						return nil
+					})
+				}
+			} else {
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange("ip_discovery") {
@@ -1671,6 +1826,30 @@ func suppressDiffIfBelongsToGlobalReplicationGroup(_ context.Context, diff *sche
 		}
 	}
 	return nil
+}
+
+func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
+	versionStr := aws.ToString(engineVersion)
+	major, _, _ := strings.Cut(versionStr, ".")
+	majorVersion, err := strconv.Atoi(major)
+	if err != nil {
+		return false
+	}
+	return (majorVersion >= 6 && aws.ToString(engine) == engineRedis) ||
+		(majorVersion >= 7 && aws.ToString(engine) == engineValkey)
+}
+
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
+	logTypeSlowLogExists := false
+
+	for _, current := range currentLogDeliveryConfig {
+		logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
+		if logDeliveryConfigurationRequest.LogType == awstypes.LogTypeSlowLog {
+			logTypeSlowLogExists = true
+			break
+		}
+	}
+	return logTypeSlowLogExists
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
