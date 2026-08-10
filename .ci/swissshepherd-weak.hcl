@@ -772,7 +772,6 @@ check "schema_docs" {
     "resource/aws_backup_vault_policy",
     "resource/aws_backup_vault",
     "resource/aws_batch_compute_environment",
-    "resource/aws_batch_job_definition",
     "resource/aws_batch_job_queue",
     "resource/aws_batch_scheduling_policy",
     "resource/aws_bcmdataexports_export",
