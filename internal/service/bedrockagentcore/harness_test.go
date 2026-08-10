@@ -168,7 +168,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					acctest.ImportCheckResourceAttr("memory.#", "1"),
 					acctest.ImportCheckResourceAttr("memory.0.agentcore_memory_configuration.#", "0"),
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.#", "1"),
-					acctest.ImportMatchResourceAttr("memory.0.managed_memory_configuration.0.arn", regexache.MustCompile(`^arn:[^:]+:bedrock-agentcore:[^:]+:\d{12}:memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+$`)),
+					acctest.ImportMatchResourceAttr("memory.0.managed_memory_configuration.0.arn", regexache.MustCompile(`^arn:[^:]+:bedrock-agentcore:[^:]+:\d{12}:memory/`+rName+`-[a-zA-Z0-9]{10}$`)),
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.encryption_key_arn", ""),
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.event_expiry_duration", "30"),
 					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.strategies.#", "2"),
@@ -897,7 +897,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *t
 						"disabled":                       knownvalue.ListSizeExact(0),
 						"managed_memory_configuration": knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+								names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/`+rName+`-[a-zA-Z0-9]{10}`)),
 								"encryption_key_arn":    knownvalue.Null(),
 								"event_expiry_duration": knownvalue.Int32Exact(30),
 								"strategies": knownvalue.SetExact([]knownvalue.Check{
@@ -948,7 +948,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_update(t *
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/`+rName+`-[a-zA-Z0-9]{10}`)),
 						"encryption_key_arn":    knownvalue.Null(),
 						"event_expiry_duration": knownvalue.Int32Exact(7),
 						"strategies": knownvalue.SetExact([]knownvalue.Check{
@@ -969,7 +969,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_update(t *
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/`+rName+`-[a-zA-Z0-9]{10}`)),
 						"encryption_key_arn":    knownvalue.Null(),
 						"event_expiry_duration": knownvalue.Int32Exact(14),
 						"strategies": knownvalue.SetExact([]knownvalue.Check{
@@ -1018,7 +1018,7 @@ func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryption
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/`+rName+`-[a-zA-Z0-9]{10}`)),
 						"encryption_key_arn":    knownvalue.NotNull(),
 						"event_expiry_duration": knownvalue.Int32Exact(30),
 						"strategies": knownvalue.SetExact([]knownvalue.Check{
