@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -96,7 +97,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,7 +125,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -162,7 +163,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -199,6 +200,12 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.ValueString())
 		return
 	}
+}
+
+func (r *resourcePolicyResource) flatten(ctx context.Context, output *pinpointsmsvoicev2.GetResourcePolicyOutput, data *resourcePolicyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	return diags
 }
 
 func findResourcePolicyByARN(ctx context.Context, conn *pinpointsmsvoicev2.Client, arn string) (*pinpointsmsvoicev2.GetResourcePolicyOutput, error) {

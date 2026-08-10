@@ -135,6 +135,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
+		{
 			Factory:  newSenderIDResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_sender_id",
 			Name:     "Sender ID",
