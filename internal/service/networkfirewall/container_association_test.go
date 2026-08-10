@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -60,8 +61,9 @@ func TestAccNetworkFirewallContainerAssociation_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_association_arn"), checkContainerAssociationARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_association_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("EKS")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.ContainerMonitoringTypeEks)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("container_monitoring_configuration"), knownvalue.ListSizeExact(1)),
@@ -229,7 +231,7 @@ func TestAccNetworkFirewallContainerAssociation_ecs(t *testing.T) {
 					testAccCheckContainerAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("ECS")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.ContainerMonitoringTypeEcs)),
 				},
 			},
 			{
@@ -471,7 +473,7 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = %[1]q
   type                       = "ECS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
 
@@ -488,7 +490,7 @@ resource "aws_networkfirewall_container_association" "test" {
   container_association_name = %[1]q
   type                       = "ECS"
 
-  container_monitoring_configurations {
+  container_monitoring_configuration {
     cluster_arn = aws_ecs_cluster.test.arn
   }
 
