@@ -733,7 +733,6 @@ check "schema_docs" {
     "resource/aws_amplify_branch",
     "resource/aws_amplify_domain_association",
     "resource/aws_amplify_webhook",
-    "resource/aws_arcregionswitch_plan",
     "resource/aws_arczonalshift_autoshift_observer_notification_status",
     "resource/aws_arczonalshift_zonal_autoshift_configuration",
     "resource/aws_athena_data_catalog",
