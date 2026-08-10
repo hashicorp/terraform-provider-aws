@@ -105,6 +105,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("index_name", true),
 			}),
 		},
+		{
+			Factory:  newVectorIndexResourceAsListResource,
+			TypeName: "aws_dynamodb_vector_index",
+			Name:     "Vector Index",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("index_name", true),
+			}),
+		},
 	})
 }
 
