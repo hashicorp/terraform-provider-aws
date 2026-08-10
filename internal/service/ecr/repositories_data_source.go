@@ -62,7 +62,7 @@ func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region(ctx))
-	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
+	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSetLegacy(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
 		return aws.ToString(v.RepositoryName)
 	}))
 
