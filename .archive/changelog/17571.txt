@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_msk_configuration: `kafka_versions` argument is optional
-```

@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -29,6 +31,196 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: Operation not allowed",
 	)
+}
+
+func TestFlattenViewRepresentation(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name      string
+		apiObject awstypes.ViewRepresentation
+		prior     map[string]any
+		want      map[string]any
+	}{
+		{
+			name: "api values take precedence over prior state",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:              awstypes.ViewDialectAthena,
+				DialectVersion:       aws.String("3"),
+				ValidationConnection: aws.String("api-conn"),
+				ViewExpandedText:     aws.String("api-expanded"),
+				ViewOriginalText:     aws.String("api-original"),
+			},
+			prior: map[string]any{
+				"dialect":               "ATHENA",
+				"validation_connection": "prior-conn",
+				"view_expanded_text":    "prior-expanded",
+				"view_original_text":    "prior-original",
+			},
+			want: map[string]any{
+				"dialect":               awstypes.ViewDialectAthena,
+				"dialect_version":       "3",
+				"validation_connection": "api-conn",
+				"view_expanded_text":    "api-expanded",
+				"view_original_text":    "api-original",
+			},
+		},
+		{
+			name: "falls back to prior state when glue strips fields for validated athena view",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:              awstypes.ViewDialectAthena,
+				DialectVersion:       aws.String("3"),
+				ValidationConnection: nil,
+				ViewExpandedText:     nil,
+				ViewOriginalText:     nil,
+			},
+			prior: map[string]any{
+				"dialect":               "ATHENA",
+				"validation_connection": "prior-conn",
+				"view_expanded_text":    "prior-expanded",
+				"view_original_text":    "prior-original",
+			},
+			want: map[string]any{
+				"dialect":               awstypes.ViewDialectAthena,
+				"dialect_version":       "3",
+				"validation_connection": "prior-conn",
+				"view_expanded_text":    "prior-expanded",
+				"view_original_text":    "prior-original",
+			},
+		},
+		{
+			name: "nil prior does not panic and omits empty optional fields",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect:        awstypes.ViewDialectSpark,
+				DialectVersion: aws.String("3.3"),
+			},
+			prior: nil,
+			want: map[string]any{
+				"dialect":         awstypes.ViewDialectSpark,
+				"dialect_version": "3.3",
+			},
+		},
+		{
+			name: "empty-string prior values are not written into flattened map",
+			apiObject: awstypes.ViewRepresentation{
+				Dialect: awstypes.ViewDialectAthena,
+			},
+			prior: map[string]any{
+				"dialect":               "ATHENA",
+				"validation_connection": "",
+				"view_expanded_text":    "",
+				"view_original_text":    "",
+			},
+			want: map[string]any{
+				"dialect": awstypes.ViewDialectAthena,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfglue.FlattenViewRepresentation(tc.apiObject, tc.prior)
+
+			for k, wantVal := range tc.want {
+				if got[k] != wantVal {
+					t.Errorf("key %q: got %v, want %v", k, got[k], wantVal)
+				}
+			}
+			for k := range got {
+				if _, ok := tc.want[k]; !ok {
+					t.Errorf("unexpected key %q in result", k)
+				}
+			}
+		})
+	}
+}
+
+func TestFlattenViewRepresentations(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		apiObjects []awstypes.ViewRepresentation
+		prior      []any
+		wantLen    int
+		checkFn    func(t *testing.T, got []any)
+	}{
+		{
+			name: "prior matched by dialect not list position",
+			apiObjects: []awstypes.ViewRepresentation{
+				// API returns SPARK first, ATHENA second.
+				{
+					Dialect:        awstypes.ViewDialectSpark,
+					DialectVersion: aws.String("3.3"),
+				},
+				{
+					Dialect:        awstypes.ViewDialectAthena,
+					DialectVersion: aws.String("3"),
+				},
+			},
+			// Prior state has ATHENA first, SPARK second (reversed).
+			prior: []any{
+				map[string]any{
+					"dialect":               "ATHENA",
+					"validation_connection": "athena-conn",
+					"view_original_text":    "athena-sql",
+				},
+				map[string]any{
+					"dialect":            "SPARK",
+					"view_original_text": "spark-sql",
+				},
+			},
+			wantLen: 2,
+			checkFn: func(t *testing.T, got []any) {
+				t.Helper()
+				spark := got[0].(map[string]any)
+				if spark["view_original_text"] != "spark-sql" {
+					t.Errorf("SPARK view_original_text = %q, want %q", spark["view_original_text"], "spark-sql")
+				}
+				athena := got[1].(map[string]any)
+				if athena["validation_connection"] != "athena-conn" {
+					t.Errorf("ATHENA validation_connection = %q, want %q", athena["validation_connection"], "athena-conn")
+				}
+				if athena["view_original_text"] != "athena-sql" {
+					t.Errorf("ATHENA view_original_text = %q, want %q", athena["view_original_text"], "athena-sql")
+				}
+			},
+		},
+		{
+			name: "nil prior does not panic and propagates api fields",
+			apiObjects: []awstypes.ViewRepresentation{
+				{
+					Dialect:          awstypes.ViewDialectAthena,
+					DialectVersion:   aws.String("3"),
+					ViewOriginalText: aws.String("SELECT 1"),
+				},
+			},
+			prior:   nil,
+			wantLen: 1,
+			checkFn: func(t *testing.T, got []any) {
+				t.Helper()
+				m := got[0].(map[string]any)
+				if m["view_original_text"] != "SELECT 1" {
+					t.Errorf("view_original_text = %q, want %q", m["view_original_text"], "SELECT 1")
+				}
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfglue.FlattenViewRepresentations(tc.apiObjects, tc.prior)
+
+			if len(got) != tc.wantLen {
+				t.Fatalf("len(got) = %d, want %d", len(got), tc.wantLen)
+			}
+			tc.checkFn(t, got)
+		})
+	}
 }
 
 func TestAccGlueCatalogTable_basic(t *testing.T) {
@@ -870,6 +1062,42 @@ func TestAccGlueCatalogTable_viewDefinitionFailure(t *testing.T) {
 			{
 				Config:      testAccCatalogTableConfig_viewDefinitionFailure(rName),
 				ExpectError: regexache.MustCompile(`unexpected state 'FAILED'`),
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinition_noPerpetualDiff(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, "view_original_text_1", "view_expanded_text_1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text_1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, "view_original_text_1", "view_expanded_text_1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1901,4 +2129,44 @@ resource "aws_glue_connection" "test_athena" {
   }
 }
 `, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinitionNoPerpetualDiff(rName, viewOriginalText, viewExpandedText string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    definer = aws_iam_role.test.arn
+
+    representations {
+      dialect            = "SPARK"
+      dialect_version    = "1.0"
+      view_original_text = %[2]q
+      view_expanded_text = %[3]q
+    }
+  }
+}
+`, rName, viewOriginalText, viewExpandedText)
 }

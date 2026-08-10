@@ -35,7 +35,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `object_lock_enabled` - Indicates whether this bucket has an Object Lock configuration enabled.
+* `object_lock_enabled` - Whether this bucket has an Object Lock configuration enabled.
 * `rule` - Object lock rule for the specified object. See [Rule](#rule) below.
 
 ### Rule

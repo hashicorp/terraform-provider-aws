@@ -238,6 +238,7 @@ provider "aws" {
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
+|SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
@@ -265,7 +266,7 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
@@ -287,6 +288,7 @@ provider "aws" {
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|
 |Rekognition|`rekognition`|`AWS_ENDPOINT_URL_REKOGNITION`|`rekognition`|
 |Resilience Hub|`resiliencehub`|`AWS_ENDPOINT_URL_RESILIENCEHUB`|`resiliencehub`|
+|Resilience Hub V2|`resiliencehubv2`|`AWS_ENDPOINT_URL_RESILIENCEHUBV2`|`resiliencehubv2`|
 |Resource Explorer|`resourceexplorer2`|`AWS_ENDPOINT_URL_RESOURCE_EXPLORER_2`|`resource_explorer_2`|
 |Resource Groups|`resourcegroups`|`AWS_ENDPOINT_URL_RESOURCE_GROUPS`|`resource_groups`|
 |Resource Groups Tagging|`resourcegroupstaggingapi`(or `resourcegroupstagging`)|`AWS_ENDPOINT_URL_RESOURCE_GROUPS_TAGGING_API`|`resource_groups_tagging_api`|

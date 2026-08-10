@@ -51,19 +51,19 @@ resource "aws_s3control_directory_bucket_access_point_scope" "example" {
 
 This resource supports the following arguments:
 
-* `account_id` - (Required) The AWS account ID that owns the specified access point.
-* `name` - (Required) The name of the access point that you want to apply the scope to.
+* `account_id` - (Required) AWS account ID that owns the specified access point.
+* `name` - (Required) Name of the access point that you want to apply the scope to.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
-### Scope Configuration block
+### `scope` Block
+
+For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
 
 The following arguments are optional:
 
-* `permissions` – (Optional) You can specify a list of API operations as permissions for the access point.
-* `prefixes` – (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes.
-
-* For more information on access point scope, see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets-manage-scope.html).
+* `permissions` - (Optional) You can specify a list of API operations as permissions for the access point.
+* `prefixes` - (Optional) You can specify a list of prefixes, but the total length of characters of all prefixes must be less than 256 bytes.
 
 ## Attribute Reference
 

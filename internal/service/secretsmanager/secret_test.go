@@ -6,6 +6,7 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -17,10 +18,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkSecretARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:`+regexp.QuoteMeta(name)+`-[[:alnum:]]+`))
+}
 
 func TestAccSecretsManagerSecret_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -38,7 +44,6 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretExists(ctx, t, resourceName, &secret),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -47,8 +52,10 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkSecretARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("")),
 				},
 			},
 			{
@@ -333,6 +340,35 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecret_type(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretConfig_type(rName, "SalesforceClientSecret"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SalesforceClientSecret"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+			},
+		},
+	})
+}
+
 func testAccCheckSecretDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
@@ -607,4 +643,13 @@ resource "aws_secretsmanager_secret" "test" {
   policy = "{}"
 }
 `, rName)
+}
+
+func testAccSecretConfig_type(rName, secretType string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+  type = %[2]q
+}
+`, rName, secretType)
 }

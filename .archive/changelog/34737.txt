@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_glue_connection: Fix crash while creating resource with empty `physical_connection_requirements` configuration block
-```

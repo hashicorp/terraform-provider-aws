@@ -435,6 +435,32 @@ any cleanup task during the destroying process.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_cluster.aurora_cluster
+  identity = {
+    cluster_identifier = "aurora-prod-cluster"
+  }
+}
+
+resource "aws_rds_cluster" "aurora_cluster" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `cluster_identifier` (String) Cluster identifier of the RDS Cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters using the `cluster_identifier`. For example:
 
 ```terraform
