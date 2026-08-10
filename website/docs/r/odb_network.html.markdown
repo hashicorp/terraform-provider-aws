@@ -1,6 +1,6 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "AWS: aws_odb_network"
+layout: "aws"
 page_title: "AWS: aws_odb_network"
 description: |-
   Terraform resource for managing odb network of an Oracle Database@AWS.
@@ -15,19 +15,6 @@ Terraform resource for managing odb Network resource in AWS for Oracle Database@
 ### Basic Usage
 
 ```terraform
-
-resource "aws_odb_network" "example" {
-  display_name         = "odb-my-net"
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
-  tags = {
-    "env" = "dev"
-  }
-}
-
 resource "aws_odb_network" "example" {
   display_name         = "odb-my-net"
   availability_zone_id = "use1-az6"
@@ -54,9 +41,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure availability_zone maps correctly with availability_zone_id.
+* `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure `availability_zone` maps correctly with `availability_zone_id`.
 * `cross_region_s3_restore_sources_access` - (Optional) List of regions enabled for cross-region restore in the ODB network.
-* `custom_domain_name` - (Optional) Name of the custom domain that the network is located. Custom_domain_name and default_dns_prefix both can't be given. Changing this will force terraform to create new resource.
+* `custom_domain_name` - (Optional) Name of the custom domain that the network is located. `custom_domain_name` and `default_dns_prefix` both can't be given. Changing this will force terraform to create new resource.
 * `default_dns_prefix` - (Optional) Default DNS prefix for the network resource. Changing this will force terraform to create new resource.
 * `delete_associated_resources` - (Optional) If set to true deletes associated OCI resources. Default false.
 * `kms_access` - (Optional) Configuration for KMS access from the ODB network.
@@ -82,14 +69,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the ODB network.
 * `oci_vcn_id` - Unique identifier Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.
 * `oci_vcn_url` - URL of the OCI VCN for the ODB network.
-* `peered_cidrs` - List of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.
+* `peered_cidrs` - List of CIDR ranges from the peered VPC that are allowed access to the ODB network. See the [ODB network peering documentation](https://docs.aws.amazon.com/odb/latest/UserGuide/network-peering.html) for more information.
 * `percent_progress` - Amount of progress made on the current operation on the ODB network, expressed as a percentage.
 * `status` - Status of the network resource.
 * `status_reason` - Additional information about the current status of the ODB network.
 
 ### `managed_services` Block
-
-The `managed_services` block exports the following attributes:
 
 * `cross_region_s3_restore_sources_access` - Cross-region S3 restore sources access configuration. See [`cross_region_s3_restore_sources_access` Block](#cross_region_s3_restore_sources_access-block) below.
 * `kms_access` - Amazon KMS access configuration. See [`kms_access` Block](#kms_access-block) below.
@@ -104,15 +89,11 @@ The `managed_services` block exports the following attributes:
 
 #### `cross_region_s3_restore_sources_access` Block
 
-The `cross_region_s3_restore_sources_access` block exports the following attributes:
-
 * `ipv4_addresses` - List of IPv4 addresses for the cross-region S3 restore sources access.
 * `region` - Region enabled for cross-region S3 restore.
 * `status` - Status of the cross-region S3 restore sources access.
 
 #### `kms_access` Block
-
-The `kms_access` block exports the following attributes:
 
 * `domain_name` - Domain name for the Amazon KMS access.
 * `ipv4_addresses` - List of IPv4 addresses for the Amazon KMS access.
@@ -121,14 +102,10 @@ The `kms_access` block exports the following attributes:
 
 #### `managed_s3_backup_access` Block
 
-The `managed_s3_backup_access` block exports the following attributes:
-
 * `ipv4_addresses` - List of IPv4 addresses for the managed S3 backup access.
 * `status` - Status of the managed S3 backup access.
 
 #### `s3_access` Block
-
-The `s3_access` block exports the following attributes:
 
 * `domain_name` - Domain name for the Amazon S3 access.
 * `ipv4_addresses` - List of IPv4 addresses for the Amazon S3 access.
@@ -137,14 +114,10 @@ The `s3_access` block exports the following attributes:
 
 #### `service_network_endpoint` Block
 
-The `service_network_endpoint` block exports the following attributes:
-
 * `vpc_endpoint_id` - Unique identifier of the VPC endpoint.
 * `vpc_endpoint_type` - Type of the VPC endpoint.
 
 #### `sts_access` Block
-
-The `sts_access` block exports the following attributes:
 
 * `domain_name` - Domain name for the Amazon STS access.
 * `ipv4_addresses` - List of IPv4 addresses for the Amazon STS access.
@@ -153,14 +126,10 @@ The `sts_access` block exports the following attributes:
 
 #### `zero_etl_access` Block
 
-The `zero_etl_access` block exports the following attributes:
-
 * `cidr` - CIDR range for the Zero-ETL access.
 * `status` - Status of the Zero-ETL access.
 
 ### `oci_dns_forwarding_configs` Block
-
-The `oci_dns_forwarding_configs` block exports the following attributes:
 
 * `domain_name` - Domain name for which the DNS queries are forwarded.
 * `oci_dns_listener_ip` - IP address of the OCI DNS listener.
@@ -175,7 +144,7 @@ The `oci_dns_forwarding_configs` block exports the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ODB Network using the `id`. For example:
 
 ```terraform
 import {
