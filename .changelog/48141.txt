@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_emrserverless_application: Add `session_enabled` argument to `interactive_configuration`
 ```
+
+```release-note:bug
+resource/aws_emrserverless_application: Fix `interactive_configuration.session_enabled` being silently reset to `false` on any update that touches the application for an unrelated reason
+```
