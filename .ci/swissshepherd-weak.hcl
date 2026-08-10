@@ -764,7 +764,6 @@ check "schema_docs" {
     "resource/aws_backup_logically_air_gapped_vault",
     "resource/aws_backup_plan",
     "resource/aws_backup_region_settings",
-    "resource/aws_backup_report_plan",
     "resource/aws_backup_restore_testing_plan",
     "resource/aws_backup_restore_testing_selection",
     "resource/aws_backup_selection",
