@@ -6,6 +6,8 @@ package smithymodel_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/smithymodel"
@@ -64,6 +66,43 @@ func TestLoadURL_AMP_NoError(t *testing.T) {
 	_, err := smithymodel.LoadURL(fixtureBaseURL(t) + "/models/amp/service/2020-08-01/amp-2020-08-01.json")
 	if err != nil {
 		t.Fatalf("LoadURL(amp): %v", err)
+	}
+}
+
+func TestLoadFile_Errors(t *testing.T) {
+	t.Parallel()
+
+	if _, err := smithymodel.LoadFile(filepath.Join(t.TempDir(), "missing.json")); err == nil {
+		t.Fatal("LoadFile(missing) error = nil, want an error")
+	}
+	path := filepath.Join(t.TempDir(), "invalid.json")
+	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := smithymodel.LoadFile(path); err == nil {
+		t.Fatal("LoadFile(invalid) error = nil, want an error")
+	}
+}
+
+func TestLoadURL_Errors(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		code int
+		body string
+	}{
+		{name: "not found", code: http.StatusNotFound},
+		{name: "malformed model", code: http.StatusOK, body: "{"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.code)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer server.Close()
+			if _, err := smithymodel.LoadURL(server.URL); err == nil {
+				t.Fatal("LoadURL() error = nil, want an error")
+			}
+		})
 	}
 }
 
@@ -166,6 +205,21 @@ func TestAMP_ResolveToKind_BuiltinString(t *testing.T) {
 	got := m.ResolveToKind("smithy.api#String")
 	if got != smithymodel.KindString {
 		t.Errorf("ResolveToKind(smithy.api#String) = %q, want string", got)
+	}
+}
+
+func TestResolveToKind_UnknownAndNonPrimitive(t *testing.T) {
+	t.Parallel()
+	m, err := smithymodel.LoadFile(snsModel)
+	if err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
+
+	if got := m.ResolveToKind("com.amazonaws.sqs#DoesNotExist"); got != smithymodel.KindOther {
+		t.Errorf("unknown shape kind = %q, want other", got)
+	}
+	if got := m.ResolveToKind("com.amazonaws.sns#TopicAttributesMap"); got != smithymodel.KindMap {
+		t.Errorf("map shape kind = %q, want map", got)
 	}
 }
 
@@ -305,5 +359,31 @@ func TestSNS_TopicAttributesMap_IsUntyped(t *testing.T) {
 	}
 	if valKind != smithymodel.KindString {
 		t.Errorf("TopicAttributesMap value kind = %q, want string", valKind)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// HasResourceShapes
+// ---------------------------------------------------------------------------
+
+func TestHasResourceShapes_AMP_True(t *testing.T) {
+	t.Parallel()
+	m, err := smithymodel.LoadFile(ampModel)
+	if err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
+	if !m.HasResourceShapes() {
+		t.Error("HasResourceShapes() = false for AMP model, want true")
+	}
+}
+
+func TestHasResourceShapes_SQS_False(t *testing.T) {
+	t.Parallel()
+	m, err := smithymodel.LoadFile(sqsModel)
+	if err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
+	if m.HasResourceShapes() {
+		t.Error("HasResourceShapes() = true for SQS model, want false")
 	}
 }

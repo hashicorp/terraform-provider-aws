@@ -24,13 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/tfschema"
 )
 
-// ExtractResource builds a ResourceIR for the given Terraform resource name
-// using the provided mapping and the api-models raw base URL.
-//
-// apiModelsBaseURL is an HTTP(S) base URL such as
-// https://raw.githubusercontent.com/aws/api-models-aws/main. The
-// smithy_model path in the mapping is joined to this base URL.
-func ExtractResource(tfName string, m *awsmapping.ResourceMapping, apiModelsBaseURL string) (*tfschema.ResourceIR, error) {
+// ExtractResource builds a ResourceIR using an already-loaded Smithy
+// model. model may be nil for explicit-fields-only resources (those that do
+// not require a Smithy model). smithyNamespace must match the loaded model.
+// This function contains all extraction logic; callers that need to load a
+// model first can use LoadModel.
+func ExtractResource(tfName string, m *awsmapping.ResourceMapping, model *smithymodel.Model, smithyNamespace string) (*tfschema.ResourceIR, error) {
 	ir := &tfschema.ResourceIR{
 		Name:   tfName,
 		Source: "aws",
@@ -44,32 +43,19 @@ func ExtractResource(tfName string, m *awsmapping.ResourceMapping, apiModelsBase
 		)
 	}
 
-	var model *smithymodel.Model
-	if needsSmithyModel(m) {
-		if m.SmithyModel == "" {
-			return nil, fmt.Errorf("resource %q requires smithy_model for lifecycle/enum extraction", tfName)
-		}
-
-		var err error
-		model, err = loadModel(apiModelsBaseURL, m.SmithyModel)
-		if err != nil {
-			return nil, fmt.Errorf("loading smithy model: %w", err)
-		}
-	}
-
 	if model != nil {
 		if hasLifecycleExtraction(m) {
-			lifecycle, err := resolveLifecycle(m, model)
+			lifecycle, err := resolveLifecycle(m, model, smithyNamespace)
 			if err != nil {
 				return nil, err
 			}
-			extractLifecycle(ir, m, model, lifecycle)
+			extractLifecycle(ir, m, model, lifecycle, smithyNamespace)
 		}
 
-		setIdentifierMetadata(ir, m, model)
+		setIdentifierMetadata(ir, m, model, smithyNamespace)
 
 		if hasEnumExtraction(m) {
-			addEnumFields(ir, m, model)
+			addEnumFields(ir, m, model, smithyNamespace)
 		}
 	}
 
@@ -95,15 +81,14 @@ func hasExplicitExtraction(m *awsmapping.ResourceMapping) bool {
 	return len(m.ExplicitFields) > 0
 }
 
-func needsSmithyModel(m *awsmapping.ResourceMapping) bool {
-	return hasLifecycleExtraction(m) || hasEnumExtraction(m) || m.SmithyResource != ""
-}
-
 func hasAnyExtractionConfig(m *awsmapping.ResourceMapping) bool {
 	return hasLifecycleExtraction(m) || hasEnumExtraction(m) || hasExplicitExtraction(m)
 }
 
-func loadModel(apiModelsBaseURL, smithyModelPath string) (*smithymodel.Model, error) {
+// LoadModel fetches and parses the Smithy model at smithyModelPath relative to
+// apiModelsBaseURL. It is exported so callers (e.g. resolveResourceInfo in
+// main.go) can load the model once and pass it to ExtractResource.
+func LoadModel(apiModelsBaseURL, smithyModelPath string) (*smithymodel.Model, error) {
 	modelURL, err := url.JoinPath(strings.TrimRight(apiModelsBaseURL, "/"), smithyModelPath)
 	if err != nil {
 		return nil, fmt.Errorf("joining smithy model URL: %w", err)
@@ -112,11 +97,11 @@ func loadModel(apiModelsBaseURL, smithyModelPath string) (*smithymodel.Model, er
 	return smithymodel.LoadURL(modelURL)
 }
 
-func resolveLifecycle(m *awsmapping.ResourceMapping, model *smithymodel.Model) (awsmapping.Lifecycle, error) {
+func resolveLifecycle(m *awsmapping.ResourceMapping, model *smithymodel.Model, smithyNamespace string) (awsmapping.Lifecycle, error) {
 	resolved := awsmapping.Lifecycle{}
 
 	if m.SmithyResource != "" {
-		resourceID := m.SmithyNamespace + "#" + m.SmithyResource
+		resourceID := smithyNamespace + "#" + m.SmithyResource
 		shape := model.Shape(resourceID)
 		if shape == nil || shape.Kind != smithymodel.KindResource {
 			return resolved, fmt.Errorf("resource shape %q not found", resourceID)
@@ -166,12 +151,12 @@ func resolveLifecycle(m *awsmapping.ResourceMapping, model *smithymodel.Model) (
 	return resolved, nil
 }
 
-func setIdentifierMetadata(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model) {
+func setIdentifierMetadata(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model, smithyNamespace string) {
 	if m.SmithyResource == "" {
 		return
 	}
 
-	resourceID := m.SmithyNamespace + "#" + m.SmithyResource
+	resourceID := smithyNamespace + "#" + m.SmithyResource
 	shape := model.Shape(resourceID)
 	if shape == nil || shape.Kind != smithymodel.KindResource || len(shape.Identifiers) == 0 {
 		return
@@ -205,7 +190,7 @@ func opName(target string) string {
 // Lifecycle extraction
 // ---------------------------------------------------------------------------
 
-func extractLifecycle(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model, lifecycle awsmapping.Lifecycle) {
+func extractLifecycle(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model, lifecycle awsmapping.Lifecycle, smithyNamespace string) {
 	// Union fields from write operation inputs and read/list outputs.
 	ops := []string{
 		lifecycle.Create,
@@ -224,7 +209,7 @@ func extractLifecycle(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, mo
 		}
 		seenOps[opName] = true
 
-		opID := m.SmithyNamespace + "#" + opName
+		opID := smithyNamespace + "#" + opName
 		op := model.Shape(opID)
 		if op == nil || op.Kind != smithymodel.KindOperation {
 			continue
@@ -248,7 +233,6 @@ func addStructureFields(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, 
 	}
 
 	for memberName, mem := range s.Members {
-
 		// Skip transport/identity fields detected by traits.
 		if mem.Traits.IsSuppressible() {
 			continue
@@ -282,8 +266,8 @@ func addStructureFields(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, 
 // Enum expansion
 // ---------------------------------------------------------------------------
 
-func addEnumFields(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model) {
-	enumID := m.SmithyNamespace + "#" + m.AttributeMapEnum
+func addEnumFields(ir *tfschema.ResourceIR, m *awsmapping.ResourceMapping, model *smithymodel.Model, smithyNamespace string) {
+	enumID := smithyNamespace + "#" + m.AttributeMapEnum
 	enumShape := model.Shape(enumID)
 	if enumShape == nil || enumShape.Kind != smithymodel.KindEnum {
 		return

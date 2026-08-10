@@ -2,43 +2,42 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // Package awsmapping loads the YAML resource mapping file that bridges
-// Terraform resource names to their corresponding AWS Smithy model operations.
+// Terraform resource names to AWS Smithy model shapes, operations, and field
+// extraction rules.
 package awsmapping
 
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 // File is the top-level structure of aws_resources.yaml.
 type File struct {
-	// Services maps Terraform service names to AWS API model directory names
-	// when the two differ (e.g. "prometheus" → "amp"). Checked before
-	// auto-discovery; if an entry exists the renamed value is used directly.
-	Services map[string]string `yaml:"services"`
+	SuppressFields []string `yaml:"suppress_fields"`
+
+	SkipResources map[string]*SkipResource `yaml:"skip_resources"`
 
 	Resources map[string]*ResourceMapping `yaml:"resources"`
 }
 
+type SkipResource struct {
+	Reason string `yaml:"reason"`
+}
+
 // ResourceMapping holds the configuration for one Terraform resource.
 type ResourceMapping struct {
-	// SmithyModel is the path to the Smithy JSON file, relative to the
-	// api-models-aws root directory.
-	SmithyModel string `yaml:"smithy_model"`
-
-	// SmithyNamespace is the AWS namespace prefix, e.g. "com.amazonaws.sqs".
-	SmithyNamespace string `yaml:"smithy_namespace"`
-
 	// SmithyResource is the Smithy resource shape name (without namespace),
 	// e.g. "WorkspaceResourcePolicy". When set, extraction can infer lifecycle
 	// operations from the resource shape's put/create/read/update/delete/list
 	// targets and other operations.
 	SmithyResource string `yaml:"smithy_resource"`
 
-	// Lifecycle names the Smithy operations (without namespace) for each
-	// CRUD verb. Only Create and Read are required for Phase 1.
+	// Lifecycle names Smithy operations (without namespace) for the supported
+	// resource actions. Values may be inferred from Smithy resource shapes and
+	// overridden here when necessary.
 	Lifecycle Lifecycle `yaml:"lifecycle"`
 
 	// SuppressFields lists member names that must be dropped from the
@@ -93,8 +92,11 @@ func LoadFile(path string) (*File, error) {
 	if err := yaml.Unmarshal(data, &f); err != nil {
 		return nil, fmt.Errorf("parsing mapping file: %w", err)
 	}
-	if f.Services == nil {
-		f.Services = make(map[string]string)
+	if f.SuppressFields == nil {
+		f.SuppressFields = []string{}
+	}
+	if f.SkipResources == nil {
+		f.SkipResources = make(map[string]*SkipResource)
 	}
 	if f.Resources == nil {
 		f.Resources = make(map[string]*ResourceMapping)
@@ -106,7 +108,7 @@ func LoadFile(path string) (*File, error) {
 // IsSuppressed reports whether fieldName appears in the suppress list.
 func (m *ResourceMapping) IsSuppressed(fieldName string) bool {
 	for _, s := range m.SuppressFields {
-		if s == fieldName {
+		if strings.EqualFold(s, fieldName) {
 			return true
 		}
 	}

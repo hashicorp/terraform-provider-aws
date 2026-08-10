@@ -9,6 +9,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/awsmapping"
 )
 
+// TestSnakeToPascal exercises the snake_case → PascalCase conversion helper.
+func TestSnakeToPascal(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"workspace", "Workspace"},
+		{"resource_policy", "ResourcePolicy"},
+		{"workspace_resource_policy", "WorkspaceResourcePolicy"},
+		{"", ""},
+		{"already", "Already"},
+		{"a_b_c", "ABC"},
+	}
+
+	for _, tc := range cases {
+		got := awsmapping.SnakeToPascal(tc.in)
+		if got != tc.want {
+			t.Errorf("SnakeToPascal(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
 // TestCamelToSnake exercises the name-normalisation helper.
 func TestCamelToSnake(t *testing.T) {
 	t.Parallel()
@@ -30,6 +54,8 @@ func TestCamelToSnake(t *testing.T) {
 		{"DisplayName", "display_name"},
 		{"alias", "alias"},
 		{"kmsKeyArn", "kms_key_arn"},
+		{"KMSKey", "kms_key"},
+		{"URL", "url"},
 		{"", ""},
 	}
 
@@ -41,8 +67,8 @@ func TestCamelToSnake(t *testing.T) {
 	}
 }
 
-// TestLoadFile_ParsesRealMappingFile ensures the actual aws_resources.yaml
-// parses without error and contains the three Phase 1 resources.
+// TestLoadFile_ParsesRealMappingFile ensures the checked-in mapping file parses
+// and contains the expected resource entries.
 func TestLoadFile_ParsesRealMappingFile(t *testing.T) {
 	t.Parallel()
 
@@ -108,9 +134,9 @@ func TestLoadFile_SNSCapabilities(t *testing.T) {
 	}
 }
 
-// TestLoadFile_AMPWorkspaceCapabilities confirms aws_prometheus_workspace
-// is configured for lifecycle inference from smithy_resource.
-func TestLoadFile_AMPWorkspaceCapabilities(t *testing.T) {
+// TestLoadFile_AMPWorkspaceMapping confirms the workspace mapping supplies its
+// field rename while Smithy resource discovery remains a later pipeline step.
+func TestLoadFile_AMPWorkspaceMapping(t *testing.T) {
 	t.Parallel()
 
 	f, err := awsmapping.LoadFile("../../mappings/aws_resources.yaml")
@@ -123,11 +149,11 @@ func TestLoadFile_AMPWorkspaceCapabilities(t *testing.T) {
 		t.Fatal("aws_prometheus_workspace missing")
 	}
 
-	if m.Lifecycle.Create != "" {
-		t.Errorf("Lifecycle.Create = %q, want empty for inference", m.Lifecycle.Create)
+	if m.SmithyResource != "" {
+		t.Errorf("SmithyResource = %q, want empty before resource-service discovery", m.SmithyResource)
 	}
-	if m.SmithyResource != "Workspace" {
-		t.Errorf("SmithyResource = %q, want %q", m.SmithyResource, "Workspace")
+	if got := m.FieldRenames["workspaceId"]; got != "id" {
+		t.Errorf("FieldRenames[workspaceId] = %q, want id", got)
 	}
 }
 
@@ -186,29 +212,6 @@ func TestMapping_TFName(t *testing.T) {
 	}
 }
 
-// TestLoadFile_ServicesBlock verifies that the services: rename block is parsed
-// correctly and contains the expected prometheus→amp entry.
-func TestLoadFile_ServicesBlock(t *testing.T) {
-	t.Parallel()
-
-	f, err := awsmapping.LoadFile("../../mappings/aws_resources.yaml")
-	if err != nil {
-		t.Fatalf("LoadFile: %v", err)
-	}
-
-	if f.Services == nil {
-		t.Fatal("Services map is nil")
-	}
-
-	got, ok := f.Services["prometheus"]
-	if !ok {
-		t.Fatal("services: entry for \"prometheus\" is missing")
-	}
-	if got != "amp" {
-		t.Errorf("services[\"prometheus\"] = %q, want %q", got, "amp")
-	}
-}
-
 // TestMapping_IsSuppressed checks the suppress list.
 func TestMapping_IsSuppressed(t *testing.T) {
 	t.Parallel()
@@ -228,5 +231,26 @@ func TestMapping_IsSuppressed(t *testing.T) {
 	}
 	if m.IsSuppressed("FifoQueue") {
 		t.Error("FifoQueue should NOT be suppressed")
+	}
+	if !m.IsSuppressed("approximatenumberofmessages") {
+		t.Error("suppression should be case-insensitive")
+	}
+}
+
+// TestLoadFile_SkipResources verifies that skipped resources retain their
+// operator-facing reason after YAML decoding.
+func TestLoadFile_SkipResources(t *testing.T) {
+	t.Parallel()
+
+	f, err := awsmapping.LoadFile("../../mappings/aws_resources.yaml")
+	if err != nil {
+		t.Fatalf("LoadFile: %v", err)
+	}
+	skip, ok := f.SkipResources["aws_sqs_queue_policy"]
+	if !ok {
+		t.Fatal("aws_sqs_queue_policy missing from SkipResources")
+	}
+	if skip.Reason == "" {
+		t.Error("aws_sqs_queue_policy skip reason is empty")
 	}
 }

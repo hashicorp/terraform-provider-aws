@@ -3,7 +3,10 @@
 
 package awsmapping
 
-import "unicode"
+import (
+	"strings"
+	"unicode"
+)
 
 // CamelToSnake converts a PascalCase or camelCase name to snake_case.
 // Examples:
@@ -41,4 +44,31 @@ func CamelToSnake(s string) string {
 		}
 	}
 	return string(out)
+}
+
+// SnakeToPascal converts a snake_case name to PascalCase by capitalising the
+// first letter of each underscore-delimited segment and joining them without
+// separators.
+// Examples:
+//
+//	"workspace"                 → "Workspace"
+//	"resource_policy"           → "ResourcePolicy"
+//	"workspace_resource_policy" → "WorkspaceResourcePolicy"
+func SnakeToPascal(s string) string {
+	if s == "" {
+		return ""
+	}
+	parts := strings.Split(s, "_")
+	var b strings.Builder
+	for _, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+		runes := []rune(p)
+		b.WriteRune(unicode.ToUpper(runes[0]))
+		for _, r := range runes[1:] {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

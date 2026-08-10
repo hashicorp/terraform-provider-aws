@@ -9,7 +9,7 @@
 // Only the traits relevant to field extraction are decoded:
 //   - smithy.api#required     — marks a member as required
 //   - smithy.api#httpLabel    — marks a member as a URL path segment (suppress)
-//   - smithy.api#httpQuery    — marks a member as a URL query param (suppress)
+//   - smithy.api#httpQuery    — marks a member as a URL query parameter (suppress)
 //   - smithy.api#idempotencyToken — marks a member as an idempotency token (suppress)
 //   - smithy.api#input / output  — marks a structure as op input/output
 package smithymodel
@@ -169,7 +169,7 @@ type MemberTraits struct {
 // IsSuppressible returns true when the member should be excluded from the
 // resource IR (it is a URL routing concern, not a resource body field).
 func (t MemberTraits) IsSuppressible() bool {
-	return t.HTTPLabel || t.IdempotencyToken
+	return t.HTTPLabel || t.HTTPQuery || t.IdempotencyToken
 }
 
 // ---------------------------------------------------------------------------
@@ -227,8 +227,21 @@ func (m *Model) Shape(id string) *Shape {
 	return m.shapes[id]
 }
 
-// ResolveToKind walks typedef chains until it reaches a shape whose kind is
-// not an alias of another shape, returning the terminal shape.
+// HasResourceShapes reports whether the model contains at least one shape of
+// Kind == KindResource. Used to gate smithy_resource auto-discovery: if the
+// model has no resource shapes (e.g. SQS), skip to the lifecycle/enum path.
+func (m *Model) HasResourceShapes() bool {
+	for _, s := range m.shapes {
+		if s.Kind == KindResource {
+			return true
+		}
+	}
+	return false
+}
+
+// ResolveToKind resolves built-in Smithy prelude types and primitive shapes
+// declared in the model. Non-primitive shapes are returned as-is; the current
+// model representation does not recursively follow typedef chains.
 // This handles patterns like:
 //
 //	com.amazonaws.amp#WorkspaceAlias → { type: "string" }  (direct)

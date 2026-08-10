@@ -4,9 +4,9 @@
 package awsschema_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -32,24 +32,65 @@ func apiModelsBaseURL(t *testing.T) string {
 	return server.URL
 }
 
-func fixtureModelExists(modelPath string) bool {
-	_, err := os.Stat(filepath.Join(fixtureModelsRoot, modelPath))
-	return err == nil
+// fixtureServiceRenames maps TF service name segments to their fixture model
+// directory names when the two differ (e.g. "prometheus" → "amp").
+var fixtureServiceRenames = map[string]string{
+	"prometheus": "amp",
 }
 
-// loadMapping is a test helper that loads the mapping file and returns the
-// ResourceMapping for the given TF resource name.
-func loadMapping(t *testing.T, tfName string) *awsmapping.ResourceMapping {
-	t.Helper()
-	f, err := awsmapping.LoadFile(mappingFile)
+func resolveFixtureModelAndNamespace(tfName string) (string, string, error) {
+	parts := strings.SplitN(tfName, "_", 3)
+	if len(parts) < 3 {
+		return "", "", fmt.Errorf("invalid terraform resource name %q", tfName)
+	}
+
+	tfService := parts[1]
+	awsService := tfService
+	if renamed, ok := fixtureServiceRenames[tfService]; ok {
+		awsService = renamed
+	}
+
+	globPattern := filepath.Join(
+		fixtureModelsRoot,
+		"models",
+		awsService,
+		"service",
+		"*",
+		awsService+"-*.json",
+	)
+	matches, err := filepath.Glob(globPattern)
 	if err != nil {
-		t.Fatalf("LoadFile(%q): %v", mappingFile, err)
+		return "", "", fmt.Errorf("glob fixture model path: %w", err)
 	}
-	m, ok := f.Resources[tfName]
-	if !ok {
-		t.Fatalf("resource %q not found in mapping file", tfName)
+	if len(matches) == 0 {
+		return "", "", fmt.Errorf("no fixture model found for service %q", awsService)
 	}
-	return m
+	sort.Strings(matches)
+	modelFile := matches[len(matches)-1]
+
+	modelPath, err := filepath.Rel(fixtureModelsRoot, modelFile)
+	if err != nil {
+		return "", "", fmt.Errorf("computing fixture model path: %w", err)
+	}
+
+	namespace := "com.amazonaws." + strings.ReplaceAll(awsService, "-", "")
+	return filepath.ToSlash(modelPath), namespace, nil
+}
+
+func extractResourceWithDerivedModel(t *testing.T, tfName string, m *awsmapping.ResourceMapping) (*tfschema.ResourceIR, error) {
+	t.Helper()
+
+	modelPath, namespace, err := resolveFixtureModelAndNamespace(tfName)
+	if err != nil {
+		return nil, err
+	}
+
+	model, err := awsschema.LoadModel(apiModelsBaseURL(t), modelPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return awsschema.ExtractResource(tfName, m, model, namespace)
 }
 
 // fieldNames returns sorted field names from a ResourceIR for stable assertions.
@@ -84,14 +125,42 @@ func printIR(t *testing.T, ir *tfschema.ResourceIR) {
 }
 
 // ---------------------------------------------------------------------------
-// Pattern B — aws_sqs_queue (first priority per the plan)
+// SQS — enum-backed attribute map
 // ---------------------------------------------------------------------------
 
 func TestExtract_SQS_PatternB(t *testing.T) {
 	t.Parallel()
 
-	m := loadMapping(t, "aws_sqs_queue")
-	ir, err := awsschema.ExtractResource("aws_sqs_queue", m, apiModelsBaseURL(t))
+	m := &awsmapping.ResourceMapping{
+		Lifecycle: awsmapping.Lifecycle{
+			Create: "CreateQueue",
+			Read:   "GetQueueAttributes",
+			Update: "SetQueueAttributes",
+			Delete: "DeleteQueue",
+			List:   "ListQueues",
+		},
+		AttributeMapEnum: "QueueAttributeName",
+		SuppressFields: []string{
+			"ApproximateNumberOfMessages",
+			"ApproximateNumberOfMessagesNotVisible",
+			"ApproximateNumberOfMessagesDelayed",
+			"CreatedTimestamp",
+			"LastModifiedTimestamp",
+			"NextToken",
+			"All",
+		},
+		FieldRenames: map[string]string{
+			"VisibilityTimeout":             "visibility_timeout_seconds",
+			"MaximumMessageSize":            "max_message_size",
+			"MessageRetentionPeriod":        "message_retention_seconds",
+			"ReceiveMessageWaitTimeSeconds": "receive_wait_time_seconds",
+			"QueueArn":                      "arn",
+			"QueueUrl":                      "url",
+			"QueueName":                     "name",
+			"QueueNamePrefix":               "name_prefix",
+		},
+	}
+	ir, err := extractResourceWithDerivedModel(t, "aws_sqs_queue", m)
 	if err != nil {
 		t.Fatalf("ExtractResource: %v", err)
 	}
@@ -149,14 +218,31 @@ func TestExtract_SQS_PatternB(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Pattern C — aws_sns_topic
+// SNS — explicit fields for an untyped attribute map
 // ---------------------------------------------------------------------------
 
 func TestExtract_SNS_PatternC(t *testing.T) {
 	t.Parallel()
 
-	m := loadMapping(t, "aws_sns_topic")
-	ir, err := awsschema.ExtractResource("aws_sns_topic", m, apiModelsBaseURL(t))
+	m := &awsmapping.ResourceMapping{
+		Lifecycle: awsmapping.Lifecycle{
+			Create: "CreateTopic",
+			Read:   "GetTopicAttributes",
+		},
+		FieldRenames: map[string]string{"topic_arn": "arn"},
+		ExplicitFields: []awsmapping.ExplicitField{
+			{Name: "DisplayName", Type: "string"},
+			{Name: "KmsMasterKeyId", Type: "string"},
+			{Name: "FifoTopic", Type: "bool"},
+			{Name: "ContentBasedDeduplication", Type: "bool"},
+			{Name: "Policy", Type: "string"},
+			{Name: "DeliveryPolicy", Type: "string"},
+			{Name: "TracingConfig", Type: "string"},
+			{Name: "SignatureVersion", Type: "string"},
+			{Name: "ArchivePolicy", Type: "string"},
+		},
+	}
+	ir, err := extractResourceWithDerivedModel(t, "aws_sns_topic", m)
 	if err != nil {
 		t.Fatalf("ExtractResource: %v", err)
 	}
@@ -208,14 +294,21 @@ func TestExtract_SNS_PatternC(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Pattern A — aws_prometheus_workspace (AMP)
+// AMP — Smithy resource lifecycle extraction
 // ---------------------------------------------------------------------------
 
 func TestExtract_AMP_PatternA(t *testing.T) {
 	t.Parallel()
 
-	m := loadMapping(t, "aws_prometheus_workspace")
-	ir, err := awsschema.ExtractResource("aws_prometheus_workspace", m, apiModelsBaseURL(t))
+	m := &awsmapping.ResourceMapping{
+		SmithyResource: "Workspace",
+		SuppressFields: []string{"clientToken", "workspaceId", "status", "workspace"},
+		FieldRenames: map[string]string{
+			"workspaceId": "id",
+			"kmsKeyArn":   "kms_key_arn",
+		},
+	}
+	ir, err := extractResourceWithDerivedModel(t, "aws_prometheus_workspace", m)
 	if err != nil {
 		t.Fatalf("ExtractResource: %v", err)
 	}
@@ -254,17 +347,15 @@ func TestExtract_AMPWorkspace_InferLifecycleFromSmithyResource(t *testing.T) {
 	t.Parallel()
 
 	m := &awsmapping.ResourceMapping{
-		SmithyModel:     "models/amp/service/2020-08-01/amp-2020-08-01.json",
-		SmithyNamespace: "com.amazonaws.amp",
-		SmithyResource:  "Workspace",
-		SuppressFields:  []string{"clientToken", "workspaceId", "status", "workspace"},
+		SmithyResource: "Workspace",
+		SuppressFields: []string{"clientToken", "workspaceId", "status", "workspace"},
 		FieldRenames: map[string]string{
 			"kmsKeyArn": "kms_key_arn",
 			"arn":       "arn",
 		},
 	}
 
-	ir, err := awsschema.ExtractResource("aws_prometheus_workspace", m, apiModelsBaseURL(t))
+	ir, err := extractResourceWithDerivedModel(t, "aws_prometheus_workspace", m)
 	if err != nil {
 		t.Fatalf("ExtractResource: %v", err)
 	}
@@ -291,17 +382,15 @@ func TestExtract_AMPResourcePolicy_InferLifecycleFromSmithyResource(t *testing.T
 	t.Parallel()
 
 	m := &awsmapping.ResourceMapping{
-		SmithyModel:     "models/amp/service/2020-08-01/amp-2020-08-01.json",
-		SmithyNamespace: "com.amazonaws.amp",
-		SmithyResource:  "WorkspaceResourcePolicy",
-		SuppressFields:  []string{"workspaceId"},
+		SmithyResource: "WorkspaceResourcePolicy",
+		SuppressFields: []string{"workspaceId"},
 		FieldRenames: map[string]string{
 			"policyDocument": "policy_document",
 			"revisionId":     "revision_id",
 		},
 	}
 
-	ir, err := awsschema.ExtractResource("aws_prometheus_resource_policy", m, apiModelsBaseURL(t))
+	ir, err := extractResourceWithDerivedModel(t, "aws_prometheus_resource_policy", m)
 	if err != nil {
 		t.Fatalf("ExtractResource: %v", err)
 	}
@@ -336,14 +425,39 @@ func TestExtract_AMPResourcePolicy_InferLifecycleFromSmithyResource(t *testing.T
 func TestExtract_NoExtractionConfig_ReturnsError(t *testing.T) {
 	t.Parallel()
 
-	m := &awsmapping.ResourceMapping{}
-
-	_, err := awsschema.ExtractResource("aws_example", m, apiModelsBaseURL(t))
+	_, err := awsschema.ExtractResource("aws_example", &awsmapping.ResourceMapping{}, nil, "")
 	if err == nil {
-		t.Fatal("expected error, got nil")
+		t.Fatal("expected an error for a mapping without extraction configuration")
 	}
 	if !strings.Contains(err.Error(), "no extraction configuration") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestExtract_ExplicitFieldsWithoutModel(t *testing.T) {
+	t.Parallel()
+
+	m := &awsmapping.ResourceMapping{ExplicitFields: []awsmapping.ExplicitField{
+		{Name: "Enabled", Type: "bool", Required: true},
+		{Name: "Count", Type: "int64"},
+		{Name: "Ratio", Type: "float64"},
+		{Name: "Description", Type: "string"},
+	}}
+	ir, err := awsschema.ExtractResource("aws_example", m, nil, "")
+	if err != nil {
+		t.Fatalf("ExtractResource: %v", err)
+	}
+	if len(ir.Fields) != 4 {
+		t.Fatalf("field count = %d, want 4", len(ir.Fields))
+	}
+	if got := ir.Fields["enabled"]; got.Type != tfschema.FieldTypeBool || !got.Required || got.Optional {
+		t.Errorf("enabled field = %#v", got)
+	}
+	if got := ir.Fields["count"]; got.Type != tfschema.FieldTypeInt64 || !got.Optional || got.Required {
+		t.Errorf("count field = %#v", got)
+	}
+	if got := ir.Fields["ratio"]; got.Type != tfschema.FieldTypeFloat64 {
+		t.Errorf("ratio type = %q, want float64", got.Type)
 	}
 }
 
@@ -363,11 +477,14 @@ func TestExtract_AllResources_SourceIsAWS(t *testing.T) {
 		tfName, m := tfName, m
 		t.Run(tfName, func(t *testing.T) {
 			t.Parallel()
-			if !fixtureModelExists(m.SmithyModel) {
-				t.Skipf("fixture model missing for %q: %s", tfName, m.SmithyModel)
-			}
-			ir, err := awsschema.ExtractResource(tfName, m, apiModelsBaseURL(t))
+			ir, err := extractResourceWithDerivedModel(t, tfName, m)
 			if err != nil {
+				if strings.Contains(err.Error(), "no extraction configuration") {
+					t.Skip("mapping relies on resource-service discovery before extraction")
+				}
+				if strings.Contains(err.Error(), "no fixture model found") {
+					t.Skip(err.Error())
+				}
 				t.Fatalf("ExtractResource(%q): %v", tfName, err)
 			}
 			if ir.Source != "aws" {
@@ -394,11 +511,14 @@ func TestExtract_FieldNameConsistency(t *testing.T) {
 		tfName, m := tfName, m
 		t.Run(tfName, func(t *testing.T) {
 			t.Parallel()
-			if !fixtureModelExists(m.SmithyModel) {
-				t.Skipf("fixture model missing for %q: %s", tfName, m.SmithyModel)
-			}
-			ir, err := awsschema.ExtractResource(tfName, m, apiModelsBaseURL(t))
+			ir, err := extractResourceWithDerivedModel(t, tfName, m)
 			if err != nil {
+				if strings.Contains(err.Error(), "no extraction configuration") {
+					t.Skip("mapping relies on resource-service discovery before extraction")
+				}
+				if strings.Contains(err.Error(), "no fixture model found") {
+					t.Skip(err.Error())
+				}
 				t.Fatalf("ExtractResource: %v", err)
 			}
 			for key, field := range ir.Fields {
@@ -408,22 +528,4 @@ func TestExtract_FieldNameConsistency(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestExtract_SQS_PrintSortedFields prints all SQS fields sorted for visual
-// comparison against the TF schema output. Use go test -v to see this.
-func TestExtract_SQS_PrintSortedFields(t *testing.T) {
-	m := loadMapping(t, "aws_sqs_queue")
-	ir, err := awsschema.ExtractResource("aws_sqs_queue", m, apiModelsBaseURL(t))
-	if err != nil {
-		t.Fatalf("ExtractResource: %v", err)
-	}
-
-	names := fieldNames(ir)
-	t.Log("\naws_sqs_queue AWS IR fields:")
-	for _, n := range names {
-		f := ir.Fields[n]
-		t.Logf("  %-45s %s", n, f.Type)
-	}
-	t.Logf("Total: %d fields", len(names))
 }

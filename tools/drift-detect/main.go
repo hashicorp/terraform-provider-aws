@@ -10,7 +10,8 @@
 //   - Load a pre-generated `terraform providers schema -json` output file, or
 //     build the provider locally and generate it on the fly.
 //   - Parse the TF JSON into a Phase 1 IR (top-level primitive fields only).
-//   - Load AWS Smithy model JSON files via a resource mapping file.
+//   - Resolve Terraform resources to AWS Smithy model files using the provider
+//     source and the resource mapping file.
 //   - Extract an AWS IR
 //   - Print TF and AWS IR side-by-side for a given resource with a preliminary
 //     "present in AWS but missing in TF" field list.
@@ -47,6 +48,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/awsschema"
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/serviceindex"
+	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/smithymodel"
 	"github.com/hashicorp/terraform-provider-aws/tools/drift-detect/internal/tfschema"
 )
 
@@ -100,21 +102,20 @@ func run() error {
 		}
 	}
 
-	// --- Service index ---
-	var services map[string]string
-	if mappings != nil {
-		services = mappings.Services
-	}
-	idx, err := serviceindex.Load(".cache", defaultAPIModelsBaseURL, services, *refreshSchema)
+	// --- Resource-Service Index ---
+	resourceServiceIndex, err := serviceindex.LoadResourceServiceIndex(*providerDir, *refreshSchema, ps, mappings)
 	if err != nil {
-		return fmt.Errorf("loading service index: %w", err)
+		return fmt.Errorf("loading resource service index: %w", err)
 	}
 
+	resourceNames := []string{*resource} // FIXME: support multiple resources
+
 	// --- Build output ---
+	reports := buildReports(ps, mappings, resourceServiceIndex, defaultAPIModelsBaseURL, resourceNames)
 	if *outputJSON {
-		return outputJSONReport(ps, mappings, idx, defaultAPIModelsBaseURL, *resource)
+		return outputJSONReport(reports)
 	}
-	return outputTextReport(ps, mappings, idx, defaultAPIModelsBaseURL, *resource)
+	return outputTextReport(reports)
 }
 
 // ---------------------------------------------------------------------------
@@ -142,8 +143,7 @@ type sideReport struct {
 // Text output
 // ---------------------------------------------------------------------------
 
-func outputTextReport(ps *tfschema.ProviderSchema, mappings *awsmapping.File, idx *serviceindex.Index, apiModelsBaseURL, resource string) error {
-	reports := buildReports(ps, mappings, idx, apiModelsBaseURL, resource)
+func outputTextReport(reports []resourceReport) error {
 	for _, r := range reports {
 		fmt.Printf("\n══ %s ══\n", r.Resource)
 		printSideText("terraform", r.TF)
@@ -155,7 +155,7 @@ func outputTextReport(ps *tfschema.ProviderSchema, mappings *awsmapping.File, id
 					fmt.Printf("    - %s\n", f)
 				}
 			} else {
-				fmt.Printf("  [no fields missing in TF for compared set]\n")
+				fmt.Printf("\n  [no fields missing in TF for compared set]\n")
 			}
 		}
 	}
@@ -178,8 +178,7 @@ func printSideText(label string, s *sideReport) {
 // JSON output
 // ---------------------------------------------------------------------------
 
-func outputJSONReport(ps *tfschema.ProviderSchema, mappings *awsmapping.File, idx *serviceindex.Index, apiModelsBaseURL, resource string) error {
-	reports := buildReports(ps, mappings, idx, apiModelsBaseURL, resource)
+func outputJSONReport(reports []resourceReport) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(reports)
@@ -189,16 +188,15 @@ func outputJSONReport(ps *tfschema.ProviderSchema, mappings *awsmapping.File, id
 // Report builder
 // ---------------------------------------------------------------------------
 
-func buildReports(ps *tfschema.ProviderSchema, mappings *awsmapping.File, idx *serviceindex.Index, apiModelsBaseURL, resource string) []resourceReport {
-	names := ps.ResourceNames()
+func buildReports(ps *tfschema.ProviderSchema, mappings *awsmapping.File, rsIdx map[string]*serviceindex.ResourceServiceInfo, apiModelsBaseURL string, resourceNames []string) []resourceReport {
 	var reports []resourceReport
 
-	for _, name := range names {
-		if name != resource {
+	for _, name := range resourceNames {
+		tfIR, ok := ps.Resources[name]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "warning: TF resource %q not found\n", name)
 			continue
 		}
-
-		tfIR := ps.Resources[name]
 		tfFields := sortedFields(tfIR.Fields)
 
 		r := resourceReport{
@@ -210,24 +208,24 @@ func buildReports(ps *tfschema.ProviderSchema, mappings *awsmapping.File, idx *s
 			},
 		}
 
-		// Resolve the mapping (YAML-first, auto-discovery as fallback) and
-		// extract the AWS IR.
-		m, err := resolveMapping(name, mappings, idx, apiModelsBaseURL)
+		m, awsModel, namespace, err := resolveResourceInfo(name, mappings, rsIdx, apiModelsBaseURL)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: resolving mapping for %s: %v\n", name, err)
+			fmt.Fprintf(os.Stderr, "warning: %s: %v\n", name, err)
+			reports = append(reports, r)
+			continue
+		}
+
+		awsIR, err := awsschema.ExtractResource(name, m, awsModel, namespace)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: extracting %s from AWS model: %v\n", name, err)
 		} else {
-			awsIR, err := awsschema.ExtractResource(name, m, apiModelsBaseURL)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "warning: extracting %s from AWS model: %v\n", name, err)
-			} else {
-				awsFields := sortedFields(awsIR.Fields)
-				r.AWS = &sideReport{
-					Source:     "aws",
-					FieldCount: len(awsFields),
-					Fields:     awsFields,
-				}
-				r.MissingInTF = missingInTF(tfIR, awsIR)
+			awsFields := sortedFields(awsIR.Fields)
+			r.AWS = &sideReport{
+				Source:     "aws",
+				FieldCount: len(awsFields),
+				Fields:     awsFields,
 			}
+			r.MissingInTF = missingInTF(tfIR, awsIR)
 		}
 
 		reports = append(reports, r)
@@ -235,58 +233,70 @@ func buildReports(ps *tfschema.ProviderSchema, mappings *awsmapping.File, idx *s
 	return reports
 }
 
-// resolveMapping returns the ResourceMapping to use for the given TF resource
-// name, applying YAML-first priority:
-//
-//   - If the YAML mapping has both SmithyModel and SmithyNamespace set, it is
-//     returned as-is (no network calls made).
-//   - Otherwise, the service index is queried to auto-discover the model path
-//     and/or namespace, which are set on a (possibly new) ResourceMapping.
-//
-// An error is returned only when auto-discovery is needed but fails.
-func resolveMapping(tfName string, mappings *awsmapping.File, idx *serviceindex.Index, apiModelsBaseURL string) (*awsmapping.ResourceMapping, error) {
-	// Start with the YAML entry if one exists, otherwise an empty mapping.
+func resolveResourceInfo(
+	name string,
+	mappings *awsmapping.File,
+	rsIdx map[string]*serviceindex.ResourceServiceInfo,
+	apiModelsBaseURL string,
+) (
+	*awsmapping.ResourceMapping,
+	*smithymodel.Model,
+	string,
+	error,
+) {
+	resourceInfo, ok := rsIdx[name]
+	if !ok {
+		return nil, nil, "", fmt.Errorf("resource %q not found in ResourceServiceIndex", name)
+	}
+
+	if resourceInfo.Skipped != nil {
+		return nil, nil, "", fmt.Errorf("resource %q is skipped: %s", name, resourceInfo.Skipped.Reason)
+	}
+
+	if resourceInfo.Error != "" {
+		return nil, nil, "", fmt.Errorf("resource service index: %s", resourceInfo.Error)
+	}
+
+	awsModel, err := awsschema.LoadModel(apiModelsBaseURL, resourceInfo.AWSFile)
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("loading model: %w", err)
+	}
+
 	var m *awsmapping.ResourceMapping
+
 	if mappings != nil {
-		if existing, ok := mappings.Resources[tfName]; ok {
+		if existing, ok := mappings.Resources[name]; ok {
 			m = existing
 		}
 	}
+
 	if m == nil {
 		m = &awsmapping.ResourceMapping{}
 	}
 
-	// If both fields are already set by the YAML, nothing to do.
-	if m.SmithyModel != "" && m.SmithyNamespace != "" {
-		return m, nil
+	if mappings != nil && mappings.SuppressFields != nil {
+		m.SuppressFields = append(m.SuppressFields,mappings.SuppressFields...)
 	}
 
-	// Auto-discover the missing field(s) via the service index.
-	// Parse the service name from aws_<service>_<resource>.
-	parts := strings.SplitN(tfName, "_", 3)
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("cannot parse service name from %q", tfName)
-	}
-	tfServiceName := parts[1]
+	namespace := resourceInfo.AWSNamespace
 
-	awsServiceName, err := idx.Resolve(tfServiceName)
-	if err != nil {
-		return nil, fmt.Errorf("resolving service name: %w", err)
-	}
+	if m.SmithyResource == "" && awsModel != nil && awsModel.HasResourceShapes() {
+		candidate := resourceInfo.TFResourceSegment
+		resourceID := namespace + "#" + candidate
 
-	modelPath, namespace, err := serviceindex.ResolveModelPath(awsServiceName, apiModelsBaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("resolving model path: %w", err)
-	}
-
-	if m.SmithyModel == "" {
-		m.SmithyModel = modelPath
-	}
-	if m.SmithyNamespace == "" {
-		m.SmithyNamespace = namespace
+		if s := awsModel.Shape(resourceID); s != nil && s.Kind == smithymodel.KindResource {
+			m.SmithyResource = candidate
+		} else {
+			candidate2 := candidate + "Resource"
+			resourceID2 := namespace + "#" + candidate2
+			if s2 := awsModel.Shape(resourceID2); s2 != nil &&
+				s2.Kind == smithymodel.KindResource {
+				m.SmithyResource = candidate2
+			}
+		}
 	}
 
-	return m, nil
+	return m, awsModel, namespace, nil
 }
 
 // missingInTF returns a sorted list of AWS IR field names not present in the
@@ -378,15 +388,16 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-// validateResource checks that r is non-empty and matches the required format
-// aws_<service>_<resource>, where all three segments are non-empty strings.
+// validateResource checks that r is non-empty and uses the aws_ resource-name
+// prefix. Detailed resource lookup and service resolution happen later.
 func validateResource(r string) error {
-	if r == "" {
-		return fmt.Errorf("--resource is required (format: aws_<service>_<resource>, e.g. aws_sqs_queue)")
-	}
-	parts := strings.SplitN(r, "_", 3)
-	if len(parts) < 3 || parts[0] != "aws" || parts[1] == "" || parts[2] == "" {
-		return fmt.Errorf("--resource %q is invalid: must be in the format aws_<service>_<resource> (e.g. aws_sqs_queue)", r)
-	}
-	return nil
+    if r == "" {
+        return fmt.Errorf("--resource is required")
+    }
+
+    if !strings.HasPrefix(r, "aws_") {
+        return fmt.Errorf("--resource %q must start with aws_", r)
+    }
+
+    return nil
 }
