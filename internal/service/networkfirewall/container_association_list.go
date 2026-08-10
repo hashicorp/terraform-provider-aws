@@ -59,6 +59,18 @@ func (l *containerAssociationListResource) List(ctx context.Context, request lis
 			arn := aws.ToString(item.Arn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("container_association_arn"), arn)
 
+			var out *networkfirewall.DescribeContainerAssociationOutput
+			if request.IncludeResource {
+				out, err = findContainerAssociationByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					return
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data containerAssociationResourceModel
@@ -67,15 +79,6 @@ func (l *containerAssociationListResource) List(ctx context.Context, request lis
 				data.ContainerAssociationARN = fwflex.StringValueToFramework(ctx, arn)
 
 				if request.IncludeResource {
-					out, err := findContainerAssociationByARN(ctx, conn, arn)
-					if retry.NotFound(err) {
-						return
-					}
-					if err != nil {
-						result = fwdiag.NewListResultErrorDiagnostic(err)
-						return
-					}
-
 					result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
 					if result.Diagnostics.HasError() {
 						return
