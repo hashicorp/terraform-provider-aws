@@ -291,7 +291,7 @@ The `self_managed` block supports the following arguments:
 
 * `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
 * `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
-* `trigger_condition` - (Optional) Conditions that trigger memory processing. See [`trigger_condition` Block](#trigger_condition-block) below. When omitted, the service supplies the documented defaults for all three trigger types.
+* `trigger_conditions` - (Optional) Conditions that trigger memory processing. See [`trigger_conditions` Block](#trigger_conditions-block) below. When omitted, the service supplies the documented defaults for all three trigger types.
 
 ### `invocation_configuration` Block
 
@@ -300,15 +300,15 @@ The `invocation_configuration` block supports the following arguments:
 * `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
 * `topic_arn` - (Required) ARN of the SNS topic for job notifications.
 
-### `trigger_condition` Block
+### `trigger_conditions` Block
 
-The `trigger_condition` block supports the following arguments:
+The `trigger_conditions` block supports the following arguments:
 
 * `message_based_trigger` - (Optional) Message-based condition. See [`message_based_trigger` Block](#message_based_trigger-block) below.
 * `time_based_trigger` - (Optional) Idle-time condition. See [`time_based_trigger` Block](#time_based_trigger-block) below.
 * `token_based_trigger` - (Optional) Token-based condition. See [`token_based_trigger` Block](#token_based_trigger-block) below.
 
-When `trigger_condition` is omitted or the resource is imported, all normalized conditions returned by the service are recorded in state. When only a subset is configured, Terraform state retains that subset while the service applies its defaults to the omitted conditions.
+When `trigger_conditions` is omitted or the resource is imported, all normalized conditions returned by the service are recorded in state. When only a subset is configured, Terraform state retains that subset while the service applies its defaults to the omitted conditions.
 
 ### `message_based_trigger` Block
 

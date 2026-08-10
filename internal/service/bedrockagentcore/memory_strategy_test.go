@@ -337,6 +337,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -357,6 +358,67 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 							InvocationConfiguration: &awstypes.InvocationConfigurationInput{
 								PayloadDeliveryBucketName: aws.String("bucket001"),
 								TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+							},
+						},
+					},
+					Name: aws.String("self_managed_001"),
+				},
+			},
+		},
+		{
+			name: "self-managed with trigger_condition",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+							MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+								MessageCount: types.Int32Value(10),
+							}),
+							TimeBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+							TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TokenBasedTriggerModel{
+								TokenCount: types.Int32Value(100),
+							}),
+						}),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSelfManagedConfiguration{
+						Value: awstypes.SelfManagedConfigurationInput{
+							HistoricalContextWindowSize: aws.Int32(4),
+							InvocationConfiguration: &awstypes.InvocationConfigurationInput{
+								PayloadDeliveryBucketName: aws.String("bucket001"),
+								TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+							},
+							TriggerConditions: []awstypes.TriggerConditionInput{
+								&awstypes.TriggerConditionInputMemberMessageBasedTrigger{
+									Value: awstypes.MessageBasedTriggerInput{
+										MessageCount: aws.Int32(10),
+									},
+								},
+								&awstypes.TriggerConditionInputMemberTokenBasedTrigger{
+									Value: awstypes.TokenBasedTriggerInput{
+										TokenCount: aws.Int32(100),
+									},
+								},
 							},
 						},
 					},
@@ -386,6 +448,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{},
+			awstypes.MessageBasedTriggerInput{},
 			awstypes.SemanticMemoryStrategyInput{},
 			awstypes.SelfManagedConfigurationInput{},
 			awstypes.SummaryMemoryStrategyInput{},
@@ -394,6 +457,11 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
 			awstypes.SummaryOverrideConfigurationInput{},
 			awstypes.SummaryOverrideConsolidationConfigurationInput{},
+			awstypes.TimeBasedTriggerInput{},
+			awstypes.TokenBasedTriggerInput{},
+			awstypes.TriggerConditionInputMemberMessageBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTimeBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTokenBasedTrigger{},
 			awstypes.UserPreferenceMemoryStrategyInput{},
 			awstypes.UserPreferenceOverrideConfigurationInput{},
 			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
@@ -789,6 +857,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -1226,6 +1295,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),

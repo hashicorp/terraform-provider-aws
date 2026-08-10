@@ -298,8 +298,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
-									// TODO https://github.com/hashicorp/terraform-provider-aws/pull/49306
-									"trigger_condition": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute[triggerConditionModel](ctx),
+									"trigger_conditions": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute(ctx, framework.WithValidatorsAppend[triggerConditionsModel](triggerConditionsValidator{})),
 								},
 								Blocks: map[string]schema.Block{
 									"invocation_configuration": schema.ListNestedBlock{
@@ -1345,7 +1344,7 @@ func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v 
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
-	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionModel]        `tfsdk:"trigger_condition"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions"`
 }
 
 type invocationConfigurationModel struct {
@@ -1353,7 +1352,7 @@ type invocationConfigurationModel struct {
 	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
 }
 
-type triggerConditionModel struct {
+type triggerConditionsModel struct {
 	MessageBasedTrigger fwtypes.ListNestedObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
 	TimeBasedTrigger    fwtypes.ListNestedObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
 	TokenBasedTrigger   fwtypes.ListNestedObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
@@ -1369,4 +1368,225 @@ type timeBasedTriggerModel struct {
 
 type tokenBasedTriggerModel struct {
 	TokenCount types.Int32 `tfsdk:"token_count"`
+}
+
+var (
+	_ fwflex.Expander  = triggerConditionsModel{}
+	_ fwflex.Flattener = &triggerConditionsModel{}
+)
+
+func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conditions, ok := v.([]awstypes.TriggerCondition)
+	if !ok {
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("triggerConditionsModel.Flatten: %T", v),
+		)
+		return diags
+	}
+
+	m.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+	m.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+	m.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
+
+	var d diag.Diagnostics
+	for _, v := range conditions {
+		switch t := v.(type) {
+		case *awstypes.TriggerConditionMemberMessageBasedTrigger:
+			var model messageBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		case *awstypes.TriggerConditionMemberTokenBasedTrigger:
+			var model tokenBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		case *awstypes.TriggerConditionMemberTimeBasedTrigger:
+			var model timeBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		default:
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("triggerConditionsModel.Flatten: %T", v),
+			)
+		}
+
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	conditions := make([]awstypes.TriggerConditionInput, 0, 3)
+
+	if !m.MessageBasedTrigger.IsNull() && !m.MessageBasedTrigger.IsUnknown() {
+		p, d := m.MessageBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberMessageBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		conditions = append(conditions, &condition)
+	}
+
+	if !m.TokenBasedTrigger.IsNull() && !m.TokenBasedTrigger.IsUnknown() {
+		p, d := m.TokenBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberTokenBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		conditions = append(conditions, &condition)
+	}
+
+	if !m.TimeBasedTrigger.IsNull() && !m.TimeBasedTrigger.IsUnknown() {
+		p, d := m.TimeBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberTimeBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		conditions = append(conditions, &condition)
+	}
+
+	return conditions, diags
+}
+
+var _ validator.List = triggerConditionsValidator{}
+
+type triggerConditionsValidator struct{}
+
+func (triggerConditionsValidator) Description(context.Context) string {
+	return "validates self-managed memory trigger condition thresholds"
+}
+
+func (v triggerConditionsValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (triggerConditionsValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
+	const (
+		minimumMessageCount       int32 = 1
+		maximumMessageCount       int32 = 50
+		minimumTokenCount         int32 = 100
+		maximumTokenCount         int32 = 500_000
+		minimumIdleSessionTimeout int32 = 10
+		maximumIdleSessionTimeout int32 = 3_000
+	)
+
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value, diags := fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx).ValueFromList(ctx, request.ConfigValue)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conditionsValue, ok := value.(fwtypes.ListNestedObjectValueOf[triggerConditionsModel])
+	if !ok {
+		response.Diagnostics.AddAttributeError(request.Path, "Invalid Attribute Value", fmt.Sprintf("unexpected trigger conditions value type: %T", value))
+		return
+	}
+	conditions, diags := conditionsValue.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() || conditions == nil {
+		return
+	}
+
+	rootPath := request.Path.AtListIndex(0)
+	if !conditions.MessageBasedTrigger.IsNull() && !conditions.MessageBasedTrigger.IsUnknown() {
+		message, diags := conditions.MessageBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if message != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("message_based_trigger").AtListIndex(0).AtName("message_count"),
+				message.MessageCount,
+				minimumMessageCount,
+				maximumMessageCount,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("message_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+
+	if !conditions.TokenBasedTrigger.IsNull() && !conditions.TokenBasedTrigger.IsUnknown() {
+		token, diags := conditions.TokenBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if token != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("token_based_trigger").AtListIndex(0).AtName("token_count"),
+				token.TokenCount,
+				minimumTokenCount,
+				maximumTokenCount,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("token_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+
+	if !conditions.TimeBasedTrigger.IsNull() && !conditions.TimeBasedTrigger.IsUnknown() {
+		timeBased, diags := conditions.TimeBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if timeBased != nil {
+			validateTriggerThreshold(
+				rootPath.AtName("time_based_trigger").AtListIndex(0).AtName("idle_session_timeout"),
+				timeBased.IdleSessionTimeout,
+				minimumIdleSessionTimeout,
+				maximumIdleSessionTimeout,
+				response,
+			)
+		} else {
+			response.Diagnostics.AddAttributeError(rootPath.AtName("time_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
+		}
+	}
+}
+
+func validateTriggerThreshold(attributePath path.Path, value types.Int32, min, max int32, response *validator.ListResponse) {
+	if value.IsNull() || value.IsUnknown() || value.ValueInt32() >= min && value.ValueInt32() <= max {
+		return
+	}
+	response.Diagnostics.AddAttributeError(attributePath, "Invalid Attribute Value", fmt.Sprintf("value must be between %d and %d, got: %d", min, max, value.ValueInt32()))
 }
