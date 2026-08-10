@@ -109,8 +109,6 @@ The following arguments are optional:
 
 ### `volume` Block
 
-The `volume` block exports the following attributes:
-
 * `configure_at_launch` - Whether the volume is configured at launch time.
 * `docker_volume_configuration` - Configuration block for a Docker volume. See [`docker_volume_configuration` Block](#docker_volume_configuration-block) for details.
 * `efs_volume_configuration` - Configuration block for an EFS volume. See [`efs_volume_configuration` Block](#efs_volume_configuration-block) for details.
@@ -121,8 +119,6 @@ The `volume` block exports the following attributes:
 
 ### `docker_volume_configuration` Block
 
-The `docker_volume_configuration` block exports the following attributes:
-
 * `autoprovision` - Whether the Docker volume is created if it does not already exist.
 * `driver` - Docker volume driver used.
 * `driver_opts` - Map of Docker driver-specific options.
@@ -130,8 +126,6 @@ The `docker_volume_configuration` block exports the following attributes:
 * `scope` - Scope for the Docker volume, either `task` or `shared`.
 
 ### `efs_volume_configuration` Block
-
-The `efs_volume_configuration` block exports the following attributes:
 
 * `authorization_config` - Configuration block for authorization for the Amazon EFS file system. See [`efs_volume_configuration.authorization_config` Block](#efs_volume_configurationauthorization_config-block) for details.
 * `file_system_id` - ID of the EFS file system.
@@ -141,14 +135,10 @@ The `efs_volume_configuration` block exports the following attributes:
 
 #### `efs_volume_configuration.authorization_config` Block
 
-The `authorization_config` block exports the following attributes:
-
 * `access_point_id` - Access point ID used.
 * `iam` - Whether the Amazon ECS task IAM role defined in a task definition is used when mounting the Amazon EFS file system.
 
 ### `fsx_windows_file_server_volume_configuration` Block
-
-The `fsx_windows_file_server_volume_configuration` block exports the following attributes:
 
 * `authorization_config` - Configuration block for authorization for the Amazon FSx for Windows File Server file system. See [`fsx_windows_file_server_volume_configuration.authorization_config` Block](#fsx_windows_file_server_volume_configurationauthorization_config-block) for details.
 * `file_system_id` - Amazon FSx for Windows File Server file system ID used.
@@ -156,14 +146,10 @@ The `fsx_windows_file_server_volume_configuration` block exports the following a
 
 #### `fsx_windows_file_server_volume_configuration.authorization_config` Block
 
-The `authorization_config` block exports the following attributes:
-
 * `credentials_parameter` - Authorization credential option used.
 * `domain` - Fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
 ### `s3files_volume_configuration` Block
-
-The `s3files_volume_configuration` block exports the following attributes:
 
 * `access_point_arn` - Full ARN of the S3 Files access point used.
 * `file_system_arn` - Full ARN of the S3 Files file system mounted.
