@@ -32,6 +32,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the service.
+* `kms_key_id` - KMS key ARN.
 * `name` - Name of the service.
 * `permission_model` - Permission model configuration. See [`permission_model` Block](#permission_model-block) below.
 * `policy_arn` - ARN of the associated resilience policy.
@@ -40,4 +41,14 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `permission_model` Block
 
-* `invoker_role_name` - Name of the IAM role used for resource discovery.
+The `permission_model` block supports:
+
+* `cross_account_role` - (Optional) Cross-account IAM role. See [`cross_account_role` Block](#cross_account_role-block) below.
+* `invoker_role_name` - (Required) Name of the IAM role that Resilience Hub assumes for resource discovery.
+
+### `cross_account_role` Block
+
+The `cross_account_role` block supports:
+
+* `cross_account_role_arn` - (Required) ARN of the IAM Role for the profile.
+* `external_id` - (Optional) External ID used for assuming the cross-account role.
