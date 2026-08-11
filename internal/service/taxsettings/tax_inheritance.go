@@ -34,6 +34,10 @@ import (
 // @Region(global=true)
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(tagsTest=false)
+// @Testing(importStateIdFunc=testAccTaxInheritanceImportStateIdFunc)
+// @Testing(importStateIdAttribute=heritage_status)
+// @Testing(checkDestroyNoop=true)
 func newTaxInheritanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &taxInheritanceResource{}
 
@@ -125,7 +129,9 @@ func (r *taxInheritanceResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *taxInheritanceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("heritage_status"), req, resp)
+	r.WithImportByIdentity.ImportState(ctx, req, resp)
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("heritage_status"), types.StringUnknown())...)
 }
 
 func (r *taxInheritanceResource) putTaxInheritanceHeritageStatus(ctx context.Context, data *taxInheritanceResourceModel) diag.Diagnostics {
