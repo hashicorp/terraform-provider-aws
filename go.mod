@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.57.5
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.68.4
-	github.com/aws/aws-sdk-go-v2/service/connect v1.184.4
+	github.com/aws/aws-sdk-go-v2/service/connect v1.185.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.37.4
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.320.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.321.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.60.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.90.0
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.45.4
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.85.4
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.42.4
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.58.4
@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.97.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.101.4
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.42.4
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.43.4
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.36.4
@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/resiliencehubv2 v1.4.1
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.27.4
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.26.3
@@ -237,7 +237,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.10.4
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.264.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.265.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.37.4
