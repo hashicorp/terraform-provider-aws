@@ -35,6 +35,7 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "unmanaged_vcpus", resourceName, "unmanaged_vcpus"),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "0"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -64,6 +65,31 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.terminate_jobs_on_update", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironmentDataSource_unmanagedVCpus(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+	dataSourceName := "data.aws_batch_compute_environment.by_name"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentDataSourceConfig_unmanagedVCpus(rName, 256),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "unmanaged_vcpus", resourceName, "unmanaged_vcpus"),
+					resource.TestCheckResourceAttr(dataSourceName, "unmanaged_vcpus", "256"),
 				),
 			},
 		},
@@ -184,4 +210,21 @@ data "aws_batch_compute_environment" "by_name" {
   name = aws_batch_compute_environment.test.name
 }
 `, rName, timeout, terminate))
+}
+
+func testAccComputeEnvironmentDataSourceConfig_unmanagedVCpus(rName string, vcpus int) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  service_role    = aws_iam_role.batch_service.arn
+  type            = "UNMANAGED"
+  unmanaged_vcpus = %[2]d
+  depends_on      = [aws_iam_role_policy_attachment.batch_service]
+}
+
+data "aws_batch_compute_environment" "by_name" {
+  name = aws_batch_compute_environment.test.name
+}
+`, rName, vcpus))
 }

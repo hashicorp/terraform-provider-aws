@@ -1770,6 +1770,68 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 	})
 }
 
+func TestAccBatchComputeEnvironment_unmanagedvCpus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_unmanagedvCpus(rName, 256),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UNMANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "unmanaged_vcpus", "256"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_unmanagedvCpus(rName, 512),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "unmanaged_vcpus", "512"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UNMANAGED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_unmanagedvCpusInvalidWithManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccComputeEnvironmentConfig_managedWithUnmanagedvCpus(rName),
+				ExpectError: regexache.MustCompile("`unmanaged_vcpus` can only be specified when `type` is"),
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -3436,4 +3498,30 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName, instanceType))
+}
+
+func testAccComputeEnvironmentConfig_unmanagedvCpus(rName string, vcpus int) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  service_role    = aws_iam_role.batch_service.arn
+  type            = "UNMANAGED"
+  unmanaged_vcpus = %[2]d
+  depends_on      = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName, vcpus))
+}
+
+func testAccComputeEnvironmentConfig_managedWithUnmanagedvCpus(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  service_role    = aws_iam_role.batch_service.arn
+  type            = "MANAGED"
+  unmanaged_vcpus = 256
+  depends_on      = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
 }
