@@ -4036,6 +4036,9 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 	var dbCluster types.DBCluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
+	parameterGroupResourceName := "aws_rds_cluster_parameter_group.test"
+
+	engineVersion, engineVersionUpgrade := "8.0.mysql_aurora.3.90.0", "8.0.mysql_aurora.3.10.0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4044,7 +4047,7 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion_outOfBand(rName, "STATEMENT"),
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, "STATEMENT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
@@ -4056,8 +4059,8 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 
 					id := dbCluster.DBClusterIdentifier
 					_, err := conn.ModifyDBCluster(ctx, &rds.ModifyDBClusterInput{
-						DBClusterIdentifier: dbCluster.DBClusterIdentifier,
-						EngineVersion:       aws.String("8.0.mysql_aurora.3.11.1"),
+						DBClusterIdentifier: id,
+						EngineVersion:       aws.String(engineVersionUpgrade),
 						ApplyImmediately:    aws.Bool(true),
 					})
 
@@ -4065,11 +4068,11 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 						t.Fatalf("externally updating RDS Cluster engine version: %s", err)
 					}
 
-					if _, err := tfrds.WaitDBClusterUpdated(ctx, conn, aws.ToString(id), true, time.Duration(15*time.Minute)); err != nil {
+					if _, err := tfrds.WaitDBClusterUpdated(ctx, conn, aws.ToString(id), true, 120*time.Minute); err != nil {
 						t.Fatalf("waiting on external update for RDS Cluster engine version: %s", err)
 					}
 				},
-				Config: testAccClusterConfig_engineVersion_outOfBand(rName, "STATEMENT"),
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, "STATEMENT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
@@ -4077,6 +4080,19 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersionUpgrade, "ROW"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(parameterGroupResourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -7555,10 +7571,10 @@ resource "aws_kms_key" "test" {
 `, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
 }
 
-func testAccClusterConfig_engineVersion_outOfBand(rName, parameter string) string {
+func testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, parameter string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
-  engine = local.engine
+  engine = %[3]q
 }
 
 
@@ -7579,7 +7595,7 @@ resource "aws_rds_cluster" "test" {
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
   database_name                   = "test"
   engine                          = %[3]q
-  engine_version                  = "8.0.mysql_aurora.3.10.5" # lower version that is upgradable
+  engine_version                  = %[4]q
   master_username                 = "tfacctest"
   master_password                 = "avoid-plaintext-passwords"
   storage_encrypted               = true
@@ -7606,5 +7622,5 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 
-`, rName, parameter, tfrds.ClusterEngineAuroraMySQL)
+`, rName, parameter, tfrds.ClusterEngineAuroraMySQL, engineVersion)
 }
