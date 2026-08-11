@@ -28,5 +28,5 @@ list "aws_pinpointsmsvoicev2_resource_policy" "example" {
 
 This list resource supports the following arguments:
 
-* `resource_arn` - (Required) ARN of the End User Messaging SMS resource whose attached policy to list.
 * `region` - (Optional) Region to query. Defaults to provider region.
+* `resource_arn` - (Required) ARN of the End User Messaging SMS resource whose attached policy to list.
