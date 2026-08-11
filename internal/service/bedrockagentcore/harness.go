@@ -39,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -115,7 +116,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"max_tokens": schema.Int32Attribute{
 				Optional: true,
 			},
-			"memory_actual":   framework.ResourceComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, unknownWhenValueChanges{path: path.Root("memory")}),
+			"memory_actual":   framework.ResourceComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root("memory"))),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"timeout_seconds": schema.Int32Attribute{
@@ -1683,37 +1684,4 @@ func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Con
 	}
 
 	return diags
-}
-
-// memory_actual plan modifier.
-
-type unknownWhenValueChanges struct {
-	path path.Path
-}
-
-func (m unknownWhenValueChanges) Description(_ context.Context) string {
-	return "Uses state for unknown when the value at the given path is not changing."
-}
-
-func (m unknownWhenValueChanges) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m unknownWhenValueChanges) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.StateValue.IsNull() {
-		return
-	}
-
-	var configValue, stateValue attr.Value
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, m.path, &configValue)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, m.path, &stateValue)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !configValue.Equal(stateValue) {
-		return
-	}
-
-	resp.PlanValue = req.StateValue
 }
