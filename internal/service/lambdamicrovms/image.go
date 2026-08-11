@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,8 +31,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -177,9 +174,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
-	outWait, err := waitImageCreated(ctx, conn, plan.ImageArn.ValueString(), createTimeout)
+	outWait, err := waitImageCreated(ctx, conn, plan.ImageARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -202,14 +197,14 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	out, err := findImageByARN(ctx, conn, state.ImageArn.ValueString())
+	out, err := findImageByARN(ctx, conn, state.ImageARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.String())
 		return
 	}
 
@@ -240,7 +235,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if diff.HasChanges() {
 		var input lambdamicrovms.UpdateMicrovmImageInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		input.ImageIdentifier = plan.ImageArn.ValueStringPointer()
+		input.ImageIdentifier = plan.ImageARN.ValueStringPointer()
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		// The service resolves base_image_version to a full version (e.g. "0.0")
@@ -255,11 +250,11 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		out, err := conn.UpdateMicrovmImage(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageARN.String())
 			return
 		}
 		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ImageARN.String())
 			return
 		}
 
@@ -268,11 +263,10 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		outWait, err := waitImageUpdated(ctx, conn, plan.ImageArn.ValueString(), updateTimeout)
+		outWait, err := waitImageUpdated(ctx, conn, plan.ImageARN.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageARN.String())
 			return
 		}
 
@@ -294,7 +288,7 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	input := lambdamicrovms.DeleteMicrovmImageInput{
-		ImageIdentifier: state.ImageArn.ValueStringPointer(),
+		ImageIdentifier: state.ImageARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMicrovmImage(ctx, &input)
@@ -303,14 +297,13 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.ValueString())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitImageDeleted(ctx, conn, state.ImageArn.ValueString(), deleteTimeout)
+	_, err = waitImageDeleted(ctx, conn, state.ImageARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.ValueString())
 		return
 	}
 }
@@ -321,7 +314,6 @@ func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 		Target:                    enum.Slice(awstypes.MicrovmImageStateCreated),
 		Refresh:                   statusImage(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -339,7 +331,6 @@ func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 		Target:                    enum.Slice(awstypes.MicrovmImageStateUpdated),
 		Refresh:                   statusImage(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -408,14 +399,14 @@ func findImageByARN(ctx context.Context, conn *lambdamicrovms.Client, arn string
 type imageResourceModel struct {
 	framework.WithRegionModel
 	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]      `tfsdk:"additional_os_capabilities"`
-	BaseImageArn             fwtypes.ARN                                        `tfsdk:"base_image_arn"`
+	BaseImageARN             fwtypes.ARN                                        `tfsdk:"base_image_arn"`
 	BaseImageVersion         types.String                                       `tfsdk:"base_image_version"`
-	BuildRoleArn             fwtypes.ARN                                        `tfsdk:"build_role_arn"`
+	BuildRoleARN             fwtypes.ARN                                        `tfsdk:"build_role_arn"`
 	CodeArtifact             fwtypes.ListNestedObjectValueOf[codeArtifactModel] `tfsdk:"code_artifact"`
 	Description              types.String                                       `tfsdk:"description"`
 	EgressNetworkConnectors  fwtypes.ListOfString                               `tfsdk:"egress_network_connectors"`
 	EnvironmentVariables     fwtypes.MapOfString                                `tfsdk:"environment_variables"`
-	ImageArn                 types.String                                       `tfsdk:"arn"`
+	ImageARN                 types.String                                       `tfsdk:"arn"`
 	LatestActiveImageVersion types.String                                       `tfsdk:"latest_active_image_version"`
 	LatestFailedImageVersion types.String                                       `tfsdk:"latest_failed_image_version"`
 	Name                     types.String                                       `tfsdk:"name"`
@@ -448,26 +439,4 @@ func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 	}
 
 	return diags
-}
-
-func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdamicrovms.ListMicrovmImagesInput{}
-	conn := client.LambdaMicrovmsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := lambdamicrovms.NewListMicrovmImagesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.Items {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newImageResource, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.ImageArn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
