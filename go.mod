@@ -278,7 +278,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/waf v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.33.5
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.3
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.73.1
