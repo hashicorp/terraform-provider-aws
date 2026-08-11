@@ -5,6 +5,14 @@ provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
+}
+
+# tflint-ignore: terraform_unused_declarations
+data "aws_resiliencehubv2_service" "test" {
+  arn = aws_resiliencehubv2_service.test.arn
 }
 
 resource "aws_resiliencehubv2_service" "test" {
@@ -63,5 +71,11 @@ variable "resource_tags" {
 
 variable "provider_tags" {
   type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }

@@ -1,10 +1,9 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
+# tflint-ignore: terraform_unused_declarations
+data "aws_resiliencehubv2_service" "test" {
+  arn = aws_resiliencehubv2_service.test.arn
 }
 
 resource "aws_resiliencehubv2_service" "test" {
@@ -14,8 +13,6 @@ resource "aws_resiliencehubv2_service" "test" {
   permission_model {
     invoker_role_name = aws_iam_role.test.name
   }
-
-  tags = var.resource_tags
 
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
 }
@@ -48,20 +45,9 @@ resource "aws_iam_role_policy_attachment" "service_AWSResilienceHubV2AssessmentE
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSResilienceHubV2AssessmentExecutionPolicy"
   role       = aws_iam_role.test.name
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
-}
-
-variable "provider_tags" {
-  type     = map(string)
-  nullable = false
 }

@@ -1,10 +1,9 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
+# tflint-ignore: terraform_unused_declarations
+data "aws_resiliencehubv2_service" "test" {
+  arn = aws_resiliencehubv2_service.test.arn
 }
 
 resource "aws_resiliencehubv2_service" "test" {
@@ -59,9 +58,4 @@ variable "resource_tags" {
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
   nullable = true
-}
-
-variable "provider_tags" {
-  type     = map(string)
-  nullable = false
 }

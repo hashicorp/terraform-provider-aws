@@ -7,6 +7,11 @@ provider "aws" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
+data "aws_resiliencehubv2_service" "test" {
+  arn = aws_resiliencehubv2_service.test.arn
+}
+
 resource "aws_resiliencehubv2_service" "test" {
   name    = var.rName
   regions = [data.aws_region.current.name]
