@@ -581,8 +581,8 @@ github.com/aws/aws-sdk-go-v2/service/wafregional v1.33.5 h1:tYJbIRFj6Fg1//H/fm9i
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.33.5/go.mod h1:IqDYKckMffoasaKW0GRQSQhOF9R+U7+BuOtzdwL3hP0=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.4 h1:nZoKKYGutt+HhhYYjSNeMBDrBiDcEfT76pNvn+cqOpM=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.4/go.mod h1:KeJzBrxHRPUKwkYRY9DXQ3JpbRVNeQh1Ci50MIssXTE=
-github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.42.4 h1:rGPfWXxAr1AT8f4xg9k5SaO3JfAfdB+AxsS0mmAJSyM=
-github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.42.4/go.mod h1:yBsbhnzMqOsQkacWNSmsxzbKkeQW3ERHWhb0UUwOmrk=
+github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.42.5 h1:pUMYpPXPmqr37F8dPn1ofMwmy35CnPFLC2vw/hkiYaM=
+github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.42.5/go.mod h1:4zHIWtNcyDuRiUtDGu79OGQ66gQOpZ+GpDrkG6kzvqg=
 github.com/aws/aws-sdk-go-v2/service/workmail v1.39.4 h1:YEsAKCSG3NgRFiT2RZD9T6PLO+kVs6Y/1IJhJsiKlh8=
 github.com/aws/aws-sdk-go-v2/service/workmail v1.39.4/go.mod h1:xVkktGlaT9BlMkeJxC+tepQLSrdbYFHy9ao8WZOiyzw=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.73.1 h1:NV9NW+aiPNvM3rcZOeAEhfl23XsftyAoSoln8J8zv08=
