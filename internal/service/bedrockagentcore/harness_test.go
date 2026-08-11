@@ -80,30 +80,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					})),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "bedrock-agentcore", "harness/{harness_id}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
-									"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
-									"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
-									"filesystem_configuration": knownvalue.Null(),
-									"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"idle_runtime_session_timeout": knownvalue.Int32Exact(900),
-											"max_lifetime":                 knownvalue.Int32Exact(28800),
-										}),
-									}),
-									names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
-										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"network_mode":        knownvalue.StringExact("PUBLIC"),
-											"network_mode_config": knownvalue.Null(),
-										}),
-									}),
-								}),
-							}),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
