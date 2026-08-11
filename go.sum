@@ -393,8 +393,8 @@ github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.67.2 h1:K6mR9GrL+tgFveAO
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.67.2/go.mod h1:rXH0aAYHnc2G808Yud13BROLntl0HyOckiwZz6zYGXs=
 github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.14.5 h1:RuGXkdbSOxNYqT/49VGmUHj3M5nZ2KV84NyjqlI/RJw=
 github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.14.5/go.mod h1:fJVK9CTNsPTEpviY23LBBhgGNmDCc1K0PSP0WtcXFJs=
-github.com/aws/aws-sdk-go-v2/service/networkmanager v1.44.4 h1:NqVaABPv2KzNPAFFDWe0tOx7Y7B3y/UuuB+TTUJNEO0=
-github.com/aws/aws-sdk-go-v2/service/networkmanager v1.44.4/go.mod h1:Rn3XXfK1IcbCURfY2KNXs/joVMDuIxQGrgLHQzx6df4=
+github.com/aws/aws-sdk-go-v2/service/networkmanager v1.44.5 h1:5nWKi6g7jpZx1+XFRijA8wI9I5jAtufR3CGnrTCDT+Y=
+github.com/aws/aws-sdk-go-v2/service/networkmanager v1.44.5/go.mod h1:6tVwU8DRm1ZGY4sZMEktlLiQfNu8goAy6W/j2aano7c=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.16.4 h1:a69y4f63C/nbN6eQrjoPazMUqZhbT/sd/Yr/sSvBzL0=
 github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.16.4/go.mod h1:DQ6yUXnzi+HXkT0Wm+imoiNC877IV+JHcOXcZUbGx1g=
 github.com/aws/aws-sdk-go-v2/service/notifications v1.10.4 h1:g+ka7JE2+9UMYzybOFe4rz8KfMAIC7xlB6XBuRt+M+g=
