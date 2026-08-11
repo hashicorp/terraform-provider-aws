@@ -1022,6 +1022,38 @@ func testAccPermissions_catalogResource_nonIAMPrincipals(t *testing.T) {
 	})
 }
 
+func testAccPermissions_dataCellsFilterCrossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_dataCellsFilterCrossAccount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionSelect)),
+					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_cells_filter.0.database_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_cells_filter.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_cells_filter.0.table_catalog_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_cells_filter.0.table_name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -3147,4 +3179,134 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPermissionsConfig_dataCellsFilterCrossAccount(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+data "aws_caller_identity" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_iam_role" "cross_account_consumer" {
+  provider = "awsalternate"
+
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.alternate.account_id}:root" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+
+  parameters = {
+    CROSS_ACCOUNT_VERSION = "3"
+    SET_CONTEXT           = "TRUE"
+  }
+}
+
+# RAM share — required before granting LF permissions cross-account.
+resource "aws_ram_resource_share" "test" {
+  name                      = %[1]q
+  allow_external_principals = true
+}
+
+resource "aws_ram_principal_association" "test" {
+  resource_share_arn = aws_ram_resource_share.test.arn
+  principal          = data.aws_caller_identity.alternate.account_id
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_share_arn = aws_ram_resource_share.test.arn
+  resource_arn       = aws_glue_catalog_database.test.arn
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  table_type = "EXTERNAL_TABLE"
+
+  storage_descriptor {
+    location      = "s3://does-not-need-to-exist-for-test/"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+    }
+
+    columns {
+      name = "customer_id"
+      type = "string"
+    }
+
+    columns {
+      name = "order_total"
+      type = "string"
+    }
+
+    columns {
+      name = "order_date"
+      type = "string"
+    }
+  }
+}
+
+resource "aws_lakeformation_data_cells_filter" "test" {
+  table_data {
+    database_name    = aws_glue_catalog_database.test.name
+    name             = %[1]q
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.test.name
+
+    column_names = ["customer_id", "order_total"]
+
+    row_filter {
+      all_rows_wildcard {}
+    }
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  principal = aws_iam_role.cross_account_consumer.arn
+
+  permissions = ["SELECT"]
+
+  data_cells_filter {
+    database_name    = aws_glue_catalog_database.test.name
+    name             = aws_lakeformation_data_cells_filter.test.table_data[0].name
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.test.name
+  }
+
+  depends_on = [
+    aws_lakeformation_data_cells_filter.test,
+    aws_ram_principal_association.test,
+    aws_ram_resource_association.test,
+  ]
+}
+`, rName))
 }
