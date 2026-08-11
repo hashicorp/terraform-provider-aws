@@ -1347,6 +1347,143 @@ type selfManagedConfigurationModel struct {
 	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions"`
 }
 
+var (
+	_ fwflex.TypedExpander = selfManagedConfigurationModel{}
+	_ fwflex.Flattener     = &selfManagedConfigurationModel{}
+)
+
+func (m *selfManagedConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *selfManagedConfigurationModel
+	alias := modelAlias(m)
+	switch t := v.(type) {
+	case awstypes.SelfManagedConfiguration:
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+		if diags.HasError() {
+			return diags
+		}
+
+		m.TriggerConditions = fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
+		if t.TriggerConditions != nil {
+			var model triggerConditionsModel
+			smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.TriggerConditions))
+			if diags.HasError() {
+				return diags
+			}
+			var d diag.Diagnostics
+			m.TriggerConditions, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m selfManagedConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.SelfManagedConfigurationInput](): // Create
+		return m.expandToSelfManagedConfigurationInput(ctx)
+
+	case reflect.TypeFor[awstypes.ModifySelfManagedConfiguration](): // Update
+		return m.expandToModifySelfManagedConfiguration(ctx)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedConfigurationModel.ExpandTo: %s", targetType),
+		)
+	}
+
+	return nil, diags
+}
+
+func (m selfManagedConfigurationModel) expandToSelfManagedConfigurationInput(ctx context.Context) (*awstypes.SelfManagedConfigurationInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.SelfManagedConfigurationInput
+	// To prevent infinite recursion...
+	type modelAlias selfManagedConfigurationModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	conditions, d := m.expandTriggerConditionInputs(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	r.TriggerConditions = conditions
+
+	return &r, diags
+}
+
+func (m selfManagedConfigurationModel) expandToModifySelfManagedConfiguration(ctx context.Context) (*awstypes.ModifySelfManagedConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ModifySelfManagedConfiguration
+	// To prevent infinite recursion...
+	type modelAlias selfManagedConfigurationModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	conditions, d := m.expandTriggerConditionInputs(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	r.TriggerConditions = conditions
+
+	return &r, diags
+}
+
+func (m selfManagedConfigurationModel) expandTriggerConditionInputs(ctx context.Context) ([]awstypes.TriggerConditionInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if !m.TriggerConditions.IsNull() && !m.TriggerConditions.IsUnknown() {
+		model, d := m.TriggerConditions.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		v, d := model.Expand(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		conditions, ok := v.([]awstypes.TriggerConditionInput)
+		if !ok {
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("triggerConditionsModel.Expand: %T", v),
+			)
+			return nil, diags
+		}
+
+		if len(conditions) == 0 {
+			conditions = nil
+		}
+
+		return conditions, diags
+	}
+
+	return nil, diags
+}
+
 type invocationConfigurationModel struct {
 	PayloadDeliveryBucketName types.String `tfsdk:"payload_delivery_bucket_name"`
 	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
@@ -1402,6 +1539,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagno
 			}
 			m.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
+
 		case *awstypes.TriggerConditionMemberTokenBasedTrigger:
 			var model tokenBasedTriggerModel
 			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
@@ -1410,6 +1548,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagno
 			}
 			m.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
+
 		case *awstypes.TriggerConditionMemberTimeBasedTrigger:
 			var model timeBasedTriggerModel
 			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
@@ -1418,6 +1557,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagno
 			}
 			m.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
+
 		default:
 			diags.AddError(
 				"Unsupported Type",
@@ -1435,7 +1575,7 @@ func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagno
 
 func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	conditions := make([]awstypes.TriggerConditionInput, 0, 3)
+	r := make([]awstypes.TriggerConditionInput, 0, 3)
 
 	if !m.MessageBasedTrigger.IsNull() && !m.MessageBasedTrigger.IsUnknown() {
 		p, d := m.MessageBasedTrigger.ToPtr(ctx)
@@ -1448,7 +1588,7 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnosti
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
+		r = append(r, &condition)
 	}
 
 	if !m.TokenBasedTrigger.IsNull() && !m.TokenBasedTrigger.IsUnknown() {
@@ -1462,7 +1602,7 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnosti
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
+		r = append(r, &condition)
 	}
 
 	if !m.TimeBasedTrigger.IsNull() && !m.TimeBasedTrigger.IsUnknown() {
@@ -1476,10 +1616,10 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnosti
 		if diags.HasError() {
 			return nil, diags
 		}
-		conditions = append(conditions, &condition)
+		r = append(r, &condition)
 	}
 
-	return conditions, diags
+	return r, diags
 }
 
 var _ validator.List = triggerConditionsValidator{}
