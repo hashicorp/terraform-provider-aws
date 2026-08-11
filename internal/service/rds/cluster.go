@@ -284,6 +284,14 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Suppress the diff when the configured version is not newer than
+						// engine_version_actual. This handles the case where the cluster was
+						// auto-upgraded externally (auto_minor_version_upgrade=true or
+						// ignore_changes=[engine_version]): sending the older configured
+						// version would be rejected by AWS as a downgrade.
+						return !engineVersionIsNewer(new, d.Get("engine_version_actual").(string))
+					},
 				},
 				"engine_version_actual": {
 					Type:     schema.TypeString,
