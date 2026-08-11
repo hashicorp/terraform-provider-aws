@@ -29,20 +29,22 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read, Update:
-			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
-				break
-			}
 			// `Id()` is empty when the resource is being removed
 			if d.Id() == "" {
 				break
 			}
-			// Identity is fully-null on Read when Importing or when updating existing resources created without identity.
-			if why == Read && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
-				break
-			}
+
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(identity, r.identitySpec) {
+				break
+			}
+			// Identity is fully-null on Read when Importing or when updating existing resources created without identity.
+			if why == Read && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(identity, r.identitySpec) {
+				break
 			}
 
 			for _, attr := range r.identitySpec.Attributes {
@@ -71,13 +73,13 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case OnError:
 		switch why {
 		case Update:
-			if identityIsFullyNull(d, r.identitySpec) {
+			identity, err := d.Identity()
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			if identityIsFullyNull(identity, r.identitySpec) {
 				if d.Id() == "" {
 					break
-				}
-				identity, err := d.Identity()
-				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				for _, attr := range r.identitySpec.Attributes {
@@ -111,12 +113,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 
 // identityIsFullyNull returns true if a resource supports identity and
 // all attributes are set to null values
-func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) bool {
-	identity, err := d.Identity()
-	if err != nil {
-		return false
-	}
-
+func identityIsFullyNull(identity *schema.IdentityData, identitySpec *inttypes.Identity) bool {
 	for _, attr := range identitySpec.Attributes {
 		value := identity.Get(attr.Name())
 		if value != "" {
