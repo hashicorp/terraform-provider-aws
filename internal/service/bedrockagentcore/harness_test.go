@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -62,17 +63,68 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_tools"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkHarnessARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_iterations"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_tokens"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"max_tokens":  knownvalue.Null(),
+									"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+									"temperature": knownvalue.Null(),
+									"top_p":       knownvalue.Null(),
+								}),
+							}),
+							"gemini_model_config": knownvalue.ListSizeExact(0),
+							"openai_model_config": knownvalue.ListSizeExact(0),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("system_prompt"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"text": knownvalue.StringExact("You are a helpful assistant."),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("timeout_seconds"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tool"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("truncation"), knownvalue.NotNull()),
 				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("memory.#", "1"),
+					acctest.ImportCheckResourceAttr("memory.0.agentcore_memory_configuration.#", "0"),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.#", "1"),
+					acctest.ImportMatchResourceAttr("memory.0.managed_memory_configuration.0.arn", regexache.MustCompile(`^arn:[^:]+:bedrock-agentcore:[^:]+:\d{12}:memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+$`)),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.encryption_key_arn", ""),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.event_expiry_duration", "30"),
+					acctest.ImportCheckResourceAttr("memory.0.managed_memory_configuration.0.strategies.#", "2"),
+					importCheckSetContains("memory.0.managed_memory_configuration.0.strategies", "SEMANTIC"),
+					importCheckSetContains("memory.0.managed_memory_configuration.0.strategies", "SUMMARIZATION"),
+				),
 			},
 		},
 	})
@@ -155,6 +207,14 @@ func TestAccBedrockAgentCoreHarness_update_systemPrompt(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -196,6 +256,14 @@ func TestAccBedrockAgentCoreHarness_update_allowedTools(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -239,6 +307,14 @@ func TestAccBedrockAgentCoreHarness_update_limits(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -276,7 +352,11 @@ func TestAccBedrockAgentCoreHarness_model_bedrock(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
-				ImportStateVerifyIgnore:              []string{"model.0.bedrock_model_config.0.temperature", "model.0.bedrock_model_config.0.top_p"},
+				ImportStateVerifyIgnore: []string{
+					"memory",
+					"model.0.bedrock_model_config.0.temperature",
+					"model.0.bedrock_model_config.0.top_p",
+				},
 			},
 		},
 	})
@@ -320,6 +400,14 @@ func TestAccBedrockAgentCoreHarness_truncation_slidingWindow(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -351,6 +439,14 @@ func TestAccBedrockAgentCoreHarness_truncation_summarization(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -381,6 +477,14 @@ func TestAccBedrockAgentCoreHarness_tools_inlineFunction(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -424,11 +528,22 @@ func TestAccBedrockAgentCoreHarness_environmentVariables(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					"environment_variables",
+					"memory",
+				},
+			},
 		},
 	})
 }
 
-func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
+func TestAccBedrockAgentCoreHarness_Memory_agentCoreMemoryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -445,7 +560,7 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHarnessConfig_memory(rName, 0.25),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName, 0.25),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -456,7 +571,7 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccHarnessConfig_memory(rName, 0.35),
+				Config: testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName, 0.35),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
 				),
@@ -465,6 +580,189 @@ func TestAccBedrockAgentCoreHarness_memory(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					"memory.0.agentcore_memory_configuration.0.retrieval_config.0.relevance_score",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					// TODO: float32 precision issue
+					acctest.ImportMatchResourceAttr("memory.0.agentcore_memory_configuration.0.retrieval_config.0.relevance_score", regexache.MustCompile(`^0\.34`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_Memory_managedMemoryConfiguration_empty(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						"encryption_key_arn":    knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(30),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_Memory_managedMemoryConfiguration_options(rName, 7, `["SEMANTIC"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						"encryption_key_arn":    knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(7),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_Memory_managedMemoryConfiguration_options(rName, 14, `["SEMANTIC", "SUMMARIZATION"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						"encryption_key_arn":    knownvalue.Null(),
+						"event_expiry_duration": knownvalue.Int32Exact(14),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Memory_managedMemoryConfiguration_encryptionKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_Memory_managedMemoryConfiguration_encryptionKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:           tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/harness_`+rName+`_[a-zA-Z0-9]+-[a-zA-Z0-9]+`)),
+						"encryption_key_arn":    knownvalue.NotNull(),
+						"event_expiry_duration": knownvalue.Int32Exact(30),
+						"strategies": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact("SEMANTIC"),
+							knownvalue.StringExact("SUMMARIZATION"),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("memory").AtSliceIndex(0).AtMapKey("managed_memory_configuration").AtSliceIndex(0).AtMapKey("encryption_key_arn"), "aws_kms_key.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
 			},
 		},
 	})
@@ -508,6 +806,14 @@ func TestAccBedrockAgentCoreHarness_environmentArtifact(t *testing.T) {
 					},
 				},
 			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
 		},
 	})
 }
@@ -549,6 +855,14 @@ func TestAccBedrockAgentCoreHarness_authorizerConfiguration(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 		},
 	})
@@ -592,6 +906,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
 			},
 			{
 				Config: testAccHarnessConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -689,6 +1004,22 @@ func testAccPreCheckHarness(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func importCheckSetContains(prefix, value string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("expected 1 instance state, got %d", len(is))
+		}
+
+		rs := is[0]
+		for k, v := range rs.Attributes {
+			if strings.HasPrefix(k, prefix+".") && k != prefix+".#" && v == value {
+				return nil
+			}
+		}
+		return fmt.Errorf("set %q does not contain value %q", prefix, value)
 	}
 }
 
@@ -936,7 +1267,7 @@ resource "aws_bedrockagentcore_harness" "test" {
 `, rName, key, value))
 }
 
-func testAccHarnessConfig_memory(rName string, relevanceScore float32) string {
+func testAccHarnessConfig_Memory_agentCoreMemoryConfiguration(rName string, relevanceScore float32) string {
 	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_harness" "test" {
   harness_name       = %[1]q
@@ -969,6 +1300,84 @@ resource "aws_bedrockagentcore_memory" "test" {
   event_expiry_duration = 7
 }
 `, rName, relevanceScore))
+}
+
+func testAccHarnessConfig_Memory_managedMemoryConfiguration_empty(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    managed_memory_configuration {}
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName))
+}
+
+func testAccHarnessConfig_Memory_managedMemoryConfiguration_options(rName string, eventExpiryDuration int, strategies string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    managed_memory_configuration {
+      event_expiry_duration = %[2]d
+      strategies            = %[3]s
+    }
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+`, rName, eventExpiryDuration, strategies))
+}
+
+func testAccHarnessConfig_Memory_managedMemoryConfiguration_encryptionKey(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  memory {
+    managed_memory_configuration {
+      encryption_key_arn = aws_kms_key.test.arn
+    }
+  }
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+`, rName))
 }
 
 func testAccHarnessConfig_environmentArtifact(rName, imageTag string) string {

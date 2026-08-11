@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Fix errant deletion of key value pairs when a value is changed
-```

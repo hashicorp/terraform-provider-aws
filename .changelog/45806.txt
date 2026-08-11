@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_osis_pipeline: Add `pipeline_role_arn` argument to support specifying a IAM role at the pipeline level
-```

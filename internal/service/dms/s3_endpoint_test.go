@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -438,6 +439,35 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 	})
 }
 
+func TestAccDMSS3Endpoint_kmsKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_s3_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3EndpointConfig_kmsKeyARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_kmsKeyARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckS3EndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return testAccCheckEndpointDestroy(ctx, t)
 }
@@ -835,4 +865,25 @@ resource "aws_dms_s3_endpoint" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, cdcp, dt))
+}
+
+func testAccS3EndpointConfig_kmsKeyARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccS3EndpointConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_s3_endpoint" "test" {
+  endpoint_id             = %[1]q
+  endpoint_type           = "target"
+  bucket_name             = "beckut_name"
+  kms_key_arn             = aws_kms_key.test.arn
+  service_access_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
 }

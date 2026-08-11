@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -69,6 +70,12 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"authorizer_type": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.AuthorizerType](),
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.AuthorizerTypeCustomJwt,
+						path.MatchRelative().AtParent().AtName("authorizer_configuration"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -267,24 +274,6 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 }
 
-func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data gatewayResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if data.AuthorizerType.ValueEnum() == awstypes.AuthorizerTypeCustomJwt {
-		if data.AuthorizerConfiguration.IsNull() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("authorizer_configuration"),
-				"Missing Required Attribute",
-				"authorizer_configuration is required when authorizer_type is CUSTOM_JWT",
-			)
-		}
-	}
-}
-
 func (r *gatewayResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data gatewayResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
@@ -340,11 +329,20 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	// Set values for unknowns.
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, gateway, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -370,10 +368,18 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	priorAuthorizerConfiguration := data.AuthorizerConfiguration
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }

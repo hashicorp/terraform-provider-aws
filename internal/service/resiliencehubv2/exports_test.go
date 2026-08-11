@@ -6,9 +6,9 @@ package resiliencehubv2
 // Exports for use in tests only.
 var (
 	ResourceInputSource = newResourceInputSource
-	ResourcePolicy      = newResourcePolicy
-	ResourceService     = newResourceService
-	ResourceSystem      = newResourceSystem
+	ResourcePolicy      = newPolicyResource
+	ResourceService     = newServiceResource
+	ResourceSystem      = newSystemResource
 
 	FindInputSourceByID = findInputSourceByID
 	FindPolicyByARN     = findPolicyByARN

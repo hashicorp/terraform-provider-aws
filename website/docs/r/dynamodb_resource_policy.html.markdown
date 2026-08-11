@@ -48,7 +48,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_dynamodb_resource_policy.example
   identity = {
-    "arn" = "arn:aws:dynamodb:us-west-2:123456789012:table/example-table"
+    "resource_arn" = "arn:aws:dynamodb:us-west-2:123456789012:table/example-table"
   }
 }
 
@@ -61,7 +61,7 @@ resource "aws_dynamodb_resource_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DynamoDB table.
+- `resource_arn` (String) Amazon Resource Name (ARN) of the DynamoDB table.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Resource Policy using the `resource_arn`. For example:
 

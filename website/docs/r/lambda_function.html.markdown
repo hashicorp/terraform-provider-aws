@@ -695,6 +695,7 @@ The following arguments are optional:
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
+* `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration

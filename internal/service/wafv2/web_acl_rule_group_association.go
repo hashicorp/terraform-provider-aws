@@ -1923,7 +1923,7 @@ func (m awsManagedRulesACFPRuleSetModel) Expand(ctx context.Context) (result any
 	r.RegistrationPagePath = m.RegistrationPagePath.ValueStringPointer()
 	r.EnableRegexInPath = m.EnableRegexInPath.ValueBool()
 
-	if !m.RequestInspection.IsNull() && len(m.RequestInspection.Elements()) > 0 {
+	if m.RequestInspection.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		var reqInspection requestInspectionACFPModel
 		diags.Append(m.RequestInspection.Elements()[0].(fwtypes.ObjectValueOf[requestInspectionACFPModel]).As(ctx, &reqInspection, basetypes.ObjectAsOptions{})...)
 		if diags.HasError() {

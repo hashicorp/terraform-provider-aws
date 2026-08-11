@@ -105,7 +105,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrock_custom_model.example
   identity = {
-    "arn" = "arn:aws:bedrock:us-west-2:123456789012:custom-model/amazon.titan-text-lite-v1:0:4k/example-model"
+    "job_arn" = "arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e"
   }
 }
 
@@ -118,7 +118,7 @@ resource "aws_bedrock_custom_model" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Bedrock custom model.
+- `job_arn` (String) Amazon Resource Name (ARN) of the Bedrock custom model job.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `job_arn`. For example:
 

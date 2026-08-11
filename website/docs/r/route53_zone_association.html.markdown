@@ -104,7 +104,6 @@ resource "aws_route53_zone_association" "example" {
 
 * `vpc_region` (String) The VPC's region. Defaults to the region of the AWS provider.
 * `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Hosted Zone Associations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
 

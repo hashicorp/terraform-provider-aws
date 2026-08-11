@@ -35,9 +35,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `authorized_principal` - Information about the Amazon Web Services account or service that was provided access to the domain. See [authorized principal](#authorized_principal) attribute for further details.
+* `authorized_principal` - Information about the Amazon Web Services account or service that was provided access to the domain. See [`authorized_principal` Block](#authorized_principal-block) for further details.
 
-### authorized_principal
+### `authorized_principal` Block
 
 * `principal` - IAM principal that is allowed to access to the domain.
 * `principal_type` - Type of principal.
