@@ -252,7 +252,7 @@ This resource supports the following arguments:
 ### `destination_flow_config.destination_connector_properties.s3.s3_output_format_config.prefix_config` Block
 
 * `prefix_format` - (Optional) Level of granularity included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
-* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
+* `prefix_hierarchy` - (Optional) Whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
 * `prefix_type` - (Optional) Format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 
 ### `destination_flow_config.destination_connector_properties.salesforce` Block
@@ -320,7 +320,7 @@ This resource supports the following arguments:
 ### `destination_flow_config.destination_connector_properties.upsolver.s3_output_format_config.prefix_config` Block
 
 * `prefix_format` - (Optional) Level of granularity included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
-* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
+* `prefix_hierarchy` - (Optional) Whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`.
 * `prefix_type` - (Required) Format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 
 ### `destination_flow_config.destination_connector_properties.zendesk` Block

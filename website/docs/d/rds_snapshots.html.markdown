@@ -54,7 +54,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `snapshots` - List of snapshots.
 
-### `snapshots` Attribute Reference
+### `snapshots` Block
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zone` - Name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
@@ -76,5 +76,10 @@ This data source exports the following attributes in addition to the arguments a
 * `source_region` - Region that the DB snapshot was created in or copied from.
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with the DB snapshot.
-* `tags` - Map of tags assigned to the snapshot.
+* `tag_list` - List of tags attached to the DB snapshot. See [`tag_list`](#tag_list-block) below.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
+
+### `tag_list` Block
+
+* `key` - Key of the tag.
+* `value` - Value of the tag.
