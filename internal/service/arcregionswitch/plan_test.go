@@ -25,7 +25,7 @@ import (
 func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,7 +104,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -151,7 +151,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -215,7 +215,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	zoneName := acctest.RandomDomainName(t)
@@ -262,7 +262,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	zoneName := acctest.RandomDomain(t)
@@ -433,7 +433,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	zoneName := acctest.RandomDomain(t)
@@ -625,7 +625,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -717,7 +717,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -766,7 +766,7 @@ func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
 func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -805,6 +805,256 @@ func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_auroraProvisionedScaling(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_auroraProvisionedScaling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify AuroraProvisionedScaling execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "AuroraProvisionedScaling",
+						names.AttrName:         "aurora-provisioned-scaling-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.aurora_provisioned_scaling_config.*", map[string]string{
+						"global_cluster_identifier": "test-global-cluster",
+						"timeout_minutes":           "60",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_auroraServerlessScaling(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_auroraServerlessScaling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify AuroraServerlessScaling execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "AuroraServerlessScaling",
+						names.AttrName:         "aurora-serverless-scaling-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.aurora_serverless_scaling_config.*", map[string]string{
+						"global_cluster_identifier": "test-serverless-global",
+						"timeout_minutes":           "30",
+						"target_percent":            "100",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_neptuneGlobalDatabase(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_neptuneGlobalDatabase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify NeptuneGlobalDatabase execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "NeptuneGlobalDatabase",
+						names.AttrName:         "neptune-global-database-step",
+					}),
+
+					// Verify config values
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.neptune_global_database_config.*", map[string]string{
+						"behavior":                  "switchoverOnly",
+						"global_cluster_identifier": "test-neptune-global",
+						"timeout_minutes":           "30",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_lambdaEventSourceMapping(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify LambdaEventSourceMapping execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "LambdaEventSourceMapping",
+						names.AttrName:         "lambda-esm-step",
+					}),
+
+					// Verify config values (custom Expand/Flatten)
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
+						names.AttrAction:  "enable",
+						"timeout_minutes": "10",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:aaaaaaaa-1111-2222-3333-444444444444", acctest.Region()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:bbbbbbbb-5555-6666-7777-888888888888", acctest.AlternateRegion()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.ungraceful.*", map[string]string{
+						"behavior": "skip",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_reportConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "report_configuration.0.report_output.0.s3_configuration.0.bucket_path"),
+					resource.TestCheckResourceAttrSet(resourceName, "report_configuration.0.report_output.0.s3_configuration.0.bucket_owner"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				// Removing report_configuration should clear it on update.
+				Config: testAccPlanConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "0"),
+				),
 			},
 		},
 	})
@@ -2362,54 +2612,6 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
-func TestAccARCRegionSwitchPlan_auroraProvisionedScaling(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_auroraProvisionedScaling(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify AuroraProvisionedScaling execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "AuroraProvisionedScaling",
-						names.AttrName:         "aurora-provisioned-scaling-step",
-					}),
-
-					// Verify config values
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.aurora_provisioned_scaling_config.*", map[string]string{
-						"global_cluster_identifier": "test-global-cluster",
-						"timeout_minutes":           "60",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
-}
-
 func testAccPlanConfig_auroraProvisionedScaling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -2464,55 +2666,6 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion())
 }
 
-func TestAccARCRegionSwitchPlan_auroraServerlessScaling(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_auroraServerlessScaling(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify AuroraServerlessScaling execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "AuroraServerlessScaling",
-						names.AttrName:         "aurora-serverless-scaling-step",
-					}),
-
-					// Verify config values
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.aurora_serverless_scaling_config.*", map[string]string{
-						"global_cluster_identifier": "test-serverless-global",
-						"timeout_minutes":           "30",
-						"target_percent":            "100",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
-}
-
 func testAccPlanConfig_auroraServerlessScaling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -2561,55 +2714,6 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 `, rName, acctest.Region(), acctest.AlternateRegion())
-}
-
-func TestAccARCRegionSwitchPlan_neptuneGlobalDatabase(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_neptuneGlobalDatabase(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify NeptuneGlobalDatabase execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "NeptuneGlobalDatabase",
-						names.AttrName:         "neptune-global-database-step",
-					}),
-
-					// Verify config values
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.neptune_global_database_config.*", map[string]string{
-						"behavior":                  "switchoverOnly",
-						"global_cluster_identifier": "test-neptune-global",
-						"timeout_minutes":           "30",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
 }
 
 func testAccPlanConfig_neptuneGlobalDatabase(rName string) string {
@@ -2664,65 +2768,6 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 `, rName, acctest.Region(), acctest.AlternateRegion())
-}
-
-func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_lambdaEventSourceMapping(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, t, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
-					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-
-					// Verify LambdaEventSourceMapping execution block
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
-						"execution_block_type": "LambdaEventSourceMapping",
-						names.AttrName:         "lambda-esm-step",
-					}),
-
-					// Verify config values (custom Expand/Flatten)
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*", map[string]string{
-						names.AttrAction:  "enable",
-						"timeout_minutes": "10",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
-						names.AttrRegion: acctest.Region(),
-						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:aaaaaaaa-1111-2222-3333-444444444444", acctest.Region()),
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.region_event_source_mapping.*", map[string]string{
-						names.AttrRegion: acctest.AlternateRegion(),
-						names.AttrARN:    fmt.Sprintf("arn:aws:lambda:%s:123456789012:event-source-mapping:bbbbbbbb-5555-6666-7777-888888888888", acctest.AlternateRegion()),
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.lambda_event_source_mapping_config.*.ungraceful.*", map[string]string{
-						"behavior": "skip",
-					}),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-			},
-		},
-	})
 }
 
 func testAccPlanConfig_lambdaEventSourceMapping(rName string) string {
@@ -2781,4 +2826,79 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 `, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_reportConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  report_configuration {
+    report_output {
+      s3_configuration {
+        bucket_path  = aws_s3_bucket.test.bucket
+        bucket_owner = data.aws_caller_identity.current.account_id
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
 }
