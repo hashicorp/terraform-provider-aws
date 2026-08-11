@@ -153,7 +153,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var input lambdamicrovms.CreateMicrovmImageInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,18 +169,18 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	outWait, err := waitImageCreated(ctx, conn, plan.ImageARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	outWait, err := waitImageCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -197,18 +197,18 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	out, err := findImageByARN(ctx, conn, state.ImageARN.ValueString())
+	out, err := findImageByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -234,8 +234,8 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	if diff.HasChanges() {
 		var input lambdamicrovms.UpdateMicrovmImageInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		input.ImageIdentifier = plan.ImageARN.ValueStringPointer()
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
+		input.ImageIdentifier = plan.ARN.ValueStringPointer()
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		// The service resolves base_image_version to a full version (e.g. "0.0")
@@ -250,27 +250,27 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		out, err := conn.UpdateMicrovmImage(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ImageARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		outWait, err := waitImageUpdated(ctx, conn, plan.ImageARN.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+		outWait, err := waitImageUpdated(ctx, conn, plan.ARN.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageARN.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -288,7 +288,7 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	input := lambdamicrovms.DeleteMicrovmImageInput{
-		ImageIdentifier: state.ImageARN.ValueStringPointer(),
+		ImageIdentifier: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMicrovmImage(ctx, &input)
@@ -297,13 +297,13 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 
-	_, err = waitImageDeleted(ctx, conn, state.ImageARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
+	_, err = waitImageDeleted(ctx, conn, state.ARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 }
@@ -406,7 +406,7 @@ type imageResourceModel struct {
 	Description              types.String                                       `tfsdk:"description"`
 	EgressNetworkConnectors  fwtypes.ListOfString                               `tfsdk:"egress_network_connectors"`
 	EnvironmentVariables     fwtypes.MapOfString                                `tfsdk:"environment_variables"`
-	ImageARN                 types.String                                       `tfsdk:"arn"`
+	ARN                      types.String                                       `tfsdk:"arn"`
 	LatestActiveImageVersion types.String                                       `tfsdk:"latest_active_image_version"`
 	LatestFailedImageVersion types.String                                       `tfsdk:"latest_failed_image_version"`
 	Name                     types.String                                       `tfsdk:"name"`
