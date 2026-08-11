@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_metric_alarm: Support `20` as a valid value for `metric_query.metric.period`, `metric_query.period`, and `period`
-```

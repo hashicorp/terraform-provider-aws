@@ -188,21 +188,49 @@ The `string_not_like` configuration block supports the following attributes:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Backup Selection identifier
+* `id` - Backup Selection identifier.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the role plan_id and id separated by `|`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_backup_selection.example
-  id = "plan-id|selection-id"
+  identity = {
+    plan_id = "abcd1234"
+    id      = "efgh5678"
+  }
+}
+
+resource "aws_backup_selection" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Backup selection using the role plan_id and id separated by `|`. For example:
+### Identity Schema
+
+#### Required
+
+* `plan_id` (Required) Backup plan ID associated with the selection of resources.
+* `id` (String) Backup selection ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the `plan_id` and `id` separated by `|`. For example:
+
+```terraform
+import {
+  to = aws_backup_selection.example
+  id = "abcd1234|efgh5678"
+}
+```
+
+Using `terraform import`, import Backup selection using the `plan_id` and `id` separated by `|`. For example:
 
 ```console
-% terraform import aws_backup_selection.example plan-id|selection-id
+% terraform import aws_backup_selection.example abcd1234|efgh5678
 ```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_document: Recreate resource on `name` update
-```

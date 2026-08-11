@@ -115,6 +115,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newStorageTierPolicyResource,
+			TypeName: "aws_cloudwatch_log_storage_tier_policy",
+			Name:     "Storage Tier Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTransformerResource,
 			TypeName: "aws_cloudwatch_log_transformer",
 			Name:     "Transformer",

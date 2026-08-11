@@ -1,3 +1,0 @@
-```release-note:enhancement
-various IAM resource types: more detailed error messages for invalid policy document JSON
-```

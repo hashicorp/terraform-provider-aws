@@ -74,10 +74,10 @@ resource "aws_appmesh_virtual_gateway" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name to use for the virtual gateway. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
+* `name` - (Required) Name to use for the virtual gateway. Must be between 1 and 255 characters in length.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `spec` - (Required) Virtual gateway specification to apply.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -93,57 +93,57 @@ This resource supports the following arguments:
 
 ### `client_policy` Block
 
-* `tls` - (Optional) Transport Layer Security (TLS) client policy. See [`tls` Block](#tls-block) for details.
+* `tls` - (Optional) Transport Layer Security (TLS) client policy. See [`spec.backend_defaults.client_policy.tls` Block](#specbackend_defaultsclient_policytls-block) for details.
 
-### `tls` Block
+### `spec.backend_defaults.client_policy.tls` Block
 
 * `certificate` (Optional) Virtual gateway's client's Transport Layer Security (TLS) certificate.
 * `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
 * `validation` - (Required) TLS validation context.
 
-### `certificate` Block
+### `spec.backend_defaults.client_policy.tls.certificate` Block
 
 * `file` - (Optional) Local file certificate.
-* `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `sds` - (Optional) [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-### `file` Block
+### `spec.backend_defaults.client_policy.tls.certificate.file` Block
 
 * `certificate_chain` - (Required) Certificate chain for the certificate.
 * `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
 
-### `sds` Block
+### `spec.backend_defaults.client_policy.tls.certificate.sds` Block
 
 * `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
-### `validation` Block
+### `spec.backend_defaults.client_policy.tls.validation` Block
 
 * `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
 * `trust` - (Required) TLS validation context trust.
 
-### `subject_alternative_names` Block
+### `spec.backend_defaults.client_policy.tls.validation.subject_alternative_names` Block
 
 * `match` - (Required) Criteria for determining a SAN's match.
 
-### `match` Block
+### `spec.backend_defaults.client_policy.tls.validation.subject_alternative_names.match` Block
 
 * `exact` - (Required) Values sent must match the specified values exactly.
 
-### `trust` Block
+### `spec.backend_defaults.client_policy.tls.validation.trust` Block
 
 * `acm` - (Optional) TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
 * `file` - (Optional) TLS validation context trust for a local file certificate.
 * `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-### `acm` Block
+### `spec.backend_defaults.client_policy.tls.validation.trust.acm` Block
 
 * `certificate_authority_arns` - (Required) One or more ACM ARNs.
 
-### `file` Block
+### `spec.backend_defaults.client_policy.tls.validation.trust.file` Block
 
 * `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
-### `sds` Block
+### `spec.backend_defaults.client_policy.tls.validation.trust.sds` Block
 
 * `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
@@ -152,7 +152,7 @@ This resource supports the following arguments:
 * `connection_pool` - (Optional) Connection pool information for the listener. See [`connection_pool` Block](#connection_pool-block) for details.
 * `health_check` - (Optional) Health check information for the listener. See [`health_check` Block](#health_check-block) for details.
 * `port_mapping` - (Required) Port mapping information for the listener. See [`port_mapping` Block](#port_mapping-block) for details.
-* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener. See [`tls` Block](#tls-block) for details.
+* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener. See [`spec.listener.tls` Block](#speclistenertls-block) for details.
 
 ### `logging` Block
 
@@ -160,22 +160,22 @@ This resource supports the following arguments:
 
 ### `access_log` Block
 
-* `file` - (Optional) File object to send virtual gateway access logs to. See [`file` Block](#file-block) for details.
+* `file` - (Optional) File object to send virtual gateway access logs to. See [`spec.logging.access_log.file` Block](#specloggingaccess_logfile-block) for details.
 
-### `file` Block
+### `spec.logging.access_log.file` Block
 
-* `format` - (Optional) The specified format for the logs. See [`format` Block](#format-block) for details.
+* `format` - (Optional) Specified format for the logs. See [`format` Block](#format-block) for details.
 * `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
 ### `format` Block
 
-* `json` - (Optional) The logging format for JSON. See [`json` Block](#json-block) for details.
-* `text` - (Optional) The logging format for text. Must be between 1 and 1000 characters in length.
+* `json` - (Optional) Logging format for JSON. See [`json` Block](#json-block) for details.
+* `text` - (Optional) Logging format for text. Must be between 1 and 1000 characters in length.
 
 ### `json` Block
 
-* `key` - (Required) The specified key for the JSON. Must be between 1 and 100 characters in length.
-* `value` - (Required) The specified value for the JSON. Must be between 1 and 100 characters in length.
+* `key` - (Required) Specified key for the JSON. Must be between 1 and 100 characters in length.
+* `value` - (Required) Specified value for the JSON. Must be between 1 and 100 characters in length.
 
 ### `port_mapping` Block
 
@@ -205,60 +205,60 @@ This resource supports the following arguments:
 
 * `healthy_threshold` - (Required) Number of consecutive successful health checks that must occur before declaring listener healthy.
 * `interval_millis` - (Required) Time period in milliseconds between each health check execution.
+* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 * `protocol` - (Required) Protocol for the health check request. Valid values are `http`, `http2`, and `grpc`.
 * `timeout_millis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
 * `unhealthy_threshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual gateway unhealthy.
-* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
-### `tls` Block
+### `spec.listener.tls` Block
 
 * `certificate` - (Required) Listener's TLS certificate.
 * `mode` - (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
 * `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
-### `certificate` Block
+### `spec.listener.tls.certificate` Block
 
-* `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
+* `acm` - (Optional) AWS Certificate Manager (ACM) certificate.
 * `file` - (Optional) Local file certificate.
-* `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `sds` - (Optional) [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-### `acm` Block
+### `spec.listener.tls.certificate.acm` Block
 
 * `certificate_arn` - (Required) ARN for the certificate.
 
-### `file` Block
+### `spec.listener.tls.certificate.file` Block
 
 * `certificate_chain` - (Required) Certificate chain for the certificate. Must be between 1 and 255 characters in length.
 * `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
-### `sds` Block
+### `spec.listener.tls.certificate.sds` Block
 
 * `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
-### `validation` Block
+### `spec.listener.tls.validation` Block
 
 * `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
 * `trust` - (Required) TLS validation context trust.
 
-### `subject_alternative_names` Block
+### `spec.listener.tls.validation.subject_alternative_names` Block
 
 * `match` - (Required) Criteria for determining a SAN's match.
 
-### `match` Block
+### `spec.listener.tls.validation.subject_alternative_names.match` Block
 
 * `exact` - (Required) Values sent must match the specified values exactly.
 
-### `trust` Block
+### `spec.listener.tls.validation.trust` Block
 
 * `file` - (Optional) TLS validation context trust for a local file certificate.
 * `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
-### `file` Block
+### `spec.listener.tls.validation.trust.file` Block
 
 * `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
-### `sds` Block
+### `spec.listener.tls.validation.trust.sds` Block
 
 * `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
@@ -266,9 +266,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the virtual gateway.
 * `arn` - ARN of the virtual gateway.
 * `created_date` - Creation date of the virtual gateway.
+* `id` - ID of the virtual gateway.
 * `last_updated_date` - Last update date of the virtual gateway.
 * `resource_owner` - Resource owner's AWS account ID.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

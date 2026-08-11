@@ -43,6 +43,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newBucketsDataSource,
+			TypeName: "aws_s3_buckets",
+			Name:     "Buckets",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDirectoryBucketsDataSource,
 			TypeName: "aws_s3_directory_buckets",
 			Name:     "Directory Buckets",
