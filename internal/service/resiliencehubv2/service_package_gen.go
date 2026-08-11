@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceInputSource,
+			Factory:  newInputSourceResource,
 			TypeName: "aws_resiliencehubv2_input_source",
 			Name:     "Input Source",
 			Region:   inttypes.ResourceRegionDefault(),
@@ -68,7 +68,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      inputSourceImportID{},
-				SetIDAttr:     true,
 			},
 		},
 		{
@@ -116,7 +115,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  newResourceInputSourceAsListResource,
+			Factory:  newInputSourceResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_input_source",
 			Name:     "Input Source",
 			Region:   inttypes.ResourceRegionDefault(),

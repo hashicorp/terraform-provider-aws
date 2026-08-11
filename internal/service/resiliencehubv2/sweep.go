@@ -114,7 +114,7 @@ func sweepInputSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 				continue
 			}
 			for _, is := range output.InputSourceSummaries {
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInputSource, client,
+				sweepResources = append(sweepResources, framework.NewSweepResource(newInputSourceResource, client,
 					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(is.InputSourceId)),
 					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
 					framework.NewAttribute("input_source_id", aws.ToString(is.InputSourceId)),

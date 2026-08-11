@@ -5,12 +5,12 @@ package resiliencehubv2
 
 // Exports for use in tests only.
 var (
-	ResourceInputSource = newResourceInputSource
+	ResourceInputSource = newInputSourceResource
 	ResourcePolicy      = newPolicyResource
 	ResourceService     = newServiceResource
 	ResourceSystem      = newSystemResource
 
-	FindInputSourceByID = findInputSourceByID
+	FindInputSourceByID = findInputSourceByTwoPartKey
 	FindPolicyByARN     = findPolicyByARN
 	FindServiceByARN    = findServiceByARN
 	FindSystemByARN     = findSystemByARN
