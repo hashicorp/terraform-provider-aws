@@ -515,7 +515,7 @@ The `value` configuration block supports the following:
 
 `tag_specifications` supports the following:
 
-* `propagate_tags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `propagate_tags` - (Optional) Whether to propagate the tags from the task definition to the Amazon EBS volume.
 * `resource_type` - (Required) Type of volume resource. Valid values, `volume`.
 * `tags` - (Optional) Tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
 

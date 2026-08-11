@@ -90,47 +90,47 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional) Single table bucket encryption configuration object. [See `encryption_configuration` below](#encryption_configuration).
-* `maintenance_configuration` - (Optional) Single table bucket maintenance configuration object. [See `maintenance_configuration` below](#maintenance_configuration).
-* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format. [See `metadata` below](#metadata).
+* `encryption_configuration` - (Optional) Single table bucket encryption configuration object. [See `encryption_configuration` below](#encryption_configuration-block).
+* `maintenance_configuration` - (Optional) Single table bucket maintenance configuration object. [See `maintenance_configuration` below](#maintenance_configuration-block).
+* `metadata` - (Optional) Details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format. [See `metadata` below](#metadata).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `encryption_configuration`
+### `encryption_configuration` Block
 
 The `encryption_configuration` object supports the following arguments:
 
 * `kms_key_arn` - (Optional) ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
 * `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
-### `maintenance_configuration`
+### `maintenance_configuration` Block
 
 The `maintenance_configuration` object supports the following arguments:
 
-* `iceberg_compaction` - (Required) Single Iceberg compaction settings object. [See `iceberg_compaction` below](#iceberg_compaction).
-* `iceberg_snapshot_management` - (Required) Single Iceberg snapshot management settings object. [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
+* `iceberg_compaction` - (Required) Single Iceberg compaction settings object. [See `iceberg_compaction` below](#iceberg_compaction-block).
+* `iceberg_snapshot_management` - (Required) Single Iceberg snapshot management settings object. [See `iceberg_snapshot_management` below](#iceberg_snapshot_management-block).
 
-### `iceberg_compaction`
+### `iceberg_compaction` Block
 
 The `iceberg_compaction` object supports the following arguments:
 
-* `settings` - (Required) Settings object for compaction. [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
+* `settings` - (Required) Settings object for compaction. [See `iceberg_compaction.settings` below](#iceberg_compactionsettings-block).
 * `status` - (Required) Whether the configuration is enabled. Valid values are `enabled` and `disabled`.
 
-### `iceberg_compaction.settings`
+### `iceberg_compaction.settings` Block
 
 The `iceberg_compaction.settings` object supports the following argument:
 
 * `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance. Must be between `64` and `512`.
 
-### `iceberg_snapshot_management`
+### `iceberg_snapshot_management` Block
 
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
-* `settings` - (Required) Settings object for snapshot management. [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
+* `settings` - (Required) Settings object for snapshot management. [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings-block).
 * `status` - (Required) Whether the configuration is enabled. Valid values are `enabled` and `disabled`.
 
-### `iceberg_snapshot_management.settings`
+### `iceberg_snapshot_management.settings` Block
 
 The `iceberg_snapshot_management.settings` object supports the following argument:
 
@@ -141,7 +141,7 @@ The `iceberg_snapshot_management.settings` object supports the following argumen
 
 The `metadata` configuration block supports the following argument:
 
-* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format. [See `iceberg` below](#iceberg).
+* `iceberg` - (Optional) Details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format. [See `iceberg` below](#iceberg).
 
 ### `iceberg` Block
 
