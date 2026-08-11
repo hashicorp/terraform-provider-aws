@@ -51,8 +51,8 @@ github.com/aws/aws-sdk-go-v2/service/acmpca v1.50.1 h1:Si6LJG3Hr5jDDv/opoitI0r6I
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.50.1/go.mod h1:wCigm+MfHm7GhSoHmWHncrSqSBZNlw2XBVLNsfORc5s=
 github.com/aws/aws-sdk-go-v2/service/amp v1.48.2 h1:FmxWSDPNvplS1WNZoxayESnaVxbfk98UsK3mK1BfsFE=
 github.com/aws/aws-sdk-go-v2/service/amp v1.48.2/go.mod h1:Bnu19aGtDbDU1wUbS+1gpAj7pKup7KLAkAmTlXJUDzA=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.41.4 h1:r1vkAV5jaTTKqPZdCRS0LAl+XI/rU9tnvX8IDNrzP+k=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.41.4/go.mod h1:gEy6dbFBOyIIN+wZmvIaMOznN6QvTrVEoIj+2+PjVfM=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.41.5 h1:iqzd8NTGqcJbKitsfqnlOhRozzPUu6Us+dhhuWBrEAw=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.41.5/go.mod h1:1opZxmEGiCHboTK6I+6jxPL9rK3Sc6TL0NbsrKufvAw=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.42.4 h1:Ms7Axfp9CmCT4fCGwSDzR+cYj+8db0LXNqi9ew5bubM=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.42.4/go.mod h1:yHef7hBAGictbSyfX0mrlYu/QW5eERTexpV9HyiP31U=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.37.4 h1:XTTGr+U0wf8qeuTQ0PhHkfSdU2EoKzV+a/fdBhfNBcg=
