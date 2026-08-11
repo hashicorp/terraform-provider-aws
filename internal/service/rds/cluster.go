@@ -1619,10 +1619,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
-		// This can happen when updates are deferred (apply_immediately = false), and
-		// multiple applies occur before the maintenance window. In this case,
-		// continue sending the desired engine_version as part of the modify request.
-		if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+		// This can happen when updates are deferred (apply_immediately = false) and
+		// multiple applies occur before the maintenance window. Re-send the desired
+		// engine_version so the pending upgrade is not dropped.
+		// Guard: only send when engine_version is newer than engine_version_actual
+		// (the user's desired version is ahead of what is running — a genuine pending
+		// upgrade). If engine_version_actual is newer, the cluster was auto-upgraded
+		// externally (auto_minor_version_upgrade=true or ignore_changes=[engine_version])
+		// and sending the older version would be rejected by AWS as a downgrade.
+		// See: https://github.com/hashicorp/terraform-provider-aws/issues/48936
+		if engineVersionIsNewer(d.Get(names.AttrEngineVersion).(string), d.Get("engine_version_actual").(string)) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
