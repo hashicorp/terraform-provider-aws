@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/fms v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.68.5
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/glue v1.152.0
