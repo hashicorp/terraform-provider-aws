@@ -16,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -36,7 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;awstypes;awstypes.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Provisioned Product")
 // @Testing(tagsUpdateGetTagsIn=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -55,217 +53,219 @@ func resourceProvisionedProduct() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_dashboard_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ignore_errors": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"last_provisioning_record_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_record_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_successful_provisioning_record_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"notification_arns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"outputs": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudwatch_dashboard_names": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ignore_errors": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"last_provisioning_record_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_record_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_successful_provisioning_record_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"launch_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"notification_arns": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"outputs": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"path_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ConflictsWith: []string{
-					"path_name",
+				"path_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ConflictsWith: []string{
+						"path_name",
+					},
 				},
-			},
-			"path_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ConflictsWith: []string{
-					"path_id",
+				"path_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ConflictsWith: []string{
+						"path_id",
+					},
 				},
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ExactlyOneOf: []string{
-					"product_id",
-					"product_name",
+				"product_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ExactlyOneOf: []string{
+						"product_id",
+						"product_name",
+					},
 				},
-			},
-			"product_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ExactlyOneOf: []string{
-					"product_id",
-					"product_name",
+				"product_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ExactlyOneOf: []string{
+						"product_id",
+						"product_name",
+					},
 				},
-			},
-			"provisioning_artifact_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ExactlyOneOf: []string{
-					"provisioning_artifact_id",
-					"provisioning_artifact_name",
+				"provisioning_artifact_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ExactlyOneOf: []string{
+						"provisioning_artifact_id",
+						"provisioning_artifact_name",
+					},
 				},
-			},
-			"provisioning_artifact_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ExactlyOneOf: []string{
-					"provisioning_artifact_id",
-					"provisioning_artifact_name",
+				"provisioning_artifact_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ExactlyOneOf: []string{
+						"provisioning_artifact_id",
+						"provisioning_artifact_name",
+					},
 				},
-			},
-			"provisioning_parameters": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"use_previous_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+				"provisioning_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"use_previous_value": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"retain_physical_resources": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"stack_set_provisioning_preferences": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accounts": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"failure_tolerance_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"stack_set_provisioning_preferences.0.failure_tolerance_count",
-								"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
+				"retain_physical_resources": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"stack_set_provisioning_preferences": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accounts": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-						},
-						"failure_tolerance_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"stack_set_provisioning_preferences.0.failure_tolerance_count",
-								"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
+							"failure_tolerance_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"stack_set_provisioning_preferences.0.failure_tolerance_count",
+									"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
+								},
 							},
-						},
-						"max_concurrency_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"stack_set_provisioning_preferences.0.max_concurrency_count",
-								"stack_set_provisioning_preferences.0.max_concurrency_percentage",
+							"failure_tolerance_percentage": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"stack_set_provisioning_preferences.0.failure_tolerance_count",
+									"stack_set_provisioning_preferences.0.failure_tolerance_percentage",
+								},
 							},
-						},
-						"max_concurrency_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"stack_set_provisioning_preferences.0.max_concurrency_count",
-								"stack_set_provisioning_preferences.0.max_concurrency_percentage",
+							"max_concurrency_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"stack_set_provisioning_preferences.0.max_concurrency_count",
+									"stack_set_provisioning_preferences.0.max_concurrency_percentage",
+								},
 							},
-						},
-						"regions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							"max_concurrency_percentage": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"stack_set_provisioning_preferences.0.max_concurrency_count",
+									"stack_set_provisioning_preferences.0.max_concurrency_percentage",
+								},
+							},
+							"regions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusMessage: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusMessage: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: refreshOutputsDiff,
@@ -288,7 +288,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(id.UniqueId()),
+		ProvisionToken:         aws.String(create.UniqueId(ctx)),
 		ProvisionedProductName: aws.String(name),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -464,7 +464,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
-		UpdateToken:          aws.String(id.UniqueId()),
+		UpdateToken:          aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -524,7 +524,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok {
+		if failureErr, ok := errors.AsType[*provisionedProductFailureError](err); ok {
 			log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
 			refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
 			if refreshDiags.HasError() {
@@ -554,7 +554,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(id.UniqueId()),
+		TerminateToken:       aws.String(create.UniqueId(ctx)),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -622,9 +622,8 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	output, err := conn.DescribeProvisionedProduct(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -657,9 +656,8 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 		page, err := conn.DescribeRecord(ctx, input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -691,8 +689,8 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	return output, nil
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedProduct(conn *servicecatalog.Client, id, acceptLanguage string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedProductByTwoPartKey(ctx, conn, id, acceptLanguage)
 
 		if retry.NotFound(err) {
@@ -708,10 +706,10 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 }
 
 func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
 		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
-		Refresh:                   statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh:                   statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
 		NotFoundChecks:            notFoundChecks,
@@ -722,7 +720,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusError || status == awstypes.ProvisionedProductStatusTainted {
@@ -741,13 +739,13 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 }
 
 func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ProvisionedProductStatusAvailable,
 			awstypes.ProvisionedProductStatusUnderChange,
 		),
 		Target:  []string{},
-		Refresh: statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh: statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout: timeout,
 	}
 
@@ -755,7 +753,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed

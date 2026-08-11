@@ -87,12 +87,12 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   domain_id                = aws_datazone_domain.test.id
   environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
-  enabled_regions          = [data.aws_region.test.name]
+  enabled_regions          = [data.aws_region.test.region]
 }
 
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   description                      = "description"
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   name                             = "example-name"
@@ -131,6 +131,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `updated_at` - Time of last update to environment profile.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_environment_profile.example
+  identity = {
+    domain_identifier = "domain-id-12345678"
+    id                = "environment_profile-id-12345678"
+  }
+}
+
+resource "aws_datazone_environment_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the environment profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Profile using a comma-delimited string combining `id` and `domain_identifier`. For example:
 

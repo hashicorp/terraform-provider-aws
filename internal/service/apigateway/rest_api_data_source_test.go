@@ -6,7 +6,6 @@ package apigateway_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,7 +13,7 @@ import (
 
 func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -44,7 +43,7 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -75,7 +74,7 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -68,7 +68,7 @@ func testAccCheckBaiduChannelExists(ctx context.Context, t *testing.T, n string,
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint Baidu channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging Baidu channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -104,7 +104,7 @@ func testAccCheckBaiduChannelDestroy(ctx context.Context, t *testing.T) resource
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint Baidu Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging Baidu Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

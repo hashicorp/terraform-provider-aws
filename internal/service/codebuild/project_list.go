@@ -6,12 +6,14 @@ package codebuild
 import (
 	"context"
 	"fmt"
-	"iter"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -50,62 +52,66 @@ func (l *projectListResource) List(ctx context.Context, request list.ListRequest
 	tflog.Info(ctx, "Listing CodeBuild projects")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for projectName, err := range listProjects(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), projectName)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(projectName)
-
-			tflog.Info(ctx, "Listing CodeBuild project")
-			diags := resourceProjectRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				tflog.Error(ctx, "Error reading CodeBuild project", map[string]any{
-					"project_name": projectName,
-					"error":        diags,
-				})
-				continue
-			}
-
-			if rd.Id() == "" {
-				continue
-			}
-
-			result.DisplayName = projectName
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				tflog.Error(ctx, "Error setting result for CodeBuild project", map[string]any{
-					"project_name": projectName,
-					"error":        result.Diagnostics,
-				})
-				continue
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-func listProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.ListProjectsInput) iter.Seq2[string, error] {
-	return func(yield func(string, error) bool) {
-		pages := codebuild.NewListProjectsPaginator(conn, input)
+		pages := codebuild.NewListProjectsPaginator(conn, &input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield("", fmt.Errorf("listing CodeBuild Projects: %w", err))
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing CodeBuild Projects: %w", err))
+				yield(result)
 				return
 			}
 
+			if len(page.Projects) == 0 {
+				continue
+			}
+
+			// Batch-get full project details when IncludeResource is set.
+			var projects []types.Project
+			if request.IncludeResource {
+				projects, err = findProjects(ctx, conn, &codebuild.BatchGetProjectsInput{
+					Names: page.Projects,
+				})
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading CodeBuild Projects: %w", err))
+					yield(result)
+					return
+				}
+			}
+
+			// Build a map for lookup by name.
+			projectsByName := make(map[string]*types.Project, len(projects))
+			for i := range projects {
+				projectsByName[aws.ToString(projects[i].Name)] = &projects[i]
+			}
+
 			for _, projectName := range page.Projects {
-				if !yield(projectName, nil) {
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), projectName)
+
+				result := request.NewListResult(ctx)
+				rd := l.ResourceData()
+				rd.SetId(projectName)
+				rd.Set(names.AttrARN, awsClient.RegionalARN(ctx, "codebuild", "project/"+projectName))
+
+				if project, ok := projectsByName[projectName]; ok {
+					diags := resourceProjectFlatten(ctx, rd, project)
+					if diags.HasError() {
+						tflog.Error(ctx, "Error reading CodeBuild project", map[string]any{
+							"error": sdkdiag.DiagnosticsString(diags),
+						})
+						continue
+					}
+				}
+				result.DisplayName = projectName
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
+				if result.Diagnostics.HasError() {
+					tflog.Error(ctx, "Error setting result for CodeBuild project", map[string]any{
+						"error": result.Diagnostics,
+					})
+					continue
+				}
+
+				if !yield(result) {
 					return
 				}
 			}

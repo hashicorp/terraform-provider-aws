@@ -31,17 +31,19 @@ func resourceConnectionAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceConnectionAssociationRead,
 		DeleteWithoutTimeout: resourceConnectionAssociationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"lag_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"lag_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

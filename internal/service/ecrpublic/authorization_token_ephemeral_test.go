@@ -22,7 +22,7 @@ func TestAccECRPublicAuthorizationTokenEphemeral_basic(t *testing.T) {
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ECRServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

@@ -48,7 +48,7 @@ func testAccSageMakerUserProfile_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccSageMakerUserProfile_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{domain_id}/{user_profile_name}"),
@@ -231,7 +231,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy: testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy: testAccCheckUserProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -240,7 +240,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -291,7 +291,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SageMakerServiceID),
-		CheckDestroy: testAccCheckUserProfileDestroy(ctx),
+		CheckDestroy: testAccCheckUserProfileDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -305,7 +305,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

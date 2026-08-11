@@ -45,3 +45,9 @@ This data source exports the following attributes in addition to the arguments a
 * `portfolio_id` - Identifier of the portfolio the product resides in. The constraint applies only to the instance of the product that lives within this portfolio.
 * `product_id` - Identifier of the product the constraint applies to. A constraint applies to a specific instance of a product within a certain portfolio.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `STACKSET`, and `TEMPLATE`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `10m`)

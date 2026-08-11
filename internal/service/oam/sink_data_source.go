@@ -23,24 +23,26 @@ func dataSourceSink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinkRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sink_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sink_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sink_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sink_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

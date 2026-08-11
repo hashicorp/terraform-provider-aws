@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +43,8 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Public Access Block")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := s3.ListBucketsInput{
 			BucketRegion: aws.String(l.Meta().Region(ctx)),
@@ -63,24 +65,30 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
+			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
 			// So always try to read it to see if it is present.
-			tflog.Info(ctx, "Reading S3 Bucket Public Access Block")
-			diags := resourceBucketPublicAccessBlockRead(ctx, rd, l.Meta())
-			if diags.HasError() {
+			pabc, err := findPublicAccessBlockConfiguration(ctx, conn, bucketName)
+			if err != nil {
+				if retry.NotFound(err) {
+					continue
+				}
 				tflog.Error(ctx, "Reading S3 Bucket Public Access Block", map[string]any{
-					"diags": sdkdiag.DiagnosticsString(diags),
+					"error": err,
 				})
 				continue
 			}
-			if rd.Id() == "" {
-				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+
+			diags := resourceBucketPublicAccessBlockFlatten(rd, bucketName, pabc)
+			if diags.HasError() {
+				tflog.Error(ctx, "Reading S3 Bucket Public Access Block", map[string]any{
+					"error": sdkdiag.DiagnosticsString(diags),
+				})
 				continue
 			}
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

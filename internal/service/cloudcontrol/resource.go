@@ -18,10 +18,10 @@ import (
 	cfschema "github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -46,35 +46,37 @@ func resourceResource() *schema.Resource {
 			Update: schema.DefaultTimeout(2 * time.Hour),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"desired_state": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrSchema: {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"type_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
-			},
-			"type_version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"desired_state": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrProperties: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrSchema: {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"type_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}`), "must be three alphanumeric sections separated by double colons (::)"),
+				},
+				"type_version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -93,7 +95,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	typeName := d.Get("type_name").(string)
 	input := cloudcontrol.CreateResourceInput{
-		ClientToken:  aws.String(sdkid.UniqueId()),
+		ClientToken:  aws.String(create.UniqueId(ctx)),
 		DesiredState: aws.String(d.Get("desired_state").(string)),
 		TypeName:     aws.String(typeName),
 	}
@@ -168,7 +170,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		typeName := d.Get("type_name").(string)
 		input := cloudcontrol.UpdateResourceInput{
-			ClientToken:   aws.String(sdkid.UniqueId()),
+			ClientToken:   aws.String(create.UniqueId(ctx)),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
 			TypeName:      aws.String(typeName),
@@ -200,7 +202,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	typeName := d.Get("type_name").(string)
 	input := cloudcontrol.DeleteResourceInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Identifier:  aws.String(d.Id()),
 		TypeName:    aws.String(typeName),
 	}

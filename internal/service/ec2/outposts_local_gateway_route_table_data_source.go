@@ -31,29 +31,31 @@ func dataSourceLocalGatewayRouteTable() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			"local_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"local_gateway_route_table_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customFiltersSchema(),
+				"local_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"local_gateway_route_table_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -71,7 +73,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
-			"outpost-arn":      d.Get("outpost_arn").(string),
+			"outpost-arn":      d.Get(names.AttrOutpostARN).(string),
 			names.AttrState:    d.Get(names.AttrState).(string),
 		},
 	)
@@ -98,7 +100,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.SetId(aws.ToString(localGatewayRouteTable.LocalGatewayRouteTableId))
 	d.Set("local_gateway_id", localGatewayRouteTable.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", localGatewayRouteTable.LocalGatewayRouteTableId)
-	d.Set("outpost_arn", localGatewayRouteTable.OutpostArn)
+	d.Set(names.AttrOutpostARN, localGatewayRouteTable.OutpostArn)
 	d.Set(names.AttrState, localGatewayRouteTable.State)
 
 	setTagsOut(ctx, localGatewayRouteTable.Tags)

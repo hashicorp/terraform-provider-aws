@@ -64,26 +64,29 @@ func (l *listResourceBucketACL) List(ctx context.Context, request list.ListReque
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// There is always a Bucket ACL associated with a Bucket (1-1)
+			// There is always a Bucket ACL associated with a Bucket (1:1)
 			// So only read it if resource data is requested.
 			if request.IncludeResource {
-				tflog.Info(ctx, "Reading S3 Bucket ACL")
-				diags := resourceBucketACLRead(ctx, rd, l.Meta())
-				if diags.HasError() {
+				bucketACL, err := findBucketACL(ctx, conn, bucketName, "")
+				if err != nil {
 					tflog.Error(ctx, "Reading S3 Bucket ACL", map[string]any{
-						"diags": sdkdiag.DiagnosticsString(diags),
+						"error": err,
 					})
 					continue
 				}
-				if rd.Id() == "" {
-					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+
+				diags := resourceBucketACLFlatten(rd, bucketACL, bucketName, "", "")
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading S3 Bucket ACL", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
 					continue
 				}
 			}
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

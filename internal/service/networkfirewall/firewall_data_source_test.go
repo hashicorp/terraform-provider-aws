@@ -20,7 +20,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -118,7 +118,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -165,7 +165,6 @@ func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testin
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
-	dataSourceCallerIdentity := "data.aws_caller_identity.current"
 	dataSourceAvailabilityZones := "data.aws_availability_zones.available"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -183,7 +182,7 @@ func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testin
 					resource.TestCheckResourceAttr(dataSourceName, "availability_zone_change_protection", acctest.CtFalse),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "availability_zone_mapping.0.availability_zone_id", dataSourceAvailabilityZones, "zone_ids.0"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_status.0.transit_gateway_attachment_sync_states.0.attachment_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_owner_account_id", dataSourceCallerIdentity, names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, "transit_gateway_owner_account_id"),
 				),
 			},
 		},

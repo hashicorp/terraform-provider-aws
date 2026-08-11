@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,23 +60,25 @@ func resourceDefaultPatchBaseline() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"baseline_id": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: diffSuppressPatchBaselineID,
-				ValidateFunc: validation.Any(
-					validatePatchBaselineID,
-					validatePatchBaselineARN,
-				),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"baseline_id": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: diffSuppressPatchBaselineID,
+					ValidateFunc: validation.Any(
+						validatePatchBaselineID,
+						validatePatchBaselineARN,
+					),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+			}
 		},
 	}
 }
@@ -168,9 +169,8 @@ func findDefaultPatchBaselineByOperatingSystem(ctx context.Context, conn *ssm.Cl
 	output, err := conn.GetDefaultPatchBaseline(ctx, input)
 
 	if errs.IsA[*awstypes.DoesNotExistException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

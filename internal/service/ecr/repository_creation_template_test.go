@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,9 +19,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// ROOT prefix is a per-registry singleton — only one template with prefix
+// "ROOT" can exist.
+func TestAccECRRepositoryCreationTemplate_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"root":           testAccRepositoryCreationTemplate_root,
+		"rootDataSource": testAccRepositoryCreationTemplateDataSource_root,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -64,7 +76,7 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -80,6 +92,14 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -87,7 +107,7 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -105,7 +125,7 @@ func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -142,7 +162,7 @@ func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T
 
 func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -177,7 +197,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	})
 }
 
-func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
+func testAccRepositoryCreationTemplate_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_repository_creation_template.root"
 
@@ -199,7 +219,7 @@ func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

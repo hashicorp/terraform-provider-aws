@@ -11,11 +11,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,16 +36,18 @@ func resourceActiveReceiptRuleSet() *schema.Resource {
 			StateContext: resourceActiveReceiptRuleSetImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rule_set_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rule_set_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
@@ -57,11 +57,11 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
-	input := &ses.SetActiveReceiptRuleSetInput{
+	input := ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: aws.String(ruleSetName),
 	}
 
-	_, err := conn.SetActiveReceiptRuleSet(ctx, input)
+	_, err := conn.SetActiveReceiptRuleSet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES Active Receipt Rule Set (%s): %s", ruleSetName, err)
@@ -74,7 +74,8 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESClient(ctx)
 
 	output, err := findActiveReceiptRuleSet(ctx, conn)
 
@@ -88,14 +89,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, receiptRuleSetARN(ctx, c, d.Id()))
 	d.Set("rule_set_name", output.Name)
 
 	return diags
@@ -105,7 +99,9 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	_, err := conn.SetActiveReceiptRuleSet(ctx, &ses.SetActiveReceiptRuleSetInput{})
+	log.Printf("[DEBUG] Deleting SES Active Receipt Rule Set: %s", d.Id())
+	var input ses.SetActiveReceiptRuleSetInput
+	_, err := conn.SetActiveReceiptRuleSet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Active Receipt Rule Set: %s", err)
@@ -117,43 +113,34 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
+	// Region may be overridden in the import block.
+	var optFns []func(*ses.Options)
+	if v, ok := d.GetOk(names.AttrRegion); ok {
+		optFns = append(optFns, func(o *ses.Options) {
+			o.Region = v.(string)
+		})
+	}
 
-	response, err := conn.DescribeActiveReceiptRuleSet(ctx, describeOpts)
+	output, err := findActiveReceiptRuleSet(ctx, conn, optFns...)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if response.Metadata == nil {
-		return nil, fmt.Errorf("no active Receipt Rule Set found")
+	if got, want := aws.ToString(output.Name), d.Id(); got != want {
+		return nil, fmt.Errorf("SES Receipt Rule Set (%s) is not the SES Active Receipt Rule Set (%s)", want, got)
 	}
-
-	if aws.ToString(response.Metadata.Name) != d.Id() {
-		return nil, fmt.Errorf("SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found", d.Id())
-	}
-
-	d.Set("rule_set_name", response.Metadata.Name)
-
-	arnValue := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arnValue)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client) (*awstypes.ReceiptRuleSetMetadata, error) {
-	input := &ses.DescribeActiveReceiptRuleSetInput{}
-	output, err := conn.DescribeActiveReceiptRuleSet(ctx, input)
+func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client, optFns ...func(*ses.Options)) (*awstypes.ReceiptRuleSetMetadata, error) {
+	var input ses.DescribeActiveReceiptRuleSetInput
+	output, err := conn.DescribeActiveReceiptRuleSet(ctx, &input, optFns...)
 
 	if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

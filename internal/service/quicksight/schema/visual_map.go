@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 )
 
 var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
@@ -19,7 +20,19 @@ var geospatialMapStyleOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"base_map_style": stringEnumSchema[awstypes.BaseMapStyleType](attrOptional),
+				"base_map_style": sdkschema.StringEnumSchema[awstypes.BaseMapStyleType](sdkschema.AttrOptional),
+			},
+		},
+	}
+})
+
+var geospatialMapStyleOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapStyleOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"base_map_style": sdkschema.StringEnumDataSourceSchema[awstypes.BaseMapStyleType](),
 			},
 		},
 	}
@@ -40,14 +53,38 @@ var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"east":  floatBetweenSchema(attrRequired, -1800, 1800),
-							"north": floatBetweenSchema(attrRequired, -90, 90),
-							"south": floatBetweenSchema(attrRequired, -90, 90),
-							"west":  floatBetweenSchema(attrRequired, -1800, 1800),
+							"east":  sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -1800, 1800),
+							"north": sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -90, 90),
+							"south": sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -90, 90),
+							"west":  sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, -1800, 1800),
 						},
 					},
 				},
-				"map_zoom_mode": stringEnumSchema[awstypes.MapZoomMode](attrOptional),
+				"map_zoom_mode": sdkschema.StringEnumSchema[awstypes.MapZoomMode](sdkschema.AttrOptional),
+			},
+		},
+	}
+})
+
+var geospatialWindowOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"bounds": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialCoordinateBounds.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"east":  floatComputedOnly(),
+							"north": floatComputedOnly(),
+							"south": floatComputedOnly(),
+							"west":  floatComputedOnly(),
+						},
+					},
+				},
+				"map_zoom_mode": sdkschema.StringEnumDataSourceSchema[awstypes.MapZoomMode](),
 			},
 		},
 	}

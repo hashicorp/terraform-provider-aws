@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -35,22 +34,24 @@ func resourceDomainMailFrom() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
-				ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.BehaviorOnMXFailureUseDefaultValue,
+					ValidateDiagFunc: enum.Validate[awstypes.BehaviorOnMXFailure](),
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -60,13 +61,13 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	input := &ses.SetIdentityMailFromDomainInput{
+	input := ses.SetIdentityMailFromDomainInput{
 		BehaviorOnMXFailure: awstypes.BehaviorOnMXFailure(d.Get("behavior_on_mx_failure").(string)),
 		Identity:            aws.String(domainName),
 		MailFromDomain:      aws.String(d.Get("mail_from_domain").(string)),
 	}
 
-	_, err := conn.SetIdentityMailFromDomain(ctx, input)
+	_, err := conn.SetIdentityMailFromDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES MAIL FROM Domain (%s): %s", domainName, err)
@@ -107,9 +108,10 @@ func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SES MAIL FROM Domain: %s", d.Id())
-	_, err := conn.SetIdentityMailFromDomain(ctx, &ses.SetIdentityMailFromDomainInput{
+	input := ses.SetIdentityMailFromDomainInput{
 		Identity: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.SetIdentityMailFromDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES MAIL FROM Domain (%s): %s", d.Id(), err)
@@ -119,20 +121,20 @@ func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findIdentityMailFromDomainAttributesByIdentity(ctx context.Context, conn *ses.Client, identity string) (*awstypes.IdentityMailFromDomainAttributes, error) {
-	input := &ses.GetIdentityMailFromDomainAttributesInput{
+	input := ses.GetIdentityMailFromDomainAttributesInput{
 		Identities: []string{identity},
 	}
-	output, err := findIdentityMailFromDomainAttributes(ctx, conn, input)
+	output, err := findIdentityMailFromDomainAttributes(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if v, ok := output[identity]; ok {
+	if v, ok := output[identity]; ok && v.MailFromDomain != nil {
 		return &v, nil
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityMailFromDomainAttributesInput) (map[string]awstypes.IdentityMailFromDomainAttributes, error) {

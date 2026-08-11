@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -25,7 +24,7 @@ func TestAccLogsLogGroup_List_basic(t *testing.T) {
 	resourceName1 := "aws_cloudwatch_log_group.test[0]"
 	resourceName2 := "aws_cloudwatch_log_group.test[1]"
 	resourceName3 := "aws_cloudwatch_log_group.test[2]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -37,8 +36,7 @@ func TestAccLogsLogGroup_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LogGroup/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -51,9 +49,8 @@ func TestAccLogsLogGroup_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LogGroup/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -87,7 +84,7 @@ func TestAccLogsLogGroup_List_regionOverride(t *testing.T) {
 	resourceName1 := "aws_cloudwatch_log_group.test[0]"
 	resourceName2 := "aws_cloudwatch_log_group.test[1]"
 	resourceName3 := "aws_cloudwatch_log_group.test[2]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -99,8 +96,7 @@ func TestAccLogsLogGroup_List_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LogGroup/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -114,9 +110,8 @@ func TestAccLogsLogGroup_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogGroup/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LogGroup/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

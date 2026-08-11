@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpc_endpoint: Fix issue where `dns_options` were not being updated correctly when `private_dns_enabled` was set to true
-```

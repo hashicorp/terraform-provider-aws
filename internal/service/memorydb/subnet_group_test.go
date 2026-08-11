@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,7 +24,7 @@ func testAccPreCheck(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -75,6 +75,14 @@ func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -82,7 +90,7 @@ func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +113,7 @@ func TestAccMemoryDBSubnetGroup_nameGenerated(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -128,7 +136,7 @@ func TestAccMemoryDBSubnetGroup_namePrefix(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -167,7 +175,7 @@ func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -224,7 +232,7 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 
 func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_subnet_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -1,3 +1,0 @@
-```release-note:bug
-data-source/aws_kms_public_key: Correctly base64 encode `public_key` value
-```

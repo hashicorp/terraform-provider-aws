@@ -24,92 +24,94 @@ func dataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEngine: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEngineVersion: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"maintenance_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"node_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"num_shards": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrParameterGroupName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_retention_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"snapshot_window": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subnet_group_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrTopicARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngine: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEngineVersion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"maintenance_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"node_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"num_shards": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrParameterGroupName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_retention_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"snapshot_window": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"subnet_group_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrTopicARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrClusterName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,7 +33,7 @@ func TestIdentityInterceptor(t *testing.T) {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"region": attribute.Region(),
+		"region": sdkv2.RegionOptionalComputed(),
 	}
 
 	client := mockClient{
@@ -114,7 +114,7 @@ func TestIdentityInterceptor_Read_Removed(t *testing.T) {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"region": attribute.Region(),
+		"region": sdkv2.RegionOptionalComputed(),
 	}
 
 	identitySpec := regionalSingleParameterizedIdentitySpec("name")
@@ -177,7 +177,7 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"region": attribute.Region(),
+		"region": sdkv2.RegionOptionalComputed(),
 	}
 
 	client := mockClient{
@@ -278,12 +278,12 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 	}
 }
 
-func regionalSingleParameterizedIdentitySpec(attrName string, opts ...inttypes.IdentityOptsFunc) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(attrName, opts...)
+func regionalSingleParameterizedIdentitySpec(name string, opts ...inttypes.IdentityOptsFunc) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true), opts...)
 }
 
-func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterizedIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 type mockClient struct {

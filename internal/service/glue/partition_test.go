@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -21,7 +21,7 @@ import (
 func TestAccGluePartition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -54,8 +54,8 @@ func TestAccGluePartition_basic(t *testing.T) {
 func TestAccGluePartition_multipleValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
-	parValue2 := sdkacctest.RandString(11)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 11)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -85,7 +85,7 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 func TestAccGluePartition_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -131,8 +131,8 @@ func TestAccGluePartition_parameters(t *testing.T) {
 func TestAccGluePartition_storageDescriptorBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
-	parValue2 := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -191,9 +191,9 @@ func TestAccGluePartition_storageDescriptorBasic(t *testing.T) {
 func TestAccGluePartition_storageDescriptorAdditionalLocations(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
-	parValue2 := sdkacctest.RandString(10)
-	parValue3 := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
+	parValue2 := acctest.RandString(t, 10)
+	parValue3 := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -248,7 +248,7 @@ func TestAccGluePartition_storageDescriptorAdditionalLocations(t *testing.T) {
 func TestAccGluePartition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -264,6 +264,14 @@ func TestAccGluePartition_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -272,7 +280,7 @@ func TestAccGluePartition_disappears(t *testing.T) {
 func TestAccGluePartition_Disappears_table(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	parValue := sdkacctest.RandString(10)
+	parValue := acctest.RandString(t, 10)
 	resourceName := "aws_glue_partition.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -288,6 +296,14 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_glue_catalog_table.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_glue_catalog_table.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

@@ -79,17 +79,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Config Organization Custom Policy Rule using the `name` argument. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_config_organization_custom_policy_rule.example
-  id = "example_rule_name"
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_custom_policy_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import a Config Organization Custom Policy Rule using the `name` argument. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Policy Rules using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_organization_custom_policy_rule.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import Config Organization Custom Policy Rules using the `name`. For example:
 
 ```console
-% terraform import aws_config_organization_custom_policy_rule.example example_rule_name
+% terraform import aws_config_organization_custom_policy_rule.example example
 ```

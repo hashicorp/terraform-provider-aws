@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,220 +53,222 @@ func resourceGateway() *schema.Resource {
 			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"activation_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"average_download_rate_limit_in_bits_per_sec": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(102400),
-			},
-			"average_upload_rate_limit_in_bits_per_sec": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(51200),
-			},
-			names.AttrCloudWatchLogGroupARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"ec2_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpointType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"gateway_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"gateway_ip_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPv4Address,
-				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
-			},
-			"gateway_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
-					validation.StringLenBetween(2, 255),
-				),
-			},
-			"gateway_network_interface": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4_address": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"activation_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"average_download_rate_limit_in_bits_per_sec": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(102400),
+				},
+				"average_upload_rate_limit_in_bits_per_sec": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(51200),
+				},
+				names.AttrCloudWatchLogGroupARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"ec2_instance_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpointType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"gateway_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"gateway_ip_address": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPv4Address,
+					ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
+				},
+				"gateway_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
+						validation.StringLenBetween(2, 255),
+					),
+				},
+				"gateway_network_interface": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv4_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"gateway_timezone": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.Any(
-					validation.StringMatch(regexache.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
-					validation.StringMatch(regexache.MustCompile(`^GMT$`), ""),
-				),
-			},
-			"gateway_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      gatewayTypeStored,
-				ValidateFunc: validation.StringInSlice(gatewayType_Values(), false),
-			},
-			"gateway_vpc_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"host_environment": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"maintenance_start_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"day_of_week": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 6),
-						},
-						"day_of_month": {
-							Type:         nullable.TypeNullableInt,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 28),
-						},
-						"hour_of_day": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 23),
-						},
-						"minute_of_hour": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 59),
+				"gateway_timezone": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.Any(
+						validation.StringMatch(regexache.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^GMT$`), ""),
+					),
+				},
+				"gateway_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      gatewayTypeStored,
+					ValidateFunc: validation.StringInSlice(gatewayType_Values(), false),
+				},
+				"gateway_vpc_endpoint": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"host_environment": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"maintenance_start_time": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"day_of_week": {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 6),
+							},
+							"day_of_month": {
+								Type:         nullable.TypeNullableInt,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(1, 28),
+							},
+							"hour_of_day": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 23),
+							},
+							"minute_of_hour": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 59),
+							},
 						},
 					},
 				},
-			},
-			"medium_changer_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(mediumChangerType_Values(), false),
-			},
-			"smb_active_directory_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active_directory_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"domain_controllers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"medium_changer_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(mediumChangerType_Values(), false),
+				},
+				"smb_active_directory_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active_directory_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"domain_controllers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
+										validation.StringLenBetween(6, 1024),
+									),
+								},
+							},
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Required: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
-									validation.StringLenBetween(6, 1024),
+									validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
+									validation.StringLenBetween(1, 1024),
+								),
+							},
+							"organizational_unit": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							names.AttrPassword: {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
+									validation.StringLenBetween(1, 1024),
+								),
+							},
+							"timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      20,
+								ValidateFunc: validation.IntBetween(0, 3600),
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
+									validation.StringLenBetween(1, 1024),
 								),
 							},
 						},
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
-						"organizational_unit": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						names.AttrPassword: {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
-						"timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      20,
-							ValidateFunc: validation.IntBetween(0, 3600),
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
 					},
 				},
-			},
-			"smb_file_share_visibility": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"smb_guest_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
-					validation.StringLenBetween(6, 512),
-				),
-			},
-			"smb_security_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SMBSecurityStrategy](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tape_drive_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(tapeDriveType_Values(), false),
-			},
+				"smb_file_share_visibility": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"smb_guest_password": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
+						validation.StringLenBetween(6, 512),
+					),
+				},
+				"smb_security_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SMBSecurityStrategy](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tape_drive_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(tapeDriveType_Values(), false),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -779,9 +780,8 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	output, err := conn.DescribeGatewayInformation(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -847,9 +847,8 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	output, err := conn.DescribeSMBSettings(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -876,9 +875,8 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeBandwidthRateLimit(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -905,9 +903,8 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	output, err := conn.DescribeMaintenanceStartTime(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -927,8 +924,8 @@ const (
 	gatewayStatusNotConnected = "GatewayNotConnected"
 )
 
-func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayConnected(conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
 		if retry.NotFound(err) {
@@ -947,8 +944,8 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 	}
 }
 
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayJoinDomain(conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
 		if retry.NotFound(err) {
@@ -964,10 +961,10 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, g
 }
 
 func waitGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{gatewayStatusNotConnected},
 		Target:                    []string{gatewayStatusConnected},
-		Refresh:                   statusGatewayConnected(ctx, conn, gatewayARN),
+		Refresh:                   statusGatewayConnected(conn, gatewayARN),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		ContinuousTargetOccurence: 6, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway.
@@ -986,10 +983,10 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Clien
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ActiveDirectoryStatusJoining),
 		Target:  enum.Slice(awstypes.ActiveDirectoryStatusJoined),
-		Refresh: statusGatewayJoinDomain(ctx, conn, gatewayARN),
+		Refresh: statusGatewayJoinDomain(conn, gatewayARN),
 		Timeout: timeout,
 	}
 

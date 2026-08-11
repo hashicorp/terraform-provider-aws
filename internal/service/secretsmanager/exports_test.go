@@ -16,4 +16,9 @@ var (
 	FindSecretVersionByTwoPartKey      = findSecretVersionByTwoPartKey
 	FindSecretVersionEntryByTwoPartKey = findSecretVersionEntryByTwoPartKey
 	FindSecretTag                      = findSecretTag
+
+	ValidSecretName       = validSecretName
+	ValidSecretNamePrefix = validSecretNamePrefix
+
+	SecretVersionForceNewCustomDiffInner = secretVersionForceNewCustomDiffInner
 )

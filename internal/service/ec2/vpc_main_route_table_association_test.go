@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,33 +21,33 @@ func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_main_route_table_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMainRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMainRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCMainRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociationExists(ctx, resourceName, &rta),
+					testAccCheckMainRouteTableAssociationExists(ctx, t, resourceName, &rta),
 				),
 			},
 			{
 				Config: testAccVPCMainRouteTableAssociationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociationExists(ctx, resourceName, &rta),
+					testAccCheckMainRouteTableAssociationExists(ctx, t, resourceName, &rta),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckMainRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMainRouteTableAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_main_route_table_association" {
@@ -73,14 +71,14 @@ func testAccCheckMainRouteTableAssociationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckMainRouteTableAssociationExists(ctx context.Context, n string, v *awstypes.RouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckMainRouteTableAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		association, err := tfec2.FindMainRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 

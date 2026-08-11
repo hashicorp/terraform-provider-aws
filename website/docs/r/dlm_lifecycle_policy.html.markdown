@@ -99,7 +99,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
 
 ### Example Default Policy
 
-```
+```terraform
 resource "aws_dlm_lifecycle_policy" "example" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.example.arn
@@ -351,6 +351,7 @@ This resource supports the following arguments:
 #### Parameters arguments
 
 * `exclude_boot_volume` - (Optional) Indicates whether to exclude the root volume from snapshots created using CreateSnapshots. The default is `false`.
+* `exclude_data_volume_tags` - (Optional) Map specifies whether to exclude volumes that have specific tags.
 * `no_reboot` - (Optional) Applies to AMI lifecycle policies only. Indicates whether targeted instances are rebooted when the lifecycle policy runs. `true` indicates that targeted instances are not rebooted when the policy runs. `false` indicates that target instances are rebooted when the policy runs. The default is `true` (instances are not rebooted).
 
 #### Schedule arguments

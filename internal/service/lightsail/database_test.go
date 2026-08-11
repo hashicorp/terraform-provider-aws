@@ -15,7 +15,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -85,7 +84,7 @@ func testAccDatabase_relationalDatabaseName(t *testing.T, semaphore tfsync.Semap
 	resourceName := "aws_lightsail_database.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameTooShort := "s"
-	rNameTooLong := fmt.Sprintf("%s-%s", rName, sdkacctest.RandString(255))
+	rNameTooLong := fmt.Sprintf("%s-%s", rName, acctest.RandString(t, 255))
 	rNameContainsUnderscore := fmt.Sprintf("%s-%s", rName, "_test")
 	rNameStartingDash := fmt.Sprintf("%s-%s", "-", rName)
 	rNameEndingDash := fmt.Sprintf("%s-%s", rName, "-")
@@ -149,7 +148,7 @@ func testAccDatabase_masterDatabaseName(t *testing.T, semaphore tfsync.Semaphore
 	resourceName := "aws_lightsail_database.test"
 	dbName := "randomdatabasename"
 	dbNameTooShort := ""
-	dbNameTooLong := fmt.Sprintf("%s-%s", dbName, sdkacctest.RandString(64))
+	dbNameTooLong := fmt.Sprintf("%s-%s", dbName, acctest.RandString(t, 64))
 	dbNameContainsSpaces := fmt.Sprint(dbName, "string with spaces")
 	dbNameContainsStartingDigit := fmt.Sprintf("01_%s", dbName)
 	dbNameContainsUnderscore := fmt.Sprintf("%s_123456", dbName)
@@ -216,7 +215,7 @@ func testAccDatabase_masterUsername(t *testing.T, semaphore tfsync.Semaphore) {
 	resourceName := "aws_lightsail_database.test"
 	username := "username1"
 	usernameTooShort := ""
-	usernameTooLong := fmt.Sprintf("%s-%s", username, sdkacctest.RandString(63))
+	usernameTooLong := fmt.Sprintf("%s-%s", username, acctest.RandString(t, 63))
 	usernameStartingDigit := fmt.Sprintf("01%s", username)
 	usernameContainsDash := fmt.Sprintf("%s-test", username)
 	usernameContainsSpecial := fmt.Sprintf("%s@", username)
@@ -287,7 +286,7 @@ func testAccDatabase_masterPassword(t *testing.T, semaphore tfsync.Semaphore) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	password := "testpassword"
 	passwordTooShort := "short"
-	passwordTooLong := fmt.Sprintf("%s-%s", password, sdkacctest.RandString(128))
+	passwordTooLong := fmt.Sprintf("%s-%s", password, acctest.RandString(t, 128))
 	passwordContainsSlash := fmt.Sprintf("%s/", password)
 	passwordContainsQuotes := fmt.Sprintf("%s\"", password)
 	passwordContainsAtSymbol := fmt.Sprintf("%s@", password)
@@ -543,7 +542,7 @@ func testAccDatabase_finalSnapshotName(t *testing.T, semaphore tfsync.Semaphore)
 	resourceName := "aws_lightsail_database.test"
 	sName := fmt.Sprintf("%s-snapshot", rName)
 	sNameTooShort := "s"
-	sNameTooLong := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(255))
+	sNameTooLong := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(t, 255))
 	sNameContainsSpaces := fmt.Sprint(sName, "string with spaces")
 	sNameContainsUnderscore := fmt.Sprintf("%s_123456", sName)
 

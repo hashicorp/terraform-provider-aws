@@ -62,6 +62,11 @@ func resourceFirewallPolicy() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_tls_session_holding": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"policy_variables": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -562,6 +567,10 @@ func expandFirewallPolicy(tfList []any) *awstypes.FirewallPolicy {
 		StatelessFragmentDefaultActions: flex.ExpandStringValueSet(tfMap["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
+	if v, ok := tfMap["enable_tls_session_holding"].(bool); ok {
+		apiObject.EnableTLSSessionHolding = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["policy_variables"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.PolicyVariables = expandPolicyVariables(v.([]any)[0].(map[string]any))
 	}
@@ -599,6 +608,10 @@ func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []any {
 	}
 
 	tfMap := map[string]any{}
+
+	if apiObject.EnableTLSSessionHolding != nil {
+		tfMap["enable_tls_session_holding"] = aws.ToBool(apiObject.EnableTLSSessionHolding)
+	}
 
 	if apiObject.PolicyVariables != nil {
 		tfMap["policy_variables"] = flattenPolicyVariables(apiObject.PolicyVariables)

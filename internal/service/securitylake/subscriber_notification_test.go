@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +22,7 @@ import (
 func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 	subscriberResourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
 
@@ -66,7 +67,7 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 func testAccSubscriberNotification_https_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
@@ -114,7 +115,7 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 func testAccSubscriberNotification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
@@ -137,6 +138,14 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceSubscriberNotification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_subscriber_notification.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_subscriber_notification.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -145,7 +154,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 func testAccSubscriberNotification_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
@@ -227,7 +236,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
@@ -290,7 +299,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := randomCustomLogSourceName()
+	rName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())

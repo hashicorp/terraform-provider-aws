@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -117,8 +118,8 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 
 	conn := a.Meta().SESClient(ctx)
 
-	source := config.Source.ValueString()
-	subject := config.Subject.ValueString()
+	source := fwflex.StringValueFromFramework(ctx, config.Source)
+	subject := fwflex.StringValueFromFramework(ctx, config.Subject)
 
 	tflog.Info(ctx, "Starting SES send email action", map[string]any{
 		names.AttrSource: source,
@@ -127,9 +128,8 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 		"has_html_body":  !config.HtmlBody.IsNull(),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Sending email from %s...", source),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Sending email from %s...", source)
 
 	// Build destination
 	destination := &awstypes.Destination{}
@@ -188,9 +188,7 @@ func (a *sendEmailAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 	}
 
 	messageId := aws.ToString(output.MessageId)
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Email sent successfully (Message ID: %s)", messageId),
-	})
+	cb(ctx, "Email sent successfully (Message ID: %s)", messageId)
 
 	tflog.Info(ctx, "SES send email action completed successfully", map[string]any{
 		names.AttrSource: source,

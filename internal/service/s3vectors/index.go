@@ -40,7 +40,6 @@ import (
 // @Tags(identifierAttribute="index_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3vectors/types;awstypes;awstypes.Index")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -82,10 +81,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[indexEncryptionConfigurationModel](ctx, 1, nil,
-				listplanmodifier.UseStateForUnknown(),
-				listplanmodifier.RequiresReplace(),
-			),
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[indexEncryptionConfigurationModel](ctx),
 			"index_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

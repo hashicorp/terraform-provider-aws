@@ -21,20 +21,22 @@ import (
 func DataSourceStreamKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamKeyRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"channel_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"channel_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

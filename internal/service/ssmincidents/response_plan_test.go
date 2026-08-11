@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -155,21 +155,21 @@ func testAccResponsePlan_updateTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rTitle := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	rKey1 := sdkacctest.RandString(26)
-	rVal1Ini := sdkacctest.RandString(26)
-	rVal1Upd := sdkacctest.RandString(26)
-	rKey2 := sdkacctest.RandString(26)
-	rVal2 := sdkacctest.RandString(26)
-	rKey3 := sdkacctest.RandString(26)
-	rVal3 := sdkacctest.RandString(26)
+	rKey1 := acctest.RandString(t, 26)
+	rVal1Ini := acctest.RandString(t, 26)
+	rVal1Upd := acctest.RandString(t, 26)
+	rKey2 := acctest.RandString(t, 26)
+	rVal2 := acctest.RandString(t, 26)
+	rKey3 := acctest.RandString(t, 26)
+	rVal3 := acctest.RandString(t, 26)
 
-	rProviderKey1 := sdkacctest.RandString(26)
-	rProviderVal1Ini := sdkacctest.RandString(26)
-	rProviderVal1Upd := sdkacctest.RandString(26)
-	rProviderKey2 := sdkacctest.RandString(26)
-	rProviderVal2 := sdkacctest.RandString(26)
-	rProviderKey3 := sdkacctest.RandString(26)
-	rProviderVal3 := sdkacctest.RandString(26)
+	rProviderKey1 := acctest.RandString(t, 26)
+	rProviderVal1Ini := acctest.RandString(t, 26)
+	rProviderVal1Upd := acctest.RandString(t, 26)
+	rProviderKey2 := acctest.RandString(t, 26)
+	rProviderVal2 := acctest.RandString(t, 26)
+	rProviderKey3 := acctest.RandString(t, 26)
+	rProviderVal3 := acctest.RandString(t, 26)
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
@@ -254,8 +254,8 @@ func testAccResponsePlan_updateEmptyTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rTitle := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	rKey1 := sdkacctest.RandString(26)
-	rKey2 := sdkacctest.RandString(26)
+	rKey1 := acctest.RandString(t, 26)
+	rKey2 := acctest.RandString(t, 26)
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
@@ -341,6 +341,14 @@ func testAccResponsePlan_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssmincidents.ResourceResponsePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmincidents_response_plan.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssmincidents_response_plan.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

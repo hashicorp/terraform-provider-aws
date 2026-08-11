@@ -60,7 +60,7 @@ func testAccSSMContactsContact_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func testAccSSMContactsContact_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -116,7 +116,7 @@ func testAccSSMContactsContact_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -164,7 +164,7 @@ func testAccSSMContactsContact_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -205,7 +205,7 @@ func testAccSSMContactsContact_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -247,7 +247,7 @@ func testAccSSMContactsContact_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +259,7 @@ func testAccSSMContactsContact_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -317,7 +317,7 @@ func testAccSSMContactsContact_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -327,7 +327,7 @@ func testAccSSMContactsContact_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -383,7 +383,7 @@ func testAccSSMContactsContact_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -393,7 +393,7 @@ func testAccSSMContactsContact_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -417,7 +417,7 @@ func testAccSSMContactsContact_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -469,7 +469,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -481,7 +481,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -521,7 +521,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -563,7 +563,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -575,7 +575,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -607,7 +607,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -653,7 +653,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -705,7 +705,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactDestroy(ctx),
+		CheckDestroy:             testAccCheckContactDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -717,7 +717,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -748,7 +748,7 @@ func testAccSSMContactsContact_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -797,7 +797,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -810,7 +810,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -854,7 +854,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -900,7 +900,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -940,7 +940,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -981,7 +981,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -996,7 +996,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1050,7 +1050,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1103,7 +1103,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1144,7 +1144,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1159,7 +1159,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1212,7 +1212,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1269,7 +1269,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1323,7 +1323,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToProviderOnly(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1335,7 +1335,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToProviderOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1368,7 +1368,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1416,7 +1416,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToResourceOnly(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1429,7 +1429,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToResourceOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1457,7 +1457,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_updateToResourceOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1510,7 +1510,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1525,7 +1525,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1580,7 +1580,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1593,7 +1593,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1642,7 +1642,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1657,7 +1657,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1709,7 +1709,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1724,7 +1724,7 @@ func testAccSSMContactsContact_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1774,7 +1774,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_onCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1784,7 +1784,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1832,7 +1832,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1844,7 +1844,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1876,7 +1876,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1932,7 +1932,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1944,7 +1944,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1974,7 +1974,7 @@ func testAccSSMContactsContact_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2022,7 +2022,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2041,7 +2041,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2090,7 +2090,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2139,7 +2139,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2187,7 +2187,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactDestroy(ctx),
+		CheckDestroy: testAccCheckContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2204,7 +2204,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2267,7 +2267,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2330,7 +2330,7 @@ func testAccSSMContactsContact_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactExists(ctx, resourceName),
+					testAccCheckContactExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

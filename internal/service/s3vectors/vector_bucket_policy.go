@@ -30,7 +30,6 @@ import (
 // @ArnIdentity("vector_bucket_arn")
 // @Testing(importIgnore="policy")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVectorBucketPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketPolicyResource{}
 

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,59 +48,61 @@ func resourceMultiplex() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multiplex_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transport_stream_bitrate": {
-							Type:             schema.TypeInt,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
-						},
-						"transport_stream_reserved_bitrate": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"transport_stream_id": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"maximum_video_buffer_delay_milliseconds": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"multiplex_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"transport_stream_bitrate": {
+								Type:             schema.TypeInt,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
+							},
+							"transport_stream_reserved_bitrate": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"transport_stream_id": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"maximum_video_buffer_delay_milliseconds": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"start_multiplex": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"start_multiplex": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -116,7 +117,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateMultiplexInput{
-		RequestId:         aws.String(id.UniqueId()),
+		RequestId:         aws.String(create.UniqueId(ctx)),
 		Name:              aws.String(d.Get(names.AttrName).(string)),
 		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		Tags:              getTagsIn(ctx),

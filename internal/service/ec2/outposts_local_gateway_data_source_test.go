@@ -16,7 +16,7 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_local_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -25,7 +25,7 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 				Config: testAccOutpostsLocalGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-`)),
-					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrOutpostARN, "outposts", regexache.MustCompile(`outpost/op-.+`)),
 					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),

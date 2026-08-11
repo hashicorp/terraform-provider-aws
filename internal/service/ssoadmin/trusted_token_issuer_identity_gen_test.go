@@ -51,7 +51,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_basic(t *testing.T) {
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy:             testAccCheckTrustedTokenIssuerDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustedTokenIssuerDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -61,7 +61,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &v),
+					testAccCheckTrustedTokenIssuerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -265,7 +265,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_basic(t *testin
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx),
+		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -274,7 +274,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_basic(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &v),
+					testAccCheckTrustedTokenIssuerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -288,7 +288,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_basic(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &v),
+					testAccCheckTrustedTokenIssuerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -350,7 +350,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_noRefreshNoChan
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx),
+		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -364,7 +364,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_noRefreshNoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &v),
+					testAccCheckTrustedTokenIssuerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

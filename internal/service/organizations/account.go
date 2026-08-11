@@ -40,6 +40,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
+// @Testing(preIdentityVersion="v5.100.0")
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -57,76 +58,78 @@ func resourceAccount() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"close_on_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"create_govcloud": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(6, 64),
-					validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
-				),
-			},
-			"govcloud_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_user_access_to_billing": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IAMUserAccessToBilling](),
-			},
-			"joined_method": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"joined_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
-			},
-			"parent_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
-			},
-			"role_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
-			},
-			names.AttrStatus: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "status is deprecated. Use state instead.",
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"close_on_deletion": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"create_govcloud": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEmail: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(6, 64),
+						validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+					),
+				},
+				"govcloud_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_user_access_to_billing": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IAMUserAccessToBilling](),
+				},
+				"joined_method": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"joined_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 50),
+				},
+				"parent_id": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+				},
+				"role_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
+				},
+				names.AttrStatus: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "status is deprecated. Use state instead.",
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -328,7 +331,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 		})
 	}
 
-	if errs.IsA[*awstypes.AccountNotFoundException](err) {
+	if errs.IsA[*awstypes.AccountNotFoundException](err) || errs.IsA[*awstypes.AccountAlreadyClosedException](err) {
 		return diags
 	}
 

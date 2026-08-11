@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,7 +25,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_report_plan.test"
@@ -84,7 +85,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -144,7 +145,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -209,7 +210,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	resourceName := "aws_backup_report_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -225,6 +226,14 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceReportPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

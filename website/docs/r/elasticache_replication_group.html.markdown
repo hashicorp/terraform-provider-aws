@@ -239,6 +239,7 @@ The following arguments are optional:
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
+* `durability` - (Optional) Specifies the durability mode for the replication group. Valid values are `default`, `async`, `sync`, or `disabled`. Requires cluster mode enabled and Valkey 9.0 or higher.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
   Valid values are `redis` or `valkey`.
   Default is `redis`.
@@ -277,7 +278,7 @@ The following arguments are optional:
 * `preferred_cache_cluster_azs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 * `replicas_per_node_group` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
-  Valid values are 0 to 5.
+  Default AWS limit is 5. Higher values may be available with a quota increase.
   Conflicts with `num_cache_clusters`.
   Can only be set if `num_node_groups` is set.
 * `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
@@ -314,7 +315,7 @@ The `node_group_configuration` block supports the following arguments:
 * `primary_availability_zone` - (Optional) Availability zone for the primary node.
 * `primary_outpost_arn` - (Optional) ARN of the Outpost for the primary node.
 * `replica_availability_zones` - (Optional) List of availability zones for the replica nodes.
-* `replica_count` - (Optional) Number of replica nodes in this node group.
+* `replica_count` - (Optional) Number of replica nodes in this node group. Default AWS limit is 5. Higher values may be available with a quota increase.
 * `replica_outpost_arns` - (Optional) List of ARNs of the Outposts for the replica nodes.
 * `slots` - (Optional) Keyspace for this node group. Format is `start-end` (e.g., `0-5460`). For Redis (cluster mode disabled) replication groups, this value is ignored.
 

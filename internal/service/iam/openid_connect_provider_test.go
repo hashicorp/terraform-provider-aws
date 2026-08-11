@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +19,7 @@ import (
 
 func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	url := "accounts.testle.com/" + rString
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -66,12 +65,26 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
+// Thumbprint tests all use the hardcoded accounts.google.com URL. Only one
+// OIDC provider per URL can exist per account.
+func TestAccIAMOpenIDConnectProvider_Thumbprints_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"none":          testAccOpenIDConnectProvider_Thumbprints_none,
+		"withToWithout": testAccOpenIDConnectProvider_Thumbprints_withToWithout,
+		"withoutToWith": testAccOpenIDConnectProvider_Thumbprints_withoutToWith,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,12 +107,12 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
+func testAccOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -139,12 +152,12 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
+func testAccOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 	ctx := acctest.Context(t)
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -184,7 +197,7 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -199,6 +212,14 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceOpenIDConnectProvider(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -207,7 +228,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -248,7 +269,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

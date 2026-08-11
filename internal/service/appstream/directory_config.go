@@ -39,61 +39,63 @@ func resourceDirectoryConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"organizational_unit_distinguished_names": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(0, 2000),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"service_account_credentials": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"account_password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
+				"directory_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"organizational_unit_distinguished_names": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(0, 2000),
+					},
+				},
+				"service_account_credentials": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"account_password": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
 						},
 					},
 				},
-			},
-			"certificate_based_auth_properties": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_authority_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CertificateBasedAuthStatus](),
+				"certificate_based_auth_properties": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"certificate_authority_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CertificateBasedAuthStatus](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

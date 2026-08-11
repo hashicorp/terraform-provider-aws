@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,17 +26,25 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "allocation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "allows_multiple_instance_types"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "available_capacity.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cores"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(dataSourceName, "host_maintenance"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
-					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "member_of_service_linked_resource_group", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOutpostARN, resourceName, names.AttrOutpostARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrSet(dataSourceName, "total_vcpus"),
 				),
@@ -50,9 +57,9 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,18 +67,26 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 			{
 				Config: testAccHostDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "allocation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "allows_multiple_instance_types"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "asset_id", resourceName, "asset_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "available_capacity.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cores"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(dataSourceName, "host_maintenance"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
-					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "member_of_service_linked_resource_group", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOutpostARN, resourceName, names.AttrOutpostARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrSet(dataSourceName, "total_vcpus"),
 				),

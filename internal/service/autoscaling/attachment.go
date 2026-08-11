@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -30,24 +30,26 @@ func resourceAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"elb": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
-			"lb_target_group_arn": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_group_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"elb": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+				"lb_target_group_arn": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ExactlyOneOf: []string{"elb", "lb_target_group_arn"},
+				},
+			}
 		},
 	}
 }
@@ -93,7 +95,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
 	return append(diags, resourceAttachmentRead(ctx, d, meta)...)
 }

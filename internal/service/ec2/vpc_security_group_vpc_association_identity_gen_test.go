@@ -35,7 +35,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -220,7 +220,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_basic(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityGroupVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -229,7 +229,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_basic(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -280,7 +280,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_noRefreshNo
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityGroupVPCAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -294,7 +294,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_noRefreshNo
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -112,6 +112,14 @@ func testAccSubscriber_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceSubscriber, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_subscriber.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_subscriber.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -122,7 +130,7 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 	resourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	sourceName := randomCustomLogSourceName()
+	sourceName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())

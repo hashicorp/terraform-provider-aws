@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -18,6 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
+
+//go:embed list_common.gtpl
+var listCommonTmpl string
 
 //go:embed list_framework.gtpl
 var listTmplFramework string
@@ -39,6 +43,7 @@ var websiteTmpl string
 
 type TemplateData struct {
 	ListResource              string
+	ListResourceAWS           string
 	ListResourceLower         string
 	ListResourceLowerCamel    string
 	ListResourceSnake         string
@@ -51,6 +56,7 @@ type TemplateData struct {
 	ServiceLower              string
 	HumanListResourceName     string
 	ProviderResourceName      string
+	ARNNamespace              string
 }
 
 func Create(listName, snakeName string, comments, framework, force bool) error {
@@ -84,6 +90,7 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 
 	templateData := TemplateData{
 		ListResource:              listName,
+		ListResourceAWS:           convert.ToAWSCapitalization(listName),
 		ListResourceLower:         strings.ToLower(listName),
 		ListResourceLowerCamel:    convert.ToLowercasePrefix(listName),
 		ListResourceSnake:         snakeName,
@@ -96,15 +103,11 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 		ServiceLower:              strings.ToLower(service.ProviderNameUpper()),
 		HumanListResourceName:     convert.ToHumanResName(listName),
 		ProviderResourceName:      convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:              service.ARNNamespace(),
 	}
 
-	tmpl := listTmplFramework
-	if !framework {
-		tmpl = listTmplSdkV2
-	}
-	f := fmt.Sprintf("%s_list.go", snakeName)
-	if err = writeTemplate("newlist", f, tmpl, force, templateData); err != nil {
-		return fmt.Errorf("writing list resource template: %w", err)
+	if err := writeListResource(snakeName, framework, force, templateData); err != nil {
+		return fmt.Errorf("creating list resource: %w", err)
 	}
 
 	tf := fmt.Sprintf("%s_list_test.go", snakeName)
@@ -166,15 +169,6 @@ func testConfig(listName, path string, force bool, templateData TemplateData, in
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td any) error {
-	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
-		return fmt.Errorf("file (%s) already exists and force is not set", filename)
-	}
-
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("error opening file (%s): %s", filename, err)
-	}
-
 	tplate, err := template.New(templateName).Parse(tmpl)
 	if err != nil {
 		return fmt.Errorf("error parsing template: %s", err)
@@ -186,13 +180,69 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td any) erro
 		return fmt.Errorf("error executing template: %s", err)
 	}
 
-	if _, err := f.Write(buffer.Bytes()); err != nil {
+	return write(filename, force, &buffer)
+}
+
+func executeTemplate(tmpl *template.Template, templateData any) (io.Reader, error) {
+	var buffer bytes.Buffer
+	err := tmpl.Execute(&buffer, templateData)
+
+	if err != nil {
+		return nil, fmt.Errorf("executing template: %w", err)
+	}
+
+	return &buffer, nil
+}
+
+func write(filename string, force bool, reader io.Reader) error {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
+		return fmt.Errorf("file (%s) already exists and force is not set", filename)
+	}
+
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file (%s): %s", filename, err)
+	}
+
+	if _, err := f.ReadFrom(reader); err != nil {
 		f.Close() // ignore error; Write error takes precedence
 		return fmt.Errorf("error writing to file (%s): %s", filename, err)
 	}
 
 	if err := f.Close(); err != nil {
 		return fmt.Errorf("error closing file (%s): %s", filename, err)
+	}
+
+	return nil
+}
+
+func writeListResource(snakeName string, framework, force bool, templateData TemplateData) error {
+	f := fmt.Sprintf("%s_list.go", snakeName)
+	templates, err := template.New("newlist").Parse(listCommonTmpl)
+	if err != nil {
+		return fmt.Errorf("parsing common template %q: %w", "list_common.gtpl", err)
+	}
+
+	tmpl := listTmplFramework
+	if !framework {
+		tmpl = listTmplSdkV2
+	}
+	templates, err = templates.Parse(tmpl)
+	if err != nil {
+		tmplName := "list_framework.gtpl"
+		if !framework {
+			tmplName = "list_sdkv2.gtpl"
+		}
+		return fmt.Errorf("parsing implementation template %q: %w", tmplName, err)
+	}
+
+	b, err := executeTemplate(templates, templateData)
+	if err != nil {
+		return fmt.Errorf("executing template: %w", err)
+	}
+
+	if err = write(f, force, b); err != nil {
+		return fmt.Errorf("writing file %q: %w", f, err)
 	}
 
 	return nil

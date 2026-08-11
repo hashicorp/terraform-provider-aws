@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -52,6 +53,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shard_instance_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -97,6 +99,14 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdocdbelastic.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -216,6 +226,74 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBElasticCluster_shardInstanceCount(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cluster awstypes.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_docdbelastic_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBElasticServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_shardInstanceCount(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shard_instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"admin_user_password",
+				},
+			},
+			{
+				Config: testAccClusterConfig_shardInstanceCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shard_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
@@ -355,6 +433,35 @@ resource "aws_docdbelastic_cluster" "test" {
   ]
 }
 `, rName, shardCapacity, backupRetentionPeriod))
+}
+
+func testAccClusterConfig_shardInstanceCount(rName string, shardInstanceCount int) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_docdbelastic_cluster" "test" {
+  name           = %[1]q
+  shard_capacity = 2
+  shard_count    = 1
+
+  shard_instance_count = %[2]d
+
+  admin_user_name     = "testuser"
+  admin_user_password = "testpassword"
+  auth_type           = "PLAIN_TEXT"
+
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  subnet_ids = [
+    aws_subnet.test[0].id,
+    aws_subnet.test[1].id
+  ]
+}
+`, rName, shardInstanceCount))
 }
 
 func testAccClusterConfig_tags1(rName, key1, value1 string) string {

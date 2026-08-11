@@ -14,9 +14,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,63 +37,65 @@ func resourceVerifiedAccessInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cidr_endpoints_custom_subdomain": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"fips_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"verified_access_trust_providers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_trust_provider_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"verified_access_trust_provider_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cidr_endpoints_custom_subdomain": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"fips_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"verified_access_trust_providers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_trust_provider_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"verified_access_trust_provider_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"name_servers": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"name_servers": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -103,7 +105,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVerifiedAccessInstanceInput{
-		ClientToken:       aws.String(sdkid.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessInstance),
 	}
 
@@ -173,7 +175,7 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := ec2.ModifyVerifiedAccessInstanceInput{
-			ClientToken:              aws.String(sdkid.UniqueId()),
+			ClientToken:              aws.String(create.UniqueId(ctx)),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
@@ -201,7 +203,7 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] Deleting Verified Access Instance: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessInstanceInput{
-		ClientToken:              aws.String(sdkid.UniqueId()),
+		ClientToken:              aws.String(create.UniqueId(ctx)),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessInstance(ctx, &input)

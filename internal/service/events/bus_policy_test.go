@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -32,23 +33,73 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, t, resourceName),
 					testAccBusPolicyDocument(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccBusPolicyConfig_update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusPolicyExists(ctx, t, resourceName),
-					testAccBusPolicyDocument(ctx, t, resourceName),
-				),
-			},
-			{
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsBusPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -92,6 +143,38 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
+func TestAccEventsBusPolicy_default(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/default/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, t, resourceName),
+					testAccBusPolicyDocument(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/BusPolicy/default/"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_bus_policy.test"
@@ -104,12 +187,23 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -128,12 +222,23 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/BusPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -201,81 +306,6 @@ func testAccBusPolicyDocument(ctx context.Context, t *testing.T, n string) resou
 
 		return nil
 	}
-}
-
-func testAccBusPolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
-}
-
-data "aws_iam_policy_document" "access" {
-  statement {
-    sid    = "test-resource-policy"
-    effect = "Allow"
-    principals {
-      identifiers = ["ecs.amazonaws.com"]
-      type        = "Service"
-    }
-    actions = [
-      "events:PutEvents",
-      "events:PutRule"
-    ]
-    resources = [
-      aws_cloudwatch_event_bus.test.arn,
-    ]
-  }
-}
-
-resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy         = data.aws_iam_policy_document.access.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
-}
-`, rName)
-}
-
-func testAccBusPolicyConfig_update(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
-}
-
-data "aws_iam_policy_document" "access" {
-  statement {
-    sid    = "test-resource-policy-1"
-    effect = "Allow"
-    principals {
-      identifiers = ["ecs.amazonaws.com"]
-      type        = "Service"
-    }
-    actions = [
-      "events:PutEvents",
-    ]
-    resources = [
-      aws_cloudwatch_event_bus.test.arn,
-    ]
-  }
-  statement {
-    sid    = "test-resource-policy-2"
-    effect = "Allow"
-    principals {
-      identifiers = ["ecs.amazonaws.com"]
-      type        = "Service"
-    }
-    actions = [
-      "events:PutRule"
-    ]
-    resources = [
-      aws_cloudwatch_event_bus.test.arn,
-    ]
-  }
-}
-
-resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy         = data.aws_iam_policy_document.access.json
-  event_bus_name = aws_cloudwatch_event_bus.test.name
-}
-`, rName)
 }
 
 func testAccBusPolicyConfig_order(rName string) string {

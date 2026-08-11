@@ -16,15 +16,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,200 +45,202 @@ func resourceEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_rollback_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarms": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"alarm_name": {
-													Type:     schema.TypeString,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_rollback_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarms": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"alarm_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"blue_green_update_policy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"deployment_config.0.blue_green_update_policy",
-								"deployment_config.0.rolling_update_policy",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"maximum_execution_timeout_in_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(600, 14400),
-									},
-									"termination_wait_in_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0,
-										ValidateFunc: validation.IntBetween(0, 3600),
-									},
-									"traffic_routing_configuration": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"canary_size": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
-															},
-															names.AttrValue: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
-															},
-														},
-													},
-												},
-												"linear_step_size": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
-															},
-															names.AttrValue: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntAtLeast(1),
+							"blue_green_update_policy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"deployment_config.0.blue_green_update_policy",
+									"deployment_config.0.rolling_update_policy",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"maximum_execution_timeout_in_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(600, 14400),
+										},
+										"termination_wait_in_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      0,
+											ValidateFunc: validation.IntBetween(0, 3600),
+										},
+										"traffic_routing_configuration": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"canary_size": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
+																},
+																names.AttrValue: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
 															},
 														},
 													},
-												},
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.TrafficRoutingConfigType](),
-												},
-												"wait_interval_in_seconds": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(0, 3600),
+													"linear_step_size": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrType: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
+																},
+																names.AttrValue: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntAtLeast(1),
+																},
+															},
+														},
+													},
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.TrafficRoutingConfigType](),
+													},
+													"wait_interval_in_seconds": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(0, 3600),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"rolling_update_policy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							ExactlyOneOf: []string{
-								"deployment_config.0.blue_green_update_policy",
-								"deployment_config.0.rolling_update_policy",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"maximum_batch_size": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
-												},
-												names.AttrValue: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-											},
-										},
-									},
-									"maximum_execution_timeout_in_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(600, 14400),
-									},
-									"rollback_maximum_batch_size": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
-												},
-												names.AttrValue: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntAtLeast(1),
+							"rolling_update_policy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								ExactlyOneOf: []string{
+									"deployment_config.0.blue_green_update_policy",
+									"deployment_config.0.rolling_update_policy",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"maximum_batch_size": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
+													},
+													names.AttrValue: {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
 												},
 											},
 										},
-									},
-									"wait_interval_in_seconds": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(0, 3600),
+										"maximum_execution_timeout_in_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(600, 14400),
+										},
+										"rollback_maximum_batch_size": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CapacitySizeType](),
+													},
+													names.AttrValue: {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
+													},
+												},
+											},
+										},
+										"wait_interval_in_seconds": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 3600),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"endpoint_config_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validName,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"endpoint_config_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validName,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -250,7 +253,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = id.UniqueId()
+		name = create.UniqueId(ctx)
 	}
 	input := sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
@@ -262,7 +265,12 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DeploymentConfig = expandDeploymentConfig(v.([]any))
 	}
 
-	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+
+	tflog.Info(ctx, "Creating SageMaker AI Endpoint")
+
+	err := tfresource.Retry(ctx, propagationTimeout*2, func(ctx context.Context) *tfresource.RetryError {
+		tflog.Info(ctx, "Calling CreateEndpoint")
 		_, err := conn.CreateEndpoint(ctx, &input)
 
 		if err != nil {
@@ -273,12 +281,12 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
 		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
-			d := resourceEndpoint().Data(nil)
-			d.SetId(name)
-			if diags := resourceEndpointDelete(ctx, d, meta); diags.HasError() {
-				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
+			tflog.Warn(ctx, "Error creating SageMaker AI Endpoint: Rolling back", map[string]any{
+				"error": err.Error(),
+			})
+			if err := endpointDeleteSync(ctx, conn, name); err != nil {
+				return tfresource.NonRetryableError(err)
 			}
-
 			return tfresource.RetryableError(err)
 		}
 
@@ -293,6 +301,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	tflog.Info(ctx, "Created SageMaker AI Endpoint")
+
 	d.SetId(name)
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
@@ -302,7 +312,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	endpoint, err := findEndpointByName(ctx, conn, d.Id())
+	endpoint, err := findEndpointByNameExcludeDeleting(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
@@ -357,27 +367,46 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
-	input := sagemaker.DeleteEndpointInput{
-		EndpointName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteEndpoint(ctx, &input)
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) delete: %s", d.Id(), err)
+	if err := endpointDeleteSync(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
+func endpointDeleteSync(ctx context.Context, conn *sagemaker.Client, name string) error {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+
+	tflog.Info(ctx, "Deleting SageMaker AI Endpoint")
+
+	input := sagemaker.DeleteEndpointInput{
+		EndpointName: aws.String(name),
+	}
+
+	_, err := conn.DeleteEndpoint(ctx, &input)
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
+		tflog.Info(ctx, "SageMaker AI Endpoint not found")
+		return nil
+	}
+	if err != nil {
+		tflog.Info(ctx, "Error deleting SageMaker AI Endpoint", map[string]any{
+			"error": err.Error(),
+		})
+		return err
+	}
+
+	tflog.Trace(ctx, "Waiting for SageMaker AI Endpoint deletion")
+
+	if _, err := waitEndpointDeleted(ctx, conn, name); err != nil {
+		return fmt.Errorf("waiting for SageMaker AI Endpoint (%s) delete: %w", name, err)
+	}
+
+	tflog.Info(ctx, "Deleted SageMaker AI Endpoint")
+
+	return nil
+}
+
+// findEndpointByName finds an Endpoint by name
 func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
 	input := sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(name),
@@ -389,10 +418,19 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 		return nil, err
 	}
 
+	return output, nil
+}
+
+// findEndpointByNameExcludeDeleting finds an Endpoint by name, but excludes it if it is in status "Deleting"
+func findEndpointByNameExcludeDeleting(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
+	output, err := findEndpointByName(ctx, conn, name)
+	if err != nil {
+		return nil, err
+	}
+
 	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -403,9 +441,8 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -420,8 +457,8 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpoint(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -440,10 +477,10 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
-		Refresh: statusEndpoint(ctx, conn, name),
+		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
 	}
 
@@ -464,10 +501,10 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, name),
+		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
 	}
 

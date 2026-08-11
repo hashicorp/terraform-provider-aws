@@ -11,7 +11,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
+	"maps"
 	"strings"
 	"time"
 
@@ -20,7 +22,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -136,7 +137,6 @@ var (
 // @Testing(existsType="map[string]string")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
@@ -146,7 +146,7 @@ func resourceTopicSubscription() *schema.Resource {
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
-		Schema: subscriptionSchema,
+		Schema: maps.Clone(subscriptionSchema),
 	}
 }
 
@@ -364,9 +364,8 @@ func findSubscriptionAttributes(ctx context.Context, conn *sns.Client, input *sn
 	output, err := conn.GetSubscriptionAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -386,13 +385,13 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 		TopicArn: aws.String(topicARN),
 	}
 
-	return findSubscriptionByTopic(ctx, conn, &input, func(v *types.Subscription) bool {
+	return findSubscriptionByTopic(ctx, conn, &input, tfslices.WithFilter(func(v types.Subscription) bool {
 		return aws.ToString(v.SubscriptionArn) == subscriptionARN
-	})
+	}), tfslices.WithReturnFirstMatch[types.Subscription]())
 }
 
-func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) (*types.Subscription, error) {
-	output, err := findSubscriptionsByTopic(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) (*types.Subscription, error) {
+	output, err := findSubscriptionsByTopic(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -401,36 +400,37 @@ func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription], optFns ...tfslices.FinderOptionsFunc) ([]types.Subscription, error) {
-	var output []types.Subscription
-	opts := tfslices.NewFinderOptions(optFns)
+func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) ([]types.Subscription, error) {
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionPagesByTopic(ctx, conn, input), optFns...)
 
-	pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Subscriptions {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
-			}
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
+}
+
+func listSubscriptionPagesByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[[]types.Subscription, error] {
+	return func(yield func([]types.Subscription, error) bool) {
+		pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing SNS Topic Subscriptions: %w", err))
+				return
+			}
+
+			if !yield(page.Subscriptions, nil) {
+				return
+			}
+		}
+	}
 }
 
 // waitForConfirmation indicates whether the subscription should wait for confirmation
@@ -450,8 +450,8 @@ func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
 	return true
 }
 
-func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSubscriptionPendingConfirmation(conn *sns.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -473,10 +473,10 @@ const (
 )
 
 func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -490,10 +490,10 @@ func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string
 }
 
 func waitSubscriptionDeleted(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
-		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
 

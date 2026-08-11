@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	set "github.com/hashicorp/go-set/v3"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -144,8 +143,7 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	// Additional fields.
-	uuid, _ := uuid.GenerateUUID()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateScope(ctx, &input)
@@ -305,8 +303,8 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	output, err := conn.GetScope(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -321,8 +319,8 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	return output, nil
 }
 
-func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScope(conn *networkflowmonitor.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findScopeByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -338,10 +336,10 @@ func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string
 }
 
 func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
-		Refresh: statusScope(ctx, conn, id),
+		Refresh: statusScope(conn, id),
 		Timeout: timeout,
 	}
 
@@ -355,10 +353,10 @@ func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
-		Refresh: statusScope(ctx, conn, id),
+		Refresh: statusScope(conn, id),
 		Timeout: timeout,
 	}
 
@@ -372,10 +370,10 @@ func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeDeleted(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusDeactivating),
 		Target:  []string{},
-		Refresh: statusScope(ctx, conn, id),
+		Refresh: statusScope(conn, id),
 		Timeout: timeout,
 	}
 

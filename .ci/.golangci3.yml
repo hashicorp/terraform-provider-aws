@@ -8,20 +8,17 @@ linters:
     # !! only add f-m linters here
     - goconst
     - gocritic
+    - godox
     - govet
     - importas
     - ineffassign
     - makezero
     - misspell
     - mnd
-  exclusions:
-    rules:
-      - path: '(.+)_test\.go'
-        linters:
-          - goconst
   settings:
     goconst:
-      min-occurrences: 6
+      min-occurrences: 30
+      ignore-tests: true
     gocritic:
       enabled-tags:
         - diagnostic
@@ -30,11 +27,19 @@ linters:
         - opinionated
         - performance
         - style
+    godox:
+      keywords:
+        # for lingering skaff TIP comments
+        - TIP
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
+          alias: sdkid
         - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
           alias: sdkretry
+        - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+          alias: sdkacctest
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
@@ -52,14 +57,18 @@ linters:
         - nullable.*
         - tfresource.Retry*
         - tfresource.With*
+        - verify.StringUTF8LenBetween
         # Terraform Plugin SDK
         - retry.RetryContext
         - schema.DefaultTimeout
         - validation.*
-        - floatBetweenSchema
-        - intBetweenSchema
-        - stringLenBetweenSchema
+        - sdkschema.FloatBetweenSchema
+        - sdkschema.IntBetweenSchema
+        - sdkschema.StringLenBetweenSchema
         # Terraform Plugin Framework
+        - float32validator.*
+        - float64validator.*
+        - fwactions.TimeoutOr
         - int32validator.*
         - int64validator.*
         - listvalidator.*
@@ -78,8 +87,8 @@ linters:
         - strconv.ParseInt
         - strings.SplitN
 issues:
-  max-issues-per-linter: 10
-  max-same-issues: 3
+  max-issues-per-linter: 10000
+  max-same-issues: 10000
 formatters:
   enable:
     - gofmt

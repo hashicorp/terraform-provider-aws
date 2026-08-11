@@ -68,11 +68,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_network_acl_rule.example
+  identity = {
+    egress         = false
+    network_acl_id = "acl-7aaabd18"
+    rule_number    = 100
+    protocol       = "tcp"
+  }
+}
+
+resource "aws_network_acl_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `egress` (Boolean) Indicates whether this is an egress rule.
+* `network_acl_id` (String) The ID of the network ACL.
+* `protocol` (String) The protocol. This can be a decimal value such as `6` or a keyword such as `tcp`.
+* `rule_number` (Number) The rule number for the entry.
+
+#### Optional
+
+* `account_id` (String) AWS account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as `"6"`) or string (such as `"tcp"`) value. For example:
 
 **NOTE:** If importing a rule previously provisioned by Terraform, the `PROTOCOL` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
 
-Using the procotol's string value:
+Using the protocol's string value:
 
 ```terraform
 import {
@@ -81,7 +113,7 @@ import {
 }
 ```
 
-Using the procotol's decimal value:
+Using the protocol's decimal value:
 
 ```terraform
 import {
@@ -90,15 +122,15 @@ import {
 }
 ```
 
-**Using `terraform import` to import** individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+Using `terraform import`, import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as `"6"`) or string (such as `"tcp"`) value. For example:
 
-Using the procotol's string value:
+Using the protocol's string value:
 
 ```console
 % terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:tcp:false
 ```
 
-Using the procotol's decimal value:
+Using the protocol's decimal value:
 
 ```console
 % terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false

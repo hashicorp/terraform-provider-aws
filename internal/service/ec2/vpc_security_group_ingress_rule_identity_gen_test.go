@@ -36,7 +36,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("security_group_rule_id"), compare.ValuesSame()),
@@ -213,7 +213,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_ExistingResource_basic(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -222,7 +222,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_ExistingResource_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -271,7 +271,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_ExistingResource_noRefreshNoCha
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -285,7 +285,7 @@ func TestAccVPCSecurityGroupIngressRule_Identity_ExistingResource_noRefreshNoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

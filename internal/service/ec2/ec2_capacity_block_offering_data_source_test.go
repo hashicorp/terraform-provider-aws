@@ -16,10 +16,10 @@ import (
 func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_capacity_block_offering.test"
-	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
+	startDate := time.Now().UTC().Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -33,7 +33,7 @@ func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(dataSourceName, "capacity_duration_hours", "24"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceCount, "1"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "p4d.24xlarge"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "p5.4xlarge"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "capacity_block_offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "tenancy", "default"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "upfront_fee"),
@@ -46,7 +46,7 @@ func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 func testAccCapacityBlockOfferingDataSourceConfig_basic(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_capacity_block_offering" "test" {
-  instance_type           = "p4d.24xlarge"
+  instance_type           = "p5.4xlarge"
   capacity_duration_hours = 24
   instance_count          = 1
   start_date_range        = %[1]q

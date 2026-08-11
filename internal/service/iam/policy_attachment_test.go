@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -41,6 +41,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 					testAccCheckPolicyAttachmentCounts(ctx, t, resourceName, 0, 2, 1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 				),
 			},
 			{
@@ -75,6 +76,14 @@ func TestAccIAMPolicyAttachment_disappears(t *testing.T) {
 					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicyAttachment(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -83,7 +92,7 @@ func TestAccIAMPolicyAttachment_disappears(t *testing.T) {
 
 func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	ctx := acctest.Context(t)
-	userNamePrefix := fmt.Sprintf("%s-%s-", acctest.ResourcePrefix, sdkacctest.RandString(3))
+	userNamePrefix := fmt.Sprintf("%s-%s-", acctest.ResourcePrefix, acctest.RandString(t, 3))
 	policyName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	attachmentName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy_attachment.test"

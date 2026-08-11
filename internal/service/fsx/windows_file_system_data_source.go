@@ -23,148 +23,150 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWindowsFileSystemRead,
 
-		Schema: map[string]*schema.Schema{
-			"active_directory_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aliases": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active_directory_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"audit_log_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"audit_log_destination": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_access_audit_log_level": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"file_share_access_audit_log_level": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"aliases": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"audit_log_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audit_log_destination": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_access_audit_log_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"file_share_access_audit_log_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"automatic_backup_retention_days": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disk_iops_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrMode: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"automatic_backup_retention_days": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"backup_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"copy_tags_to_backups": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"daily_automatic_backup_start_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disk_iops_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrMode: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"preferred_file_server_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"preferred_subnet_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			"skip_final_backup": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"storage_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"throughput_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"network_interface_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"preferred_file_server_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"preferred_subnet_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"skip_final_backup": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"storage_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"throughput_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_start_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
