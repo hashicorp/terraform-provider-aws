@@ -3189,6 +3189,7 @@ data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
 }
 
+data "aws_partition" "alternate" {}
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
 }
@@ -3203,7 +3204,7 @@ resource "aws_iam_role" "cross_account_consumer" {
     Statement = [
       {
         Effect    = "Allow"
-        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.alternate.account_id}:root" }
+        Principal = { AWS = "arn:${data.aws_partition.alternate.partition}:iam::${data.aws_caller_identity.alternate.account_id}:root" }
         Action    = "sts:AssumeRole"
       }
     ]
