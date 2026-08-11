@@ -70,9 +70,6 @@ func TestAccSSMParameter_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -160,9 +157,6 @@ func TestAccSSMParameter_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 
 			// Step 3: Import block with Import ID

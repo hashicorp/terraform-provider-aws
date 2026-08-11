@@ -413,7 +413,10 @@ func RegisterSweepers() {
 		},
 	})
 
-	awsv2.Register("aws_vpc_ipam", sweepIPAMs)
+	awsv2.Register("aws_vpc_ipam", sweepIPAMs, "aws_vpc_ipam_pool")
+	awsv2.Register("aws_vpc_ipam_pool", sweepIPAMPools, "aws_vpc_ipam_pool_cidr")
+	awsv2.Register("aws_vpc_ipam_pool_cidr", sweepIPAMPoolCIDRs)
+
 	awsv2.Register("aws_vpc_ipam_resource_discovery", sweepIPAMResourceDiscoveries)
 
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
@@ -2781,6 +2784,70 @@ func sweepIPAMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 			d.Set("cascade", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepIPAMPools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeIpamPoolsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeIpamPoolsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.IpamPools {
+			id := aws.ToString(v.IpamPoolId)
+
+			r := resourceIPAMPool()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepIPAMPoolCIDRs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var poolsInput ec2.DescribeIpamPoolsInput
+	poolPages := ec2.NewDescribeIpamPoolsPaginator(conn, &poolsInput)
+	for poolPages.HasMorePages() {
+		poolPage, err := poolPages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, pool := range poolPage.IpamPools {
+			poolID := aws.ToString(pool.IpamPoolId)
+			poolCIDRsInput := ec2.GetIpamPoolCidrsInput{
+				IpamPoolId: pool.IpamPoolId,
+			}
+			cidrPages := ec2.NewGetIpamPoolCidrsPaginator(conn, &poolCIDRsInput)
+			for cidrPages.HasMorePages() {
+				cidrPage, err := cidrPages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, cidr := range cidrPage.IpamPoolCidrs {
+					r := resourceIPAMPoolCIDR()
+					d := r.Data(nil)
+					d.SetId(ipamPoolCIDRCreateResourceID(aws.ToString(cidr.Cidr), poolID))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
 		}
 	}
 

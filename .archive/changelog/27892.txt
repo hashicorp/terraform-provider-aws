@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_rds_cluster: Add `engine_mode` attribute
-```
