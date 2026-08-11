@@ -50,12 +50,14 @@ func resourceFunction() *schema.Resource {
 					Computed: true,
 				},
 				"code": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 40960),
 				},
 				names.AttrComment: {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 128),
 				},
 				"etag": {
 					Type:     schema.TypeString,
