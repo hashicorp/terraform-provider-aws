@@ -3,12 +3,12 @@ subcategory: "OpenSearch Serverless"
 layout: "aws"
 page_title: "AWS: aws_opensearchserverless_collection"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Serverless Collection.
+  Manages an AWS OpenSearch Serverless Collection.
 ---
 
 # Resource: aws_opensearchserverless_collection
 
-Terraform resource for managing an AWS OpenSearch Serverless Collection.
+Manages an AWS OpenSearch Serverless Collection.
 
 ~> **NOTE:** An `aws_opensearchserverless_collection` must have encryption configured either by an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy) or by setting `encryption_config` directly on the resource.
 
@@ -74,13 +74,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `collection_group_name` - (Optional, Forces new resource) Name of the collection group to associate with this collection.
 * `description` - (Optional) Description of the collection.
 * `encryption_config` - (Optional, Forces new resource) Configuration block for direct collection encryption settings. See [`encryption_config`](#encryption_config) below for details.
-* `standby_replicas` - (Optional) Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
-* `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `standby_replicas` - (Optional) Whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
+* `vector_options` - (Optional) Configuration block for vector search options. Only valid when `type` is `VECTORSEARCH`. See [`vector_options`](#vector_options) below for details.
 
 ### `encryption_config`
 
@@ -89,6 +90,10 @@ Specify one of the following:
 * `aws_owned_key` - (Optional) Whether to use an AWS owned key for collection encryption.
 * `kms_key_arn` - (Optional) ARN of the AWS KMS key to use for collection encryption.
 
+### `vector_options`
+
+* `serverless_vector_acceleration` - (Required) Status of serverless vector acceleration for the collection. One of `ENABLED`, `DISABLED`, or `ALLOWED`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -96,9 +101,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
-* `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `id` - Unique identifier for the collection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `kms_key_arn` - ARN of the Amazon Web Services KMS key used to encrypt the collection.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

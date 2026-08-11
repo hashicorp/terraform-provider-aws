@@ -32,6 +32,10 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the system.
+* `kms_key_id` - KMS key ARN.
 * `name` - Name of the system.
+* `organization_id` - AWS Organizations identifier for the system.
+* `ou_id` - Organizational unit (OU) identifier for the system.
 * `sharing_enabled` - Whether cross-account sharing is enabled.
+* `system_id` - System ID for cross-account use without exposing account structure.
 * `tags` - Map of tags assigned to the resource.

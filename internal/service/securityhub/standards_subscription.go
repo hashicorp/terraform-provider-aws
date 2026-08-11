@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_securityhub_standards_subscription", name="Standards Subscription")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsSubscription")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")

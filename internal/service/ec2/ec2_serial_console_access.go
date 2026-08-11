@@ -21,11 +21,11 @@ import (
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @SingletonIdentity
 // @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessIdentityUpgradeV0")
-// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 // Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")
 func resourceSerialConsoleAccess() *schema.Resource {
@@ -123,6 +123,7 @@ func setSerialConsoleAccess(ctx context.Context, conn *ec2.Client, enabled bool)
 var serialConsoleAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
 	Version: 0,
 	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrAccountID] = meta.(*conns.AWSClient).AccountID(ctx)
 		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
 		return rawState, nil
 	},

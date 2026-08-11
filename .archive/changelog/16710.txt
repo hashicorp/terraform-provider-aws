@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_imagebuilder_image
-```
-
-```release-note:new-resource
-aws_imagebuilder_image
-```

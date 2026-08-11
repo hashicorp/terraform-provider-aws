@@ -78,19 +78,25 @@ func (l *listResourceRolePolicy) List(ctx context.Context, request list.ListRequ
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(id)
+			rd.Set(names.AttrRole, roleName)
+			rd.Set(names.AttrName, policyName)
 
-			tflog.Info(ctx, "Reading IAM (Identity & Access Management) Role Policy")
-			diags := resourceRolePolicyRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading IAM (Identity & Access Management) Role Policy", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				policyDocument, err := findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+				if err != nil {
+					tflog.Error(ctx, "Reading IAM (Identity & Access Management) Role Policy", map[string]any{
+						"diags": err.Error(),
+					})
+					continue
+				}
+
+				diags := resourceRolePolicyFlatten(rd, roleName, policyName, policyDocument)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading IAM (Identity & Access Management) Role Policy", map[string]any{
+						"diags": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = policyName

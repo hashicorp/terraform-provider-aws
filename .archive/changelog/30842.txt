@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_autoscaling_group: Remove deprecated `tags` attribute
-```

@@ -24,9 +24,9 @@ data "aws_ecs_service" "example" {
 
 This data source supports the following arguments:
 
+* `cluster_arn` - (Required) ARN of the ECS Cluster
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required) Name of the ECS Service
-* `cluster_arn` - (Required) ARN of the ECS Cluster
 
 ## Attribute Reference
 
@@ -59,9 +59,9 @@ This data source exports the following attributes in addition to the arguments a
 * `scheduling_strategy` - Scheduling strategy for the ECS Service
 * `service_registries` - Service discovery registries. See [`service_registries` Block](#service_registries-block) for details.
 * `status` - Status of the service
+* `tags` - Resource tags.
 * `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition
 * `task_sets` - Task sets for the service. See [`task_sets` Block](#task_sets-block) for details.
-* `tags` - Resource tags.
 
 ### `capacity_provider_strategy` Block
 
@@ -79,8 +79,8 @@ The `deployment_configuration` block exports the following attributes:
 * `bake_time_in_minutes` - Time to wait after deployment before terminating old tasks
 * `canary_configuration` - Canary deployment configuration. See [`canary_configuration` Block](#canary_configuration-block) for details.
 * `deployment_circuit_breaker` - Circuit breaker configuration. See [`deployment_circuit_breaker` Block](#deployment_circuit_breaker-block) for details.
-* `linear_configuration` - Linear deployment configuration. See [`linear_configuration` Block](#linear_configuration-block) for details.
 * `lifecycle_hook` - Lifecycle hooks for deployments. See [`lifecycle_hook` Block](#lifecycle_hook-block) for details.
+* `linear_configuration` - Linear deployment configuration. See [`linear_configuration` Block](#linear_configuration-block) for details.
 * `maximum_percent` - Upper limit on tasks during deployment
 * `minimum_healthy_percent` - Lower limit on healthy tasks during deployment
 * `strategy` - Deployment strategy (ROLLING, BLUE_GREEN, LINEAR, or CANARY)

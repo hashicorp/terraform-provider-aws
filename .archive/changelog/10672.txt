@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Don't ignore `dualstack` prefix in Route 53 Record alias names
-```

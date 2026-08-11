@@ -30,7 +30,7 @@ import (
 )
 
 // @SDKResource("aws_securityhub_standards_control", name="Standards Control")
-// @ArnIdentity("standards_control_arn", identityDuplicateAttributes="id")
+// @ArnIdentity("standards_control_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsControl")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")

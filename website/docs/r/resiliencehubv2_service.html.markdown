@@ -59,12 +59,14 @@ resource "aws_resiliencehubv2_service" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the service. Changing this value requires creating a new resource.
+* `permission_model` - (Required) Permission model for resource discovery. See [`permission_model` Block](#permission_model-block) below.
 * `regions` - (Required) List of AWS regions where the service operates.
 
 The following arguments are optional:
 
+* `dependency_discovery` - (Optional) Dependency discovery. Valid values: `ENABLED`, `DISABLED`.
 * `description` - (Optional) Description of the service.
-* `permission_model` - (Optional) Permission model for resource discovery. See [`permission_model` Block](#permission_model-block) below.
+* `kms_key_id` - (Optional) KMS key ARN.
 * `policy_arn` - (Optional) ARN of the resilience policy to associate with this service.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -73,7 +75,15 @@ The following arguments are optional:
 
 The `permission_model` block supports:
 
+* `cross_account_role` - (Optional) Cross-account IAM role. See [`cross_account_role` Block](#cross_account_role-block) below.
 * `invoker_role_name` - (Required) Name of the IAM role that Resilience Hub assumes for resource discovery.
+
+### `cross_account_role` Block
+
+The `cross_account_role` block supports:
+
+* `cross_account_role_arn` - (Required) ARN of the IAM Role for the profile.
+* `external_id` - (Optional) External ID used for assuming the cross-account role.
 
 ## Attribute Reference
 
@@ -90,7 +100,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_resiliencehubv2_service.example
   identity = {
-    "arn" = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
+    arn = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
   }
 }
 

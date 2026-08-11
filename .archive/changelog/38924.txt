@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_datazone_project: Properly surface import `id` parsing errors
-```
