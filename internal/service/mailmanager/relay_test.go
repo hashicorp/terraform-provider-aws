@@ -39,7 +39,7 @@ func TestAccMailManagerRelay_basic(t *testing.T) {
 				Config: testAccRelayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRelayExists(ctx, t, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`mailmanager-relay/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`mailmanager-smtp-relay/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified_timestamp"),
