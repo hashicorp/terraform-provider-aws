@@ -4038,7 +4038,7 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 	parameterGroupResourceName := "aws_rds_cluster_parameter_group.test"
 
-	engineVersion, engineVersionUpgrade := "8.0.mysql_aurora.3.90.0", "8.0.mysql_aurora.3.10.0"
+	engineVersion, engineVersionUpgrade := "8.0.mysql_aurora.3.09.0", "8.0.mysql_aurora.3.10.0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
