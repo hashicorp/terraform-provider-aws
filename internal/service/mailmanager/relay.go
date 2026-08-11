@@ -42,7 +42,7 @@ import (
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccRelayPreCheck")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newRelayResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &relayResource{}
