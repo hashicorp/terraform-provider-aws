@@ -54,7 +54,6 @@ import (
 // @IdentityAttribute("harness_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.Harness")
 // @Testing(generator="testAccRandomHarnessName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="harness_id")
 // @Testing(importIgnore="memory")
