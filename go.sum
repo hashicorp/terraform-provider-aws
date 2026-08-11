@@ -111,8 +111,8 @@ github.com/aws/aws-sdk-go-v2/service/chatbot v1.17.5 h1:lUJBLaKqHDm4oGIV0cw+X0L+
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.17.5/go.mod h1:D4zCphY5RjbcZUcCErqmlujZpM6sVp0bgySNvDewItA=
 github.com/aws/aws-sdk-go-v2/service/chime v1.45.0 h1:evtOk152bk7iIWT+7lXBEYliBdVUgo/TEZc6bxtzB4Y=
 github.com/aws/aws-sdk-go-v2/service/chime v1.45.0/go.mod h1:pzSQ3LbrGUOGTPkfbYIFg8vzZNfMgCc0K6wNbG7MRnM=
-github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.29.4 h1:FDT6sqUtMkEVO/0Q9czCM750kuUBRqN33anWlXwUWe0=
-github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.29.4/go.mod h1:hD6+fCqFMYrYzYKCP/7YZiNfA4qw6OB6jrPGVCdn6rA=
+github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.30.0 h1:/0ViSEbODGB+iN8PV0OLI7d0IvKIyX4UNPrhfqdMUN4=
+github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.30.0/go.mod h1:7NZyOSPaVYhNMvOfa42KSCJb+0p4eNgByGKXXlo6Sv4=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.32.4 h1:XXnDFFu3XezKqlzqo1WxpIZiULlFhbwAD70Zh3FDCek=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.32.4/go.mod h1:KzWpEBEHmt1DsFLc5VpfJo++BY42Uml4ZzwsYq+F538=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.49.4 h1:+VbC3GgRKKU3IaWxxveQHzuEgNugqMqDVEGui2QmlhA=
