@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_policy_grant", name="Policy Grant")
@@ -65,7 +66,7 @@ type policyGrantResource struct {
 func (r *policyGrantResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -113,7 +114,7 @@ func (r *policyGrantResource) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"detail":    detailBlockSchema(ctx),
-			"principal": principalBlockSchema(ctx),
+			names.AttrPrincipal: principalBlockSchema(ctx),
 		},
 	}
 }

@@ -45,7 +45,7 @@ func TestAccDataZonePolicyGrant_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyGrantExists(ctx, t, resourceName, &policygrant),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttr(resourceName, "entity_type", "DOMAIN_UNIT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "CREATE_DOMAIN_UNIT"),
@@ -126,7 +126,7 @@ func TestAccDataZonePolicyGrant_includeChildDomainUnits(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "grant_id"),
 					resource.TestCheckResourceAttr(resourceName, "entity_type", "DOMAIN_UNIT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "CREATE_DOMAIN_UNIT"),
-					resource.TestCheckResourceAttr(resourceName, "detail.0.create_domain_unit.0.include_child_domain_units", "true"),
+					resource.TestCheckResourceAttr(resourceName, "detail.0.create_domain_unit.0.include_child_domain_units", acctest.CtTrue),
 				),
 			},
 			{

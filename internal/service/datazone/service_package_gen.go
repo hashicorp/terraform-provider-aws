@@ -155,7 +155,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPolicyGrantResource,
 			TypeName: "aws_datazone_policy_grant",
 			Name:     "Policy Grant",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("domain_identifier", true),
 				inttypes.StringIdentityAttribute("entity_type", true),
