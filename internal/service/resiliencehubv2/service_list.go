@@ -58,6 +58,19 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 			arn := aws.ToString(item.ServiceArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			var output *awstypes.Service
+			if request.IncludeResource {
+				var err error
+				output, err = findServiceByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data serviceResourceModel
@@ -65,16 +78,6 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 				data.ServiceARN = fwflex.StringValueToFramework(ctx, arn)
 
 				if request.IncludeResource {
-					output, err := findServiceByARN(ctx, conn, arn)
-					if retry.NotFound(err) {
-						return
-					}
-					if err != nil {
-						result := fwdiag.NewListResultErrorDiagnostic(err)
-						yield(result)
-						return
-					}
-
 					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 					if result.Diagnostics.HasError() {
 						return
@@ -84,6 +87,10 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 				result.DisplayName = aws.ToString(item.Name)
 			})
 
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
 			if !yield(result) {
 				return
 			}
