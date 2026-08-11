@@ -173,7 +173,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.97.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.102.0
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.42.4
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.32.4
