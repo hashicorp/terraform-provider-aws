@@ -63,7 +63,7 @@ func (l *containerAssociationListResource) List(ctx context.Context, request lis
 			if request.IncludeResource {
 				out, err = findContainerAssociationByARN(ctx, conn, arn)
 				if retry.NotFound(err) {
-					return
+					continue
 				}
 				if err != nil {
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
