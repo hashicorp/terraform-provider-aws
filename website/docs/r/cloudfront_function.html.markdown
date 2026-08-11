@@ -32,7 +32,7 @@ resource "aws_cloudfront_function" "test" {
 
 The following arguments are required:
 
-* `name` - (Required) Unique name for your CloudFront Function.
+* `name` - (Required) Unique name for your CloudFront Function. Valid names contain only alphanumeric characters, hyphens, and underscores, and must be between 1 and 64 characters.
 * `code` - (Required) Source code of the function
 * `runtime` - (Required) Identifier of the function's runtime. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
