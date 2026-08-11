@@ -71,7 +71,7 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironmentDataSource_unmanagedVCpus(t *testing.T) {
+func TestAccBatchComputeEnvironmentDataSource_unmanagedVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
@@ -83,7 +83,7 @@ func TestAccBatchComputeEnvironmentDataSource_unmanagedVCpus(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentDataSourceConfig_unmanagedVCpus(rName, 256),
+				Config: testAccComputeEnvironmentDataSourceConfig_unmanagedVCPUs(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
@@ -212,7 +212,7 @@ data "aws_batch_compute_environment" "by_name" {
 `, rName, timeout, terminate))
 }
 
-func testAccComputeEnvironmentDataSourceConfig_unmanagedVCpus(rName string, vcpus int) string {
+func testAccComputeEnvironmentDataSourceConfig_unmanagedVCPUs(rName string, vcpus int) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   name = %[1]q

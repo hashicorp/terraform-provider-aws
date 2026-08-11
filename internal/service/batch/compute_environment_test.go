@@ -1770,7 +1770,7 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 	})
 }
 
-func TestAccBatchComputeEnvironment_unmanagedvCpus(t *testing.T) {
+func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1783,7 +1783,7 @@ func TestAccBatchComputeEnvironment_unmanagedvCpus(t *testing.T) {
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_unmanagedvCpus(rName, 256),
+				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 256),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -1801,7 +1801,7 @@ func TestAccBatchComputeEnvironment_unmanagedvCpus(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_unmanagedvCpus(rName, 512),
+				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 512),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -1814,7 +1814,7 @@ func TestAccBatchComputeEnvironment_unmanagedvCpus(t *testing.T) {
 	})
 }
 
-func TestAccBatchComputeEnvironment_unmanagedvCpusInvalidWithManaged(t *testing.T) {
+func TestAccBatchComputeEnvironment_unmanagedVCPUsInvalidWithManaged(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1825,7 +1825,7 @@ func TestAccBatchComputeEnvironment_unmanagedvCpusInvalidWithManaged(t *testing.
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccComputeEnvironmentConfig_managedWithUnmanagedvCpus(rName),
+				Config:      testAccComputeEnvironmentConfig_managedWithUnmanagedVCPUs(rName),
 				ExpectError: regexache.MustCompile("`unmanaged_vcpus` can only be specified when `type` is"),
 			},
 		},
@@ -3500,7 +3500,7 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, instanceType))
 }
 
-func testAccComputeEnvironmentConfig_unmanagedvCpus(rName string, vcpus int) string {
+func testAccComputeEnvironmentConfig_unmanagedVCPUs(rName string, vcpus int) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   name = %[1]q
@@ -3513,7 +3513,7 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, vcpus))
 }
 
-func testAccComputeEnvironmentConfig_managedWithUnmanagedvCpus(rName string) string {
+func testAccComputeEnvironmentConfig_managedWithUnmanagedVCPUs(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   name = %[1]q
