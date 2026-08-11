@@ -25,7 +25,7 @@ import (
 func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -104,7 +104,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -151,7 +151,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -215,7 +215,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	zoneName := acctest.RandomDomainName(t)
@@ -262,7 +262,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	zoneName := acctest.RandomDomain(t)
@@ -433,7 +433,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	zoneName := acctest.RandomDomain(t)
@@ -625,7 +625,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -717,7 +717,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -766,7 +766,7 @@ func TestAccARCRegionSwitchPlan_rdsCreateCrossRegionReadReplica(t *testing.T) {
 func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -813,7 +813,7 @@ func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 func TestAccARCRegionSwitchPlan_auroraProvisionedScaling(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -861,7 +861,7 @@ func TestAccARCRegionSwitchPlan_auroraProvisionedScaling(t *testing.T) {
 func TestAccARCRegionSwitchPlan_auroraServerlessScaling(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -910,7 +910,7 @@ func TestAccARCRegionSwitchPlan_auroraServerlessScaling(t *testing.T) {
 func TestAccARCRegionSwitchPlan_neptuneGlobalDatabase(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -959,7 +959,7 @@ func TestAccARCRegionSwitchPlan_neptuneGlobalDatabase(t *testing.T) {
 func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1018,7 +1018,7 @@ func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
