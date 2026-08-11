@@ -77,7 +77,7 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 					continue
 				}
 
-				resourceParameterFlatten(rd, &paramMetadata)
+				resourceParameterFlatten(rd, param, &paramMetadata)
 
 				rd.Set(names.AttrValue, param.Value)
 			}
