@@ -2043,7 +2043,12 @@ func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []any {
 // Therefore, reset them to the previous value when the update fails.
 // https://developer.hashicorp.com/terraform/plugin/framework/diagnostics#how-errors-affect-state
 func resetNonRefreshableAttributes(d *schema.ResourceData) {
+	storageMode, _ := d.GetOk("s3_object_storage_mode")
+	isReference := storageMode.(string) == string(awstypes.S3ObjectStorageModeReference)
 	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "s3_object_storage_mode", "source_code_hash", "filename"} {
+		if isReference && (key == names.AttrS3Bucket || key == "s3_key" || key == "s3_object_version") {
+			continue
+		}
 		if d.HasChange(key) {
 			old, _ := d.GetChange(key)
 			d.Set(key, old)
@@ -2111,6 +2116,11 @@ func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d 
 	}
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
+		if output.Code.ResolvedS3Object != nil {
+			d.Set(names.AttrS3Bucket, output.Code.ResolvedS3Object.S3Bucket)
+			d.Set("s3_key", output.Code.ResolvedS3Object.S3Key)
+			d.Set("s3_object_version", output.Code.ResolvedS3Object.S3ObjectVersion)
+		}
 	}
 	d.Set("invoke_arn", invokeARN(ctx, awsClient, functionARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
