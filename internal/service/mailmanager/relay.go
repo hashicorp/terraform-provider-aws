@@ -363,11 +363,8 @@ func (m relayAuthenticationModel) Expand(ctx context.Context) (any, diag.Diagnos
 func (m *relayAuthenticationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch v.(type) {
-	case *awstypes.RelayAuthenticationMemberNoAuthentication,
-		awstypes.RelayAuthenticationMemberNoAuthentication:
+	case awstypes.RelayAuthenticationMemberNoAuthentication:
 		m.NoAuthentication = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &relayNoAuthenticationModel{})
-	case *awstypes.RelayAuthenticationMemberSecretArn:
-		m.SecretARN = fwtypes.ARNValue(v.(*awstypes.RelayAuthenticationMemberSecretArn).Value)
 	case awstypes.RelayAuthenticationMemberSecretArn:
 		m.SecretARN = fwtypes.ARNValue(v.(awstypes.RelayAuthenticationMemberSecretArn).Value)
 	default:
