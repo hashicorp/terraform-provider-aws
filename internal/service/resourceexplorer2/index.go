@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -86,7 +86,7 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateIndexInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 

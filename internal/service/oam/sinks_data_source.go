@@ -24,12 +24,14 @@ func dataSourceSinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinksRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARNs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

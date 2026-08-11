@@ -7,7 +7,6 @@ package cloudsearch
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
@@ -38,13 +37,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceDomain,
 			TypeName: "aws_cloudsearch_domain",
 			Name:     "Domain",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceDomainServiceAccessPolicy,
 			TypeName: "aws_cloudsearch_domain_service_access_policy",
 			Name:     "Domain Service Access Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

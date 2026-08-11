@@ -14,6 +14,12 @@ It typically requires minimal changes, if any, to the existing code.
 
 The [Resource Identity Reference](resource-identity.md) provides more detail on enabling Resource Identity on a resource type.
 
+In some cases, a resource type may behave differently depending on certain configurations or "modes".
+For example, the Route Table underlying the resource type `aws_route_table_association` is either
+a [Subnet Route Table](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-route-tables.html) which manages routing for traffic from a Subnet
+or a [Gateway Route Table](https://docs.aws.amazon.com/vpc/latest/userguide/gateway-route-tables.html) which manages incoming traffic for an Internet Gateway or Virtual Private Gateway.
+The creation and import behavior is different, so both "modes" should be tested.
+
 Follow these steps:
 
 1. Identify which form of Resource Identity the resource type will use and add the appropriate annotation.
@@ -56,6 +62,9 @@ Follow these steps:
   Only the resource being tested should have tags.
   For more details on Terraform configurations for generated acceptance tests, see the [acceptance test generation documentation](acc-test-generation.md#terraform-configuration-templates-for-tests).
 
+1. If multiple "modes" are being tested, each mode should have a separate configuration template, named `<resource file name>_<mode>.gtpl`.
+  Add the annotation `@Testing(identityTestCases="...")`, listing each mode, separated by `;`.
+
 1. Run `go generate internal/service/<service>/generate.go` to update the resource type registration and generate acceptance tests for Resource Identity.
 
 1. Run the acceptance tests for the resource type to ensure everything is functioning as expected.
@@ -70,14 +79,14 @@ Follow these steps:
 
         ```terraform
         import {
-        to = <resource-name>.example
-        identity = {
-            "arn" = <example-arn-value>
-        }
+          to = <resource-name>.example
+          identity = {
+              "arn" = <example-arn-value>
+          }
         }
 
         resource "<resource-name>" "example" {
-        ### Configuration omitted for brevity ###
+          ### Configuration omitted for brevity ###
         }
         ```
 
@@ -95,14 +104,14 @@ Follow these steps:
 
         ```terraform
         import {
-        to = <resource-name>.example
-        identity = {
-            <required key/value pairs here>
-        }
+          to = <resource-name>.example
+          identity = {
+              <required key/value pairs here>
+          }
         }
 
         resource "<resource-name>" "example" {
-        ### Configuration omitted for brevity ###
+          ### Configuration omitted for brevity ###
         }
         ```
 

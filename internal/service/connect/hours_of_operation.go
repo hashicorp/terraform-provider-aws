@@ -40,83 +40,85 @@ func resourceHoursOfOperation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"config": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 0,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"day": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HoursOfOperationDays](),
-						},
-						"end_time": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hours": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"minutes": {
-										Type:     schema.TypeInt,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"config": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"day": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.HoursOfOperationDays](),
+							},
+							"end_time": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hours": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"minutes": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrStartTime: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hours": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"minutes": {
-										Type:     schema.TypeInt,
-										Required: true,
+							names.AttrStartTime: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hours": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"minutes": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 250),
-			},
-			"hours_of_operation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 127),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"time_zone": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 250),
+				},
+				"hours_of_operation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 127),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"time_zone": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

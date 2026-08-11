@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -37,7 +37,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_ip_access_settings", name="IP Access Settings")
 // @Tags(identifierAttribute="ip_access_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
 // @Testing(importStateIdAttribute="ip_access_settings_arn")
@@ -139,7 +138,7 @@ func (r *ipAccessSettingsResource) Create(ctx context.Context, request resource.
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIpAccessSettings(ctx, &input)
@@ -218,7 +217,7 @@ func (r *ipAccessSettingsResource) Update(ctx context.Context, request resource.
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateIpAccessSettings(ctx, &input)
 

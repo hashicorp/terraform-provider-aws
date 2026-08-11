@@ -48,77 +48,79 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cluster_certificates": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_hardware_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cluster_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cluster_csr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"hsm_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"manufacturer_hardware_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cluster_certificates": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"aws_hardware_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cluster_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cluster_csr": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"hsm_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"manufacturer_hardware_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hsm_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
-			},
-			names.AttrMode: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ClusterMode](),
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_backup_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hsm_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
+				},
+				names.AttrMode: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ClusterMode](),
+				},
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_backup_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

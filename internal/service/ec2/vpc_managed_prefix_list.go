@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,56 +46,58 @@ func resourceManagedPrefixList() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"entry": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-						names.AttrDescription: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"entry": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cidr": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsCIDR,
+							},
+							names.AttrDescription: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
 						},
 					},
 				},
-			},
-			"max_entries": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"max_entries": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -108,7 +110,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateManagedPrefixListInput{
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
-		ClientToken:       aws.String(sdkid.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		MaxEntries:        aws.Int32(int32(d.Get("max_entries").(int))),
 		PrefixListName:    aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),

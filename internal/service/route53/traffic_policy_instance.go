@@ -38,42 +38,44 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-				StateFunc: func(v any) string {
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"traffic_policy_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-			},
-			"traffic_policy_version": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 1000),
-			},
-			"ttl": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtMost(2147483647),
-			},
+				names.AttrHostedZoneID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+					StateFunc: func(v any) string {
+						value := strings.TrimSuffix(v.(string), ".")
+						return strings.ToLower(value)
+					},
+				},
+				"traffic_policy_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+				},
+				"traffic_policy_version": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 1000),
+				},
+				"ttl": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtMost(2147483647),
+				},
+			}
 		},
 	}
 }

@@ -28,7 +28,7 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Factory:  newPublishAction,
 			TypeName: "aws_sns_publish",
 			Name:     "Publish",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -50,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -61,13 +61,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePlatformApplication,
 			TypeName: "aws_sns_platform_application",
 			Name:     "Platform Application",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceSMSPreferences,
 			TypeName: "aws_sns_sms_preferences",
 			Name:     "SMS Preferences",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceTopic,
@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTopicDataProtectionPolicy,
 			TypeName: "aws_sns_topic_data_protection_policy",
 			Name:     "Topic Data Protection Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -100,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 			Name:     "Topic Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -112,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceTopicSubscription,
 			TypeName: "aws_sns_topic_subscription",
 			Name:     "Topic Subscription",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -129,17 +129,24 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  newTopicResourceAsListResource,
 			TypeName: "aws_sns_topic",
 			Name:     "Topic",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
+			Factory:  newTopicPolicyResourceAsListResource,
+			TypeName: "aws_sns_topic_policy",
+			Name:     "Topic Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
 			Factory:  newTopicSubscriptionResourceAsListResource,
 			TypeName: "aws_sns_topic_subscription",
 			Name:     "Topic Subscription",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})

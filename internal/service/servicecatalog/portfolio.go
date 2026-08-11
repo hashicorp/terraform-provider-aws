@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -50,33 +50,35 @@ func resourcePortfolio() *schema.Resource {
 			Delete: schema.DefaultTimeout(PortfolioDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2000),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrProviderName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2000),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrProviderName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 50),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -88,7 +90,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta a
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(acceptLanguageEnglish),
 		DisplayName:      aws.String(name),
-		IdempotencyToken: aws.String(sdkid.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Tags:             getTagsIn(ctx),
 	}
 

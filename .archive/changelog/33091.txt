@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_organizations_organization: Fix `current Organization ID (o-xxxxxxxxxx) does not match` errors on resource Read
-```

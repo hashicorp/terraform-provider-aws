@@ -7,6 +7,8 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -41,67 +43,69 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"log_group_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validLogGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validLogGroupNamePrefix,
-			},
-			"retention_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.HasChange("log_group_class") {
-						return false
-					}
-					if v, ok := d.GetOk("log_group_class"); ok {
-						if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
-							return true
-						}
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_group_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LogGroupClass](),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validLogGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validLogGroupNamePrefix,
+				},
+				"retention_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.HasChange("log_group_class") {
+							return false
+						}
+						if v, ok := d.GetOk("log_group_class"); ok {
+							if awstypes.LogGroupClass(v.(string)) == awstypes.LogGroupClassDelivery {
+								return true
+							}
+						}
+						return false
+					},
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -287,26 +291,23 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 		LogGroupNamePrefix: aws.String(name),
 	}
 
-	return findLogGroup(ctx, conn, &input, func(v *awstypes.LogGroup) bool {
+	return findLogGroup(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.LogGroup) bool {
 		return aws.ToString(v.LogGroupName) == name
-	}, tfslices.WithReturnFirstMatch)
+	}), tfslices.WithReturnFirstMatch[awstypes.LogGroup]())
 }
 
-func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) (*awstypes.LogGroup, error) {
-	opts := tfslices.NewFinderOptions(optFns)
-	var output []awstypes.LogGroup
-	for value, err := range listLogGroups(ctx, conn, input, filter) {
-		if err != nil {
-			return nil, err
-		}
+func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) (*awstypes.LogGroup, error) {
+	output, err := findLogGroups(ctx, conn, input, optFns...)
 
-		output = append(output, value)
-		if opts.ReturnFirstMatch() {
-			break
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
+	return tfslices.CollectAndConcatWithError(listLogGroupPages(ctx, conn, input), optFns...)
 }
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
@@ -319,4 +320,21 @@ func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes
 	d.Set("retention_in_days", lg.RetentionInDays)
 	// Support in-place update of non-refreshable attribute.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+}
+
+func listLogGroupPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {
+	return func(yield func([]awstypes.LogGroup, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
+				return
+			}
+
+			if !yield(page.LogGroups, nil) {
+				return
+			}
+		}
+	}
 }

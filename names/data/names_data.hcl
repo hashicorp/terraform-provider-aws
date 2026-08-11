@@ -1617,7 +1617,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
   brand                    = "AWS"
 }
 
@@ -2740,6 +2740,35 @@ service "devicefarm" {
 
   provider_package_correct = "devicefarm"
   doc_prefix               = ["devicefarm_"]
+  brand                    = "AWS"
+}
+
+service "devopsagent" {
+  cli_v2_command {
+    aws_cli_v2_command           = "devops-agent"
+    aws_cli_v2_command_no_dashes = "devopsagent"
+  }
+
+  sdk {
+    id            = "DevOps Agent"
+    arn_namespace = "aidevops"
+  }
+
+  names {
+    provider_name_upper = "DevOpsAgent"
+    human_friendly      = "DevOps Agent"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListAgentSpaces"
+  }
+
+  resource_prefix {
+    correct = "aws_devopsagent_"
+  }
+
+  provider_package_correct = "devopsagent"
+  doc_prefix               = ["devopsagent_"]
   brand                    = "AWS"
 }
 
@@ -4275,6 +4304,30 @@ service "inspector2" {
   brand                    = "AWS"
 }
 
+service "interconnect" {
+  sdk {
+    id            = "Interconnect"
+    arn_namespace = "interconnect"
+  }
+
+  names {
+    provider_name_upper = "Interconnect"
+    human_friendly      = "Interconnect"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_interconnect_"
+  }
+
+  provider_package_correct = "interconnect"
+  doc_prefix               = ["interconnect_"]
+  brand                    = "AWS"
+}
+
 service "iot1clickdevices" {
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-devices"
@@ -4782,7 +4835,7 @@ service "kinesis" {
   }
 
   provider_package_correct = "kinesis"
-  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy", "kinesis_account_settings"]
   brand                    = "AWS"
 }
 
@@ -5038,6 +5091,29 @@ service "lambda" {
   provider_package_correct = "lambda"
   doc_prefix               = ["lambda_"]
   brand                    = "AWS"
+}
+
+service "lambdamicrovms" {
+  sdk {
+    id            = "Lambda Microvms"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaMicrovms"
+    human_friendly      = "Lambda MicroVMs"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMicrovms"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdamicrovms_"
+  }
+
+  doc_prefix = ["lambdamicrovms_"]
+  brand      = "AWS"
 }
 
 service "launchwizard" {
@@ -6253,7 +6329,7 @@ service "opensearch" {
 
   provider_package_correct = "opensearch"
   doc_prefix               = ["opensearch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opensearchserverless" {
@@ -6277,7 +6353,7 @@ service "opensearchserverless" {
 
   provider_package_correct = "opensearchserverless"
   doc_prefix               = ["opensearchserverless_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "osis" {
@@ -6289,7 +6365,7 @@ service "osis" {
   names {
     aliases             = ["opensearchingestion"]
     provider_name_upper = "OpenSearchIngestion"
-    human_friendly      = "OpenSearch Ingestion"
+    human_friendly      = "OpenSearch Ingestion (OSIS)"
   }
 
   endpoint_info {
@@ -6302,7 +6378,7 @@ service "osis" {
 
   provider_package_correct = "osis"
   doc_prefix               = ["osis_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opsworks" {
@@ -6591,7 +6667,7 @@ service "pinpoint" {
 
   names {
     provider_name_upper = "Pinpoint"
-    human_friendly      = "Pinpoint"
+    human_friendly      = "End User Messaging"
   }
 
   endpoint_info {
@@ -7156,6 +7232,35 @@ service "resiliencehub" {
   brand                    = "AWS"
 }
 
+service "resiliencehubv2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "resilience-hub-v2"
+    aws_cli_v2_command_no_dashes = "resiliencehubv2"
+  }
+
+  sdk {
+    id            = "resiliencehubv2"
+    arn_namespace = "resiliencehub"
+  }
+
+  names {
+    provider_name_upper = "ResilienceHubV2"
+    human_friendly      = "Resilience Hub V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPolicies"
+  }
+
+  resource_prefix {
+    correct = "aws_resiliencehubv2_"
+  }
+
+  provider_package_correct = "resiliencehubv2"
+  doc_prefix               = ["resiliencehubv2_"]
+  brand                    = "AWS"
+}
+
 service "resourceexplorer2" {
   cli_v2_command {
     aws_cli_v2_command           = "resource-explorer-2"
@@ -7171,7 +7276,6 @@ service "resourceexplorer2" {
     provider_name_upper = "ResourceExplorer2"
     human_friendly      = "Resource Explorer"
   }
-
 
   endpoint_info {
     endpoint_api_call = "ListIndexes"
@@ -7573,6 +7677,30 @@ service "s3tables" {
 
   doc_prefix = ["s3tables_"]
   brand      = "Amazon"
+}
+
+service "s3files" {
+  sdk {
+    id            = "S3Files"
+    arn_namespace = "s3files"
+  }
+
+  names {
+    provider_name_upper = "S3Files"
+    human_friendly      = "S3 Files"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListFileSystems"
+  }
+
+  resource_prefix {
+    correct = "aws_s3files_"
+  }
+
+  provider_package_correct = "s3files"
+  doc_prefix               = ["s3files_"]
+  brand                    = "AWS"
 }
 
 service "s3vectors" {
@@ -8067,6 +8195,30 @@ service "servicequotas" {
 
   provider_package_correct = "servicequotas"
   doc_prefix               = ["servicequotas_"]
+}
+
+service "mailmanager" {
+  sdk {
+    id            = "MailManager"
+    arn_namespace = "ses"
+  }
+
+  names {
+    provider_name_upper = "MailManager"
+    human_friendly      = "SES Mail Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIngressPoints"
+  }
+
+  resource_prefix {
+    correct = "aws_mailmanager_"
+  }
+
+  provider_package_correct = "mailmanager"
+  doc_prefix               = ["mailmanager_"]
+  brand                    = "Amazon"
 }
 
 service "ses" {
@@ -8865,7 +9017,6 @@ service "transfer" {
     human_friendly      = "Transfer Family"
   }
 
-
   endpoint_info {
     endpoint_api_call = "ListConnectors"
   }
@@ -8898,6 +9049,34 @@ service "translate" {
   doc_prefix               = ["translate_"]
   brand                    = "Amazon"
   not_implemented          = true
+}
+
+service "uxc" {
+  sdk {
+    id            = "UXC"
+    arn_namespace = "uxc"
+  }
+
+  names {
+    provider_name_upper = "UXC"
+    human_friendly      = "User Experience Customization"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListServices"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_uxc_"
+  }
+
+  provider_package_correct = "uxc"
+  doc_prefix               = ["uxc_"]
+  brand                    = "Amazon"
+  is_global                = true
 }
 
 service "vpclattice" {
@@ -9437,7 +9616,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "outposts_"
-    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
+    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway", "ec2_service_link_virtual_interface"]
     brand               = "AWS"
     exclude             = true
     allowed_subcategory = true

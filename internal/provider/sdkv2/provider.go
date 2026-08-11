@@ -29,17 +29,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
-	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-var (
-	resourceSchemasValidated bool
 )
 
 type sdkProvider struct {
@@ -315,24 +310,6 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 
 	sdkProvider.provider.ConfigureContextFunc = sdkProvider.configure
 
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
-	// Because we try and share resource schemas as much as possible,
-	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := sdkProvider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
-	}
-
 	servicePackageMap, err := sdkProvider.initialize(ctx)
 
 	if err != nil {
@@ -451,7 +428,19 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
+		c, err := expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
+		if err != nil {
+			path := cty.GetAttrPath("assume_role_with_web_identity")
+			diags = append(diags,
+				errs.NewInvalidValueAttributeCombinationError(
+					path.IndexInt(0),
+					err.Error(),
+				),
+			)
+			return nil, diags
+		}
+		config.AssumeRoleWithWebIdentity = c
+
 		tflog.Info(ctx, "assume_role_with_web_identity configuration set", map[string]any{
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
@@ -565,12 +554,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			r := v.Factory()
 
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s data source", typeName))
-				continue
-			}
-
 			var isRegionOverrideEnabled bool
 			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
@@ -584,7 +567,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					if f := r.SchemaFunc; f != nil {
 						r.SchemaFunc = func() map[string]*schema.Schema {
@@ -631,8 +614,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
+						ctx = c.RequestContext(ctx)
 					}
 
 					if getProviderMeta != nil {
@@ -665,24 +647,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			r := resource.Factory()
 
-			// Ensure that the correct CRUD handler variants are used.
-			if r.Create != nil || r.CreateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Read != nil || r.ReadContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Update != nil || r.UpdateContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s resource", typeName))
-				continue
-			}
-			if r.Delete != nil || r.DeleteContext != nil {
-				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s resource", typeName))
-				continue
-			}
-
 			var isRegionOverrideEnabled bool
 			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
@@ -696,7 +660,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := attribute.Region()
+					regionSchema := sdkv2.RegionOptionalComputed()
 
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
@@ -812,11 +776,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						if s := c.RandomnessSource(); s != nil {
-							ctx = vcr.NewContext(ctx, s)
-						}
+						ctx = c.RequestContext(ctx)
 					}
 
 					if getProviderMeta != nil {
@@ -841,85 +801,6 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 	}
 
 	return servicePackageMap, errors.Join(errs...)
-}
-
-// validateResourceSchemas is called from `New` to validate Terraform Plugin SDK v2-style resource schemas.
-func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
-	var errs []error
-
-	for _, sp := range p.servicePackages {
-		for _, v := range sp.SDKDataSources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
-			s := r.SchemaMap()
-
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(v.Tags) {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
-					continue
-				}
-			}
-		}
-
-		for _, resource := range sp.SDKResources(ctx) {
-			typeName := resource.TypeName
-			r := resource.Factory()
-			s := r.SchemaMap()
-
-			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := s[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
-					continue
-				}
-			}
-
-			if !tfunique.IsHandleNil(resource.Tags) {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := s[names.AttrTags]; ok {
-					if v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := s[names.AttrTagsAll]; ok {
-					if !v.Computed {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
-					continue
-				}
-			}
-
-			if resource.Identity.IsCustomInherentRegion {
-				if resource.Identity.IsGlobalResource {
-					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
-					continue
-				}
-			}
-		}
-	}
-
-	return errors.Join(errs...)
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -1034,15 +915,15 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 					ValidateFunc: validAssumeRoleSessionName,
 				},
 				"web_identity_token": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(4, 20000),
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(4, 20000),
+					ConflictsWith: []string{"assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 				"web_identity_token_file": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assume_role_with_web_identity.0.web_identity_token"},
 				},
 			},
 		},
@@ -1119,9 +1000,21 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 	return result, diags
 }
 
-func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
+const (
+	// Environment variable specifying a web identity token file.
+	//
+	// Any value read from this environment variable is superseded by any value in `assume_role_with_web_identity.web_identity_token_file`.
+	awsWebIdentityTokenFileEnvVar = "AWS_WEB_IDENTITY_TOKEN_FILE" // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
+
+	// Environment variable specifying a web identity token.
+	//
+	// Any value read from this environment variable is superseded by any value in `assume_role_with_web_identity.web_identity_token`.
+	tfWebIdentityTokenEnvVar = "TF_AWS_WEB_IDENTITY_TOKEN"
+)
+
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) (*awsbase.AssumeRoleWithWebIdentity, error) {
 	if tfMap == nil {
-		return nil
+		return nil, nil
 	}
 
 	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
@@ -1147,15 +1040,23 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *a
 		assumeRole.SessionName = v
 	}
 
+	assumeRole.WebIdentityToken = os.Getenv(tfWebIdentityTokenEnvVar)
 	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
+	// We need to read any environment variable value here:
+	// https://github.com/hashicorp/aws-sdk-go-base/blob/71dcf8ad2f4d8c9f02407d73a8dc666f79bfb555/credentials.go#L81-L82
+	assumeRole.WebIdentityTokenFile = os.Getenv(awsWebIdentityTokenFileEnvVar)
 	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
 		assumeRole.WebIdentityTokenFile = v
 	}
 
-	return &assumeRole
+	if (assumeRole.WebIdentityToken != "") == (assumeRole.WebIdentityTokenFile != "") {
+		return nil, errors.New("Exactly one of web_identity_token or web_identity_token_file is required")
+	}
+
+	return &assumeRole, nil
 }
 
 func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.DefaultConfig {

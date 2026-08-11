@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -43,307 +43,58 @@ func resourceMonitoringSchedule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"monitoring_schedule_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"monitoring_job_definition": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"baseline": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"baselining_job_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"constraints_resource": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"s3_uri": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validHTTPSOrS3URI,
-															},
-														},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"monitoring_schedule_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"monitoring_job_definition": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"baseline": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"baselining_job_name": {
+														Type:     schema.TypeString,
+														Optional: true,
 													},
-												},
-												"statistics_resource": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"s3_uri": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validHTTPSOrS3URI,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									names.AttrEnvironment: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"monitoring_app_specification": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"container_arguments": {
-													Type:     schema.TypeList,
-													MaxItems: 50,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"container_entrypoint": {
-													Type:     schema.TypeList,
-													MaxItems: 100,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"image_uri": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"post_analytics_processor_source_uri": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validHTTPSOrS3URI,
-												},
-												"record_preprocessor_source_uri": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validHTTPSOrS3URI,
-												},
-											},
-										},
-									},
-									"monitoring_inputs": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"batch_transform_input": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"data_captured_destination_s3_uri": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validHTTPSOrS3URI,
-															},
-															"dataset_format": {
-																Type:     schema.TypeList,
-																MaxItems: 1,
-																Required: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"csv": {
-																			Type:     schema.TypeList,
-																			MaxItems: 1,
-																			Optional: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					names.AttrHeader: {
-																						Type:     schema.TypeBool,
-																						Optional: true,
-																					},
-																				},
-																			},
-																		},
-																		names.AttrJSON: {
-																			Type:     schema.TypeList,
-																			MaxItems: 1,
-																			Optional: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"line": {
-																						Type:     schema.TypeBool,
-																						Optional: true,
-																					},
-																				},
-																			},
-																		},
-																	},
+													"constraints_resource": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"s3_uri": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validHTTPSOrS3URI,
 																},
 															},
-															"end_time_offset": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"exclude_features_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"features_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"inference_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"local_path": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 256),
-															},
-															"probability_attribute": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringLenBetween(1, 256),
-															},
-															"probability_threshold_attribute": {
-																Type:         schema.TypeFloat,
-																Optional:     true,
-																ValidateFunc: validation.FloatBetween(0, 1),
-															},
-															"s3_data_distribution_type": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Computed:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
-															},
-															"s3_input_mode": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Computed:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
-															},
-															"start_time_offset": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
 														},
 													},
-												},
-												"endpoint_input": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"end_time_offset": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"endpoint_name": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 63),
-															},
-															"exclude_features_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"features_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"inference_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"local_path": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringLenBetween(1, 256),
-															},
-															"probability_attribute": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"probability_threshold_attribute": {
-																Type:     schema.TypeFloat,
-																Optional: true,
-															},
-															"s3_data_distribution_type": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Computed:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
-															},
-															"s3_input_mode": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																Computed:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
-															},
-															"start_time_offset": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"monitoring_output_config": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKMSKeyID: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"monitoring_outputs": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"s3_output": {
-																Type:     schema.TypeList,
-																MaxItems: 1,
-																Required: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"local_path": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"s3_upload_mode": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			Computed:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
-																		},
-																		"s3_uri": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validHTTPSOrS3URI,
-																		},
-																	},
+													"statistics_resource": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"s3_uri": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validHTTPSOrS3URI,
 																},
 															},
 														},
@@ -351,140 +102,391 @@ func resourceMonitoringSchedule() *schema.Resource {
 												},
 											},
 										},
-									},
-									"monitoring_resources": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cluster_config": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrInstanceCount: {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntBetween(1, 100),
+										names.AttrEnvironment: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"monitoring_app_specification": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"container_arguments": {
+														Type:     schema.TypeList,
+														MaxItems: 50,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"container_entrypoint": {
+														Type:     schema.TypeList,
+														MaxItems: 100,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"image_uri": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"post_analytics_processor_source_uri": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
+													"record_preprocessor_source_uri": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validHTTPSOrS3URI,
+													},
+												},
+											},
+										},
+										"monitoring_inputs": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"batch_transform_input": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"data_captured_destination_s3_uri": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validHTTPSOrS3URI,
+																},
+																"dataset_format": {
+																	Type:     schema.TypeList,
+																	MaxItems: 1,
+																	Required: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"csv": {
+																				Type:     schema.TypeList,
+																				MaxItems: 1,
+																				Optional: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						names.AttrHeader: {
+																							Type:     schema.TypeBool,
+																							Optional: true,
+																						},
+																					},
+																				},
+																			},
+																			names.AttrJSON: {
+																				Type:     schema.TypeList,
+																				MaxItems: 1,
+																				Optional: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"line": {
+																							Type:     schema.TypeBool,
+																							Optional: true,
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+																"end_time_offset": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"exclude_features_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"features_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"inference_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"local_path": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 256),
+																},
+																"probability_attribute": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 256),
+																},
+																"probability_threshold_attribute": {
+																	Type:         schema.TypeFloat,
+																	Optional:     true,
+																	ValidateFunc: validation.FloatBetween(0, 1),
+																},
+																"s3_data_distribution_type": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+																},
+																"s3_input_mode": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+																},
+																"start_time_offset": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
-															names.AttrInstanceType: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"volume_kms_key_id": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: verify.ValidARN,
-															},
-															"volume_size_in_gb": {
-																Type:         schema.TypeInt,
-																Required:     true,
-																ValidateFunc: validation.IntBetween(1, 16384),
+														},
+													},
+													"endpoint_input": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"end_time_offset": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"endpoint_name": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 63),
+																},
+																"exclude_features_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"features_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"inference_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"local_path": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 256),
+																},
+																"probability_attribute": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"probability_threshold_attribute": {
+																	Type:     schema.TypeFloat,
+																	Optional: true,
+																},
+																"s3_data_distribution_type": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+																},
+																"s3_input_mode": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+																},
+																"start_time_offset": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"network_config": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enable_inter_container_traffic_encryption": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"enable_network_isolation": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												names.AttrVPCConfig: {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrSecurityGroupIDs: {
-																Type:     schema.TypeSet,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															names.AttrSubnets: {
-																Type:     schema.TypeSet,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
+										"monitoring_output_config": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKMSKeyID: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"monitoring_outputs": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Required: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"s3_output": {
+																	Type:     schema.TypeList,
+																	MaxItems: 1,
+																	Required: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"local_path": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"s3_upload_mode": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				Computed:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
+																			},
+																			"s3_uri": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validHTTPSOrS3URI,
+																			},
+																		},
+																	},
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"stopping_condition": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"max_runtime_in_seconds": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.IntBetween(1, 86400),
+										"monitoring_resources": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cluster_config": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Required: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrInstanceCount: {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntBetween(1, 100),
+																},
+																names.AttrInstanceType: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																"volume_kms_key_id": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+																"volume_size_in_gb": {
+																	Type:         schema.TypeInt,
+																	Required:     true,
+																	ValidateFunc: validation.IntBetween(1, 16384),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"network_config": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"enable_inter_container_traffic_encryption": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"enable_network_isolation": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													names.AttrVPCConfig: {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrSecurityGroupIDs: {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+																names.AttrSubnets: {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"stopping_condition": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"max_runtime_in_seconds": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: validation.IntBetween(1, 86400),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"monitoring_job_definition_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validName,
-						},
-						"monitoring_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MonitoringType](),
-						},
-						"schedule_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrScheduleExpression: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+							"monitoring_job_definition_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validName,
+							},
+							"monitoring_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MonitoringType](),
+							},
+							"schedule_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Computed: true,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrScheduleExpression: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validName,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -497,7 +499,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = sdkid.UniqueId()
+		name = create.UniqueId(ctx)
 	}
 	input := sagemaker.CreateMonitoringScheduleInput{
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]any)),

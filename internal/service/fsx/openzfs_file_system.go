@@ -18,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -56,177 +56,179 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 90),
-			},
-			"backup_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"copy_tags_to_volumes": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
-				),
-			},
-			"delete_options": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automatic_backup_retention_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 90),
+				},
+				"backup_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"copy_tags_to_backups": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"copy_tags_to_volumes": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"daily_automatic_backup_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(5, 5),
+						validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					),
+				},
+				"delete_options": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+					},
+				},
+				"deployment_type": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDeploymentType](),
 				},
-			},
-			"deployment_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDeploymentType](),
-			},
-			"disk_iops_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DiskIopsConfigurationModeAutomatic,
-							ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
+				"disk_iops_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DiskIopsConfigurationModeAutomatic,
+								ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_ip_address_range": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"final_backup_tags": tftags.TagsSchema(),
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_cache_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 2147483647),
-						},
-						"sizing_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSReadCacheSizingMode](),
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_ip_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_ip_address_range": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"final_backup_tags": tftags.TagsSchema(),
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"network_interface_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_cache_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSize: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(0, 2147483647),
+							},
+							"sizing_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OpenZFSReadCacheSizingMode](),
+							},
 						},
 					},
 				},
-			},
-			"preferred_subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"root_volume_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"copy_tags_to_snapshots": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"data_compression_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
-						},
-						"nfs_exports": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_configurations": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 25,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"clients": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 128),
-														validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
-													),
-												},
-												"options": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 20,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringLenBetween(1, 128),
+				"preferred_subnet_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"root_volume_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"copy_tags_to_snapshots": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							"data_compression_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
+							},
+							"nfs_exports": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_configurations": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MaxItems: 25,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"clients": {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 128),
+															validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
+														),
+													},
+													"options": {
+														Type:     schema.TypeList,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 20,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 128),
+														},
 													},
 												},
 											},
@@ -234,106 +236,106 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 									},
 								},
 							},
-						},
-						"read_only": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"record_size_kib": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      128,
-							ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
-						},
-						"user_and_group_quotas": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrID: {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(0, 2147483647),
-									},
-									"storage_capacity_quota_gib": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(0, 2147483647),
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
+							"read_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"record_size_kib": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      128,
+								ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+							},
+							"user_and_group_quotas": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrID: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 2147483647),
+										},
+										"storage_capacity_quota_gib": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 2147483647),
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"root_volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"route_table_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"skip_final_backup": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"storage_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(64, 512*1024),
-			},
-			names.AttrStorageType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StorageTypeSsd,
-				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
-				),
-			},
+				"root_volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"route_table_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 50,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"skip_final_backup": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"storage_capacity": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(64, 512*1024),
+				},
+				names.AttrStorageType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StorageTypeSsd,
+					ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"throughput_capacity": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"weekly_maintenance_start_time": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(7, 7),
+						validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -404,7 +406,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputC := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemType:     awstypes.FileSystemTypeOpenzfs,
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
@@ -415,7 +417,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
@@ -597,7 +599,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		names.AttrTagsAll,
 	) {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(sdkid.UniqueId()),
+			ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &awstypes.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -671,7 +673,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("root_volume_configuration") {
 			rootVolumeID := d.Get("root_volume_id").(string)
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(sdkid.UniqueId()),
+				ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 				OpenZFSConfiguration: expandUpdateOpenZFSVolumeConfiguration(d.Get("root_volume_configuration").([]any)),
 				VolumeId:             aws.String(rootVolumeID),
 			}

@@ -39,17 +39,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Stream using the stream's `log_group_name` and `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_stream.foo
-  id = "Yada:SampleLogStream1234"
+  to = aws_cloudwatch_log_stream.example
+  identity = {
+    log_group_name = "example-group"
+    name           = "example-stream"
+  }
+}
+
+resource "aws_cloudwatch_log_stream" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Cloudwatch Log Stream using the stream's `log_group_name` and `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+* `name` (String) Name of the stream.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Log Streams using `log_group_name` and `name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_stream.example
+  id = "example-group:example-stream"
+}
+```
+
+Using `terraform import`, import Log Streams using `log_group_name` and `name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
+% terraform import aws_cloudwatch_log_stream.example example-group:example-stream
 ```

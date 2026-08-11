@@ -35,8 +35,10 @@ const (
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+// @Tags(identifierAttribute="name", resourceType="InstanceProfile")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -44,51 +46,49 @@ func resourceInstanceProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-				ForceNew: true,
-			},
-			names.AttrRole: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "/",
+					ForceNew: true,
+				},
+				names.AttrRole: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"unique_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

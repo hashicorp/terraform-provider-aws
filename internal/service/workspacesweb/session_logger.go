@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,7 +38,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_session_logger", name="Session Logger")
 // @Tags(identifierAttribute="session_logger_arn")
-// @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.SessionLogger")
 // @Testing(importStateIdAttribute="session_logger_arn")
 func newSessionLoggerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -179,7 +178,7 @@ func (r *sessionLoggerResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateSessionLogger(ctx, &input)

@@ -1,3 +1,0 @@
-```release-note:new-action
-aws_cloudfront_create_invalidation
-```

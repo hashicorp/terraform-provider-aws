@@ -25,7 +25,7 @@ resource "aws_lambda_function" "example" {
   function_name = "example_function"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   layers = [data.aws_lambda_layer_version.example.arn]
 }
@@ -117,7 +117,7 @@ resource "aws_lambda_function" "example" {
   function_name = "cross_account_example"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 
   layers = [data.aws_lambda_layer_version.shared_layer.arn]
 }

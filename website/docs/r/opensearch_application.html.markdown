@@ -220,12 +220,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `iam_identity_center_options[0].iam_identity_center_application_arn` - If `iam_identity_center_options.enabled` is true this will hold the Amazon Resource Name (ARN) of the IAM Identity Center application.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Additional Information
-
-For more information about OpenSearch Applications, see the [AWS OpenSearch Service Developer Guide](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application.html).
-
-For information about configuring IAM Identity Center with OpenSearch Applications, see [Using AWS IAM Identity Center authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application-getting-started.html#create-application).
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):

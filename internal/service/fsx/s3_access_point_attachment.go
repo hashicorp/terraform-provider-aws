@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -239,7 +239,7 @@ func (r *s3AccessPointAttachmentResource) Create(ctx context.Context, request re
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.CreateAndAttachS3AccessPoint(ctx, &input)
 
@@ -345,7 +345,7 @@ func (r *s3AccessPointAttachmentResource) Delete(ctx context.Context, request re
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := fsx.DetachAndDeleteS3AccessPointInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		Name:               aws.String(name),
 	}
 

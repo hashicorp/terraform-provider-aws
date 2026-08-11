@@ -41,74 +41,76 @@ func resourceCustomDataIdentifier() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"ignore_words": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(4, 90),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"keywords": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 50,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(3, 90),
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"maximum_match_distance": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 300),
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
-			},
-			"regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"ignore_words": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(4, 90),
+					},
+				},
+				"keywords": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 50,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(3, 90),
+					},
+				},
+				"maximum_match_distance": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 300),
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 128),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
+				},
+				"regex": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -123,7 +125,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateCustomDataIdentifierInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}

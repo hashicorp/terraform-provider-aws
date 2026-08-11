@@ -30,13 +30,18 @@ import (
 )
 
 // @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
+// @IdentityAttribute("id")
+// @Testing(importIgnore="status", plannableImportAction="NoOp")
+// @Testing(altRegionTfVars=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.AssessmentFrameworkShareRequest")
 func newFrameworkShareResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &frameworkShareResource{}, nil
 }
 
 type frameworkShareResource struct {
 	framework.ResourceWithModel[frameworkShareResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithNoUpdate
 }
 

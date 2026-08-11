@@ -10,6 +10,14 @@ description: |-
 
 Provides an SES email identity resource
 
+## Example Usage
+
+```terraform
+resource "aws_ses_email_identity" "example" {
+  email = "email@example.com"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -22,14 +30,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the email identity.
-
-## Example Usage
-
-```terraform
-resource "aws_ses_email_identity" "example" {
-  email = "email@example.com"
-}
-```
 
 ## Import
 

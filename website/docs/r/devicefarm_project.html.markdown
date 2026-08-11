@@ -11,7 +11,7 @@ description: |-
 Provides a resource to manage AWS Device Farm Projects.
 
 For more information about Device Farm Projects, see the AWS Documentation on
-[Device Farm Projects][aws-get-project].
+[Device Farm Projects](http://docs.aws.amazon.com/devicefarm/latest/APIReference/API_GetProject.html).
 
 ~> **NOTE:** AWS currently has limited regional support for Device Farm (e.g., `us-west-2`). See [AWS Device Farm endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/devicefarm.html) for information on supported regions.
 
@@ -38,8 +38,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name of this project
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-[aws-get-project]: http://docs.aws.amazon.com/devicefarm/latest/APIReference/API_GetProject.html
 
 ## Import
 

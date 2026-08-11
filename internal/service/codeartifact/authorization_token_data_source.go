@@ -26,33 +26,36 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
-		Schema: map[string]*schema.Schema{
-			"authorization_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"domain_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"duration_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(900, 43200),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"domain_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"duration_seconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(900, 43200),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

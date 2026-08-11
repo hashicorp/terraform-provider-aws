@@ -88,12 +88,13 @@ resource "aws_msk_topic" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Streaming for Kafka Topic using the `cluster_arn` and `name` . For example:
 
 ```terraform
 import {
-  to = aws_kafka_topic.example
+  to = aws_msk_topic.example
   id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname"
 }
 ```
@@ -101,5 +102,5 @@ import {
 Using `terraform import`, import Managed Streaming for Kafka Topic using the `cluster_arn` and `name`. For example:
 
 ```console
-% terraform import aws_kafka_topic.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname
+% terraform import aws_msk_topic.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname
 ```

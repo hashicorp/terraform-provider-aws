@@ -42,58 +42,60 @@ func ResourceSegment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 160),
-			},
-			"experiment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			"pattern": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringIsJSON,
-				),
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 160),
+				},
+				"experiment_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"launch_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				"pattern": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringIsJSON,
+					),
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

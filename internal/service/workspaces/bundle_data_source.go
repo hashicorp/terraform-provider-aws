@@ -25,62 +25,64 @@ func dataSourceBundle() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,
 
-		Schema: map[string]*schema.Schema{
-			"bundle_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrOwner, names.AttrName},
-			},
-			"compute_type": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bundle_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrOwner, names.AttrName},
+				},
+				"compute_type": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			names.AttrOwner: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			"root_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"bundle_id"},
+				},
+				names.AttrOwner: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"bundle_id"},
+				},
+				"root_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"user_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"user_storage": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

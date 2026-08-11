@@ -154,6 +154,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_redshift_integration.example
+  identity = {
+    "arn" = "arn:aws:redshift:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012"
+  }
+}
+
+resource "aws_redshift_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Redshift integration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Integration using the `arn`. For example:
 
 ```terraform

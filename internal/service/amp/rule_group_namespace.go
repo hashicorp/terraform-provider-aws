@@ -40,27 +40,29 @@ func resourceRuleGroupNamespace() *schema.Resource {
 		UpdateWithoutTimeout: resourceRuleGroupNamespaceUpdate,
 		DeleteWithoutTimeout: resourceRuleGroupNamespaceDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

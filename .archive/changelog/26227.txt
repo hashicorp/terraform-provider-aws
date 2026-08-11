@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_networkmanager_vpc_attachment
-```
-
-```release-note:new-resource
-aws_networkmanager_attachment_accepter
-```

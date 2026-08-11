@@ -21,11 +21,12 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"parameters":         testAccDataLakeSettings_parameters,
 		},
 		"DataCellsFilter": {
-			acctest.CtBasic:          testAccDataCellsFilter_basic,
-			"columnWildcard":         testAccDataCellsFilter_columnWildcard,
-			"columnWildcardMultiple": testAccDataCellsFilter_columnWildcardMultiple,
-			acctest.CtDisappears:     testAccDataCellsFilter_disappears,
-			"rowFilter":              testAccDataCellsFilter_rowFilter,
+			acctest.CtBasic:        testAccDataCellsFilter_basic,
+			"columnWildcard":       testAccDataCellsFilter_columnWildcard,
+			"columnWildcardUpdate": testAccDataCellsFilter_ColumnWildcard_update,
+			"columnWildcardEmpty":  testAccDataCellsFilter_ColumnWildcard_empty,
+			acctest.CtDisappears:   testAccDataCellsFilter_disappears,
+			"rowFilter":            testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			acctest.CtBasic:  testAccDataLakeSettingsDataSource_basic,
@@ -37,9 +38,9 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"Identity":           testAccLakeFormationIdentityCenterConfiguration_identitySerial,
 		},
 		"OptIn": {
-			acctest.CtBasic:      testAccOptIn_basic,
-			acctest.CtDisappears: testAccOptIn_disappears,
-			"table":              testAccOptIn_table,
+			acctest.CtBasic:             testAccOptIn_basic,
+			"disappearsCatalogDatabase": testAccOptIn_Disappears_catalogDatabase,
+			"table":                     testAccOptIn_table,
 		},
 		"PermissionsBasic": {
 			acctest.CtBasic:         testAccPermissions_basic,

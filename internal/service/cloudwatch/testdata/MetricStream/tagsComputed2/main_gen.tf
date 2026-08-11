@@ -9,6 +9,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
 
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
+
   tags = {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue

@@ -157,11 +157,13 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     func ResourceExample() *schema.Resource {
         return &schema.Resource{
             /* ... other configuration ... */
-            Schema: map[string]*schema.Schema{
-                /* ... other configuration ... */
-                names.AttrTags:    tftags.TagsSchema(),
-                names.AttrTagsAll: tftags.TagsSchemaComputed(),
-            },
+            SchemaFunc: func() map[string]*schema.Schema {
+                return map[string]*schema.Schema{
+                    /* ... other configuration ... */
+                    names.AttrTags:    tftags.TagsSchema(),
+                    names.AttrTagsAll: tftags.TagsSchemaComputed(),
+                },
+            }
         }
     }
     ```
@@ -283,7 +285,7 @@ For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation 
 
 === "Terraform Plugin SDK V2"
     ```go
-    func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
       var diags diag.Diagnostics
       // Tags only.
       return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
@@ -311,7 +313,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := eks.CreateClusterInput{
       /* ... other configuration ... */
@@ -325,7 +327,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := eks.CreateClusterInput{
       /* ...other configuration... */
@@ -343,7 +345,7 @@ implement the logic to convert the configuration tags into the service API call 
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     /* ... creation steps ... */
 
@@ -362,7 +364,7 @@ This example shows using `TagSpecifications`:
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := ec2.CreateFleetInput{
         /* ... other configuration ... */
@@ -471,19 +473,19 @@ Add a new test named `_tags` with associated configurations, that verifies creat
 func TestAccEKSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
   var cluster1, cluster2, cluster3 eks.Cluster
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckClusterDestroy(ctx),
+    CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster1),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
         ),
@@ -496,7 +498,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster2),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -505,7 +507,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
       {
         Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(ctx, resourceName, &cluster3),
+          testAccCheckClusterExists(ctx, t, resourceName, &cluster3),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
         ),

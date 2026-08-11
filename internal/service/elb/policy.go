@@ -33,46 +33,48 @@ func resourcePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_attribute": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				// If policy_attribute(s) are not specified,
-				// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
-				// will be returned by the API; thus, this TypeSet is marked as Computed.
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_attribute": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					// If policy_attribute(s) are not specified,
+					// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
+					// will be returned by the API; thus, this TypeSet is marked as Computed.
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
+					// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
+					// differences caused by additional attributes returned by the API are suppressed.
+					DiffSuppressFunc: suppressPolicyAttributeDiffs,
 				},
-				// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
-				// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
-				// differences caused by additional attributes returned by the API are suppressed.
-				DiffSuppressFunc: suppressPolicyAttributeDiffs,
-			},
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_type_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"policy_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_type_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -50,11 +51,17 @@ func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[i
 
 	if isRegionOverrideEnabled {
 		if _, ok := l.resourceSchema.SchemaMap()[names.AttrRegion]; !ok {
-			// TODO: Use standard shared `region` attribute
-			l.resourceSchema.SchemaMap()[names.AttrRegion] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+			// Inject a top-level "region" attribute.
+			regionSchema := sdkv2.RegionOptionalComputed()
+
+			if f := l.resourceSchema.SchemaFunc; f != nil {
+				l.resourceSchema.SchemaFunc = func() map[string]*schema.Schema {
+					s := f()
+					s[names.AttrRegion] = regionSchema
+					return s
+				}
+			} else {
+				l.resourceSchema.Schema[names.AttrRegion] = regionSchema
 			}
 		}
 	}

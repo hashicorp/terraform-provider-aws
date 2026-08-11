@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_verifiedaccess_group: Add `sse_configuration` argument
-```

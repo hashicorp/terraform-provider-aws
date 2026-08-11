@@ -32,42 +32,44 @@ func dataSourceAvailabilityZones() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"all_availability_zones": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"exclude_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"exclude_zone_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrNames: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneState](),
-			},
-			"zone_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"all_availability_zones": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"exclude_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"exclude_zone_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"group_names": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrNames: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneState](),
+				},
+				"zone_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

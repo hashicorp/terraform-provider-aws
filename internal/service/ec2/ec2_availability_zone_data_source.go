@@ -29,59 +29,61 @@ func dataSourceAvailabilityZone() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"all_availability_zones": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"group_long_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_border_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"opt_in_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"zone_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"all_availability_zones": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"group_long_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name_suffix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_border_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"opt_in_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"zone_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"zone_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

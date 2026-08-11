@@ -57,58 +57,60 @@ func resourceGatewayAssociation() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"associated_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			"associated_gateway_owner_account_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidAccountID,
-				ConflictsWith: []string{"associated_gateway_id"},
-				RequiredWith:  []string{"proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			"associated_gateway_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dx_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proposal_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"associated_gateway_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_prefixes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"associated_gateway_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				"associated_gateway_owner_account_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidAccountID,
+					ConflictsWith: []string{"associated_gateway_id"},
+					RequiredWith:  []string{"proposal_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				"associated_gateway_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dx_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dx_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proposal_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"associated_gateway_id"},
+					AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

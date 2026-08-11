@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -92,6 +92,15 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"resource_config_dns_resolution": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ResourceConfigDnsResolution](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
@@ -148,7 +157,7 @@ func (r *resourceGatewayResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 	input.VpcIdentifier = fwflex.StringFromFramework(ctx, data.VPCID)
 
@@ -374,16 +383,17 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 
 type resourceGatewayResourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String                                              `tfsdk:"arn"`
-	ID                  types.String                                              `tfsdk:"id"`
-	IPAddressType       fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
-	IPV4AddressesPerEni types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
-	Name                types.String                                              `tfsdk:"name"`
-	SecurityGroupIDs    fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
-	Status              fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
-	SubnetIDs           fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
-	Tags                tftags.Map                                                `tfsdk:"tags"`
-	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                            `tfsdk:"timeouts"`
-	VPCID               types.String                                              `tfsdk:"vpc_id"`
+	ARN                         types.String                                              `tfsdk:"arn"`
+	ID                          types.String                                              `tfsdk:"id"`
+	IPAddressType               fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
+	IPV4AddressesPerEni         types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
+	Name                        types.String                                              `tfsdk:"name"`
+	ResourceConfigDNSResolution fwtypes.StringEnum[awstypes.ResourceConfigDnsResolution]  `tfsdk:"resource_config_dns_resolution"`
+	SecurityGroupIDs            fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
+	Status                      fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
+	SubnetIDs                   fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
+	Tags                        tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts                    timeouts.Value                                            `tfsdk:"timeouts"`
+	VPCID                       types.String                                              `tfsdk:"vpc_id"`
 }

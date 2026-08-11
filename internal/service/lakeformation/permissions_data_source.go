@@ -28,244 +28,246 @@ func DataSourcePermissions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"catalog_resource": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"data_cells_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"table_catalog_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrTableName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-			},
-			"data_location": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
+				"catalog_resource": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
-			names.AttrDatabase: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"lf_tag": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValues: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateLFTagValues(),
+				"data_cells_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"table_catalog_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"lf_tag_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+				"data_location": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
 						},
-						names.AttrExpression: {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									names.AttrValues: {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
+					},
+				},
+				names.AttrDatabase: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"lf_tag": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							names.AttrValues: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validateLFTagValues(),
+								},
+							},
+						},
+					},
+				},
+				"lf_tag_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrExpression: {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
 											Type:         schema.TypeString,
-											ValidateFunc: validateLFTagValues(),
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										names.AttrValues: {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validateLFTagValues(),
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
-						},
-					},
-				},
-			},
-			names.AttrPermissions: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"permissions_with_grant_option": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validPrincipal,
-			},
-			"table": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"table_with_columns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"column_names": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
 							},
 						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"excluded_column_names": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+					},
+				},
+				names.AttrPermissions: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"permissions_with_grant_option": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validPrincipal,
+				},
+				"table": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
 						},
 					},
 				},
-			},
+				"table_with_columns": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"column_names": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"excluded_column_names": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

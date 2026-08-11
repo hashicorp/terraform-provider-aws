@@ -39,64 +39,66 @@ func resourceClusterSnapshot() *schema.Resource {
 			Create: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterIdentifier,
-			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_cluster_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterSnapshotIdentifier,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"db_cluster_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterIdentifier,
+				},
+				"db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_cluster_snapshot_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterSnapshotIdentifier,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"snapshot_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

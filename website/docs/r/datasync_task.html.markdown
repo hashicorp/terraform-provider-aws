@@ -24,7 +24,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Scheduling
+### Example Usage with Scheduling
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -38,7 +38,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Filtering
+### Example Usage with Filtering
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -58,7 +58,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Enhanced Task Mode
+### Example Usage with Enhanced Task Mode
 
 ```terraform
 resource "aws_datasync_task" "example" {

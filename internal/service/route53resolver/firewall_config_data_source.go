@@ -26,19 +26,21 @@ func dataSourceFirewallConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallConfigRead,
 
-		Schema: map[string]*schema.Schema{
-			"firewall_fail_open": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"firewall_fail_open": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

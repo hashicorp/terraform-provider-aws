@@ -24,7 +24,7 @@ resource "aws_cloudwatch_event_bus" "messenger" {
 
 ```terraform
 data "aws_cloudwatch_event_source" "examplepartner" {
-  name_prefix = "aws.partner/examplepartner.com"
+  name_prefix = "aws.partner/example.com"
 }
 
 resource "aws_cloudwatch_event_bus" "examplepartner" {
@@ -317,17 +317,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_bus.messenger
-  id = "chat-messages"
+  to = aws_cloudwatch_event_bus.example
+  identity = {
+    name = "example-event-bus"
+  }
+}
+
+resource "aws_cloudwatch_event_bus" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EventBridge event buses using the name of the event bus (which can also be a partner event source name). For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the event bus.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Buses using `name` (which can also be a partner event source name). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_bus.example
+  id = "example-event-bus"
+}
+```
+
+Using `terraform import`, import Buses using `name` (which can also be a partner event source name). For example:
 
 ```console
-% terraform import aws_cloudwatch_event_bus.messenger chat-messages
+% terraform import aws_cloudwatch_event_bus.example example-event-bus
 ```

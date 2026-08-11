@@ -24,29 +24,31 @@ func dataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
 
-		Schema: map[string]*schema.Schema{
-			"filters": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"filters": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"release_labels": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
+				"release_labels": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+			}
 		},
 	}
 }

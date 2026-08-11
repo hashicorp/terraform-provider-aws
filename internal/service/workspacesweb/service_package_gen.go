@@ -33,13 +33,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "browser_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newBrowserSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_browser_settings_association",
 			Name:     "Browser Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataProtectionSettingsResource,
@@ -48,13 +48,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "data_protection_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newDataProtectionSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_data_protection_settings_association",
 			Name:     "Data Protection Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newIdentityProviderResource,
@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "identity_provider_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newIPAccessSettingsResource,
@@ -72,13 +72,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "ip_access_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newIPAccessSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_ip_access_settings_association",
 			Name:     "IP Access Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newNetworkSettingsResource,
@@ -87,13 +87,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "network_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newNetworkSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_network_settings_association",
 			Name:     "Network Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPortalResource,
@@ -102,7 +102,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "portal_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newSessionLoggerResource,
@@ -111,13 +111,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "session_logger_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newSessionLoggerAssociationResource,
 			TypeName: "aws_workspacesweb_session_logger_association",
 			Name:     "Session Logger Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newTrustStoreResource,
@@ -126,13 +126,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "trust_store_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newTrustStoreAssociationResource,
 			TypeName: "aws_workspacesweb_trust_store_association",
 			Name:     "Trust Store Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserAccessLoggingSettingsResource,
@@ -141,13 +141,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "user_access_logging_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserAccessLoggingSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_user_access_logging_settings_association",
 			Name:     "User Access Logging Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserSettingsResource,
@@ -156,13 +156,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "user_settings_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newUserSettingsAssociationResource,
 			TypeName: "aws_workspacesweb_user_settings_association",
 			Name:     "User Settings Association",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }

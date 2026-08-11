@@ -25,43 +25,45 @@ func dataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"routing_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"state_machine_version_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrWeight: {
-							Type:     schema.TypeInt,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"routing_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"state_machine_version_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrWeight: {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"statemachine_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"statemachine_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

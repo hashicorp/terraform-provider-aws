@@ -8,8 +8,12 @@ var (
 	ResourceOrganization  = newOrganizationResource
 	ResourceDomain        = newDomainResource
 	ResourceDefaultDomain = newDefaultDomainResource
+	ResourceGroup         = newGroupResource
+	ResourceUser          = newUserResource
 
 	FindOrganizationByID     = findOrganizationByID
 	FindDomainByOrgAndName   = findDomainByOrgAndName
 	FindDefaultDomainByOrgID = findDefaultDomainByOrgID
+	FindGroupByTwoPartKey    = findGroupByTwoPartKey
+	FindUserByTwoPartKey     = findUserByTwoPartKey
 )

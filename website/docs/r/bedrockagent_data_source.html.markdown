@@ -27,6 +27,81 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### Managed Knowledge Base Connector - S3
+
+```terraform
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "example-s3-managed"
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "S3"
+        version = "1"
+        connectionConfiguration = {
+          bucketName           = "my-documents-bucket"
+          bucketOwnerAccountId = "123456789012"
+        }
+        aclEnabled = false
+        filterConfiguration = {
+          maxFileSizeInMegaBytes = "500"
+        }
+      })
+
+      media_extraction_configuration {
+        image_extraction_configuration {
+          image_extraction_status = "ENABLED"
+        }
+      }
+    }
+  }
+
+  vector_ingestion_configuration {
+    parsing_configuration {
+      parsing_strategy = "SMART_PARSING"
+    }
+  }
+}
+```
+
+### Managed Knowledge Base Connector - SharePoint
+
+```terraform
+resource "aws_bedrockagent_data_source" "sharepoint" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "example-sharepoint"
+
+  data_source_configuration {
+    type = "MANAGED_KNOWLEDGE_BASE_CONNECTOR"
+
+    managed_knowledge_base_connector_configuration {
+      connector_parameters = jsonencode({
+        type    = "SHAREPOINT"
+        version = "1"
+        connectionConfiguration = {
+          tenantId  = "your-entra-tenant-id"
+          authType  = "ENTRA_ID_APP_ONLY"
+          secretArn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-sharepoint-secret"
+          certificateS3Path = {
+            s3BucketName = "my-certs-bucket"
+            s3KeyName    = "certs/sharepoint-cert.crt"
+          }
+        }
+        dataEntityConfiguration = {
+          type       = "DOCUMENT"
+          crawlFiles = "true"
+          crawlPages = "true"
+          siteUrls   = ["https://company.sharepoint.com/sites/MySite"]
+        }
+      })
+    }
+  }
+}
+```
+
 ### Multimodal Parsing
 
 ```terraform
@@ -84,12 +159,54 @@ The following arguments are optional:
 
 The `data_source_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`.
+* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`, `MANAGED_KNOWLEDGE_BASE_CONNECTOR`.
 * `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
+* `managed_knowledge_base_connector_configuration` - (Optional) Details about the configuration of a Managed Knowledge Base connector data source. See [`managed_knowledge_base_connector_configuration` block](#managed_knowledge_base_connector_configuration-block) for details.
 * `s3_configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
 * `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
 * `share_point_configuration` - (Optional) Details about the configuration of the SharePoint data source. See [`share_point_data_source_configuration` block](#share_point_data_source_configuration-block) for details.
 * `web_configuration` - (Optional) Details about the configuration of the web data source. See [`web_data_source_configuration` block](#web_data_source_configuration-block) for details.
+
+### `managed_knowledge_base_connector_configuration` block
+
+The `managed_knowledge_base_connector_configuration` configuration block supports the following arguments:
+
+* `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
+* `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` block](#deletion_protection_configuration-block) for details.
+* `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` block](#media_extraction_configuration-block) for details.
+
+### `deletion_protection_configuration` block
+
+The `deletion_protection_configuration` configuration block supports the following arguments:
+
+* `deletion_protection_status` - (Required) Enable or disable deletion protection for the connector. Valid values: `ENABLED`, `DISABLED`.
+* `deletion_protection_threshold` - (Optional) Maximum percentage of documents that a sync job can delete from your index.
+
+### `media_extraction_configuration` block
+
+The `media_extraction_configuration` configuration block supports the following arguments:
+
+* `audio_extraction_configuration` - (Optional) Configuration for extracting audio content. See [`audio_extraction_configuration` block](#audio_extraction_configuration-block) for details.
+* `image_extraction_configuration` - (Optional) Configuration for extracting image content. See [`image_extraction_configuration` block](#image_extraction_configuration-block) for details.
+* `video_extraction_configuration` - (Optional) Configuration for extracting video content. See [`video_extraction_configuration` block](#video_extraction_configuration-block) for details.
+
+### `audio_extraction_configuration` block
+
+The `audio_extraction_configuration` configuration block supports the following arguments:
+
+* `audio_extraction_status` - (Required) Whether audio extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `image_extraction_configuration` block
+
+The `image_extraction_configuration` configuration block supports the following arguments:
+
+* `image_extraction_status` - (Required) Whether image extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `video_extraction_configuration` block
+
+The `video_extraction_configuration` configuration block supports the following arguments:
+
+* `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
 
 ### `confluence_data_source_configuration` block
 
@@ -98,7 +215,7 @@ The `confluence_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Confluence data source. See [`source_configuration` block](#confluence-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Confluence content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Confluence documentation][1].
+For more details, see the [Amazon BedrockAgent Confluence documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html).
 
 ### Confluence `source_configuration` block
 
@@ -124,7 +241,7 @@ The `salesforce_data_source_configuration` configuration block supports the foll
 * `source_configuration` - (Required) The endpoint information to connect to your Salesforce data source. See [`source_configuration` block](#salesforce-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for Salesforce content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent Salesforce documentation][2].
+For more details, see the [Amazon BedrockAgent Salesforce documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html).
 
 ### Salesforce `source_configuration` block
 
@@ -166,7 +283,7 @@ The `share_point_data_source_configuration` configuration block supports the fol
 * `source_configuration` - (Required) The endpoint information to connect to your SharePoint data source. See [`source_configuration` block](#sharepoint-source_configuration-block) for details.
 * `crawler_configuration` - (Optional) Configuration for SharePoint content. See [`crawler_configuration` block](#crawler_configuration-block) for details.
 
-For more details, see the [Amazon BedrockAgent SharePoint documentation][3].
+For more details, see the [Amazon BedrockAgent SharePoint documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html).
 
 ### SharePoint `source_configuration` block
 
@@ -350,6 +467,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
@@ -368,8 +486,3 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 ```console
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
-
-[1]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ConfluenceDataSourceConfiguration.html
-[2]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SalesforceDataSourceConfiguration.html
-[3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
-[4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html

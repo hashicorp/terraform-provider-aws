@@ -7,6 +7,8 @@ package amp
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,7 +28,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDefaultScraperConfigurationDataSource,
 			TypeName: "aws_prometheus_default_scraper_configuration",
 			Name:     "Default Scraper Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -34,16 +36,33 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAnomalyDetectorResource,
+			TypeName: "aws_prometheus_anomaly_detector",
+			Name:     "Anomaly Detector",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute("workspace_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      anomalyDetectorImportID{},
+			},
+		},
+		{
 			Factory:  newQueryLoggingConfigurationResource,
 			TypeName: "aws_prometheus_query_logging_configuration",
 			Name:     "QueryLoggingConfiguration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_prometheus_resource_policy",
 			Name:     "Resource Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newScraperResource,
@@ -52,15 +71,64 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newScraperLoggingConfigurationResource,
+			TypeName: "aws_prometheus_scraper_logging_configuration",
+			Name:     "ScraperLoggingConfiguration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("scraper_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newWorkspaceConfigurationResource,
 			TypeName: "aws_prometheus_workspace_configuration",
 			Name:     "WorkspaceConfiguration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAnomalyDetectorResourceAsListResource,
+			TypeName: "aws_prometheus_anomaly_detector",
+			Name:     "Anomaly Detector",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute("workspace_id", true),
+			}),
+		},
+		{
+			Factory:  newScraperResourceAsListResource,
+			TypeName: "aws_prometheus_scraper",
+			Name:     "Scraper",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newScraperLoggingConfigurationResourceAsListResource,
+			TypeName: "aws_prometheus_scraper_logging_configuration",
+			Name:     "ScraperLoggingConfiguration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("scraper_id", true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -70,13 +138,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			TypeName: "aws_prometheus_workspace",
 			Name:     "Workspace",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceWorkspaces,
 			TypeName: "aws_prometheus_workspaces",
 			Name:     "Workspaces",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -87,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceAlertManagerDefinition,
 			TypeName: "aws_prometheus_alert_manager_definition",
 			Name:     "Alert Manager Definition",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRuleGroupNamespace,
@@ -96,7 +164,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithV6_0SDKv2Fix(),
@@ -112,7 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }

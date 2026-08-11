@@ -27,10 +27,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountSettingsResource,
+			TypeName: "aws_kinesis_account_settings",
+			Name:     "Account Settings",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_kinesis_resource_policy",
 			Name:     "Resource Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
@@ -49,7 +59,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Stream",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceStreamConsumer,
@@ -59,7 +69,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "StreamConsumer",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -74,7 +84,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Stream",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceStreamConsumer,
@@ -84,7 +98,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "StreamConsumer",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }

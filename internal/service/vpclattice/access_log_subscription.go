@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -41,37 +41,39 @@ func resourceAccessLogSubscription() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateFunc:     verify.ValidARN,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentCloudWatchLogsLogGroupARN,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_identifier": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			"service_network_log_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceNetworkLogType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestinationARN: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateFunc:     verify.ValidARN,
+					DiffSuppressFunc: sdkv2.SuppressEquivalentCloudWatchLogsLogGroupARN,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"service_network_log_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ServiceNetworkLogType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -81,7 +83,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := vpclattice.CreateAccessLogSubscriptionInput{
-		ClientToken:        aws.String(sdkid.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
