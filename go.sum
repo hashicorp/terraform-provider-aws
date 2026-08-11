@@ -211,8 +211,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.5 h1:DV9J+BBmQHOwa9L
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.5/go.mod h1:ZiPbvooMOkB/ckw3+wUfnh1BpN+Ybi2k5WTLIf85E3w=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.40.0 h1:RxXIrJYuFXgLePZh64iSE+H6vFFG/2Or9HoE02fJ/tQ=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.40.0/go.mod h1:nZLMLgDCF2RHEue0tRe0MonFn/Ws+hlPBnQ/qBX/ces=
-github.com/aws/aws-sdk-go-v2/service/docdb v1.51.4 h1:v9APiIk1o8rcc1UibTO+b4wULni1u4uARTOfsMFlZ9w=
-github.com/aws/aws-sdk-go-v2/service/docdb v1.51.4/go.mod h1:DixlM7ytFFg7slVDNA/RkJbU+f81SLQKZU9RJOkvE/s=
+github.com/aws/aws-sdk-go-v2/service/docdb v1.51.5 h1:ZEfde44PzSHrCOq32yIByW5vAn8x3SNDs28Z0ok9erQ=
+github.com/aws/aws-sdk-go-v2/service/docdb v1.51.5/go.mod h1:aotlvFdUsb/hwEtmXNwOpZHl9IBgiIhxU84T4IdG5Iw=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.23.4 h1:4x3HpQ0iJQaqIK6GJSHDRWAvI/LIEwAKfdg0jX2yfR4=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.23.4/go.mod h1:p82aH87qd/Pj7cEvmtGdrM5/5f+Xa5rxtIUykRPgzrU=
 github.com/aws/aws-sdk-go-v2/service/drs v1.42.5 h1:zgr3QPilzd5ZV32aqlJSW572dirZLvus5CmGzQw/6JI=
