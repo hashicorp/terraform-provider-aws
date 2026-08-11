@@ -46,6 +46,8 @@ import (
 // @ImportIDHandler("inputSourceImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.InputSourceSummary")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc="testAccCheckInputSourceImportStateIDFunc")
+// @Testing(importStateIdAttribute="input_source_id")
 func newInputSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &inputSourceResource{}, nil
 }

@@ -10,8 +10,8 @@ var (
 	ResourceService     = newServiceResource
 	ResourceSystem      = newSystemResource
 
-	FindInputSourceByID = findInputSourceByTwoPartKey
-	FindPolicyByARN     = findPolicyByARN
-	FindServiceByARN    = findServiceByARN
-	FindSystemByARN     = findSystemByARN
+	FindInputSourceByTwoPartKey = findInputSourceByTwoPartKey
+	FindPolicyByARN             = findPolicyByARN
+	FindServiceByARN            = findServiceByARN
+	FindSystemByARN             = findSystemByARN
 )

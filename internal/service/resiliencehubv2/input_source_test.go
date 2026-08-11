@@ -9,17 +9,27 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresiliencehubv2 "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccResilienceHubV2InputSource_cfnStack(t *testing.T) {
+func testAccCheckInputSourceImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "service_arn", "input_source_id")
+}
+
+func TestAccResilienceHubV2InputSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var is awstypes.InputSourceSummary
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_input_source.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -32,12 +42,78 @@ func TestAccResilienceHubV2InputSource_cfnStack(t *testing.T) {
 		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInputSourceConfig_cfnStack(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
-					resource.TestCheckResourceAttrSet(resourceName, "input_source_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "cfn_stack_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input_source_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"cfn_stack_arn":      knownvalue.NotNull(),
+						"design_file_s3_url": knownvalue.Null(),
+						"eks":                knownvalue.ListSizeExact(0),
+						"resource_tag":       knownvalue.ListSizeExact(0),
+						"tf_state_file_url":  knownvalue.Null(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccCheckInputSourceImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "input_source_id",
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2InputSource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var is awstypes.InputSourceSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_input_source.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresiliencehubv2.ResourceInputSource, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -52,10 +128,17 @@ func testAccCheckInputSourceDestroy(ctx context.Context, t *testing.T) resource.
 				continue
 			}
 
-			_, err := tfresiliencehubv2.FindInputSourceByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["input_source_id"])
-			if err == nil {
-				return fmt.Errorf("Resilience Hub V2 Input Source %s still exists", rs.Primary.Attributes[names.AttrID])
+			_, err := tfresiliencehubv2.FindInputSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["input_source_id"])
+
+			if retry.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Resilience Hub V2 Input Source %s still exists", rs.Primary.Attributes["input_source_id"])
 		}
 
 		return nil
@@ -66,12 +149,12 @@ func testAccCheckInputSourceExists(ctx context.Context, t *testing.T, n string, 
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Input Source not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
 
-		output, err := tfresiliencehubv2.FindInputSourceByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["input_source_id"])
+		output, err := tfresiliencehubv2.FindInputSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["input_source_id"])
 		if err != nil {
 			return err
 		}
@@ -80,48 +163,4 @@ func testAccCheckInputSourceExists(ctx context.Context, t *testing.T, n string, 
 
 		return nil
 	}
-}
-
-func testAccInputSourceConfig_cfnStack(rName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_cloudformation_stack" "test" {
-  name = %[1]q
-
-  template_body = jsonencode({
-    AWSTemplateFormatVersion = "2010-09-09"
-    Description              = "Test stack for NGRH input source"
-    Resources = {
-      WaitHandle = {
-        Type = "AWS::CloudFormation::WaitConditionHandle"
-      }
-    }
-  })
-}
-
-resource "aws_resiliencehubv2_policy" "test" {
-  name = "%[1]s-policy"
-
-  availability_slo {
-    target = 99.9
-  }
-}
-
-resource "aws_resiliencehubv2_service" "test" {
-  name    = "%[1]s-service"
-  regions = [data.aws_region.current.name]
-
-  policy_arn = aws_resiliencehubv2_policy.test.arn
-
-  permission_model {
-    invoker_role_name = "AWSResilienceHubAssessmentRole"
-  }
-}
-
-resource "aws_resiliencehubv2_input_source" "test" {
-  service_arn   = aws_resiliencehubv2_service.test.arn
-  cfn_stack_arn = aws_cloudformation_stack.test.id
-}
-`, rName)
 }
