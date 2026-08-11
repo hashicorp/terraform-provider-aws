@@ -9,4 +9,7 @@ var (
 
 	FindRuleSetByID = findRuleSetByID
 	ResourceRuleSet = newRuleSetResource
+
+	ResourceRelay = newRelayResource
+	FindRelayByID = findRelayByID
 )
