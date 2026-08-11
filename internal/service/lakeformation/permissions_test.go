@@ -1131,7 +1131,7 @@ func permissionCountForResource(ctx context.Context, t *testing.T, conn *lakefor
 	}
 
 	principalIdentifier := rs.Primary.Attributes[names.AttrPrincipal]
-	if tflakeformation.IncludePrincipalIdentifierInList(principalIdentifier) {
+	if tflakeformation.IncludePrincipalIdentifierInList(principalIdentifier, acctest.AccountID(ctx)) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}
