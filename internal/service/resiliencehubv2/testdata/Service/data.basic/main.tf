@@ -1,5 +1,12 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+# tflint-ignore: terraform_unused_declarations
+data "aws_resiliencehubv2_service" "test" {
+  arn = aws_resiliencehubv2_service.test.arn
+}
+
 resource "aws_resiliencehubv2_service" "test" {
-{{- template "region" }}
   name    = var.rName
   regions = [data.aws_region.current.name]
 
@@ -7,13 +14,10 @@ resource "aws_resiliencehubv2_service" "test" {
     invoker_role_name = aws_iam_role.test.name
   }
 
-{{- template "tags" . }}
-
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
 }
 
 data "aws_region" "current" {
-{{- template "region" }}
 }
 
 data "aws_partition" "current" {}
@@ -40,4 +44,10 @@ POLICY
 resource "aws_iam_role_policy_attachment" "service_AWSResilienceHubV2AssessmentExecutionPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSResilienceHubV2AssessmentExecutionPolicy"
   role       = aws_iam_role.test.name
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
