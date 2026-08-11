@@ -74,12 +74,7 @@ func (r *relayResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"last_modified_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
