@@ -1051,6 +1051,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ami_launch_permission",
 			Name:     "AMI Launch Permission",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttributeWithMappedName("launch_permission_account_id", false, names.AttrAccountID),
+				inttypes.StringIdentityAttribute("group", false),
+				inttypes.StringIdentityAttribute("organization_arn", false),
+				inttypes.StringIdentityAttribute("organizational_unit_arn", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      amiLaunchPermissionImportID{},
+			},
 		},
 		{
 			Factory:  resourceCustomerGateway,
