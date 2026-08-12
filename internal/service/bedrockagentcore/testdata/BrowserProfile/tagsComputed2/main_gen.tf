@@ -11,6 +11,7 @@ resource "aws_bedrockagentcore_browser_profile" "test" {
     (var.knownTagKey)   = var.knownTagValue
   }
 }
+
 resource "null_resource" "test" {}
 
 variable "rName" {
