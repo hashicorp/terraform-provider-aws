@@ -25,7 +25,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "${var.rName}-b"
+  bucket        = "${replace(var.rName, "_", "-")}-b"
   force_destroy = false
 }
 
@@ -61,7 +61,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 
 resource "aws_iam_policy" "sns_topic_full_access" {
-  name        = "sns-topic-full-access"
+  name        = "${var.rName}-sns-topic"
   description = "Full SNS permissions for one topic"
 
   policy = jsonencode({
@@ -80,7 +80,7 @@ resource "aws_iam_role_policy_attachment" "sns_topic_full_access" {
 }
 
 resource "aws_iam_policy" "s3_bucket_full_access" {
-  name        = "s3-bucket-full-access"
+  name        = "${var.rName}-s3-bucket"
   description = "Full S3 permissions for one bucket and its objects"
 
   policy = jsonencode({
