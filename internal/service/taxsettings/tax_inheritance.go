@@ -38,6 +38,7 @@ import (
 // @Testing(importStateIdFunc=testAccTaxInheritanceImportStateIdFunc)
 // @Testing(importStateIdAttribute=heritage_status)
 // @Testing(checkDestroyNoop=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func newTaxInheritanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &taxInheritanceResource{}
 
