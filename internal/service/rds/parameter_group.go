@@ -7,6 +7,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"iter"
 	"log"
 	"slices"
@@ -38,7 +39,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(idAttrDuplicates="name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBParameterGroup")
-// @Testing(preIdentityVersion="v6.58.0")
+// @Testing(preIdentityVersion="v6.59.0")
 // @Testing(name="Parameter Group")
 func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
@@ -192,7 +193,7 @@ func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbPara
 
 	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS DB Parameter Group parameters: %w", err)
 	}
 
 	var userParams []types.Parameter
@@ -239,7 +240,7 @@ func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbPara
 	}
 
 	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
-		return err
+		return fmt.Errorf("setting parameter: %w", err)
 	}
 
 	// Support in-place update of non-refreshable attribute.
