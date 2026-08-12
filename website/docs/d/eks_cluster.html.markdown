@@ -70,7 +70,7 @@ This data source exports the following attributes in addition to the arguments a
     * `node_resources_fit` - Configuration for the NodeResourcesFit scheduler plugin.
         * `scoring_strategy` - The scoring strategy used to rank nodes during scheduling.
             * `type` - The scoring strategy type (`LeastAllocated` or `MostAllocated`).
-            * `resources` - List of resource weights for scoring nodes.
+            * `resource` - List of resource weights for scoring nodes.
                 * `name` - The name of the resource (e.g., `cpu`, `memory`).
                 * `weight` - The weight assigned to the resource for scoring (1-100).
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.

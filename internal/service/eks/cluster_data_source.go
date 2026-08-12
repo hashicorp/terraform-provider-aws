@@ -197,7 +197,7 @@ func dataSourceCluster() *schema.Resource {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													names.AttrResources: {
+													"resource": {
 														Type:     schema.TypeList,
 														Computed: true,
 														Elem: &schema.Resource{
