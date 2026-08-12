@@ -77,7 +77,7 @@ resource "aws_iam_role_policy_attachment" "service_AWSResilienceHubV2AssessmentE
 }
 
 resource "aws_iam_policy" "s3_bucket_full_access" {
-  name        = "s3-bucket-full-access"
+  name        = "${var.rName}-s3-bucket"
   description = "Full S3 permissions for one bucket and its objects"
 
   policy = jsonencode({

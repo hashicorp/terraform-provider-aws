@@ -28,7 +28,7 @@ data "aws_service_principal" "eks" {
 }
 
 resource "aws_iam_role" "cluster" {
-  name = var.rName
+  name = "${var.rName}-cluster"
 
   assume_role_policy = <<POLICY
 {
