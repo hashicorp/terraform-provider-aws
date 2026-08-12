@@ -157,7 +157,19 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	resourceParameterGroupFlattenBase(dbParameterGroup, d)
+	if err := resourceParameterGroupFlatten(ctx, conn, dbParameterGroup, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
+	d.Set(names.AttrDescription, dbParameterGroup.Description)
+	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
 
 	input := rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -165,9 +177,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	configParams := d.Get(names.AttrParameter).(*schema.Set)
 	if configParams.Len() < 1 {
-		// If we don't have any params in the ResourceData already, two possibilities
-		// first, we don't have a config available to us. Second, we do, but it has
-		// no parameters. We're going to assume the first, to be safe. In this case,
+		// If we don't have any params in the ResourceData already, two possibilities:
+		// first, we don't have a config available to us (e.g. this is an import, or a
+		// list resource result, neither of which has a config). Second, we do, but it
+		// has no parameters. We're going to assume the first, to be safe. In this case,
 		// we're only going to ask for the user-modified values, because any defaults
 		// the user may have _also_ set are indistinguishable from the hundreds of
 		// defaults AWS sets. If the user hasn't set any parameters, this will return
@@ -178,9 +191,8 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
+		return err
 	}
 
 	var userParams []types.Parameter
@@ -227,41 +239,13 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+		return err
 	}
 
 	// Support in-place update of non-refreshable attribute.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
-	return diags
-}
-
-func resourceParameterGroupFlattenBase(dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) {
-	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
-	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
-	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
-}
-
-// resourceParameterGroupFlatten sets a DB Parameter Group's attributes, including its
-// user-modified parameters, for the list resource.
-func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
-	resourceParameterGroupFlattenBase(dbParameterGroup, d)
-
-	// skip_destroy has no AWS-side representation, so set to schema's own default.
-	d.Set(names.AttrSkipDestroy, false)
-
-	input := rds.DescribeDBParametersInput{
-		DBParameterGroupName: aws.String(d.Id()),
-		Source:               aws.String(parameterSourceUser),
-	}
-	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
-	if err != nil {
-		return err
-	}
-
-	return d.Set(names.AttrParameter, flattenParameters(parameters))
+	return nil
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
