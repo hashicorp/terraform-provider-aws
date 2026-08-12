@@ -29,17 +29,20 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` attributes ([#49420](https://github.com/hashicorp/terraform-provider-aws/issues/49420))
 * resource/aws_arcregionswitch_plan: Add `step.aurora_provisioned_scaling_config`, `step.aurora_serverless_scaling_config`, `step.neptune_global_database_config`, and `step.lambda_event_source_mapping_config` arguments ([#48392](https://github.com/hashicorp/terraform-provider-aws/issues/48392))
 * resource/aws_arcregionswitch_plan: Add provider-side validation restricting `report_configuration` and `report_configuration.report_output.s3_configuration` to a single block each ([#46758](https://github.com/hashicorp/terraform-provider-aws/issues/46758))
 * resource/aws_backup_plan: Add resource identity support ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
 * resource/aws_backup_selection: Add resource identity support ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server.mcp_tool_schema` configuration block and `target_configuration.mcp.mcp_server.resource_priority` argument ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
+* resource/aws_bedrockagentcore_harness: Adds computed attribute `memory_actual` ([#49383](https://github.com/hashicorp/terraform-provider-aws/issues/49383))
 * resource/aws_bedrockagentcore_harness: Adds support for `memory.disabled` ([#49334](https://github.com/hashicorp/terraform-provider-aws/issues/49334))
 * resource/aws_bedrockagentcore_harness: Adds support for `memory.managed_memory_configuration` ([#49285](https://github.com/hashicorp/terraform-provider-aws/issues/49285))
 * resource/aws_dlm_lifecycle_policy: Add `policy_details.parameters.exclude_data_volume_tags` argument ([#45113](https://github.com/hashicorp/terraform-provider-aws/issues/45113))
 * resource/aws_ec2_client_vpn_route: Add `transit_gateway_attachment_id` attribute ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
 * resource/aws_ec2_client_vpn_route: Change `target_vpc_subnet_id` to Optional ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
 * resource/aws_ec2_client_vpn_route: Increase default `timeouts` values to `30m` ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
+* resource/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` arguments ([#49412](https://github.com/hashicorp/terraform-provider-aws/issues/49412))
 * resource/aws_prometheus_scraper: Add `exporter` configuration block with OpenSearch exporter support ([#49346](https://github.com/hashicorp/terraform-provider-aws/issues/49346))
 * resource/aws_wafv2_rule_group: Add `pre_parse_text_transformation` argument to `byte_match_statement`, `regex_match_statement`, `regex_pattern_set_reference_statement`, `size_constraint_statement`, `sqli_match_statement`, and `xss_match_statement` rule statements ([#49381](https://github.com/hashicorp/terraform-provider-aws/issues/49381))
 * resource/aws_wafv2_web_acl: Add `pre_parse_text_transformation` argument to `byte_match_statement`, `regex_match_statement`, `regex_pattern_set_reference_statement`, `size_constraint_statement`, `sqli_match_statement`, and `xss_match_statement` rule statements ([#49381](https://github.com/hashicorp/terraform-provider-aws/issues/49381))
