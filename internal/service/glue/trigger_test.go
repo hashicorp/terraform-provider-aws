@@ -1016,6 +1016,30 @@ resource "aws_glue_trigger" "test" {
 `, rName))
 }
 
+func testAccTriggerConfig_eventEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
+resource "aws_glue_workflow" test {
+  name = %[1]q
+}
+
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  type              = "EVENT"
+  workflow_name     = aws_glue_workflow.test.name
+  start_on_creation = false
+  enabled           = %[2]t
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+
+  event_batching_condition {
+    batch_size = 1
+  }
+}
+`, rName, enabled))
+}
+
 func testAccTriggerConfig_actionsNull(rName string) string {
 	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
