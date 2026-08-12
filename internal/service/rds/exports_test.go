@@ -105,4 +105,6 @@ var (
 	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 
 	WaitDBClusterUpdated = waitDBClusterUpdated
+
+	EngineVersionIsNewer = engineVersionIsNewer
 )
