@@ -73,7 +73,7 @@ func (l *parameterGroupListResource) List(ctx context.Context, request list.List
 
 			if request.IncludeResource {
 				if err := resourceParameterGroupFlatten(ctx, conn, &item, rd); err != nil {
-					if retry.NotFound(err) {
+					if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 						tflog.Info(ctx, "Skipping RDS DB Parameter Group, not found when fetching parameters", map[string]any{
 							"error": err.Error(),
 						})
