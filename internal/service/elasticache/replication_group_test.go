@@ -4516,7 +4516,7 @@ func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshot(t *testing.T) {
 				Config: testAccReplicationGroupConfig_serverlessCacheSource(rName),
 			},
 			{
-				// Snapshot the serverless cache out-of-band, then restore it into a single-node, Multi-AZ-disabled group (also exercises the multi_az_enabled create fix).
+				// Snapshot the serverless cache out-of-band, then restore it into a Multi-AZ-disabled group (topology is inherited from the snapshot; also exercises the multi_az_enabled create fix).
 				PreConfig: func() {
 					testAccCreateServerlessCacheSnapshot(ctx, t, rName, rName)
 				},
@@ -4525,7 +4525,6 @@ func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshot(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "serverless_cache_snapshot_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 				),
 			},
 			{
@@ -7067,7 +7066,6 @@ resource "aws_elasticache_replication_group" "test" {
   description                    = "test description"
   engine                         = "redis"
   node_type                      = "cache.t3.micro"
-  num_cache_clusters             = 1
   multi_az_enabled               = false
   apply_immediately              = true
   serverless_cache_snapshot_name = %[2]q
