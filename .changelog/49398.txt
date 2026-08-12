@@ -1,3 +1,6 @@
 ```release-note:bug
 resource/aws_lakeformation_permissions: Fix failure to read cross-account IAM principals
 ```
+```release-note:bug
+data-source/aws_lakeformation_permissions: Fix failure to read cross-account IAM principals
+```
