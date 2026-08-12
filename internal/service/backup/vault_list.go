@@ -53,7 +53,7 @@ func (l *vaultListResource) List(ctx context.Context, request list.ListRequest, 
 		input := backup.ListBackupVaultsInput{
 			ByVaultType: awstypes.VaultTypeBackupVault,
 		}
-		for item, err := range listBackupVaults(ctx, conn, &input) {
+		for item, err := range listVaults(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -101,7 +101,7 @@ func (l *vaultListResource) List(ctx context.Context, request list.ListRequest, 
 	}
 }
 
-func listBackupVaults(ctx context.Context, conn *backup.Client, input *backup.ListBackupVaultsInput) iter.Seq2[awstypes.BackupVaultListMember, error] {
+func listVaults(ctx context.Context, conn *backup.Client, input *backup.ListBackupVaultsInput) iter.Seq2[awstypes.BackupVaultListMember, error] {
 	return func(yield func(awstypes.BackupVaultListMember, error) bool) {
 		pages := backup.NewListBackupVaultsPaginator(conn, input)
 		for pages.HasMorePages() {
