@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_bedrockagentcore_gateway_target: Remove client-side count validation for `metadata_configuration` request and response headers
+resource/aws_bedrockagentcore_gateway_target: Remove client-side count validation for `metadata_configuration` request and response headers and prevent state inconsistencies caused by the service-managed policy session header
 ```
