@@ -52,6 +52,7 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_gateway_target: Treat OAuth `CREATE_PENDING_AUTH` and `UPDATE_PENDING_AUTH` statuses as successful terminal states ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
 * resource/aws_lakeformation_permissions: Fix failure to read cross-account IAM principals ([#49398](https://github.com/hashicorp/terraform-provider-aws/issues/49398))
 * resource/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US) ([#49340](https://github.com/hashicorp/terraform-provider-aws/issues/49340))
+* resource/aws_rds_cluster: Fix `InvalidParameterCombination` error when `engine_version` is updated externally ([#49396](https://github.com/hashicorp/terraform-provider-aws/issues/49396))
 * resource/aws_route53domains_registered_domain: Fix `UpdateDomainContactPrivacy` being incorrectly triggered when `billing_contact` changes ([#49314](https://github.com/hashicorp/terraform-provider-aws/issues/49314))
 * resource/aws_ssm_parameter: Fixes error where `name` with a leading slash and no other slashes was stripping the leading slash. ([#49339](https://github.com/hashicorp/terraform-provider-aws/issues/49339))
 
