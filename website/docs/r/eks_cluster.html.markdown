@@ -463,11 +463,11 @@ The `node_resources_fit` configuration block supports the following arguments:
 The `scoring_strategy` configuration block supports the following arguments:
 
 * `type` - (Optional) The scoring strategy type. Valid values are `LeastAllocated` and `MostAllocated`. Default is `LeastAllocated`.
-* `resources` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resources) below.
+* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resources) below.
 
-#### resources
+#### resource
 
-The `resources` configuration block supports the following arguments:
+The `resource` configuration block supports the following arguments:
 
 * `name` - (Optional) The name of the resource (e.g., `cpu`, `memory`, `nvidia.com/gpu`).
 * `weight` - (Optional) The weight assigned to the resource for scoring. Must be between `1` and `100`.

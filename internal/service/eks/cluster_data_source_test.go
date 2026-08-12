@@ -213,38 +213,6 @@ func TestAccEKSClusterDataSource_controlPlaneScalingConfig(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_outpost(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_outpostPlacement(rName), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_remoteNetwork(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_remotePodNetwork(rName, "10.90.0.0/22", "10.80.0.0/22"), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
 func TestAccEKSClusterDataSource_kubeAPIServerConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -289,8 +257,8 @@ func TestAccEKSClusterDataSource_kubeSchedulerConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "kube_scheduler_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.type", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.type"),
-					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resources.0.name", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resources.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resources.0.weight", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resources.0.weight"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.name", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.name"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.weight", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.weight"),
 				),
 			},
 		},
@@ -319,6 +287,38 @@ func TestAccEKSClusterDataSource_kubeControllerManagerConfig(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccClusterDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_outpostPlacement(rName), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_remoteNetwork(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_remotePodNetwork(rName, "10.90.0.0/22", "10.80.0.0/22"), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
 }
 
 func testAccClusterDataSourceConfig_kubeAPIServerConfig(rName string) string {

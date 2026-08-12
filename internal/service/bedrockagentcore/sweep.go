@@ -31,7 +31,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
-	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
+	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories, "aws_bedrockagentcore_harness")
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
 	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines, "aws_bedrockagentcore_policy")
 	awsv2.Register("aws_bedrockagentcore_evaluator", sweepEvaluators)
