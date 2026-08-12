@@ -254,6 +254,53 @@ func TestAccResilienceHubV2InputSource_resourceTags(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubV2InputSource_eks(t *testing.T) {
+	ctx := acctest.Context(t)
+	var is awstypes.InputSourceSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_input_source.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/eks/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input_source_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"cfn_stack_arn":      knownvalue.Null(),
+						"design_file_s3_url": knownvalue.Null(),
+						"eks": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"cluster_arn": knownvalue.NotNull(),
+							"namespaces":  knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("default")}),
+						})}),
+						"resource_tag":      knownvalue.ListSizeExact(0),
+						"tf_state_file_url": knownvalue.Null(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckInputSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
