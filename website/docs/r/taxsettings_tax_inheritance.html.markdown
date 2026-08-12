@@ -3,22 +3,16 @@ subcategory: "Tax Settings"
 layout: "aws"
 page_title: "AWS: aws_taxsettings_tax_inheritance"
 description: |-
-  Manages an AWS Tax Settings Tax Inheritance.
+  Manages tax information inheritance of the payer account within an AWS Organizations.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_taxsettings_tax_inheritance
 
-Manages an AWS Tax Settings Tax Inheritance.
+Manages tax information inheritance of the management account within an AWS Organizations.
+
+~> **Note:** This resource requires the Organizations management account. The terms "payer account" and "management account" are used interchangeably, as AWS refers to the [managemement account as the payer account](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html).
+
+~> **Note:** The tax inheritance can only be updated once every 15 minutes. Attempting to update it more frequently triggers a `ConflictException`.
 
 ## Example Usage
 
@@ -26,6 +20,7 @@ Manages an AWS Tax Settings Tax Inheritance.
 
 ```terraform
 resource "aws_taxsettings_tax_inheritance" "example" {
+  heritage_status = "OptIn"
 }
 ```
 
@@ -33,26 +28,18 @@ resource "aws_taxsettings_tax_inheritance" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `heritage_status` - (Required) Whether to enable (`OptIn`) or disable (`OptOut`) the tax information inheritance of the payer account for all member accounts within your AWS Organizations.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Tax Inheritance.
-* `example_attribute` - Brief description of the attribute.
+This resource exports no additional attributes.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 
@@ -61,50 +48,31 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 ```terraform
 import {
   to = aws_taxsettings_tax_inheritance.example
-  identity = {
-<!---
-Add only required attributes in this example.
---->
-  }
+  identity = {}
 }
 
 resource "aws_taxsettings_tax_inheritance" "example" {
-  ### Configuration omitted for brevity ###
+  heritage_status = "OptIn"
 }
 ```
 
 ### Identity Schema
 
-#### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Tax Inheritance.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Tax Inheritance.
-> Singleton Identity: no required attributes.
---->
-
 #### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
+
 * `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Tax Settings Tax Inheritance using the `example_id_arg`. For example:
 
 ```terraform
 import {
   to = aws_taxsettings_tax_inheritance.example
-  id = "tax_inheritance-id-12345678"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import Tax Settings Tax Inheritance using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_taxsettings_tax_inheritance.example tax_inheritance-id-12345678
+% terraform import aws_taxsettings_tax_inheritance.example "123456789012"
 ```
