@@ -213,38 +213,6 @@ func TestAccEKSClusterDataSource_controlPlaneScalingConfig(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_outpost(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_outpostPlacement(rName), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_remoteNetwork(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_remotePodNetwork(rName, "10.90.0.0/22", "10.80.0.0/22"), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
-func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
-data "aws_eks_cluster" "test" {
-  name = aws_eks_cluster.test.name
-}
-`)
-}
-
 func TestAccEKSClusterDataSource_kubeAPIServerConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -319,6 +287,38 @@ func TestAccEKSClusterDataSource_kubeControllerManagerConfig(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccClusterDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_outpostPlacement(rName), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_remoteNetwork(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_remotePodNetwork(rName, "10.90.0.0/22", "10.80.0.0/22"), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
 }
 
 func testAccClusterDataSourceConfig_kubeAPIServerConfig(rName string) string {
