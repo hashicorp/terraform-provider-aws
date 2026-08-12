@@ -93,6 +93,7 @@ DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB

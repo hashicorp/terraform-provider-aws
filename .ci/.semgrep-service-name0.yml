@@ -4686,3 +4686,18 @@ rules:
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
+  - id: controltower-in-test-name
+    languages:
+      - go
+    message: Include "ControlTower" in test name
+    paths:
+      include:
+        - "/internal/service/controltower/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccControlTower"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING

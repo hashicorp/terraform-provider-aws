@@ -91,6 +91,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -622,6 +623,10 @@ func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm.Client {
 
 func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Client {
 	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
+}
+
+func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
+	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
