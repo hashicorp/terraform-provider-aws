@@ -287,7 +287,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	input := directoryservicedata.ListUsersInput{}
+	input := directoryservicedata.ListUsersInput{
+		DirectoryId: aws.String("d-1234567890"),
+	}
 	_, err := client.ListUsers(ctx, &input,
 		func(opts *directoryservicedata.Options) {
 			opts.APIOptions = append(opts.APIOptions,

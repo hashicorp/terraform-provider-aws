@@ -2838,7 +2838,8 @@ service "directoryservicedata" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListUsers"
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "DirectoryId: aws.String(\"d-1234567890\")"
   }
 
   resource_prefix {
