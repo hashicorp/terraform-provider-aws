@@ -1910,8 +1910,11 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 			apiObject.ValidationConnection = aws.String(v)
 		}
 
-		if v, ok := tfMap["view_expanded_text"].(string); ok && v != "" {
-			apiObject.ViewExpandedText = aws.String(v)
+		// "InvalidInputException: View Expanded Text is not supported".
+		if apiObject.Dialect != awstypes.ViewDialectAthena {
+			if v, ok := tfMap["view_expanded_text"].(string); ok && v != "" {
+				apiObject.ViewExpandedText = aws.String(v)
+			}
 		}
 
 		if v, ok := tfMap["view_original_text"].(string); ok && v != "" {
