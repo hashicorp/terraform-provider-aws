@@ -123,7 +123,6 @@ jobs:
           fi
 
           # Invoke tctest directly — no eval, no string-assembled commands.
-          # Each argument is a separate word; the shell never re-parses pattern or properties.
           if [[ -n "${pattern}" ]]; then
             tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
           else
