@@ -117,17 +117,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Memory using the memory ID. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_memory.example
-  id = "MEMORY1234567890"
+  identity = {
+    id = "example_memory-5xKsqQHSWW"
+  }
+}
+
+resource "aws_bedrockagentcore_memory" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Memory using the memory ID. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) Memory ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Memory using `id`. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_memory.example
+  id = "example_memory-5xKsqQHSWW"
+}
+```
+
+Using `terraform import`, import Bedrock AgentCore Memory using `id`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_memory.example MEMORY1234567890
+% terraform import aws_bedrockagentcore_memory.example example_memory-5xKsqQHSWW
 ```
