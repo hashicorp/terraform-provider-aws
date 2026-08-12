@@ -188,13 +188,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_db_parameter_group.rds_pg
+  to = aws_db_parameter_group.example
   identity = {
     name = "rds-pg"
   }
 }
 
-resource "aws_db_parameter_group" "rds_pg" {
+resource "aws_db_parameter_group" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -214,7 +214,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_db_parameter_group.rds_pg
+  to = aws_db_parameter_group.example
   id = "rds-pg"
 }
 ```
@@ -222,5 +222,5 @@ import {
 Using `terraform import`, import DB Parameter groups using the `name`. For example:
 
 ```console
-% terraform import aws_db_parameter_group.rds_pg rds-pg
+% terraform import aws_db_parameter_group.example rds-pg
 ```
