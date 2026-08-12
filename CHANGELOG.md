@@ -30,6 +30,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` attributes ([#49420](https://github.com/hashicorp/terraform-provider-aws/issues/49420))
+* data-source/aws_eks_cluster_versions: Add `control_plane_component_config` and `control_plane_scaling_tiers` attributes ([#49421](https://github.com/hashicorp/terraform-provider-aws/issues/49421))
 * resource/aws_arcregionswitch_plan: Add `step.aurora_provisioned_scaling_config`, `step.aurora_serverless_scaling_config`, `step.neptune_global_database_config`, and `step.lambda_event_source_mapping_config` arguments ([#48392](https://github.com/hashicorp/terraform-provider-aws/issues/48392))
 * resource/aws_arcregionswitch_plan: Add provider-side validation restricting `report_configuration` and `report_configuration.report_output.s3_configuration` to a single block each ([#46758](https://github.com/hashicorp/terraform-provider-aws/issues/46758))
 * resource/aws_backup_plan: Add resource identity support ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
