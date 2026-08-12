@@ -1,4 +1,4 @@
-## 6.59.0 (Unreleased)
+## 6.59.0 (August 12, 2026)
 
 FEATURES:
 
