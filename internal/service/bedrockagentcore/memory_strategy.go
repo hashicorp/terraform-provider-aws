@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -46,6 +47,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,6 +58,13 @@ var validResourceName validator.String = stringvalidator.RegexMatches(
 )
 
 // @FrameworkResource("aws_bedrockagentcore_memory_strategy", name="Memory Strategy")
+// @IdentityAttribute("memory_id")
+// @IdentityAttribute("memory_strategy_id")
+// @ImportIDHandler("memoryStrategyImportID")
+// @Testing(preIdentityVersion="v6.59.0")
+// @Testing(importStateIdFunc=testAccMemoryStrategyImportStateIDFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.MemoryStrategy")
+// @Testing(importStateIdAttribute="memory_strategy_id")
 func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMemoryStrategy{}
 
@@ -69,6 +78,7 @@ func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigur
 type resourceMemoryStrategy struct {
 	framework.ResourceWithModel[memoryStrategyResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -598,15 +608,36 @@ func (r *resourceMemoryStrategy) flatten(ctx context.Context, memoryStrategy *aw
 	return diags
 }
 
-func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const idParts = 2
-	parts, err := intflex.ExpandResourceId(request.ID, idParts, false)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
-		return
+const memoryStrategyImportIDSeparator = intflex.ResourceIdSeparator
+
+func memoryStrategyParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, memoryStrategyImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_id"), parts[0]))
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), parts[1]))
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected memory-id%[2]smemory-strategy-id", id, memoryStrategyImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser = memoryStrategyImportID{}
+)
+
+type memoryStrategyImportID struct{}
+
+func (memoryStrategyImportID) Parse(id string) (string, map[string]any, error) {
+	memoryID, memoryStrategyID, err := memoryStrategyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"memory_id":          memoryID,
+		"memory_strategy_id": memoryStrategyID,
+	}
+
+	return id, result, nil
 }
 
 // withMemoryLock acquires a per-memory mutex to serialize modifications (and subsequent waits)

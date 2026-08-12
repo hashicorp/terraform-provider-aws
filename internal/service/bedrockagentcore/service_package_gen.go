@@ -161,6 +161,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_bedrockagentcore_memory_strategy",
 			Name:     "Memory Strategy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("memory_id", true),
+				inttypes.StringIdentityAttribute("memory_strategy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      memoryStrategyImportID{},
+			},
 		},
 		{
 			Factory:  newOAuth2CredentialProviderResource,

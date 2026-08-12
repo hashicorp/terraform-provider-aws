@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                = "${var.rName}_s"
-  memory_id           = aws_bedrockagentcore_memory.test.id
-  type                = "CUSTOM"
+  name      = "${var.rName}_s"
+  memory_id = aws_bedrockagentcore_memory.test.id
+  type      = "CUSTOM"
 
   configuration {
     type = "SELF_MANAGED"

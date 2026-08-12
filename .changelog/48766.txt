@@ -29,3 +29,7 @@ resource/aws_bedrockagentcore_memory_strategy: Add `configuration.self_managed_c
 ```release-note:enhancement
 resource/aws_bedrockagentcore_memory: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory_strategy: Add Resource Identity support
+```
