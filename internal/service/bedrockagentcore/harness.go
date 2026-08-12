@@ -86,7 +86,8 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN:        framework.ARNAttributeComputedOnly(),
+			"environment_actual": framework.ResourceComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root(names.AttrEnvironment))),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -877,6 +878,9 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// Always populate environment_actual from the current environment state.
+	data.EnvironmentActual = data.Environment
+
 	// If environment was not configured by the user, null it out.
 	if !populateEnvironment {
 		data.Environment = fwtypes.NewListNestedObjectValueOfNull[harnessEnvironmentProviderModel](ctx)
@@ -1022,6 +1026,7 @@ type harnessResourceModel struct {
 	ARN                     types.String                                                         `tfsdk:"arn"`
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
 	Environment             fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment"`
+	EnvironmentActual       fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment_actual" autoflex:"-"`
 	EnvironmentArtifact     fwtypes.ListNestedObjectValueOf[harnessEnvironmentArtifactModel]     `tfsdk:"environment_artifact"`
 	EnvironmentVariables    fwtypes.MapOfString                                                  `tfsdk:"environment_variables"`
 	ExecutionRoleARN        fwtypes.ARN                                                          `tfsdk:"execution_role_arn"`

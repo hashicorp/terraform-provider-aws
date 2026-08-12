@@ -81,6 +81,20 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "bedrock-agentcore", "harness/{harness_id}"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_actual"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"agent_runtime_arn":            tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+									"agent_runtime_id":             knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+									"agent_runtime_name":           knownvalue.StringExact("harness_" + rName),
+									"filesystem_configuration":     knownvalue.ListSizeExact(0),
+									"lifecycle_configuration":      knownvalue.NotNull(),
+									names.AttrNetworkConfiguration: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_variables"), knownvalue.Null()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -1426,6 +1440,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_VPC(t *testing.T) {
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 		},
@@ -1478,6 +1493,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_Public(t *testing.T) {
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 		},
@@ -1535,6 +1551,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *tes
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 			{
@@ -1578,6 +1595,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *tes
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 			{
@@ -1649,6 +1667,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updateVPCToPublic(t *tes
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 			{
@@ -1686,6 +1705,7 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updateVPCToPublic(t *tes
 							}),
 						}),
 					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment), resourceName, tfjsonpath.New("environment_actual"), compare.ValuesSame()),
 				},
 			},
 			{
