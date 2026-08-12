@@ -5093,6 +5093,34 @@ service "lambda" {
   brand                    = "AWS"
 }
 
+service "lambdacore" {
+  cli_v2_command {
+    aws_cli_v2_command           = "lambda-core"
+    aws_cli_v2_command_no_dashes = "lambdacore"
+  }
+
+  sdk {
+    id            = "Lambda Core"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaCore"
+    human_friendly      = "Lambda Core"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListNetworkConnectors"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdacore_"
+  }
+
+  doc_prefix = ["lambdacore_"]
+  brand      = "AWS"
+}
+
 service "lambdamicrovms" {
   sdk {
     id            = "Lambda Microvms"

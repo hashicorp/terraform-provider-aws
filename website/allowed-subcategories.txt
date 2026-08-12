@@ -159,6 +159,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
 Lambda MicroVMs
 Launch Wizard
 Lex Model Building

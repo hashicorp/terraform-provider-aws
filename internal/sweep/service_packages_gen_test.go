@@ -153,6 +153,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
@@ -426,6 +427,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		lambdacore.ServicePackage(ctx),
 		lambdamicrovms.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
