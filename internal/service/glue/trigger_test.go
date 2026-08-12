@@ -535,6 +535,50 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 	})
 }
 
+func TestAccGlueTrigger_eventDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trigger awstypes.Trigger
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_trigger.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_eventEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+			{
+				// AWS refuses StopTrigger for a trigger in CREATED state, which is the only
+				// state an EVENT trigger ever reaches.
+				Config: testAccTriggerConfig_eventEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+			{
+				// AWS rejects StartTrigger for EVENT triggers outright.
+				Config: testAccTriggerConfig_eventEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, t, resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trigger awstypes.Trigger
