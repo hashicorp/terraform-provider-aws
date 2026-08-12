@@ -58,7 +58,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="harness_id")
-// @Testing(importIgnore="memory")
+// @Testing(importIgnore="environment;memory")
 func newHarnessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &harnessResource{}
 
@@ -658,6 +658,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
+	environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 	memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
@@ -710,7 +711,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
 	// private_endpoint_overrides can be restored after Flatten.
 	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured, memoryIsConfigured))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -736,6 +737,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	// During a read of an existing resource, `harness_name` will be set as it is a required attribute.
 	isImport := data.HarnessName.IsNull()
 
+	environmentIsConfigured := data.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 	memoryIsConfigured := data.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
@@ -753,7 +755,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	priorAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured || isImport))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured || isImport, memoryIsConfigured || isImport))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -816,8 +818,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
+		environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 		memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
-		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, memoryIsConfigured))
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, environmentIsConfigured, memoryIsConfigured))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -855,7 +858,7 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
+func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateEnvironment, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
@@ -863,8 +866,21 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 		return diags
 	}
 
+	diags.Append(r.flattenEnvironment(ctx, data, populateEnvironment)...)
+
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
+
+	return diags
+}
+
+func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// If environment was not configured by the user, null it out.
+	if !populateEnvironment {
+		data.Environment = fwtypes.NewListNestedObjectValueOfNull[harnessEnvironmentProviderModel](ctx)
+	}
 
 	return diags
 }
@@ -872,8 +888,6 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// Always flatten into memory (AutoFlex handles this via the Flattener interface since noflatten was removed).
-	// Now enrich and build memory_actual.
 	memoryBlock, d := data.Memory.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
