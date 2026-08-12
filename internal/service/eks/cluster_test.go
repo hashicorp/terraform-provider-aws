@@ -3053,7 +3053,7 @@ func TestAccEKSCluster_kubeSchedulerConfig(t *testing.T) {
 						"node_resources_fit": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"scoring_strategy": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								names.AttrType: tfknownvalue.StringExact(types.ScoringStrategyTypeLeastAllocated),
-								names.AttrResources: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"resource": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 									acctest.CtName:   knownvalue.StringExact("cpu"),
 									names.AttrWeight: knownvalue.Int64Exact(1),
 								})}),
@@ -3083,7 +3083,7 @@ func TestAccEKSCluster_kubeSchedulerConfig(t *testing.T) {
 						"node_resources_fit": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"scoring_strategy": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								names.AttrType: tfknownvalue.StringExact(types.ScoringStrategyTypeMostAllocated),
-								names.AttrResources: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"resource": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 									acctest.CtName:   knownvalue.StringExact("cpu"),
 									names.AttrWeight: knownvalue.Int64Exact(1),
 								})}),
@@ -3193,7 +3193,7 @@ resource "aws_eks_cluster" "test" {
       scoring_strategy {
         type = %[2]q
 
-        resources {
+        resource {
           name   = "cpu"
           weight = 1
         }

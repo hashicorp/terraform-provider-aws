@@ -337,7 +337,7 @@ func resourceCluster() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													names.AttrResources: {
+													"resource": {
 														Type:     schema.TypeList,
 														Optional: true,
 														Computed: true,
@@ -1637,7 +1637,7 @@ func expandScoringStrategy(tfList []any) *types.ScoringStrategy {
 		apiObject.Type = types.ScoringStrategyType(v)
 	}
 
-	if v, ok := tfMap[names.AttrResources].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["resource"].([]any); ok && len(v) > 0 {
 		apiObject.Resources = expandResourceWeights(v)
 	}
 
@@ -2205,7 +2205,7 @@ func flattenScoringStrategy(apiObject *types.ScoringStrategy) []any {
 	}
 
 	if apiObject.Resources != nil {
-		tfMap[names.AttrResources] = flattenResourceWeights(apiObject.Resources)
+		tfMap["resource"] = flattenResourceWeights(apiObject.Resources)
 	}
 
 	return []any{tfMap}
@@ -2323,7 +2323,7 @@ func flattenVPCConfigResponse(apiObject *types.VpcConfigResponse) []map[string]a
 
 	tfMap := map[string]any{
 		"cluster_security_group_id": aws.ToString(apiObject.ClusterSecurityGroupId),
-		"control_plane_egress_mode": string(apiObject.ControlPlaneEgressMode),
+		"control_plane_egress_mode": apiObject.ControlPlaneEgressMode,
 		"endpoint_private_access":   apiObject.EndpointPrivateAccess,
 		"endpoint_public_access":    apiObject.EndpointPublicAccess,
 		names.AttrSecurityGroupIDs:  securityGroupIds,
