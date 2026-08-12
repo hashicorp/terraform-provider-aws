@@ -42,7 +42,7 @@ func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, policy := range page.PolicySummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(policy.PolicyArn)),
 			))
 		}
@@ -64,7 +64,7 @@ func sweepSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, system := range page.SystemSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSystem, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSystemResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(system.SystemArn)),
 			))
 		}
@@ -86,7 +86,7 @@ func sweepServices(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, svc := range page.ServiceSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceService, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newServiceResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(svc.ServiceArn)),
 			))
 		}
@@ -116,7 +116,7 @@ func sweepInputSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 				continue
 			}
 			for _, is := range output.InputSourceSummaries {
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInputSource, client,
+				sweepResources = append(sweepResources, framework.NewSweepResource(newInputSourceResource, client,
 					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(is.InputSourceId)),
 					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
 					framework.NewAttribute("input_source_id", aws.ToString(is.InputSourceId)),

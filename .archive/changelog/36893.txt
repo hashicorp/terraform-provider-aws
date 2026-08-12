@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_transfer_connector: Add `security_policy_name` argument
-```

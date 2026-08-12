@@ -5,7 +5,6 @@ package s3control
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -67,6 +66,22 @@ func (l *multiRegionAccessPointRoutesListResource) List(ctx context.Context, req
 
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("mrap"), mrapARN)
 
+			var output *s3control.GetMultiRegionAccessPointRoutesOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findMultiRegionAccessPointRoutesByTwoPartKey(ctx, conn, accountID, mrapARN)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "S3 Multi-Region Access Point Routes not found", map[string]any{
+						logging.ResourceAttributeKey("mrap"): mrapARN,
+					})
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data multiRegionAccessPointRoutesResourceModel
@@ -75,18 +90,6 @@ func (l *multiRegionAccessPointRoutesListResource) List(ctx context.Context, req
 				data.Mrap = fwflex.StringValueToFramework(ctx, mrapARN)
 
 				if request.IncludeResource {
-					output, err := findMultiRegionAccessPointRoutesByTwoPartKey(ctx, conn, accountID, mrapARN)
-					if retry.NotFound(err) {
-						tflog.Warn(ctx, "S3 Multi-Region Access Point Routes not found", map[string]any{
-							logging.ResourceAttributeKey("mrap"): mrapARN,
-						})
-						return
-					}
-					if err != nil {
-						result.Diagnostics.AddError(fmt.Sprintf("reading S3 Multi-Region Access Point Routes (%s)", mrapARN), err.Error())
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 					if result.Diagnostics.HasError() {
 						return

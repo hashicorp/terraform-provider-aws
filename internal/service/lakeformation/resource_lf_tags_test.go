@@ -70,14 +70,17 @@ func testAccResourceLFTags_disappears(t *testing.T) {
 				Config: testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+					// Expect a destroy + re-create. An empty set is technically a valid value
+					// so Read cannot trigger replacement just based on an empty list of tags
+					// when deleted out of band.
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ExpectNonEmptyPlan: true,

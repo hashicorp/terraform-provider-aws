@@ -197,7 +197,7 @@ The `workflow` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Security Hub automation rule (matches `arn`).
+* `id` - (**Deprecated**) The ARN of the Security Hub automation rule.
 * `arn` - The ARN of the Security Hub automation rule.
 
 ## Import

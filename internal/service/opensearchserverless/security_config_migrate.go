@@ -75,12 +75,14 @@ func upgradeSecurityConfigStateFromV0(ctx context.Context, request resource.Upgr
 	}
 
 	securityConfigDataV1 := securityConfigResourceModel{
-		ID:            securityConfigDataV0.ID,
-		ConfigVersion: securityConfigDataV0.ConfigVersion,
-		Description:   securityConfigDataV0.Description,
-		Name:          securityConfigDataV0.Name,
-		SamlOptions:   upgradeSAMLOptionsStateFromV0(ctx, securityConfigDataV0.SamlOptions, &response.Diagnostics),
-		Type:          securityConfigDataV0.Type,
+		ID:                       securityConfigDataV0.ID,
+		ConfigVersion:            securityConfigDataV0.ConfigVersion,
+		Description:              securityConfigDataV0.Description,
+		IamFederationOptions:     fwtypes.NewListNestedObjectValueOfNull[iamFederationConfigOptionsModel](ctx),
+		IamIdentityCenterOptions: fwtypes.NewListNestedObjectValueOfNull[iamIdentityCenterConfigOptionsModel](ctx),
+		Name:                     securityConfigDataV0.Name,
+		SamlOptions:              upgradeSAMLOptionsStateFromV0(ctx, securityConfigDataV0.SamlOptions, &response.Diagnostics),
+		Type:                     securityConfigDataV0.Type,
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, securityConfigDataV1)...)

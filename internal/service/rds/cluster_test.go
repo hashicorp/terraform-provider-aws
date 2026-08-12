@@ -3151,6 +3151,39 @@ func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_autoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_autoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
@@ -3992,6 +4025,75 @@ func TestAccRDSCluster_auroraLimitless(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(31)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStorageType), knownvalue.StringExact("aurora-iopt1")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	parameterGroupResourceName := "aws_rds_cluster_parameter_group.test"
+
+	engineVersion, engineVersionUpgrade := "8.0.mysql_aurora.3.09.0", "8.0.mysql_aurora.3.10.0"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, "STATEMENT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
+
+					id := dbCluster.DBClusterIdentifier
+					_, err := conn.ModifyDBCluster(ctx, &rds.ModifyDBClusterInput{
+						DBClusterIdentifier: id,
+						EngineVersion:       aws.String(engineVersionUpgrade),
+						ApplyImmediately:    aws.Bool(true),
+					})
+
+					if err != nil {
+						t.Fatalf("externally updating RDS Cluster engine version: %s", err)
+					}
+
+					if _, err := tfrds.WaitDBClusterUpdated(ctx, conn, aws.ToString(id), true, 120*time.Minute); err != nil {
+						t.Fatalf("waiting on external update for RDS Cluster engine version: %s", err)
+					}
+				},
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, "STATEMENT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccClusterConfig_engineVersion_outOfBand(rName, engineVersionUpgrade, "ROW"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(parameterGroupResourceName, plancheck.ResourceActionUpdate),
+					},
 				},
 			},
 		},
@@ -7063,6 +7165,21 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
+func testAccClusterConfig_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier         = %[1]q
+  database_name              = "test"
+  engine                     = "aurora-mysql"
+  engine_version             = "8.0.mysql_aurora.3.04.0"
+  auto_minor_version_upgrade = %[2]t
+  master_username            = "tfacctest"
+  master_password            = "avoid-plaintext-passwords"
+  skip_final_snapshot        = true
+}
+`, rName, autoMinorVersionUpgrade)
+}
+
 func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -7452,4 +7569,58 @@ resource "aws_kms_key" "test" {
   enable_key_rotation     = true
 }
 `, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
+}
+
+func testAccClusterConfig_engineVersion_outOfBand(rName, engineVersion, parameter string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[3]q
+}
+
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name        = %[1]q
+  family      = data.aws_rds_engine_version.default.parameter_group_family
+  description = "RDS default cluster parameter group"
+
+  parameter {
+    name         = "binlog_format"
+    value        = %[2]q
+    apply_method = "pending-reboot"
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  database_name                   = "test"
+  engine                          = %[3]q
+  engine_version                  = %[4]q
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  storage_encrypted               = true
+  skip_final_snapshot             = true
+
+  allow_major_version_upgrade = true
+  apply_immediately           = false
+
+  serverlessv2_scaling_configuration {
+    min_capacity = 1
+    max_capacity = 2
+  }
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = "%[1]s-primary-instance"
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = "db.serverless"
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+
+  auto_minor_version_upgrade = true
+  apply_immediately          = false
+}
+
+
+`, rName, parameter, tfrds.ClusterEngineAuroraMySQL, engineVersion)
 }
