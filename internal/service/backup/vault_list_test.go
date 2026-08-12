@@ -52,10 +52,10 @@ func TestAccBackupVault_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "vault:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "backup-vault:"+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "vault:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "backup-vault:"+rName+"-1")),
 				},
 			},
 
@@ -113,7 +113,7 @@ func TestAccBackupVault_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "vault:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "backup-vault:"+rName+"-0")),
 				},
 			},
 
@@ -132,7 +132,7 @@ func TestAccBackupVault_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_backup_vault.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_backup_vault.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_backup_vault.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "vault:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("backup", "backup-vault:"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKMSKeyARN), knownvalue.NotNull()),
@@ -185,10 +185,10 @@ func TestAccBackupVault_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("backup", "vault:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("backup", "backup-vault:"+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("backup", "vault:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("backup", "backup-vault:"+rName+"-1")),
 				},
 			},
 
