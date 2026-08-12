@@ -1968,9 +1968,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Focus on semantic relationships"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"extraction":   knownvalue.ListSizeExact(0),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+						"extraction":                 knownvalue.ListSizeExact(0),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -1996,8 +1997,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -2020,8 +2022,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -2047,8 +2050,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Extract user preferences"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeUserPreferenceOverride),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeUserPreferenceOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -2075,9 +2079,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Summary consolidation only"),
 							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
 						})}),
-						"extraction":   knownvalue.ListSizeExact(0),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSummaryOverride),
+						"extraction":                 knownvalue.ListSizeExact(0),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSummaryOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -2327,7 +2332,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 								knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/"),
 							}),
 						})}),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
@@ -2385,7 +2391,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 								knownvalue.StringExact("/strategy/{memoryStrategyId}/"),
 							}),
 						})}),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
@@ -2397,6 +2404,114 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/session/{sessionId}/"),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomMemoryName(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction":    knownvalue.ListSizeExact(0),
+						"reflection":    knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.Int32Exact(4),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								"topic_arn":                    knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListSizeExact(1),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                  config.StringVariable(rName),
+					"historical_context_window_size": config.IntegerVariable(25),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction":    knownvalue.ListSizeExact(0),
+						"reflection":    knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.Int32Exact(25),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								"topic_arn":                    knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListSizeExact(1),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
