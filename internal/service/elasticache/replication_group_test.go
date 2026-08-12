@@ -4492,6 +4492,71 @@ func TestAccElastiCacheReplicationGroup_SlowLog_Redis5ToValkey7(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create the source serverless cache.
+				Config: testAccReplicationGroupConfig_serverlessCacheSource(rName),
+			},
+			{
+				// Snapshot the serverless cache out-of-band, then restore it into a single-node, Multi-AZ-disabled group (also exercises the multi_az_enabled create fix).
+				PreConfig: func() {
+					testAccCreateServerlessCacheSnapshot(ctx, t, rName, rName)
+				},
+				Config: testAccReplicationGroupConfig_serverlessCacheSnapshot(rName, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "serverless_cache_snapshot_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "serverless_cache_snapshot_name"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshotConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationGroupConfig_serverlessCacheSnapshotConflict(rName),
+				ExpectError: regexache.MustCompile(`conflicts with`),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -6934,4 +6999,91 @@ resource "aws_elasticache_replication_group" "test" {
   engine               = %[4]q
 }
 `, rName, nodeType, applyImmediately, engineType)
+}
+
+// testAccCreateServerlessCacheSnapshot creates a serverless cache snapshot out-of-band (no such resource exists), registers cleanup, and blocks until it is available.
+func testAccCreateServerlessCacheSnapshot(ctx context.Context, t *testing.T, cacheName, snapshotName string) {
+	t.Helper()
+
+	conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+
+	_, err := conn.CreateServerlessCacheSnapshot(ctx, &elasticache.CreateServerlessCacheSnapshotInput{
+		ServerlessCacheName:         aws.String(cacheName),
+		ServerlessCacheSnapshotName: aws.String(snapshotName),
+	})
+	if err != nil {
+		t.Fatalf("creating ElastiCache Serverless Cache Snapshot (%s): %s", snapshotName, err)
+	}
+
+	t.Cleanup(func() {
+		_, err := conn.DeleteServerlessCacheSnapshot(ctx, &elasticache.DeleteServerlessCacheSnapshotInput{
+			ServerlessCacheSnapshotName: aws.String(snapshotName),
+		})
+		if err != nil {
+			t.Logf("deleting ElastiCache Serverless Cache Snapshot (%s): %s", snapshotName, err)
+		}
+	})
+
+	const (
+		timeout = 40 * time.Minute
+		delay   = 15 * time.Second
+	)
+	deadline := time.Now().Add(timeout)
+	for {
+		output, err := conn.DescribeServerlessCacheSnapshots(ctx, &elasticache.DescribeServerlessCacheSnapshotsInput{
+			ServerlessCacheSnapshotName: aws.String(snapshotName),
+		})
+		if err != nil {
+			t.Fatalf("describing ElastiCache Serverless Cache Snapshot (%s): %s", snapshotName, err)
+		}
+		if len(output.ServerlessCacheSnapshots) > 0 && aws.ToString(output.ServerlessCacheSnapshots[0].Status) == "available" {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for ElastiCache Serverless Cache Snapshot (%s) to become available", snapshotName)
+		}
+		time.Sleep(delay)
+	}
+}
+
+func testAccReplicationGroupConfig_serverlessCacheSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "redis"
+  name   = %[1]q
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_serverlessCacheSnapshot(rName, snapshotName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "redis"
+  name   = %[1]q
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id           = %[1]q
+  description                    = "test description"
+  engine                         = "redis"
+  node_type                      = "cache.t3.micro"
+  num_cache_clusters             = 1
+  multi_az_enabled               = false
+  apply_immediately              = true
+  serverless_cache_snapshot_name = %[2]q
+}
+`, rName, snapshotName)
+}
+
+func testAccReplicationGroupConfig_serverlessCacheSnapshotConflict(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id           = %[1]q
+  description                    = "test description"
+  node_type                      = "cache.t3.micro"
+  num_cache_clusters             = 1
+  snapshot_name                  = "%[1]s-snapshot"
+  serverless_cache_snapshot_name = "%[1]s-serverless"
+}
+`, rName)
 }
