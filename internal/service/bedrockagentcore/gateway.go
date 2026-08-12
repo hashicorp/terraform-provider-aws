@@ -49,7 +49,6 @@ import (
 // @FrameworkResource("aws_bedrockagentcore_gateway", name="Gateway")
 // @Tags(identifierAttribute="gateway_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetGatewayOutput")
-// @Testing(generator="testAccRandomGatewayName(t)")
 // @Testing(importStateIdAttribute="gateway_id")
 // @Testing(preCheck="testAccPreCheckGateways")
 func newGatewayResource(_ context.Context) (resource.ResourceWithConfigure, error) {

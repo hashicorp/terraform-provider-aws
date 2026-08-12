@@ -24,10 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccRandomGatewayName(t *testing.T) string {
-	return acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-}
-
 func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
