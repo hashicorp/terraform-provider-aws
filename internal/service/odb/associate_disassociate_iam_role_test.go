@@ -42,7 +42,7 @@ func TestAccODBIAMRoleAssociation_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			"avmc": testAccIAMRoleAssociationDataSource_avmc,
+			acctest.CtBasic: testAccIAMRoleAssociationDataSource_basic,
 			"vmc":  testAccIAMRoleAssociationDataSource_vmc,
 		},
 		"Resource": {

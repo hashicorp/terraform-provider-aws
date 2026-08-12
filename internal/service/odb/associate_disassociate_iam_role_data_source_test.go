@@ -17,7 +17,7 @@ type iamRoleAssociationDisassociationDSTest struct {
 
 var iamRoleAssociationDisassociationDSTestEntity = iamRoleAssociationDisassociationDSTest{}
 
-func testAccIAMRoleAssociationDataSource_avmc(t *testing.T) {
+func testAccIAMRoleAssociationDataSource_basic(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationAVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
