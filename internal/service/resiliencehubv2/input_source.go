@@ -203,7 +203,9 @@ func (r *inputSourceResource) Create(ctx context.Context, req resource.CreateReq
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	output, err := conn.CreateInputSource(ctx, &input)
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*resiliencehubv2.CreateInputSourceOutput, *awstypes.AccessDeniedException](ctx, propagationTimeout, func(ctx context.Context) (*resiliencehubv2.CreateInputSourceOutput, error) {
+		return conn.CreateInputSource(ctx, &input)
+	}, "The invoker role does not have access to")
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
