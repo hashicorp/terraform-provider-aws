@@ -419,7 +419,7 @@ func testAccCheckServiceExists(ctx context.Context, t *testing.T, n string, v *a
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Service not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
