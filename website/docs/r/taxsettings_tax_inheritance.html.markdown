@@ -47,7 +47,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_taxsettings_tax_inheritance.example
+  to       = aws_taxsettings_tax_inheritance.example
   identity = {}
 }
 
