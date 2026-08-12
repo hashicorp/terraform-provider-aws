@@ -84,6 +84,9 @@ func (l *vaultListResource) List(ctx context.Context, request list.ListRequest, 
 				}
 
 				resourceVaultFlatten(rd, output)
+
+				// force_destroy isn't returned by Backup API, set default value
+				rd.Set(names.AttrForceDestroy, false)
 			}
 
 			result.DisplayName = name
