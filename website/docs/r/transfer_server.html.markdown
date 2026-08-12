@@ -62,7 +62,7 @@ resource "aws_transfer_server" "example" {
 ```terraform
 resource "aws_transfer_server" "example" {
   identity_provider_type = "AWS_LAMBDA"
-  function               = aws_lambda_identity_provider.example.arn
+  function               = aws_lambda_function.example.arn
 }
 ```
 
