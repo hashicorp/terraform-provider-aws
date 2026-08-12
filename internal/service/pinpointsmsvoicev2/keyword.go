@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -195,12 +196,10 @@ func (r *keywordResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	// Preserve the user-configured value for Keyword so the resource identity remains stable.
-	// KeywordInformation does not included the origination identity ARN, so we need to get it from the DescribeKeywords response.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("Keyword")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, originationIdentityARN, &state, fwflex.WithIgnoredFieldNamesAppend("Keyword")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.OriginationIdentityARN = fwtypes.ARNValue(aws.ToString(originationIdentityARN))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -276,6 +275,23 @@ func (r *keywordResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Keyword.ValueString())
 	}
+}
+
+// flatten maps a KeywordInformation and its origination identity ARN onto the model.
+// KeywordInformation does not carry the origination identity ARN; it comes from the
+// DescribeKeywords response envelope, so it is passed separately. Callers can pass
+// AutoFlex options (e.g. to ignore Keyword and preserve the user-configured value).
+func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInformation, originationIdentityARN *string, data *keywordResourceModel, opts ...fwflex.AutoFlexOptionsFunc) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, in, data, opts...)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.OriginationIdentityARN = fwtypes.ARNValue(aws.ToString(originationIdentityARN))
+
+	return diags
 }
 
 func findKeywordByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, originationIdentity, keyword string) (*awstypes.KeywordInformation, *string, error) {

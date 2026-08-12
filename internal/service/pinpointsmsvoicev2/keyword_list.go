@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -81,13 +80,14 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 
 			var data keywordResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, item, &data))
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, item, originationIdentityARN, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
 
+				// origination_identity is not part of KeywordInformation; carry over the
+				// query value so the listed resource identity matches what was requested.
 				data.OriginationIdentity = query.OriginationIdentity
-				data.OriginationIdentityARN = fwtypes.ARNValue(aws.ToString(originationIdentityARN))
 
 				// keyword_action is AWS-managed for the mandatory keywords HELP and STOP
 				// and cannot be set (see the resource ValidateConfig). Null it so any
@@ -99,6 +99,10 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 				result.DisplayName = keyword
 			})
 
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
 			if !yield(result) {
 				return
 			}
