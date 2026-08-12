@@ -43,11 +43,11 @@ func TestAccODBIAMRoleAssociation_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
 			acctest.CtBasic: testAccIAMRoleAssociationDataSource_basic,
-			"vmc":  testAccIAMRoleAssociationDataSource_vmc,
+			"vmc":           testAccIAMRoleAssociationDataSource_vmc,
 		},
 		"Resource": {
 			"avmc":               testAccIAMRoleAssociation_avmc,
-			"vmc":                testAccIAMRoleAssociation_vmc,
+			acctest.CtBasic:      testAccIAMRoleAssociation_basic,
 			acctest.CtDisappears: testAccIAMRoleAssociation_disappears,
 		},
 	}
@@ -73,7 +73,7 @@ func testAccIAMRoleAssociationVMCFixtures(t *testing.T) iamRoleAssociationTestFi
 	}
 }
 
-func testAccIAMRoleAssociation_vmc(t *testing.T) {
+func testAccIAMRoleAssociation_basic(t *testing.T) {
 	fixtures := testAccIAMRoleAssociationVMCFixtures(t)
 	ctx := acctest.Context(t)
 	if testing.Short() {
