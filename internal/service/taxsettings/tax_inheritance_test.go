@@ -23,7 +23,9 @@ func init() {
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"Heritage status can only be updated once within 15 minutes",
+		"put heritage status for tax inheritance",
+		"ConflictException",
+		"Heritage status can only be updated once within 15",
 	)
 }
 
@@ -91,7 +93,7 @@ func testAccCheckTaxInheritanceExists(ctx context.Context, t *testing.T, name st
 func testAccTaxInheritanceConfig_basic() string {
 	return `
 resource "aws_taxsettings_tax_inheritance" "test" {
-  heritage_status = "OptOut"
+  heritage_status = "OptIn"
 }
 `
 }
