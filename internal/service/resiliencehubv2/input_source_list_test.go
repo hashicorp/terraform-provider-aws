@@ -193,3 +193,57 @@ func TestAccResilienceHubV2InputSource_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestAccResilienceHubV2InputSource_List_type(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName1 := "aws_resiliencehubv2_input_source.test[0]"
+	resourceName2 := "aws_resiliencehubv2_input_source.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2ServiceID),
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/list_type/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("input_source_id"), knownvalue.NotNull()),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("input_source_id"), knownvalue.NotNull()),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/list_type/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_resiliencehubv2_input_source.test", identity1.Checks()),
+					tfquerycheck.ExpectNoResourceObject("aws_resiliencehubv2_input_source.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectNoIdentityFunc("aws_prometheus_scraper.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}
