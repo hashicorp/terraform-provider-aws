@@ -22,7 +22,7 @@ An input source defines where Resilience Hub discovers AWS resources for a servi
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn   = aws_resiliencehubv2_service.example.arn
+  service_arn = aws_resiliencehubv2_service.example.arn
 
   resource_configuration {
     cfn_stack_arn = "arn:aws:cloudformation:us-west-2:123456789012:stack/my-stack/abc123"
@@ -34,7 +34,7 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn       = aws_resiliencehubv2_service.example.arn
+  service_arn = aws_resiliencehubv2_service.example.arn
 
   resource_configuration {
     tf_state_file_url = "s3://my-bucket/terraform.tfstate"
@@ -46,7 +46,7 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn     = aws_resiliencehubv2_service.example.arn
+  service_arn = aws_resiliencehubv2_service.example.arn
 
   resource_configuration {
     eks {
