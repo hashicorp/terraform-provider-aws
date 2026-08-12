@@ -157,11 +157,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
-	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
-	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
+	resourceParameterGroupFlattenBase(dbParameterGroup, d)
 
 	input := rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -238,6 +234,34 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	return diags
+}
+
+func resourceParameterGroupFlattenBase(dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) {
+	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
+	d.Set(names.AttrDescription, dbParameterGroup.Description)
+	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
+}
+
+// resourceParameterGroupFlatten sets a DB Parameter Group's attributes, including its
+// user-modified parameters, for the list resource.
+func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
+	resourceParameterGroupFlattenBase(dbParameterGroup, d)
+
+	// skip_destroy has no AWS-side representation, so set to schema's own default.
+	d.Set(names.AttrSkipDestroy, false)
+
+	input := rds.DescribeDBParametersInput{
+		DBParameterGroupName: aws.String(d.Id()),
+		Source:               aws.String(parameterSourceUser),
+	}
+	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
+	if err != nil {
+		return err
+	}
+
+	return d.Set(names.AttrParameter, flattenParameters(parameters))
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
