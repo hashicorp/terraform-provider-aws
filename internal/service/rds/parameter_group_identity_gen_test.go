@@ -199,7 +199,7 @@ func TestAccRDSParameterGroup_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.58.0
+// Resource Identity was added after v6.59.0
 func TestAccRDSParameterGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -217,7 +217,7 @@ func TestAccRDSParameterGroup_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ParameterGroup/basic_v6.58.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ParameterGroup/basic_v6.59.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -257,7 +257,7 @@ func TestAccRDSParameterGroup_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.58.0
+// Resource Identity was added after v6.59.0
 func TestAccRDSParameterGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -280,7 +280,7 @@ func TestAccRDSParameterGroup_Identity_ExistingResource_noRefreshNoChange(t *tes
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ParameterGroup/basic_v6.58.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ParameterGroup/basic_v6.59.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
