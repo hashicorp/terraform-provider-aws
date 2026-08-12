@@ -467,7 +467,7 @@ func (m resourceConfigurationModel) Expand(ctx context.Context) (any, diag.Diagn
 		return &r, diags
 
 	case !m.ResourceTags.IsNull():
-		data, d := m.ResourceTags.ToPtr(ctx)
+		data, d := m.ResourceTags.ToSlice(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
