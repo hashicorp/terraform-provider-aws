@@ -43,12 +43,12 @@ This data source exports the following attributes in addition to the arguments a
 
 The `permission_model` block supports:
 
-* `cross_account_role` - (Optional) Cross-account IAM role. See [`cross_account_role` Block](#cross_account_role-block) below.
-* `invoker_role_name` - (Required) Name of the IAM role that Resilience Hub assumes for resource discovery.
+* `cross_account_role` - Cross-account IAM role. See [`cross_account_role` Block](#cross_account_role-block) below.
+* `invoker_role_name` - Name of the IAM role that Resilience Hub assumes for resource discovery.
 
 ### `cross_account_role` Block
 
 The `cross_account_role` block supports:
 
-* `cross_account_role_arn` - (Required) ARN of the IAM Role for the profile.
-* `external_id` - (Optional) External ID used for assuming the cross-account role.
+* `cross_account_role_arn` - ARN of the IAM Role for the profile.
+* `external_id` - External ID used for assuming the cross-account role.
