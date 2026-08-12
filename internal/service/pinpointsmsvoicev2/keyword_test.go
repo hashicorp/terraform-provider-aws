@@ -477,8 +477,12 @@ func testAccCheckKeywordExists(ctx context.Context, t *testing.T, n string, v *a
 
 		output, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity"], rs.Primary.Attributes["keyword"])
 
+		if err != nil {
+			return err
+		}
+
 		*v = *output
-		return err
+		return nil
 	}
 }
 
