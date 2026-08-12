@@ -358,7 +358,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `dialect` - (Optional) Parameter that specifies the engine type of a specific representation. Valid values are `REDSHIFT`, `ATHENA`, and `SPARK`.
 * `dialect_version` - (Optional) Parameter that specifies the version of the engine of a specific representation.
 * `validation_connection` - (Optional) Name of the connection to be used to validate the specific representation of the view.
-* `view_expanded_text` - (Optional) String that represents the SQL query that describes the view with expanded resource ARNs.
+* `view_expanded_text` - (Optional) String that represents the SQL query that describes the view with expanded resource ARNs. Ignored for `ATHENA` dialect representations, as the Glue API rejects it (`View Expanded Text is not supported`).
 * `view_original_text` - (Optional) String that represents the original SQL query that describes the view.
 
 ## Attribute Reference
