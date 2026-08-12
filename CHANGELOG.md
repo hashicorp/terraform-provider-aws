@@ -1,5 +1,15 @@
 ## 6.60.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_db_parameter_group` ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+* **New List Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+* **New Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+
+ENHANCEMENTS:
+
+* resource/aws_db_parameter_group: Add Resource Identity support ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+
 ## 6.59.0 (August 12, 2026)
 
 FEATURES:
