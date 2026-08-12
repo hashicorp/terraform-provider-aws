@@ -467,13 +467,8 @@ func (m resourceConfigurationModel) Expand(ctx context.Context) (any, diag.Diagn
 		return &r, diags
 
 	case !m.ResourceTags.IsNull():
-		data, d := m.ResourceTags.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
 		var r awstypes.ResourceConfigurationMemberResourceTags
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.ResourceTags, &r.Value))
 		return &r, diags
 
 	case !m.TFStateFileURL.IsNull():
