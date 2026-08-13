@@ -1,29 +1,13 @@
-resource "aws_resiliencehubv2_input_source" "test" {
-{{- template "region" }}
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_resiliencehubv2_service_function" "test" {
+  name        = var.name
   service_arn = aws_resiliencehubv2_service.test.arn
-
-  resource_configuration {
-    cfn_stack_arn = aws_cloudformation_stack.test.id
-  }
-}
-
-resource "aws_cloudformation_stack" "test" {
-{{- template "region" }}
-  name = var.rName
-
-  template_body = jsonencode({
-    AWSTemplateFormatVersion = "2010-09-09"
-    Description              = "Test stack for NGRH input source"
-    Resources = {
-      WaitHandle = {
-        Type = "AWS::CloudFormation::WaitConditionHandle"
-      }
-    }
-  })
+  criticality = "PRIMARY"
 }
 
 resource "aws_resiliencehubv2_service" "test" {
-{{- template "region" }}
   name    = var.rName
   regions = [data.aws_region.current.name]
 
@@ -35,7 +19,6 @@ resource "aws_resiliencehubv2_service" "test" {
 }
 
 data "aws_region" "current" {
-{{- template "region" }}
 }
 
 data "aws_partition" "current" {}
@@ -62,4 +45,15 @@ POLICY
 resource "aws_iam_role_policy_attachment" "service_AWSResilienceHubV2AssessmentExecutionPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSResilienceHubV2AssessmentExecutionPolicy"
   role       = aws_iam_role.test.name
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "name" {
+  type     = string
+  nullable = false
 }
