@@ -102,6 +102,10 @@ func getAttributeOk(d resourceData, name string) (any, bool) {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
+		// check for zero value bool (false), which is a valid value
+		if _, okBool := v.(bool); okBool {
+			return v, true
+		}
 		return nil, false
 	} else {
 		return v, true
