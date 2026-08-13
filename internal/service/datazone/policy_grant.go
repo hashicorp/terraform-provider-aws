@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
@@ -403,7 +402,7 @@ func (r *policyGrantResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.GrantID = flex.StringToFramework(ctx, out.GrantId)
+	plan.GrantID = fwflex.StringToFramework(ctx, out.GrantId)
 
 	// Getting attributes not outputted by AddPolicyGrant API call.
 	// i.e. CreatedAt, CreatedBy
