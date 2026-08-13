@@ -106,6 +106,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateSystemInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -118,7 +119,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := conn.CreateSystem(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 

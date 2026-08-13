@@ -144,6 +144,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateServiceInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -158,7 +159,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 		return conn.CreateService(ctx, &input)
 	}, "Ensure the role exists and its trust policy allows access")
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
