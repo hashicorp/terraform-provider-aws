@@ -40,6 +40,8 @@ import (
 // @ImportIDHandler("serviceFunctionImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.ServiceFunction")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc="testAccCheckServiceFunctionImportStateIDFunc")
+// @Testing(importStateIdAttribute="service_function_id")
 func newServiceFunctionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceFunctionResource{}, nil
 }

@@ -23,6 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccCheckServiceFunctionImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "service_arn", "service_function_id")
+}
+
 func TestAccResilienceHubV2ServiceFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sf awstypes.ServiceFunction
@@ -57,6 +61,17 @@ func TestAccResilienceHubV2ServiceFunction_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ServiceFunction/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccCheckServiceFunctionImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "service_function_id",
 			},
 		},
 	})
