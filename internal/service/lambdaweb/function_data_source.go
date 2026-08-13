@@ -12,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_lambdaweb_function", name="Function")
+// @Tags(identifierAttribute="arn")
 func newFunctionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &functionDataSource{}, nil
 }
@@ -42,6 +44,7 @@ func (d *functionDataSource) Schema(ctx context.Context, request datasource.Sche
 			"state_reason": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -85,4 +88,5 @@ type functionDataSourceModel struct {
 	LatestRevisionID types.String `tfsdk:"latest_revision_id"`
 	State            types.String `tfsdk:"state"`
 	StateReason      types.String `tfsdk:"state_reason"`
+	Tags             tftags.Map   `tfsdk:"tags"`
 }

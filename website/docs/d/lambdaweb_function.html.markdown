@@ -39,3 +39,4 @@ This data source exports the following attributes in addition to the arguments a
 * `latest_revision_id` - ID of the newest revision of the function.
 * `state` - Current state of the function.
 * `state_reason` - Reason for the current state.
+* `tags` - Map of tags assigned to the function.

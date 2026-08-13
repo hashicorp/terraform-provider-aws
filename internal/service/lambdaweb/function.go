@@ -39,12 +39,14 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lambdaweb_function", name="Function")
 // @IdentityAttribute("function_name")
+// @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionOutput")
 // @Testing(importStateIdAttribute="function_name")
@@ -105,6 +107,8 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 			"state_reason": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"revision_config": schema.ListNestedBlock{
@@ -424,6 +428,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.Tags = getTagsIn(ctx)
 
 	name := plan.FunctionName.ValueString()
 
@@ -829,6 +834,8 @@ type functionResourceModel struct {
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	State               types.String                                         `tfsdk:"state"`
 	StateReason         types.String                                         `tfsdk:"state_reason"`
+	Tags                tftags.Map                                           `tfsdk:"tags"`
+	TagsAll             tftags.Map                                           `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 

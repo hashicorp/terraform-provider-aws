@@ -1,3 +1,17 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+provider "aws" {
+  default_tags {
+    tags = var.provider_tags
+  }
+}
+
+# tflint-ignore: terraform_unused_declarations
+data "aws_lambdaweb_function" "test" {
+  function_name = aws_lambdaweb_function.test.function_name
+}
+
 data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
@@ -59,7 +73,6 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_lambdaweb_function" "test" {
-{{- template "region" }}
   depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
 
   function_name = var.rName
@@ -89,5 +102,24 @@ resource "aws_lambdaweb_function" "test" {
     auth_type     = "ApplicationManaged"
     regions       = [data.aws_region.current.region]
   }
-{{- template "tags" . }}
+
+  tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
+
+variable "provider_tags" {
+  type     = map(string)
+  nullable = false
 }

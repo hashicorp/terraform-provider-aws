@@ -103,6 +103,7 @@ The following arguments are optional:
 * `endpoint_config` - (Optional) Configuration block for the function's endpoint. [See below](#endpoint_config-block).
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `revision_config` - (Optional) Configuration block for the function's initial revision. [See below](#revision_config-block).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `revision_config` Block
 
@@ -169,6 +170,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `regional_domain_names` - Map of Region to domain name. Populated for `PerRegion` endpoints, which serve an independent domain per Region; `MultiRegion` endpoints route through the single global `domain_name`.
 * `state` - Current state of the function.
 * `state_reason` - Reason for the current state, useful when the function is `Pending` or `Failed`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
