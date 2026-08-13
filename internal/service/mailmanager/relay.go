@@ -6,14 +6,12 @@ package mailmanager
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mailmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -46,12 +44,7 @@ import (
 // @Testing(preCheck="testAccRelayPreCheck")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newRelayResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &relayResource{}
-	r.SetDefaultCreateTimeout(10 * time.Minute)
-	r.SetDefaultUpdateTimeout(10 * time.Minute)
-	r.SetDefaultDeleteTimeout(10 * time.Minute)
-
-	return r, nil
+	return &relayResource{}, nil
 }
 
 const (
@@ -60,7 +53,6 @@ const (
 
 type relayResource struct {
 	framework.ResourceWithModel[relayResourceModel]
-	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -141,11 +133,6 @@ func (r *relayResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -325,7 +312,6 @@ type relayResourceModel struct {
 	ServerPort            types.Int32                                               `tfsdk:"server_port"`
 	Tags                  tftags.Map                                                `tfsdk:"tags"`
 	TagsAll               tftags.Map                                                `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value                                            `tfsdk:"timeouts"`
 }
 
 type relayAuthenticationModel struct {
