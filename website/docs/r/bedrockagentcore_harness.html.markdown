@@ -155,12 +155,12 @@ The following arguments are optional:
 
 * `allowed_tools` - (Optional) List of tool names allowed for the harness. Use `["*"]` to allow all tools.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating requests. See [`authorizer_configuration` Block](#authorizer_configuration-block) below.
-* `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below.
+* `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below.If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
 * `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
 * `environment_variables` - (Optional, Sensitive) Map of environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
-* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`.
+* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
 * `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
@@ -472,6 +472,7 @@ In addition, the following attribute is exported:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Harness.
+* `environment_actual` - Actual deployed environment configuration.
 * `harness_id` - Unique identifier of the Harness.
 * `memory_actual` - Actual deployed memory configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
