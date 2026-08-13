@@ -6,6 +6,7 @@ package pinpointsmsvoicev2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -435,9 +436,9 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPoolARN(t *testing.T) {
 	})
 }
 
-// randomKeywordName returns a name that fits the keyword's 30-character limit
+// randomKeywordName returns an upper-case name that fits the keyword's 30-character limit
 func randomKeywordName(t *testing.T) string {
-	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
+	return strings.ToUpper(fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)))
 }
 
 func testAccCheckKeywordDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

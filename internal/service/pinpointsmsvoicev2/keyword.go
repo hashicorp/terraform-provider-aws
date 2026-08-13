@@ -73,8 +73,7 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"keyword": schema.StringAttribute{
-				Description: "Keyword to configure. 1-30 characters, case-insensitive, and cannot start or end with a space.",
-				CustomType:  fwtypes.CaseInsensitiveStringType,
+				Description: "Keyword to configure. 1-30 characters, upper-case, and cannot start or end with a space.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -82,6 +81,7 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 30),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\S([ \S]*\S)?$`), "must not start or end with a space, or contain tabs or newlines"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[^a-z]*$`), "must be upper-case; AWS stores keywords in upper-case"),
 				},
 			},
 			"keyword_action": schema.StringAttribute{
@@ -186,8 +186,8 @@ func (r *keywordResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	// PutKeyword response: keyword uppercased and the origination identity as an ID.
-	// keep the user-configured values so the resource identity remains stable.
+	// PutKeyword echoes the origination identity as an ID; keep the user-configured
+	// origination_identity form. keyword is already upper-case (enforced by schema).
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenPutKeyword(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -216,8 +216,9 @@ func (r *keywordResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	// Preserve the user-configured value for Keyword so the resource identity remains stable.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, originationIdentityARN, &state, fwflex.WithIgnoredFieldNamesAppend("Keyword")))
+	// Preserve the user-configured origination_identity form; KeywordInformation does not
+	// carry the origination identity, so the ARN comes from the DescribeKeywords response.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, originationIdentityARN, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -246,7 +247,7 @@ func (r *keywordResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Preserve the user-configured values for Keyword and OriginationIdentity so the resource identity remains stable.
+	// Preserve the user-configured origination_identity form; keyword is already upper-case.
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenPutKeyword(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -297,12 +298,11 @@ func (r *keywordResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 // flatten maps a KeywordInformation and its origination identity ARN onto the model.
 // KeywordInformation does not carry the origination identity ARN; it comes from the
-// DescribeKeywords response envelope, so it is passed separately. Callers can pass
-// AutoFlex options (e.g. to ignore Keyword and preserve the user-configured value).
-func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInformation, originationIdentityARN *string, data *keywordResourceModel, opts ...fwflex.AutoFlexOptionsFunc) diag.Diagnostics {
+// DescribeKeywords response envelope, so it is passed separately.
+func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInformation, originationIdentityARN *string, data *keywordResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(fwflex.Flatten(ctx, in, data, opts...)...)
+	diags.Append(fwflex.Flatten(ctx, in, data)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -313,15 +313,13 @@ func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInfor
 }
 
 // flattenPutKeyword maps a PutKeyword response onto the model. The API echoes the
-// keyword upper-cased and the origination identity as an ID, so both are ignored to
-// preserve the user-configured values and keep the resource identity stable.
-// PutKeywordOutput carries the origination identity ARN, so (unlike flatten) it does
-// not need to be supplied separately.
+// origination identity as an ID, so it is ignored to preserve the user-configured
+// origination_identity form (which may be an ID or ARN). PutKeywordOutput carries the
+// origination identity ARN, so (unlike flatten) it does not need to be supplied
+// separately. keyword is upper-case in both the config (enforced by schema) and the
+// response, so it does not need special handling.
 func (r *keywordResource) flattenPutKeyword(ctx context.Context, out *pinpointsmsvoicev2.PutKeywordOutput, data *keywordResourceModel) diag.Diagnostics {
-	return fwflex.Flatten(ctx, out, data,
-		fwflex.WithIgnoredFieldNamesAppend("Keyword"),
-		fwflex.WithIgnoredFieldNamesAppend("OriginationIdentity"),
-	)
+	return fwflex.Flatten(ctx, out, data, fwflex.WithIgnoredFieldNamesAppend("OriginationIdentity"))
 }
 
 func findKeywordByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, originationIdentity, keyword string) (*awstypes.KeywordInformation, *string, error) {
@@ -377,7 +375,7 @@ func isMandatoryKeyword(keyword string) bool {
 
 type keywordResourceModel struct {
 	framework.WithRegionModel
-	Keyword                fwtypes.CaseInsensitiveString              `tfsdk:"keyword"`
+	Keyword                types.String                               `tfsdk:"keyword"`
 	KeywordAction          fwtypes.StringEnum[awstypes.KeywordAction] `tfsdk:"keyword_action"`
 	KeywordMessage         types.String                               `tfsdk:"keyword_message"`
 	OriginationIdentity    types.String                               `tfsdk:"origination_identity"`

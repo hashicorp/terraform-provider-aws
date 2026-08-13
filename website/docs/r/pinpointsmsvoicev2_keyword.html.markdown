@@ -78,7 +78,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "help" {
 
 The following arguments are required:
 
-* `keyword` - (Required) Keyword to configure. Case-insensitive; AWS stores and returns keywords in upper-case. Changing this forces a new resource.
+* `keyword` - (Required) Keyword to configure. Must be upper-case; AWS stores keywords in upper-case. 1-30 characters and cannot start or end with a space. Changing this forces a new resource.
 * `keyword_message` - (Required) Message to send when the keyword is received.
 * `origination_identity` - (Required) Origination identity to attach the keyword to. Value is the ID or ARN of a phone number or pool. Changing this forces a new resource.
 
