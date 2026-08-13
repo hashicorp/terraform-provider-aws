@@ -1049,7 +1049,7 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		}
 	}
 
-	if v, ok := d.GetOk("view_expanded_text"); ok {
+	if v, ok := d.GetOk("view_expanded_text"); ok && !viewDefinitionHasDialect(d, awstypes.ViewDialectAthena) {
 		apiObject.ViewExpandedText = aws.String(v.(string))
 	}
 

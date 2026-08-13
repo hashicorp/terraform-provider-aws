@@ -195,7 +195,7 @@ The following arguments are optional:
 * `table_type` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table-block) below.
 * `view_definition` - (Optional) Structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition-block) below.
-* `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
+* `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null. Ignored when the `view_definition` block contains an `ATHENA` dialect representation, as the Glue API rejects it (`View Expanded Text is not supported`).
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
 
 ### `open_table_format_input` Block
