@@ -251,17 +251,21 @@ func (r *relayResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, relayID)
 			return
 		}
-	}
 
-	relayOut, err := findRelayByID(ctx, conn, relayID)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, relayID)
-		return
-	}
+		relayOut, err := findRelayByID(ctx, conn, relayID)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, relayID)
+			return
+		}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, relayOut, &plan, flex.WithFieldNamePrefix("Relay")))
-	if resp.Diagnostics.HasError() {
-		return
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, relayOut, &plan, flex.WithFieldNamePrefix("Relay")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		plan.ARN = state.ARN
+		plan.CreatedTimestamp = state.CreatedTimestamp
+		plan.LastModifiedTimestamp = state.LastModifiedTimestamp
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
