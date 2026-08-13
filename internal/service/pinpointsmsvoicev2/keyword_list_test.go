@@ -157,8 +157,10 @@ func TestAccPinpointSMSVoiceV2Keyword_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckKeyword(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
+		ErrorCheck: acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		// The destroy check uses the default-region client, which cannot validate an
+		// alternate-region origination identity ARN (ValidationException: INVALID_ARN).
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup

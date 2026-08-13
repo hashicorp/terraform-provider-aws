@@ -7,6 +7,6 @@ list "aws_pinpointsmsvoicev2_keyword" "test" {
   include_resource = true
 
   config {
-    origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
+    origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
   }
 }

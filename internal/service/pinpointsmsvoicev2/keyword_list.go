@@ -11,7 +11,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,12 +34,12 @@ type keywordListResource struct {
 func (l *keywordListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"origination_identity": listschema.StringAttribute{
+			"origination_identity_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Required:    true,
-				Description: "Origination identity to list keywords for. Value is the ID or ARN of a phone number or pool.",
+				Description: "ARN of the origination identity (phone number or pool) to list keywords for.",
 			},
 		},
-		Blocks: map[string]listschema.Block{},
 	}
 }
 
@@ -56,13 +55,13 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 	}
 
 	input := pinpointsmsvoicev2.DescribeKeywordsInput{
-		OriginationIdentity: query.OriginationIdentity.ValueStringPointer(),
+		OriginationIdentity: query.OriginationIdentityARN.ValueStringPointer(),
 	}
 
 	tflog.Info(ctx, "Listing End User Messaging SMS Keywords")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		keywords, originationIdentityARN, err := findKeywords(ctx, conn, &input)
+		keywords, originationIdentity, originationIdentityARN, err := findKeywords(ctx, conn, &input)
 		if err != nil {
 			result := fwdiag.NewListResultErrorDiagnostic(err)
 			yield(result)
@@ -73,21 +72,19 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 			item := &keywords[i]
 			keyword := aws.ToString(item.Keyword)
 
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("origination_identity"), query.OriginationIdentity.ValueString())
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("origination_identity"), aws.ToString(originationIdentity))
 			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("keyword"), keyword)
 
 			result := request.NewListResult(ctx)
 
 			var data keywordResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, item, originationIdentityARN, &data))
+				// KeywordInformation does not carry the origination identity; its ID and
+				// ARN come from the DescribeKeywords response envelope.
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, item, originationIdentity, originationIdentityARN, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
-
-				// origination_identity is not part of KeywordInformation; carry over the
-				// query value so the listed resource identity matches what was requested.
-				data.OriginationIdentity = query.OriginationIdentity
 
 				// keyword_action is AWS-managed for the mandatory keywords HELP and STOP
 				// and cannot be set (see the resource ValidateConfig). Null it so any
@@ -112,5 +109,5 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 
 type keywordListModel struct {
 	framework.WithRegionModel
-	OriginationIdentity types.String `tfsdk:"origination_identity"`
+	OriginationIdentityARN fwtypes.ARN `tfsdk:"origination_identity_arn"`
 }

@@ -1,8 +1,8 @@
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
 {{- template "region" }}
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = var.rName
-  keyword_message      = "test keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = var.rName
+  keyword_message          = "test keyword message"
 }
 
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {

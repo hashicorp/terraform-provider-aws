@@ -25,9 +25,9 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "example" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.example.id
-  keyword              = "EXAMPLE"
-  keyword_message      = "Thanks for messaging our example number."
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.example.arn
+  keyword                  = "EXAMPLE"
+  keyword_message          = "Thanks for messaging our example number."
 }
 ```
 
@@ -48,10 +48,10 @@ resource "aws_pinpointsmsvoicev2_pool" "example" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "example" {
-  origination_identity = aws_pinpointsmsvoicev2_pool.example.id
-  keyword              = "OPTOUT"
-  keyword_message      = "You have been unsubscribed."
-  keyword_action       = "OPT_OUT"
+  origination_identity_arn = aws_pinpointsmsvoicev2_pool.example.arn
+  keyword                  = "OPTOUT"
+  keyword_message          = "You have been unsubscribed."
+  keyword_action           = "OPT_OUT"
 }
 ```
 
@@ -68,9 +68,9 @@ resource "aws_pinpointsmsvoicev2_phone_number" "example" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "help" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.example.id
-  keyword              = "HELP"
-  keyword_message      = "Reply STOP to unsubscribe. Message and data rates may apply."
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.example.arn
+  keyword                  = "HELP"
+  keyword_message          = "Reply STOP to unsubscribe. Message and data rates may apply."
 }
 ```
 
@@ -80,7 +80,7 @@ The following arguments are required:
 
 * `keyword` - (Required) Keyword to configure. Must be upper-case; AWS stores keywords in upper-case. 1-30 characters and cannot start or end with a space. Changing this forces a new resource.
 * `keyword_message` - (Required) Message to send when the keyword is received.
-* `origination_identity` - (Required) Origination identity to attach the keyword to. Value is the ID or ARN of a phone number or pool. Changing this forces a new resource.
+* `origination_identity_arn` - (Required) ARN of the origination identity (phone number or pool) to attach the keyword to. Changing this forces a new resource.
 
 The following arguments are optional:
 
@@ -91,7 +91,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `origination_identity_arn` - ARN of the origination identity the keyword is attached to.
+* `origination_identity` - ID of the origination identity the keyword is attached to.
 
 ## Import
 
@@ -101,8 +101,8 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_pinpointsmsvoicev2_keyword.example
   identity = {
-    origination_identity = "phone-abcdef0123456789abcdef0123456789"
-    keyword              = "EXAMPLE"
+    origination_identity_arn = "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789"
+    keyword                  = "EXAMPLE"
   }
 }
 
@@ -115,7 +115,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "example" {
 
 #### Required
 
-* `origination_identity` (String) Origination identity the keyword is attached to.
+* `origination_identity_arn` (String) ARN of the origination identity the keyword is attached to.
 * `keyword` (String) Keyword text.
 
 #### Optional
@@ -123,17 +123,17 @@ resource "aws_pinpointsmsvoicev2_keyword" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a keyword using the `origination_identity` and `keyword`, separated by a comma. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a keyword using the `origination_identity_arn` and `keyword`, separated by a comma. For example:
 
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_keyword.example
-  id = "phone-abcdef0123456789abcdef0123456789,EXAMPLE"
+  id = "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789,EXAMPLE"
 }
 ```
 
-Using `terraform import`, import a keyword using the `origination_identity` and `keyword`, separated by a comma. For example:
+Using `terraform import`, import a keyword using the `origination_identity_arn` and `keyword`, separated by a comma. For example:
 
 ```console
-% terraform import aws_pinpointsmsvoicev2_keyword.example "phone-abcdef0123456789abcdef0123456789,EXAMPLE"
+% terraform import aws_pinpointsmsvoicev2_keyword.example "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789,EXAMPLE"
 ```

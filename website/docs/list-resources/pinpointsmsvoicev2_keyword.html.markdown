@@ -17,7 +17,7 @@ list "aws_pinpointsmsvoicev2_keyword" "example" {
   provider = aws
 
   config {
-    origination_identity = "phone-abcdef0123456789abcdef0123456789"
+    origination_identity_arn = "arn:aws:sms-voice:us-east-1:123456789012:phone-number/phone-abcdef0123456789abcdef0123456789"
   }
 }
 ```
@@ -26,5 +26,5 @@ list "aws_pinpointsmsvoicev2_keyword" "example" {
 
 This list resource supports the following arguments:
 
-* `origination_identity` - (Required) Origination identity to list keywords for. Value is the ID or ARN of a phone number or pool.
+* `origination_identity_arn` - (Required) ARN of the origination identity (phone number or pool) to list keywords for.
 * `region` - (Optional) Region to query. Defaults to provider region.

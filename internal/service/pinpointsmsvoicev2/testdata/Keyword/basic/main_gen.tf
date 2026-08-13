@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = var.rName
-  keyword_message      = "test keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = var.rName
+  keyword_message          = "test keyword message"
 }
 
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {

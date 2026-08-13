@@ -53,12 +53,12 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID:    tfknownvalue.AccountID(),
-						names.AttrRegion:       knownvalue.StringExact(acctest.Region()),
-						"origination_identity": knownvalue.NotNull(),
-						"keyword":              knownvalue.NotNull(),
+						names.AttrAccountID:        tfknownvalue.AccountID(),
+						names.AttrRegion:           knownvalue.StringExact(acctest.Region()),
+						"origination_identity_arn": knownvalue.NotNull(),
+						"keyword":                  knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("origination_identity")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("origination_identity_arn")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("keyword")),
 				},
 			},
@@ -70,11 +70,11 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity", "keyword"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity_arn", "keyword"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "origination_identity",
+				ImportStateVerifyIdentifierAttribute: "origination_identity_arn",
 			},
 
 			// Step 3: Import block with Import ID
@@ -86,10 +86,10 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity", "keyword"),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity_arn", "keyword"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
@@ -107,7 +107,7 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
@@ -145,12 +145,12 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_regionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID:    tfknownvalue.AccountID(),
-						names.AttrRegion:       knownvalue.StringExact(acctest.AlternateRegion()),
-						"origination_identity": knownvalue.NotNull(),
-						"keyword":              knownvalue.NotNull(),
+						names.AttrAccountID:        tfknownvalue.AccountID(),
+						names.AttrRegion:           knownvalue.StringExact(acctest.AlternateRegion()),
+						"origination_identity_arn": knownvalue.NotNull(),
+						"keyword":                  knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("origination_identity")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("origination_identity_arn")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("keyword")),
 				},
 			},
@@ -163,11 +163,11 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity", "keyword"),
+				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity_arn", "keyword"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "origination_identity",
+				ImportStateVerifyIdentifierAttribute: "origination_identity_arn",
 			},
 
 			// Step 3: Import block with Import ID
@@ -180,10 +180,10 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity", "keyword"),
+				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity_arn", "keyword"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
@@ -202,7 +202,7 @@ func TestAccPinpointSMSVoiceV2Keyword_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identity_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},

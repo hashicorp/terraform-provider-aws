@@ -11,9 +11,9 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
   count = var.resource_count
 
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = upper("${var.rName}-${count.index}")
-  keyword_message      = "test keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = upper("${var.rName}-${count.index}")
+  keyword_message          = "test keyword message"
 }
 
 variable "rName" {

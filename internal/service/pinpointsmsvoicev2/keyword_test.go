@@ -57,9 +57,9 @@ func TestAccPinpointSMSVoiceV2Keyword_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity", "keyword"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "origination_identity_arn", "keyword"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "origination_identity",
+				ImportStateVerifyIdentifierAttribute: "origination_identity_arn",
 			},
 			{
 				Config: testAccKeywordConfig_basic(rName),
@@ -322,7 +322,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPhoneNumberARN(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPool(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	rName := randomKeywordName(t)
@@ -338,45 +338,7 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPhoneNumberARN(t *testi
 		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeywordConfig_OriginationIdentityPhoneNumberARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.StringExact(rName)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity"), "aws_pinpointsmsvoicev2_phone_number.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity_arn"), "aws_pinpointsmsvoicev2_phone_number.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				Config: testAccKeywordConfig_OriginationIdentityPhoneNumberARN(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPoolID(t *testing.T) {
-	ctx := acctest.Context(t)
-	var keyword awstypes.KeywordInformation
-	rName := randomKeywordName(t)
-	resourceName := "aws_pinpointsmsvoicev2_keyword.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckKeyword(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeywordConfig_OriginationIdentityPoolID(rName),
+				Config: testAccKeywordConfig_OriginationIdentityPool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
 				),
@@ -387,45 +349,7 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPoolID(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_OriginationIdentityPoolID(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPoolARN(t *testing.T) {
-	ctx := acctest.Context(t)
-	var keyword awstypes.KeywordInformation
-	rName := randomKeywordName(t)
-	resourceName := "aws_pinpointsmsvoicev2_keyword.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckKeyword(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeywordConfig_OriginationIdentityPoolARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.StringExact(rName)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity"), "aws_pinpointsmsvoicev2_pool.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity_arn"), "aws_pinpointsmsvoicev2_pool.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				Config: testAccKeywordConfig_OriginationIdentityPoolARN(rName),
+				Config: testAccKeywordConfig_OriginationIdentityPool(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -450,7 +374,7 @@ func testAccCheckKeywordDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity"], rs.Primary.Attributes["keyword"])
+			_, _, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
 
 			if retry.NotFound(err) {
 				continue
@@ -476,7 +400,7 @@ func testAccCheckKeywordExists(ctx context.Context, t *testing.T, n string, v *a
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-		output, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity"], rs.Primary.Attributes["keyword"])
+		output, _, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
 
 		if err != nil {
 			return err
@@ -514,9 +438,9 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = %[1]q
-  keyword_message      = "test keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = %[1]q
+  keyword_message          = "test keyword message"
 }
 `, keyword)
 }
@@ -531,10 +455,10 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = %[1]q
-  keyword_message      = "test keyword message"
-  keyword_action       = "OPT_OUT"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = %[1]q
+  keyword_message          = "test keyword message"
+  keyword_action           = "OPT_OUT"
 }
 `, keyword)
 }
@@ -553,9 +477,9 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 func testAccKeywordConfig_Keyword_mandatory(keyword, message string) string {
 	return acctest.ConfigCompose(testAccKeywordConfig_Keyword_mandatoryBase(), fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = %[1]q
-  keyword_message      = %[2]q
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = %[1]q
+  keyword_message          = %[2]q
 }
 `, keyword, message))
 }
@@ -563,10 +487,10 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 func testAccKeywordConfig_Keyword_mandatoryWithAction(keyword, action string) string {
 	return acctest.ConfigCompose(testAccKeywordConfig_Keyword_mandatoryBase(), fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = %[1]q
-  keyword_message      = "mandatory keyword message"
-  keyword_action       = %[2]q
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = %[1]q
+  keyword_message          = "mandatory keyword message"
+  keyword_action           = %[2]q
 }
 `, keyword, action))
 }
@@ -581,31 +505,14 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.id
-  keyword              = %[1]q
-  keyword_message      = "updated keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
+  keyword                  = %[1]q
+  keyword_message          = "updated keyword message"
 }
 `, keyword)
 }
 
-func testAccKeywordConfig_OriginationIdentityPhoneNumberARN(keyword string) string {
-	return fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_phone_number" "test" {
-  iso_country_code    = "US"
-  message_type        = "TRANSACTIONAL"
-  number_type         = "SIMULATOR"
-  number_capabilities = ["SMS"]
-}
-
-resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_phone_number.test.arn
-  keyword              = %[1]q
-  keyword_message      = "test keyword message"
-}
-`, keyword)
-}
-
-func testAccKeywordConfig_OriginationIdentityPoolID(keyword string) string {
+func testAccKeywordConfig_OriginationIdentityPool(keyword string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   force_disassociate  = true
@@ -622,33 +529,9 @@ resource "aws_pinpointsmsvoicev2_pool" "test" {
 }
 
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_pool.test.id
-  keyword              = %[1]q
-  keyword_message      = "test keyword message"
-}
-`, keyword)
-}
-
-func testAccKeywordConfig_OriginationIdentityPoolARN(keyword string) string {
-	return fmt.Sprintf(`
-resource "aws_pinpointsmsvoicev2_phone_number" "test" {
-  force_disassociate  = true
-  iso_country_code    = "US"
-  message_type        = "TRANSACTIONAL"
-  number_type         = "SIMULATOR"
-  number_capabilities = ["SMS"]
-}
-
-resource "aws_pinpointsmsvoicev2_pool" "test" {
-  iso_country_code       = "US"
-  message_type           = "TRANSACTIONAL"
-  origination_identities = [aws_pinpointsmsvoicev2_phone_number.test.arn]
-}
-
-resource "aws_pinpointsmsvoicev2_keyword" "test" {
-  origination_identity = aws_pinpointsmsvoicev2_pool.test.arn
-  keyword              = %[1]q
-  keyword_message      = "test keyword message"
+  origination_identity_arn = aws_pinpointsmsvoicev2_pool.test.arn
+  keyword                  = %[1]q
+  keyword_message          = "test keyword message"
 }
 `, keyword)
 }

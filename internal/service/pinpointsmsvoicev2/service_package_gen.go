@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Keyword",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("origination_identity", true),
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
 				inttypes.StringIdentityAttribute("keyword", true),
 			}),
 			Import: inttypes.FrameworkImport{
@@ -144,7 +144,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Keyword",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("origination_identity", true),
+				inttypes.StringIdentityAttribute("origination_identity_arn", true),
 				inttypes.StringIdentityAttribute("keyword", true),
 			}),
 		},
