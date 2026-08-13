@@ -534,7 +534,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 				}
 			}
 
-			result := identityIsFullyNull(identity, identitySpec)
+			result := identityIsFullyNull(d, identitySpec)
 			if result != tc.expectNull {
 				t.Errorf("%s: expected identityIsFullyNull to return %v, got %v",
 					tc.description, tc.expectNull, result)
