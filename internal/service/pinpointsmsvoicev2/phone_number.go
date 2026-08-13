@@ -182,6 +182,11 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 					),
 				},
 			},
+			"wait_for_active": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -224,7 +229,9 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 	data.PhoneNumberID = fwflex.StringToFramework(ctx, output.PhoneNumberId)
 	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.PhoneNumberID) // Set 'id' so as to taint the resource.
 
-	out, err := waitPhoneNumberActive(ctx, conn, data.PhoneNumberID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	waitForActive := data.WaitForActive.ValueBool()
+
+	out, err := waitOrFindPhoneNumber(ctx, conn, data.PhoneNumberID.ValueString(), waitForActive, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) create", data.PhoneNumberID.ValueString()), err.Error())
@@ -261,7 +268,7 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 			return
 		}
 
-		out, err = waitPhoneNumberActive(ctx, conn, data.PhoneNumberID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		out, err = waitOrFindPhoneNumber(ctx, conn, data.PhoneNumberID.ValueString(), waitForActive, r.CreateTimeout(ctx, data.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) create", data.PhoneNumberID.ValueString()), err.Error())
@@ -354,7 +361,7 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		out, err := waitPhoneNumberActive(ctx, conn, new.PhoneNumberID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		out, err := waitOrFindPhoneNumber(ctx, conn, new.PhoneNumberID.ValueString(), new.WaitForActive.ValueBool(), r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) update", new.PhoneNumberID.ValueString()), err.Error())
@@ -468,6 +475,7 @@ type phoneNumberResourceModel struct {
 	TwoWayChannelARN          types.String                                       `tfsdk:"two_way_channel_arn"`
 	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 	TwoWayChannelRole         fwtypes.ARN                                        `tfsdk:"two_way_channel_role"`
+	WaitForActive             types.Bool                                         `tfsdk:"wait_for_active" autoflex:"-"`
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PhoneNumberInformation, error) {
@@ -554,6 +562,20 @@ func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	}
 
 	return nil, err
+}
+
+// waitOrFindPhoneNumber returns the phone number once it reaches ACTIVE, or,
+// when waitForActive is false, returns the phone number's current state
+// without waiting. Carrier-gated number types (e.g. TEN_DLC, TOLL_FREE, or
+// any number submitted with a registration_id) can remain PENDING for days
+// to weeks pending carrier or registration approval, an external process
+// Terraform apply-time waits cannot reasonably span.
+func waitOrFindPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, waitForActive bool, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
+	if !waitForActive {
+		return findPhoneNumberByID(ctx, conn, id)
+	}
+
+	return waitPhoneNumberActive(ctx, conn, id, timeout)
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {

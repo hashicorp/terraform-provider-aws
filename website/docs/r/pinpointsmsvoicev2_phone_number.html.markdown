@@ -45,6 +45,7 @@ The following arguments are optional:
 * `two_way_channel_arn` - (Optional) Configuration for two-way SMS. Specify an ARN to receive incoming SMS messages, or `connect.[region].amazonaws.com` (with `[region]` replaced by the AWS Region of the Amazon Connect instance) to set Amazon Connect as the inbound destination.
 * `two_way_channel_enabled` - (Optional) Whether two-way messaging is enabled. When `true`, you can receive incoming text messages from your end recipients. If omitted, AWS sets this to `false`.
 * `two_way_channel_role` - (Optional) IAM Role ARN for a service to assume, to be able to post inbound SMS messages.
+* `wait_for_active` - (Optional) Whether to wait for the phone number to reach `ACTIVE` status before considering the resource created or updated. Defaults to `true`. Set to `false` for number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`), which can remain `PENDING` for days to weeks — an external process apply-time waits cannot reasonably span. When `false`, `terraform apply` returns once the phone number request is accepted; use the `status` attribute to track activation.
 
 ## Attribute Reference
 

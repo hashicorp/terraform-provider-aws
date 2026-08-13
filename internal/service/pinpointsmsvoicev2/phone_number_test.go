@@ -57,9 +57,48 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2PhoneNumber_waitForActiveDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var phoneNumber awstypes.PhoneNumberInformation
+	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// SIMULATOR numbers become ACTIVE almost immediately, so this
+				// only exercises that wait_for_active = false doesn't error
+				// and that the resource still lands in a valid, readable
+				// state; it doesn't prove the PENDING skip-wait path since
+				// SIMULATOR never stays PENDING long enough to observe.
+				Config: testAccPhoneNumberConfig_waitForActiveDisabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("wait_for_active"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrStatus, "wait_for_active"},
 			},
 		},
 	})
@@ -103,9 +142,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, false),
@@ -160,9 +200,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelRole(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleNameUpdated),
@@ -204,9 +245,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelConnect(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 		},
 	})
@@ -339,9 +381,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -438,6 +481,19 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code = "US"
   message_type     = "TRANSACTIONAL"
   number_type      = "SIMULATOR"
+
+  number_capabilities = [
+    "SMS"
+  ]
+}
+`
+
+const testAccPhoneNumberConfig_waitForActiveDisabled = `
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  number_type      = "SIMULATOR"
+  wait_for_active  = false
 
   number_capabilities = [
     "SMS"
