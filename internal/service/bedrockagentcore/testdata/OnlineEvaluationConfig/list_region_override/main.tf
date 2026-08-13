@@ -28,7 +28,9 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 }
 
 data "aws_partition" "current" {}
-data "aws_region" "current" {}
+data "aws_region" "current" {
+  region = var.region
+}
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
