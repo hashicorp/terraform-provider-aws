@@ -137,13 +137,17 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
+	resourceAMILaunchPermissionFlatten(d, imageID, accountID, group, organizationARN, organizationalUnitARN)
+
+	return diags
+}
+
+func resourceAMILaunchPermissionFlatten(d *schema.ResourceData, imageID, accountID, group, organizationARN, organizationalUnitARN string) {
 	d.Set(names.AttrAccountID, accountID)
 	d.Set("group", group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
-
-	return diags
 }
 
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
