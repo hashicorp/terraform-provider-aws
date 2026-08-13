@@ -309,7 +309,7 @@ func customizeDiffValidateEngineVersion(ctx context.Context, diff *schema.Resour
 			names.AttrEngineVersion: engineVersion,
 			"error":                 err.Error(),
 		})
-		return nil
+		return nil //nolint:nilerr // fail open: skip plan-time validation when the API is unavailable (e.g. missing IAM permissions)
 	}
 	if len(available) == 0 {
 		return nil
@@ -334,7 +334,7 @@ func customizeDiffValidateEngineVersion(ctx context.Context, diff *schema.Resour
 			names.AttrParameterGroupName: parameterGroupName,
 			"error":                      err.Error(),
 		})
-		return nil
+		return nil //nolint:nilerr // fail open: skip plan-time validation when the API is unavailable (e.g. missing IAM permissions)
 	}
 	if !ok {
 		return nil
