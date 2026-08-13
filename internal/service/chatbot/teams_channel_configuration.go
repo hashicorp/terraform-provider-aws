@@ -186,43 +186,31 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	var output *awstypes.TeamsChannelConfiguration
+	var (
+		output *awstypes.TeamsChannelConfiguration
+		err    error
+		id     string
+	)
 
-	if !data.ChatConfigurationARN.IsNull() && data.ChatConfigurationARN.ValueString() != "" {
-		if err := data.InitFromID(); err != nil {
-			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionExpandingResourceId, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
-			return
-		}
-
-		var err error
-		output, err = findTeamsChannelConfigurationByARN(ctx, conn, data.ChatConfigurationARN.ValueString())
-
-		if retry.NotFound(err) {
-			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			response.State.RemoveResource(ctx)
-			return
-		}
-
-		if err != nil {
-			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
-			return
-		}
+	if configurationARN := data.ChatConfigurationARN.ValueString(); configurationARN != "" {
+		id = configurationARN
+		output, err = findTeamsChannelConfigurationByARN(ctx, conn, configurationARN)
 	} else {
 		// Legacy import path: look up by team_id.
 		// This only works when there is a single channel configuration for the team.
-		var err error
-		output, err = findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
+		id = data.TeamID.ValueString()
+		output, err = findTeamsChannelConfigurationByTeamID(ctx, conn, id)
+	}
 
-		if retry.NotFound(err) {
-			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			response.State.RemoveResource(ctx)
-			return
-		}
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
 
-		if err != nil {
-			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
-			return
-		}
+	if err != nil {
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, id, err)
+		return
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
@@ -478,9 +466,4 @@ type teamsChannelConfigurationResourceModel struct {
 	TenantID                  types.String                      `tfsdk:"tenant_id"`
 	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
 	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
-}
-
-func (data *teamsChannelConfigurationResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ChatConfigurationARN.ValueString())
-	return err
 }
