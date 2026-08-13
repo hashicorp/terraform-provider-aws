@@ -115,8 +115,8 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 // all attributes are set to null values
 func identityIsFullyNull(identity *schema.IdentityData, identitySpec *inttypes.Identity) bool {
 	for _, attr := range identitySpec.Attributes {
-		value := identity.Get(attr.Name())
-		if value != "" {
+		_, ok := identity.GetOk(attr.Name())
+		if ok {
 			return false
 		}
 	}
