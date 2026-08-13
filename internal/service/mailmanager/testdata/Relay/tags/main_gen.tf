@@ -12,6 +12,7 @@ resource "aws_mailmanager_relay" "test" {
 
   tags = var.resource_tags
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

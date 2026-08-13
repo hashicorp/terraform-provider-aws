@@ -16,6 +16,7 @@ resource "aws_mailmanager_relay" "test" {
     (var.unknownTagKey) = null_resource.test.id
   }
 }
+
 resource "null_resource" "test" {}
 
 variable "rName" {

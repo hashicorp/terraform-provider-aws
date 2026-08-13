@@ -10,6 +10,7 @@ resource "aws_mailmanager_relay" "test" {
     no_authentication {}
   }
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
