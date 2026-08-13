@@ -281,6 +281,7 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
+	plan.Description = normalizeDescription(plan.Description)
 	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
@@ -314,6 +315,7 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	normalizeRevisionWeights(ctx, &state)
+	state.Description = normalizeDescription(state.Description)
 	setRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
 
 	state.ID = types.StringValue(endpointCreateResourceID(state.FunctionName.ValueString(), state.EndpointName.ValueString()))
@@ -346,6 +348,12 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	input.FunctionName = aws.String(functionName)
 	input.EndpointName = aws.String(endpointName)
+	// An omitted description means "leave unchanged" to the API, so removing one
+	// from the configuration would never reach the service and the read-back
+	// would not match the plan. An empty string is what clears it.
+	if plan.Description.IsNull() && !state.Description.IsNull() {
+		input.Description = aws.String("")
+	}
 
 	if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
@@ -363,6 +371,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	normalizeRevisionWeights(ctx, &plan)
+	plan.Description = normalizeDescription(plan.Description)
 	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
@@ -399,6 +408,15 @@ func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteReques
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
+}
+
+// normalizeDescription maps the empty string the API reports for a cleared
+// description back to null, so it matches a configuration that omits it.
+func normalizeDescription(d types.String) types.String {
+	if !d.IsNull() && d.ValueString() == "" {
+		return types.StringNull()
+	}
+	return d
 }
 
 // normalizeRevisionWeights keeps revision_weights as configuration-only state:
@@ -451,8 +469,11 @@ func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		(config.Regions.IsNull() || config.Regions.Equal(state.Regions))
 
 	if unchanged {
-		plan.State = state.State
-		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.Plan.Set(ctx, &plan))
+		// Only pin the volatile "state" attribute: writing the whole plan model
+		// races with the provider framework's region interceptors and can clear
+		// the "region" meta-attribute, which then reads as a change and forces a
+		// spurious replacement on any out-of-band drift.
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(names.AttrState), state.State)...)
 	}
 }
 
