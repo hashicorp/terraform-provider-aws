@@ -27,7 +27,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_ec2_application_status_check", sweepApplicationStatusChecks)
+	awsv2.Register("aws_ec2_application_status_check", sweepApplicationStatusChecks, "aws_ec2_application_status_check_association")
+	awsv2.Register("aws_ec2_application_status_check_association", sweepApplicationStatusCheckAssociations)
+
 	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
 		Name: "aws_customer_gateway",
 		F:    sweepCustomerGateways,
@@ -489,6 +491,37 @@ func sweepApplicationStatusChecks(ctx context.Context, client *conns.AWSClient) 
 		for _, v := range page.ApplicationStatusChecks {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationStatusCheckResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.ApplicationStatusCheckId))))
+		}
+
+		return true
+	})
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return sweepResources, nil
+}
+
+func sweepApplicationStatusCheckAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeApplicationStatusCheckAssociationsInput
+	var sweepResources []sweep.Sweepable
+
+	err := describeApplicationStatusCheckAssociationsPages(ctx, conn, &input, func(page *ec2.DescribeApplicationStatusCheckAssociationsOutput, _ bool) bool {
+		for _, v := range page.Associations {
+			switch v.AssociationType {
+			case awstypes.AssociationTypeEnumInstanceId:
+				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationStatusCheckAssociationResource, client,
+					framework.NewAttribute("application_status_check_id", aws.ToString(v.ApplicationStatusCheckId)),
+					framework.NewAttribute(names.AttrInstanceID, aws.ToString(v.Value))))
+			case awstypes.AssociationTypeEnumTag:
+				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationStatusCheckAssociationResource, client,
+					framework.NewAttribute("application_status_check_id", aws.ToString(v.ApplicationStatusCheckId)),
+					framework.NewAttribute("target_tag_key", aws.ToString(v.Key)),
+					framework.NewAttribute("target_tag_value", aws.ToString(v.Value))))
+			default:
+				continue
+			}
 		}
 
 		return true
