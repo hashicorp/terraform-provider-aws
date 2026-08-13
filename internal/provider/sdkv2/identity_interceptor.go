@@ -32,12 +32,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
 				break
 			}
-			// `Id()` is empty when the resource is being removed
 			if d.Id() == "" {
-				break
-			}
-			// Identity is fully-null on Read when Importing or when updating existing resources created without identity.
-			if why == Read && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
 				break
 			}
 			identity, err := d.Identity()

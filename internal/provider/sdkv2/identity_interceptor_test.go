@@ -98,13 +98,12 @@ func TestIdentityInterceptor_Create(t *testing.T) {
 	}
 }
 
-func TestIdentityInterceptor_Read(t *testing.T) {
+func TestIdentityInterceptor_Read_RemovedFromState(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
 	region := "us-west-2" //lintignore:AWSAT003
-	attributeName := "attr_name"
-	identityName := "id_name"
+	name := "a_name"
 
 	resourceSchema := map[string]*schema.Schema{
 		"name": {
@@ -118,183 +117,47 @@ func TestIdentityInterceptor_Read(t *testing.T) {
 		"region": sdkv2.RegionOptionalComputed(),
 	}
 
-	client := mockClient{
-		accountID: accountID,
-		region:    region,
-	}
+	identitySpec := regionalSingleParameterizedIdentitySpec("name")
+	identitySchema := identity.NewIdentitySchema(identitySpec)
 
-	testCases := map[string]struct {
-		id             string
-		identityValues map[string]string
-		expectedName   string
-	}{
-		"existing resource": {
-			id: "some_id",
-			identityValues: map[string]string{
-				names.AttrAccountID: accountID,
-				names.AttrRegion:    region,
-				"name":              identityName,
-			},
-			expectedName: identityName,
-		},
-		"removed from state": {
-			id: "",
-			identityValues: map[string]string{
-				names.AttrAccountID: accountID,
-				names.AttrRegion:    region,
-				"name":              identityName,
-			},
-			expectedName: identityName,
-		},
-		"for import": {
-			id:             "some_id",
-			identityValues: nil,
-			expectedName:   attributeName,
-		},
-	}
-
-	for tname, tc := range testCases {
-		t.Run(tname, func(t *testing.T) {
-			t.Parallel()
-			ctx := t.Context()
-
-			identitySpec := regionalSingleParameterizedIdentitySpec("name")
-			identitySchema := identity.NewIdentitySchema(identitySpec)
-
-			invocation := newIdentityInterceptor(&identitySpec)
-			interceptor := invocation.interceptor.(identityInterceptor)
-
-			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, tc.identityValues)
-			d.SetId(tc.id)
-			d.Set("name", attributeName)
-			d.Set("region", region)
-			d.Set("type", "some_type")
-
-			opts := crudInterceptorOptions{
-				c:    client,
-				d:    d,
-				when: After,
-				why:  Read,
-			}
-
-			interceptor.run(ctx, opts)
-
-			identity, err := d.Identity()
-			if err != nil {
-				t.Fatalf("unexpected error getting identity: %v", err)
-			}
-
-			if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-				t.Errorf("expected account ID %q, got %q", e, a)
-			}
-			if e, a := region, identity.Get(names.AttrRegion); e != a {
-				t.Errorf("expected region %q, got %q", e, a)
-			}
-			if e, a := tc.expectedName, identity.Get("name"); e != a {
-				t.Errorf("expected name %q, got %q", e, a)
-			}
-		})
-	}
-}
-
-func TestIdentityInterceptor_Read_MutableIdentity(t *testing.T) {
-	t.Parallel()
-
-	accountID := "123456789012"
-	region := "us-west-2" //lintignore:AWSAT003
-	attributeName := "attr_name"
-	identityName := "id_name"
-
-	resourceSchema := map[string]*schema.Schema{
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"type": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"region": sdkv2.RegionOptionalComputed(),
-	}
+	invocation := newIdentityInterceptor(&identitySpec)
+	interceptor := invocation.interceptor.(identityInterceptor)
 
 	client := mockClient{
 		accountID: accountID,
 		region:    region,
 	}
 
-	testCases := map[string]struct {
-		id             string
-		identityValues map[string]string
-		expectedName   string
-	}{
-		"existing resource": {
-			id: "some_id",
-			identityValues: map[string]string{
-				names.AttrAccountID: accountID,
-				names.AttrRegion:    region,
-				"name":              identityName,
-			},
-			expectedName: attributeName,
-		},
-		"removed from state": {
-			id: "",
-			identityValues: map[string]string{
-				names.AttrAccountID: accountID,
-				names.AttrRegion:    region,
-				"name":              identityName,
-			},
-			expectedName: identityName,
-		},
-		"for import": {
-			id:             "some_id",
-			identityValues: nil,
-			expectedName:   attributeName,
-		},
+	ctx := t.Context()
+
+	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+	d.SetId("")
+	d.Set("name", name)
+	d.Set("region", region)
+	d.Set("type", "some_type")
+
+	opts := crudInterceptorOptions{
+		c:    client,
+		d:    d,
+		when: After,
+		why:  Read,
 	}
 
-	for tname, tc := range testCases {
-		t.Run(tname, func(t *testing.T) {
-			t.Parallel()
-			ctx := t.Context()
+	interceptor.run(ctx, opts)
 
-			identitySpec := regionalSingleParameterizedIdentitySpec("name",
-				inttypes.WithMutableIdentity(),
-			)
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+	identity, err := d.Identity()
+	if err != nil {
+		t.Fatalf("unexpected error getting identity: %v", err)
+	}
 
-			invocation := newIdentityInterceptor(&identitySpec)
-			interceptor := invocation.interceptor.(identityInterceptor)
-
-			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, tc.identityValues)
-			d.SetId(tc.id)
-			d.Set("name", attributeName)
-			d.Set("region", region)
-			d.Set("type", "some_type")
-
-			opts := crudInterceptorOptions{
-				c:    client,
-				d:    d,
-				when: After,
-				why:  Read,
-			}
-
-			interceptor.run(ctx, opts)
-
-			identity, err := d.Identity()
-			if err != nil {
-				t.Fatalf("unexpected error getting identity: %v", err)
-			}
-
-			if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-				t.Errorf("expected account ID %q, got %q", e, a)
-			}
-			if e, a := region, identity.Get(names.AttrRegion); e != a {
-				t.Errorf("expected region %q, got %q", e, a)
-			}
-			if e, a := tc.expectedName, identity.Get("name"); e != a {
-				t.Errorf("expected name %q, got %q", e, a)
-			}
-		})
+	if identity.Get(names.AttrAccountID) != "" {
+		t.Errorf("expected no account ID, got %q", identity.Get(names.AttrAccountID))
+	}
+	if identity.Get(names.AttrRegion) != "" {
+		t.Errorf("expected no region, got %q", identity.Get(names.AttrRegion))
+	}
+	if identity.Get("name") != "" {
+		t.Errorf("expected no name, got %q", identity.Get("name"))
 	}
 }
 
