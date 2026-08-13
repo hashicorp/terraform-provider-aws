@@ -1465,7 +1465,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1524,7 +1524,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1563,7 +1563,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m1, m2 awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName1 := "aws_bedrockagentcore_memory_strategy.test"
 	resourceName2 := "aws_bedrockagentcore_memory_strategy.test2"
 
@@ -1605,7 +1605,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1684,7 +1684,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *tes
 func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplatesToNamespaces(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1763,7 +1763,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplatesToNamespaces(t *tes
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1939,7 +1939,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2104,7 +2104,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2196,7 +2196,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2300,7 +2300,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguratio
 func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2425,7 +2425,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -27,7 +27,7 @@ func TestAccBedrockAgentCoreMemory_Identity_basic(t *testing.T) {
 
 	var v awstypes.Memory
 	resourceName := "aws_bedrockagentcore_memory.test"
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -111,7 +111,7 @@ func TestAccBedrockAgentCoreMemory_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrockagentcore_memory.test"
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -200,7 +200,7 @@ func TestAccBedrockAgentCoreMemory_Identity_ExistingResource_basic(t *testing.T)
 
 	var v awstypes.Memory
 	resourceName := "aws_bedrockagentcore_memory.test"
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -258,7 +258,7 @@ func TestAccBedrockAgentCoreMemory_Identity_ExistingResource_noRefreshNoChange(t
 
 	var v awstypes.Memory
 	resourceName := "aws_bedrockagentcore_memory.test"
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
