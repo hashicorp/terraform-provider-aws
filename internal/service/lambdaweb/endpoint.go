@@ -146,6 +146,11 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
+			// Why an endpoint is Pending or Failed: without it a failed regional
+			// deployment is invisible from Terraform.
+			"state_reason": schema.StringAttribute{
+				Computed: true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"revision_weights": schema.ListNestedBlock{
@@ -493,6 +498,7 @@ func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		// the "region" meta-attribute, which then reads as a change and forces a
 		// spurious replacement on any out-of-band drift.
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(names.AttrState), state.State)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("state_reason"), state.StateReason)...)
 	}
 }
 
@@ -515,6 +521,7 @@ type endpointResourceModel struct {
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
 	State               types.String                                         `tfsdk:"state"`
+	StateReason         types.String                                         `tfsdk:"state_reason"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
@@ -524,15 +531,22 @@ type endpointResourceModel struct {
 // PerRegion endpoints have no top-level domain name; this is how callers
 // discover the per-region domains.
 func setRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
+	m.RegionalDomainNames = regionalDomainNames(ctx, regionalEndpoints)
+}
+
+// regionalDomainNames projects the API regionalEndpoints map (region ->
+// RegionalEndpoint) onto the flat region -> domain name map exposed in state;
+// AutoFlex cannot derive this field projection. Only PerRegion endpoints carry
+// per-region domains: MultiRegion regional entries have no domain of their own
+// because traffic uses the global domain.
+func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awstypes.RegionalEndpoint) fwtypes.MapOfString {
 	elems := map[string]attr.Value{}
 	for region, ep := range regionalEndpoints {
-		// Only PerRegion endpoints carry per-region domains; MultiRegion
-		// regional entries have no domain (traffic uses the global domain).
 		if ep.DomainName != nil {
 			elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
 		}
 	}
-	m.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, elems)
+	return fwtypes.NewMapValueOfMust[types.String](ctx, elems)
 }
 
 type revisionWeightModel struct {

@@ -166,7 +166,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the function in the format `arn:aws:lambda:{region}:{account}:web-function/{name}`.
 * `domain_name` - Domain name of the endpoint, when an `endpoint_config` is configured.
 * `latest_revision_id` - ID of the most recently published revision. Reference this from `aws_lambdaweb_endpoint` `revision_weights` to route traffic.
+* `regional_domain_names` - Map of Region to domain name. Populated for `PerRegion` endpoints, which serve an independent domain per Region; `MultiRegion` endpoints route through the single global `domain_name`.
 * `state` - Current state of the function.
+* `state_reason` - Reason for the current state, useful when the function is `Pending` or `Failed`.
 
 ## Timeouts
 

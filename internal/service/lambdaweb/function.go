@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -90,6 +91,18 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed: true,
 			},
 			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+			},
+			// PerRegion endpoints serve an independent domain per region; without
+			// this the regional domains of an inline endpoint_config cannot be
+			// referenced from a configuration at all.
+			"regional_domain_names": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			// Why a function is Pending or Failed.
+			"state_reason": schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -437,6 +450,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	plan.DomainName = types.StringNull()
+	plan.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{})
 	if !plan.EndpointConfig.IsNull() {
 		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
 		if err != nil {
@@ -450,6 +464,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+		plan.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
 
 		var epModel endpointConfigModel
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
@@ -524,6 +539,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	state.DomainName = types.StringNull()
+	state.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{})
 	switch endpointName, err := readEndpointName(ctx, conn, name, state.EndpointConfig); {
 	case err != nil:
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
@@ -544,6 +560,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			return
 		default:
 			state.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+			state.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
 
 			var epModel endpointConfigModel
 			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
@@ -603,7 +620,10 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		plan.LatestRevisionID = state.LatestRevisionID
 	}
 
+	// Carried over unless the endpoint is actually updated below: both are
+	// computed, so leaving them unknown fails the apply.
 	plan.DomainName = state.DomainName
+	plan.RegionalDomainNames = state.RegionalDomainNames
 	if !plan.EndpointConfig.Equal(state.EndpointConfig) && !plan.EndpointConfig.IsNull() {
 		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
 		if err != nil {
@@ -646,6 +666,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+		plan.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
 
 		// Mirror Create: flatten the endpoint back so computed sub-attributes
 		// (auto_deployment_mode, regions) are known after apply.
@@ -754,15 +775,17 @@ func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValue
 
 type functionResourceModel struct {
 	framework.WithRegionModel
-	ARN              types.String                                         `tfsdk:"arn"`
-	DomainName       types.String                                         `tfsdk:"domain_name"`
-	EndpointConfig   fwtypes.ListNestedObjectValueOf[endpointConfigModel] `tfsdk:"endpoint_config"`
-	FunctionName     types.String                                         `tfsdk:"function_name"`
-	ID               types.String                                         `tfsdk:"id"`
-	LatestRevisionID types.String                                         `tfsdk:"latest_revision_id"`
-	RevisionConfig   fwtypes.ListNestedObjectValueOf[revisionConfigModel] `tfsdk:"revision_config"`
-	State            types.String                                         `tfsdk:"state"`
-	Timeouts         timeouts.Value                                       `tfsdk:"timeouts"`
+	ARN                 types.String                                         `tfsdk:"arn"`
+	DomainName          types.String                                         `tfsdk:"domain_name"`
+	EndpointConfig      fwtypes.ListNestedObjectValueOf[endpointConfigModel] `tfsdk:"endpoint_config"`
+	FunctionName        types.String                                         `tfsdk:"function_name"`
+	ID                  types.String                                         `tfsdk:"id"`
+	LatestRevisionID    types.String                                         `tfsdk:"latest_revision_id"`
+	RevisionConfig      fwtypes.ListNestedObjectValueOf[revisionConfigModel] `tfsdk:"revision_config"`
+	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
+	State               types.String                                         `tfsdk:"state"`
+	StateReason         types.String                                         `tfsdk:"state_reason"`
+	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
 type revisionConfigModel struct {

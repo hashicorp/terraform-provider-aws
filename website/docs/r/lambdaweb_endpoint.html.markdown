@@ -79,6 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `domain_name` - HTTPS domain name of the endpoint. Empty for `PerRegion` endpoints, which only expose `regional_domain_names`.
 * `regional_domain_names` - Map of Region to that Region's independent domain name.
 * `state` - Current state of the endpoint.
+* `state_reason` - Reason for the current state, useful when a regional deployment is `Pending` or `Failed`.
 
 ## Timeouts
 
