@@ -5,8 +5,8 @@ package bedrock
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -25,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -133,39 +134,39 @@ func (r *enforcedGuardrailConfigurationResource) Schema(ctx context.Context, req
 
 func (r *enforcedGuardrailConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data enforcedGuardrailConfigurationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	response.Diagnostics.Append(r.putEnforcedGuardrailConfiguration(ctx, conn, &data)...)
+	// Set values for unknowns.
+	data.ID = types.StringValue(r.Meta().Region(ctx))
+
+	r.putEnforcedGuardrailConfiguration(ctx, conn, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().Region(ctx))
 
 	// Read back the full configuration to populate computed attributes.
 	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
 	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Enforced Guardrail Configuration after create", err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	response.Diagnostics.Append(r.flattenOutput(ctx, output, &data)...)
+	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *enforcedGuardrailConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data enforcedGuardrailConfigurationResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -175,34 +176,34 @@ func (r *enforcedGuardrailConfigurationResource) Read(ctx context.Context, reque
 	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
 
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Enforced Guardrail Configuration (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	response.Diagnostics.Append(r.flattenOutput(ctx, output, &data)...)
+	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *enforcedGuardrailConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var data enforcedGuardrailConfigurationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	response.Diagnostics.Append(r.putEnforcedGuardrailConfiguration(ctx, conn, &data)...)
+	r.putEnforcedGuardrailConfiguration(ctx, conn, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -210,21 +211,21 @@ func (r *enforcedGuardrailConfigurationResource) Update(ctx context.Context, req
 	// Read back the full configuration to populate computed attributes.
 	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
 	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Enforced Guardrail Configuration after update", err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	response.Diagnostics.Append(r.flattenOutput(ctx, output, &data)...)
+	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *enforcedGuardrailConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data enforcedGuardrailConfigurationResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -242,55 +243,20 @@ func (r *enforcedGuardrailConfigurationResource) Delete(ctx context.Context, req
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Enforced Guardrail Configuration (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 }
 
-func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client, data *enforcedGuardrailConfigurationResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	inferenceConfig := &awstypes.AccountEnforcedGuardrailInferenceInputConfiguration{
-		GuardrailIdentifier: data.GuardrailIdentifier.ValueStringPointer(),
-		GuardrailVersion:    data.GuardrailVersion.ValueStringPointer(),
+func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client, data *enforcedGuardrailConfigurationResourceModel, diags *diag.Diagnostics) {
+	var inferenceConfig awstypes.AccountEnforcedGuardrailInferenceInputConfiguration
+	smerr.AddEnrich(ctx, diags, fwflex.Expand(ctx, data, &inferenceConfig))
+	if diags.HasError() {
+		return
 	}
 
-	// Expand ModelEnforcement if set.
-	if !data.ModelEnforcement.IsNull() && !data.ModelEnforcement.IsUnknown() {
-		modelEnforcementData, d := data.ModelEnforcement.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		if modelEnforcementData != nil {
-			var me awstypes.ModelEnforcement
-			diags.Append(fwflex.Expand(ctx, modelEnforcementData, &me)...)
-			if diags.HasError() {
-				return diags
-			}
-			inferenceConfig.ModelEnforcement = &me
-		}
-	}
-
-	// Expand SelectiveContentGuarding if set.
-	if !data.SelectiveContentGuarding.IsNull() && !data.SelectiveContentGuarding.IsUnknown() {
-		scgData, d := data.SelectiveContentGuarding.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		if scgData != nil {
-			var scg awstypes.SelectiveContentGuarding
-			diags.Append(fwflex.Expand(ctx, scgData, &scg)...)
-			if diags.HasError() {
-				return diags
-			}
-			inferenceConfig.SelectiveContentGuarding = &scg
-		}
-	}
-
-	input := &bedrock.PutEnforcedGuardrailConfigurationInput{
-		GuardrailInferenceConfig: inferenceConfig,
+	input := bedrock.PutEnforcedGuardrailConfigurationInput{
+		GuardrailInferenceConfig: &inferenceConfig,
 	}
 
 	// Pass configId on update.
@@ -298,75 +264,41 @@ func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfigurati
 		input.ConfigId = data.ConfigID.ValueStringPointer()
 	}
 
-	_, err := conn.PutEnforcedGuardrailConfiguration(ctx, input)
+	_, err := conn.PutEnforcedGuardrailConfiguration(ctx, &input)
 	if err != nil {
-		diags.AddError("putting Bedrock Enforced Guardrail Configuration", err.Error())
-		return diags
+		smerr.AddError(ctx, diags, err, smerr.ID, data.ID.String())
 	}
-
-	return diags
 }
 
-func (r *enforcedGuardrailConfigurationResource) flattenOutput(ctx context.Context, output *awstypes.AccountEnforcedGuardrailOutputConfiguration, data *enforcedGuardrailConfigurationResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	data.ConfigID = types.StringPointerValue(output.ConfigId)
-	data.GuardrailArn = types.StringPointerValue(output.GuardrailArn)
-	data.GuardrailId = types.StringPointerValue(output.GuardrailId)
-	data.GuardrailVersion = types.StringPointerValue(output.GuardrailVersion)
+func (r *enforcedGuardrailConfigurationResource) flattenOutput(ctx context.Context, output *awstypes.AccountEnforcedGuardrailOutputConfiguration, data *enforcedGuardrailConfigurationResourceModel, diags *diag.Diagnostics) {
+	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, output, data))
+	if diags.HasError() {
+		return
+	}
 
 	// Populate guardrail_identifier from guardrail_arn on read so that import works correctly.
 	if data.GuardrailIdentifier.IsNull() || data.GuardrailIdentifier.ValueString() == "" {
 		data.GuardrailIdentifier = types.StringPointerValue(output.GuardrailArn)
 	}
-	data.CreatedAt = fwflex.TimeToFramework(ctx, output.CreatedAt)
-	data.CreatedBy = types.StringPointerValue(output.CreatedBy)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, output.UpdatedAt)
-	data.UpdatedBy = types.StringPointerValue(output.UpdatedBy)
-	data.Owner = fwtypes.StringEnumValue(output.Owner)
-
-	if output.ModelEnforcement != nil {
-		var me modelEnforcementModel
-		diags.Append(fwflex.Flatten(ctx, output.ModelEnforcement, &me)...)
-		if diags.HasError() {
-			return diags
-		}
-		data.ModelEnforcement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &me)
-	} else {
-		data.ModelEnforcement = fwtypes.NewListNestedObjectValueOfNull[modelEnforcementModel](ctx)
-	}
-
-	if output.SelectiveContentGuarding != nil {
-		var scg selectiveContentGuardingModel
-		diags.Append(fwflex.Flatten(ctx, output.SelectiveContentGuarding, &scg)...)
-		if diags.HasError() {
-			return diags
-		}
-		data.SelectiveContentGuarding = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &scg)
-	} else {
-		data.SelectiveContentGuarding = fwtypes.NewListNestedObjectValueOfNull[selectiveContentGuardingModel](ctx)
-	}
-
-	return diags
 }
 
 func findEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client) (*awstypes.AccountEnforcedGuardrailOutputConfiguration, error) {
-	input := &bedrock.ListEnforcedGuardrailsConfigurationInput{}
+	input := bedrock.ListEnforcedGuardrailsConfigurationInput{}
 
-	output, err := conn.ListEnforcedGuardrailsConfiguration(ctx, input)
+	output, err := conn.ListEnforcedGuardrailsConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || len(output.GuardrailsConfig) == 0 {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return &output.GuardrailsConfig[0], nil
