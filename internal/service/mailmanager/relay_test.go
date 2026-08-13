@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -149,6 +150,7 @@ func TestAccMailManagerRelay_authenticationTypes(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccRelayPreCheck(ctx, t)
+			testAccRelaySecretsManagerPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -231,6 +233,18 @@ func testAccRelayPreCheck(ctx context.Context, t *testing.T) {
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccRelaySecretsManagerPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
+	input := &secretsmanager.ListSecretsInput{}
+	_, err := conn.ListSecrets(ctx, input)
+	if acctest.PreCheckSkipError(err) {
+		t.Skip("skipping acceptance testing: secretsmanager:ListSecrets not available")
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
