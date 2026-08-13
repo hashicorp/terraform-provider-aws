@@ -135,6 +135,10 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NumberStatus](),
+				Computed:   true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"two_way_channel_arn": schema.StringAttribute{
@@ -359,8 +363,10 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		new.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, out.MonthlyLeasingPrice)
+		new.Status = fwtypes.StringEnumValue(out.Status)
 	} else {
 		new.MonthlyLeasingPrice = old.MonthlyLeasingPrice
+		new.Status = old.Status
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -455,6 +461,7 @@ type phoneNumberResourceModel struct {
 	PhoneNumberID             types.String                                       `tfsdk:"id"`
 	RegistrationID            types.String                                       `tfsdk:"registration_id"`
 	SelfManagedOptOutsEnabled types.Bool                                         `tfsdk:"self_managed_opt_outs_enabled"`
+	Status                    fwtypes.StringEnum[awstypes.NumberStatus]          `tfsdk:"status"`
 	Tags                      tftags.Map                                         `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                         `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                     `tfsdk:"timeouts"`
