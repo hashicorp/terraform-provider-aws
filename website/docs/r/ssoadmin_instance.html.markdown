@@ -35,7 +35,7 @@ resource "aws_ssoadmin_instance" "example" {
   name = "example"
 
   encryption_configuration {
-    key_type   = "CUSTOMER_MANAGED_KEY"
+    key_type    = "CUSTOMER_MANAGED_KEY"
     kms_key_arn = aws_kms_key.example.arn
   }
 }
