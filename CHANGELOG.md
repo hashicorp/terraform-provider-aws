@@ -10,6 +10,11 @@ ENHANCEMENTS:
 
 * resource/aws_db_parameter_group: Add Resource Identity support ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
 
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway_target: Prevent state inconsistencies caused by the service-managed policy session header ([#49447](https://github.com/hashicorp/terraform-provider-aws/issues/49447))
+* resource/aws_network_acl_rule: Fix `Missing Resource Identity After Read` errors. This fixes a regression introduced in [v6.59.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6590-august-12-2026) ([#49470](https://github.com/hashicorp/terraform-provider-aws/issues/49470))
+
 ## 6.59.0 (August 12, 2026)
 
 FEATURES:
