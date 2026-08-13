@@ -53,7 +53,7 @@ func testAccCheckServiceFunctionDestroy(ctx context.Context, t *testing.T) resou
 				continue
 			}
 
-			_, err := tfresiliencehubv2.FindServiceFunctionByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["service_function_id"])
+			_, err := tfresiliencehubv2.FindServiceFunctionByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["service_function_id"])
 			if err == nil {
 				return fmt.Errorf("Resilience Hub V2 Service Function %s still exists", rs.Primary.Attributes[names.AttrID])
 			}
@@ -72,7 +72,7 @@ func testAccCheckServiceFunctionExists(ctx context.Context, t *testing.T, n stri
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
 
-		output, err := tfresiliencehubv2.FindServiceFunctionByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["service_function_id"])
+		output, err := tfresiliencehubv2.FindServiceFunctionByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["service_function_id"])
 		if err != nil {
 			return err
 		}

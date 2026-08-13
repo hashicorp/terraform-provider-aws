@@ -5,82 +5,83 @@ package resiliencehubv2
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"iter"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const serviceFunctionImportIDPartCount = 2
-
 // @FrameworkResource("aws_resiliencehubv2_service_function", name="Service Function")
 // @IdentityAttribute("service_arn")
 // @IdentityAttribute("service_function_id")
-// @ImportIDHandler("serviceFunctionImportID", setIDAttribute=true)
+// @ImportIDHandler("serviceFunctionImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.ServiceFunction")
 // @Testing(hasNoPreExistingResource=true)
-func newResourceServiceFunction(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceServiceFunction{}, nil
+func newServiceFunctionResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &serviceFunctionResource{}, nil
 }
 
-type resourceServiceFunction struct {
-	framework.ResourceWithModel[resourceServiceFunctionModel]
+type serviceFunctionResource struct {
+	framework.ResourceWithModel[serviceFunctionResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *resourceServiceFunction) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *serviceFunctionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
-			names.AttrID: fwschema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+			"criticality": fwschema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ServiceFunctionCriticality](),
+				Required:   true,
 			},
-			"service_arn": fwschema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+			names.AttrDescription: fwschema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 500),
 				},
 			},
 			names.AttrName: fwschema.StringAttribute{
 				Required: true,
-			},
-			names.AttrDescription: fwschema.StringAttribute{
-				Optional: true,
-			},
-			"criticality": fwschema.StringAttribute{
-				Required: true,
-			},
-			"service_function_id": fwschema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+				Validators: []validator.String{
+					validResourceName,
 				},
 			},
+			"service_arn": fwschema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"service_function_id": framework.IDAttribute(),
 		},
 	}
 }
 
-func (r *resourceServiceFunction) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceServiceFunctionModel
+func (r *serviceFunctionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan serviceFunctionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -88,33 +89,35 @@ func (r *resourceServiceFunction) Create(ctx context.Context, req resource.Creat
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	input := resiliencehubv2.CreateServiceFunctionInput{
-		ServiceArn:  plan.ServiceArn.ValueStringPointer(),
-		Name:        plan.Name.ValueStringPointer(),
-		Description: plan.Description.ValueStringPointer(),
-		Criticality: awstypes.ServiceFunctionCriticality(plan.Criticality.ValueString()),
-	}
-
-	output, err := conn.CreateServiceFunction(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.ServiceFunction, &plan))
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input resiliencehubv2.CreateServiceFunctionInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ServiceArn = types.StringPointerValue(output.ServiceFunction.ServiceArn)
-	plan.ServiceFunctionId = types.StringPointerValue(output.ServiceFunction.ServiceFunctionId)
-	plan.ID = types.StringValue(plan.ServiceArn.ValueString() + "," + plan.ServiceFunctionId.ValueString())
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+
+	output, err := conn.CreateServiceFunction(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output.ServiceFunction, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set values for unknowns.
+	plan.ServiceFunctionID = fwflex.StringToFramework(ctx, output.ServiceFunction.ServiceFunctionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceServiceFunction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceServiceFunctionModel
+func (r *serviceFunctionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state serviceFunctionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -122,13 +125,15 @@ func (r *resourceServiceFunction) Read(ctx context.Context, req resource.ReadReq
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	sf, err := findServiceFunctionByID(ctx, conn, state.ServiceArn.ValueString(), state.ServiceFunctionId.ValueString())
+	serviceARN, serviceFunctionID := fwflex.StringValueFromFramework(ctx, state.ServiceARN), fwflex.StringValueFromFramework(ctx, state.ServiceFunctionID)
+	sf, err := findServiceFunctionByTwoPartKey(ctx, conn, serviceARN, serviceFunctionID)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceFunctionID)
 		return
 	}
 
@@ -140,8 +145,8 @@ func (r *resourceServiceFunction) Read(ctx context.Context, req resource.ReadReq
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
-func (r *resourceServiceFunction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceServiceFunctionModel
+func (r *serviceFunctionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state serviceFunctionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -150,34 +155,24 @@ func (r *resourceServiceFunction) Update(ctx context.Context, req resource.Updat
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	input := resiliencehubv2.UpdateServiceFunctionInput{
-		ServiceArn:        state.ServiceArn.ValueStringPointer(),
-		ServiceFunctionId: state.ServiceFunctionId.ValueStringPointer(),
-		Name:              plan.Name.ValueStringPointer(),
-		Description:       plan.Description.ValueStringPointer(),
-		Criticality:       awstypes.ServiceFunctionCriticality(plan.Criticality.ValueString()),
-	}
-
-	output, err := conn.UpdateServiceFunction(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.ServiceFunction, &plan))
+	serviceFunctionID := fwflex.StringValueFromFramework(ctx, plan.ServiceFunctionID)
+	var input resiliencehubv2.UpdateServiceFunctionInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ServiceArn = state.ServiceArn
-	plan.ServiceFunctionId = state.ServiceFunctionId
-	plan.ID = state.ID
+	_, err := conn.UpdateServiceFunction(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceFunctionID)
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceServiceFunction) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceServiceFunctionModel
+func (r *serviceFunctionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state serviceFunctionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,23 +180,37 @@ func (r *resourceServiceFunction) Delete(ctx context.Context, req resource.Delet
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	serviceARN, serviceFunctionID := fwflex.StringValueFromFramework(ctx, state.ServiceARN), fwflex.StringValueFromFramework(ctx, state.ServiceFunctionID)
 	input := resiliencehubv2.DeleteServiceFunctionInput{
-		ServiceArn:        state.ServiceArn.ValueStringPointer(),
-		ServiceFunctionId: state.ServiceFunctionId.ValueStringPointer(),
+		ServiceArn:        aws.String(serviceARN),
+		ServiceFunctionId: aws.String(serviceFunctionID),
 	}
 	_, err := conn.DeleteServiceFunction(ctx, &input)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceFunctionID)
+	}
+}
+
+func (r *serviceFunctionResource) flatten(ctx context.Context, sf *awstypes.ServiceFunction, data *serviceFunctionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, sf, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
 }
 
 type serviceFunctionImportID struct{}
 
 func (serviceFunctionImportID) Parse(id string) (string, map[string]any, error) {
+	const (
+		serviceFunctionImportIDPartCount = 2
+	)
 	parts, err := intflex.ExpandResourceId(id, serviceFunctionImportIDPartCount, false)
 	if err != nil {
 		return "", nil, err
@@ -215,56 +224,60 @@ func (serviceFunctionImportID) Parse(id string) (string, map[string]any, error) 
 	return id, result, nil
 }
 
-func (serviceFunctionImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var serviceArn, serviceFunctionID types.String
-	state.GetAttribute(ctx, path.Root("service_arn"), &serviceArn)
-	state.GetAttribute(ctx, path.Root("service_function_id"), &serviceFunctionID)
-
-	return serviceArn.ValueString() + "," + serviceFunctionID.ValueString()
-}
-
-func (r *resourceServiceFunction) flatten(ctx context.Context, sf *awstypes.ServiceFunction, data *resourceServiceFunctionModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	diags.Append(flex.Flatten(ctx, sf, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	data.ID = types.StringValue(data.ServiceArn.ValueString() + "," + data.ServiceFunctionId.ValueString())
-
-	return diags
-}
-
-func findServiceFunctionByID(ctx context.Context, conn *resiliencehubv2.Client, serviceArn, serviceFunctionId string) (*awstypes.ServiceFunction, error) {
+func findServiceFunctionByTwoPartKey(ctx context.Context, conn *resiliencehubv2.Client, serviceARN, serviceFunctionID string) (*awstypes.ServiceFunction, error) {
 	input := resiliencehubv2.ListServiceFunctionsInput{
-		ServiceArn: aws.String(serviceArn),
+		ServiceArn: aws.String(serviceARN),
 	}
 
-	output, err := conn.ListServiceFunctions(ctx, &input)
+	return findServiceFunction(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.ServiceFunction) bool {
+		return aws.ToString(v.ServiceFunctionId) == serviceFunctionID
+	}))
+}
+
+func findServiceFunction(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ServiceFunction]) (*awstypes.ServiceFunction, error) {
+	output, err := findServiceFunctions(ctx, conn, input, optFns...)
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
-		}
 		return nil, smarterr.NewError(err)
 	}
 
-	for _, sf := range output.ServiceFunctions {
-		if aws.ToString(sf.ServiceFunctionId) == serviceFunctionId {
-			return &sf, nil
-		}
-	}
-
-	return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
-type resourceServiceFunctionModel struct {
+func findServiceFunctions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ServiceFunction]) ([]awstypes.ServiceFunction, error) {
+	output, err := tfslices.CollectAndConcatWithError(listServiceFunctionPages(ctx, conn, input), optFns...)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	return output, nil
+}
+
+func listServiceFunctionPages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.ServiceFunction, error] {
+	return func(yield func([]awstypes.ServiceFunction, error) bool) {
+		pages := resiliencehubv2.NewListServiceFunctionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Resilience Hub V2 Service Functions: %w", err))
+				return
+			}
+
+			if !yield(page.ServiceFunctions, nil) {
+				return
+			}
+		}
+	}
+}
+
+type serviceFunctionResourceModel struct {
 	framework.WithRegionModel
-	Criticality       types.String `tfsdk:"criticality"`
-	Description       types.String `tfsdk:"description"`
-	ID                types.String `tfsdk:"id"`
-	Name              types.String `tfsdk:"name"`
-	ServiceArn        types.String `tfsdk:"service_arn"`
-	ServiceFunctionId types.String `tfsdk:"service_function_id"`
+	Criticality       fwtypes.StringEnum[awstypes.ServiceFunctionCriticality] `tfsdk:"criticality"`
+	Description       types.String                                            `tfsdk:"description"`
+	Name              types.String                                            `tfsdk:"name"`
+	ServiceARN        fwtypes.ARN                                             `tfsdk:"service_arn"`
+	ServiceFunctionID types.String                                            `tfsdk:"service_function_id"`
 }

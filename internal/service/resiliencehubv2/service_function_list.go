@@ -5,7 +5,6 @@ package resiliencehubv2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,10 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
@@ -29,7 +30,7 @@ func newResourceServiceFunctionAsListResource() list.ListResourceWithConfigure {
 var _ list.ListResource = &serviceFunctionListResource{}
 
 type serviceFunctionListResource struct {
-	resourceServiceFunction
+	serviceFunctionResource
 	framework.WithList
 }
 
@@ -37,6 +38,7 @@ func (l *serviceFunctionListResource) ListResourceConfigSchema(_ context.Context
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"service_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Required:    true,
 				Description: "ARN of the service to list service functions from.",
 			},
@@ -55,12 +57,12 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 		}
 	}
 
-	serviceArn := query.ServiceArn.ValueString()
-	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, query.ServiceARN)
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceARN)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := resiliencehubv2.ListServiceFunctionsInput{
-			ServiceArn: aws.String(serviceArn),
+			ServiceArn: aws.String(serviceARN),
 		}
 		for item, err := range listServiceFunctions(ctx, conn, &input) {
 			if err != nil {
@@ -71,7 +73,8 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 
 			result := request.NewListResult(ctx)
 
-			var data resourceServiceFunctionModel
+			var data serviceFunctionResourceModel
+
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 				if result.Diagnostics.HasError() {
@@ -90,24 +93,9 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 
 type listServiceFunctionModel struct {
 	framework.WithRegionModel
-	ServiceArn types.String `tfsdk:"service_arn"`
+	ServiceARN fwtypes.ARN `tfsdk:"service_arn"`
 }
 
-func listServiceFunctions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput) iter.Seq2[awstypes.ServiceFunction, error] {
-	return func(yield func(awstypes.ServiceFunction, error) bool) {
-		pages := resiliencehubv2.NewListServiceFunctionsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.ServiceFunction{}, fmt.Errorf("listing Resilience Hub V2 Service Function resources: %w", err))
-				return
-			}
-
-			for _, item := range page.ServiceFunctions {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listServiceFunctions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.ServiceFunction, error] {
+	return tfiter.ConcatValuesWithError(listServiceFunctionPages(ctx, conn, input, optFns...))
 }

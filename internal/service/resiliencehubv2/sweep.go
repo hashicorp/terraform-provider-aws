@@ -149,7 +149,7 @@ func sweepServiceFunctions(ctx context.Context, client *conns.AWSClient) ([]swee
 				continue
 			}
 			for _, sf := range output.ServiceFunctions {
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceServiceFunction, client,
+				sweepResources = append(sweepResources, framework.NewSweepResource(newServiceFunctionResource, client,
 					framework.NewAttribute(names.AttrID, aws.ToString(svc.ServiceArn)+","+aws.ToString(sf.ServiceFunctionId)),
 					framework.NewAttribute("service_arn", aws.ToString(svc.ServiceArn)),
 					framework.NewAttribute("service_function_id", aws.ToString(sf.ServiceFunctionId)),

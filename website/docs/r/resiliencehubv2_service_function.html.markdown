@@ -52,7 +52,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Composite identifier in the format `service_arn,service_function_id`.
 * `service_function_id` - Unique identifier of the service function.
 
 ## Import
