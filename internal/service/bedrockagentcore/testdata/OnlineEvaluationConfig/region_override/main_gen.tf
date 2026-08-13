@@ -24,6 +24,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       sampling_percentage = 10.0
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 data "aws_partition" "current" {}
