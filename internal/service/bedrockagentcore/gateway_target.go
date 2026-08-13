@@ -980,7 +980,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Set values for unknowns.
-	target = normalizeGatewayTargetOutputForState(target, len(data.MetadataConfiguration.Elements()) > 0)
+	target = normalizeGatewayTargetOutputForState(target, data.MetadataConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, target, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -1010,7 +1010,7 @@ func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	out = normalizeGatewayTargetOutputForState(out, len(data.MetadataConfiguration.Elements()) > 0)
+	out = normalizeGatewayTargetOutputForState(out, data.MetadataConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
 	if response.Diagnostics.HasError() {
 		return

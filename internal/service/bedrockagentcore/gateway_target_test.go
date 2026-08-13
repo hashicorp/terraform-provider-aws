@@ -1012,12 +1012,12 @@ func TestNormalizeGatewayTargetOutputForState(t *testing.T) {
 		},
 		"implicit header removed": {
 			metadataConfiguration: &awstypes.MetadataConfiguration{
-				AllowedQueryParameters: []string{"version"},
+				AllowedQueryParameters: []string{names.AttrVersion},
 				AllowedRequestHeaders:  []string{"x-correlation-id", testAccGatewayTargetPolicySessionIDHeader},
 				AllowedResponseHeaders: []string{"x-response-id"},
 			},
 			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
-				AllowedQueryParameters: []string{"version"},
+				AllowedQueryParameters: []string{names.AttrVersion},
 				AllowedRequestHeaders:  []string{"x-correlation-id"},
 				AllowedResponseHeaders: []string{"x-response-id"},
 			},
