@@ -314,7 +314,7 @@ func (amiLaunchPermissionImportID) Parse(id string) (string, map[string]any, err
 			if regexache.MustCompile(`^\d{12}$`).MatchString(permissionID) {
 				accountID = permissionID
 				m["image_id"] = imageID
-				m["account_id"] = accountID
+				m[names.AttrAccountID] = accountID
 				ok = true
 			} else if arn.IsARN(permissionID) {
 				if v, _ := arn.Parse(permissionID); v.Service == "organizations" {
