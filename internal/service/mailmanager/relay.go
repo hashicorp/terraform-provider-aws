@@ -46,9 +46,9 @@ import (
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newRelayResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &relayResource{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
