@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_security_group_rule: Fix resource import for rules with `icmp` or `icmpv6` protocol
-```

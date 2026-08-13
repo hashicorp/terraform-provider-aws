@@ -39,32 +39,34 @@ func resourceLicenseAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"free_trial_expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"grafana_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
-			},
-			"license_expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"license_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LicenseType](),
-			},
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"free_trial_expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"grafana_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsUUID,
+				},
+				"license_expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"license_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LicenseType](),
+				},
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

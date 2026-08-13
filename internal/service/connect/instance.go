@@ -63,88 +63,90 @@ func resourceInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_resolve_best_voices_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			"contact_flow_logs_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false, //verified default result from ListInstanceAttributes()
-			},
-			"contact_lens_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(12, 12),
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
-			},
-			"early_media_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true, //verified default result from ListInstanceAttributes()
-			},
-			"identity_management_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
-			},
-			"inbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"instance_alias": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{"directory_id", "instance_alias"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
-				),
-			},
-			"multi_party_conference_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false, //verified default result from ListInstanceAttributes()
-			},
-			"outbound_calls_enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrServiceRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
-			// "use_custom_tts_voices_enabled": {
-			// 	Type:     schema.TypeBool,
-			// 	Optional: true,
-			// 	Default:  false, //verified default result from ListInstanceAttributes()
-			// },
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_resolve_best_voices_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				"contact_flow_logs_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false, //verified default result from ListInstanceAttributes()
+				},
+				"contact_lens_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(12, 12),
+					AtLeastOneOf: []string{"directory_id", "instance_alias"},
+				},
+				"early_media_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true, //verified default result from ListInstanceAttributes()
+				},
+				"identity_management_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DirectoryType](),
+				},
+				"inbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"instance_alias": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{"directory_id", "instance_alias"},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
+					),
+				},
+				"multi_party_conference_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false, //verified default result from ListInstanceAttributes()
+				},
+				"outbound_calls_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrServiceRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
+				// "use_custom_tts_voices_enabled": {
+				// 	Type:     schema.TypeBool,
+				// 	Optional: true,
+				// 	Default:  false, //verified default result from ListInstanceAttributes()
+				// },
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

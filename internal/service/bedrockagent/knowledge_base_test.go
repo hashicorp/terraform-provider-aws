@@ -22,7 +22,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// TitanModelsAllowedEnvVar is the environment variable which
+// must be set to run acceptance tests relying on Amazon Titan embedded text
+// models.
+//
+// These models are not currently approved for use in the main HashiCorp
+// test account, and therefore tests depending on these models are skipped
+// by default.
+//
+// See the full list of supported models in the Amazon Bedrock documentation:
+// https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-supported.html#knowledge-base-supported-embeddings
+const TitanModelsAllowedEnvVar = "TF_AWS_BEDROCK_TITAN_MODELS_ALLOWED"
+
 func testAccKnowledgeBase_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -56,6 +70,8 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 }
 
 func testAccKnowledgeBase_tags(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -134,6 +150,8 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
 
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -167,10 +185,11 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -198,6 +217,8 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var knowledgebase awstypes.KnowledgeBase
@@ -224,10 +245,11 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -255,6 +277,8 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -313,6 +337,8 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
 
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -345,9 +371,10 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
 							"vector_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"supplemental_data_storage_configuration": knownvalue.ListExact([]knownvalue.Check{
@@ -404,10 +431,11 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(1),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeKendra),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeKendra),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
 						}),
 					})),
 				},
@@ -417,6 +445,8 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -451,10 +481,11 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -477,6 +508,8 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -502,10 +535,11 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -583,7 +617,8 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned(t *testing.T) 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
 							"sql_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									names.AttrType: tfknownvalue.StringExact(awstypes.QueryEngineTypeRedshift),
@@ -643,7 +678,8 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftServerless(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
 							"sql_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									names.AttrType: tfknownvalue.StringExact(awstypes.QueryEngineTypeRedshift),
@@ -703,10 +739,11 @@ func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
-							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
-							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
-							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"kendra_knowledge_base_configuration":  knownvalue.ListSizeExact(0),
+							"managed_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":     knownvalue.ListSizeExact(0),
+							names.AttrType:                         tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration":  knownvalue.ListSizeExact(1),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -723,6 +760,36 @@ func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
 						}),
 					})),
 				},
+			},
+		},
+	})
+}
+
+func testAccKnowledgeBase_Managed_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var kb awstypes.KnowledgeBase
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_managed(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &kb),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration").AtSliceIndex(0).AtMapKey(names.AttrType), tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeManaged)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -2200,6 +2267,43 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test]
+}
+`, rName)
+}
+
+func testAccKnowledgeBaseConfig_managed(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    type = "MANAGED"
+
+    managed_knowledge_base_configuration {
+      embedding_model_type = "MANAGED"
+    }
+  }
 }
 `, rName)
 }

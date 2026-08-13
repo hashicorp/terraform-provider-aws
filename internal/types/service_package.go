@@ -27,25 +27,33 @@ type ServicePackageResourceRegion struct {
 
 // ResourceRegionDefault returns the default resource region configuration.
 // The default is to enable per-resource Region override and validate the override value.
-func ResourceRegionDefault() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDefault() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
-	}
+	})
 }
 
 // ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
-func ResourceRegionDisabled() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{}
+func ResourceRegionDisabled() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{})
 }
 
 // ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
-func ResourceRegionDeprecatedOverride() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDeprecatedOverride() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
 		IsOverrideDeprecated:          true,
-	}
+	})
+}
+
+// ResourceRegionNoPartitionValidation returns the resource region configuration indicating that per-resource Region override is enabled but the value is not validated against the partition.
+func ResourceRegionNoPartitionValidation() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: false,
+	})
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.
@@ -372,12 +380,12 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func RegionalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
-			StringIdentityAttribute(name, true),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}
@@ -389,46 +397,12 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	return identity
 }
 
-func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute("region", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func GlobalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute(name, true),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		IsGlobalResource: true,
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}

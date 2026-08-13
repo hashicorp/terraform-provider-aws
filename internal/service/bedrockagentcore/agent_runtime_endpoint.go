@@ -131,6 +131,9 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	data.AgentRuntimeVersion = fwflex.StringToFramework(ctx, out.TargetVersion)
 
 	if _, err := waitAgentRuntimeEndpointCreated(ctx, conn, agentRuntimeID, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
+		response.State.SetAttribute(ctx, path.Root(names.AttrName), name)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}

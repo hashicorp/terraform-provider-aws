@@ -6,12 +6,44 @@ package common
 import (
 	"fmt"
 	"go/ast"
+	"go/parser"
+	"go/token"
+	"iter"
+	"os"
+	"strings"
 
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/tools/go/packages"
 )
 
+type PackageFile struct {
+	name string
+	file *ast.File
+}
+
+func (file *PackageFile) Name() string {
+	return file.name
+}
+
+func (file *PackageFile) File() *ast.File {
+	return file.file
+}
+
+func (file *PackageFile) PackageName() string {
+	return file.file.Name.Name
+}
+
 type Package struct {
-	files []*ast.File
+	name  string
+	files []*PackageFile
+}
+
+func (pkg *Package) Name() string {
+	return pkg.name
+}
+
+func (pkg *Package) Files() []*PackageFile {
+	return pkg.files
 }
 
 func LoadPackage(sourcePackage string) (*Package, error) {
@@ -28,17 +60,22 @@ func LoadPackage(sourcePackage string) (*Package, error) {
 	pkg := pkgs[0]
 
 	return &Package{
-		files: pkg.Syntax,
+		name: pkg.Name,
+		files: tfslices.ApplyToAll(pkg.Syntax, func(file *ast.File) *PackageFile {
+			return &PackageFile{
+				file: file,
+			}
+		}),
 	}, nil
 }
 
-func (pkg *Package) FindFunction(functionName string) *Function {
-	for _, file := range pkg.files {
+func (pkg *Package) FindFunction(functionName string) *PackageFunction {
+	for _, file := range pkg.Files() {
 		if file != nil {
-			for _, decl := range file.Decls {
+			for _, decl := range file.File().Decls {
 				if funcDecl, ok := decl.(*ast.FuncDecl); ok {
 					if funcDecl.Name.Name == functionName {
-						return &Function{
+						return &PackageFunction{
 							funcDecl: funcDecl,
 						}
 					}
@@ -50,18 +87,50 @@ func (pkg *Package) FindFunction(functionName string) *Function {
 	return nil
 }
 
-type Function struct {
+type PackageFunction struct {
 	funcDecl *ast.FuncDecl
 }
 
-func (function *Function) Name() string {
+func (function *PackageFunction) Name() string {
 	return function.funcDecl.Name.Name
 }
 
-func (function *Function) Params() []*ast.Field {
+func (function *PackageFunction) Params() []*ast.Field {
 	return function.funcDecl.Type.Params.List
 }
 
-func (function *Function) Results() []*ast.Field {
+func (function *PackageFunction) Results() []*ast.Field {
 	return function.funcDecl.Type.Results.List
+}
+
+// ScanDirectory scans a single directory and returns an iterator of Go sources files.
+func ScanDirectory(path string) iter.Seq2[*PackageFile, error] {
+	return func(yield func(*PackageFile, error) bool) {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			yield(nil, err)
+			return
+		}
+
+		fileSet := token.NewFileSet()
+
+		for _, entry := range entries {
+			// Skip directories, test files, and service_package_gen.go.
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") || entry.Name() == "service_package_gen.go" {
+				continue
+			}
+
+			name := path + "/" + entry.Name()
+
+			file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments)
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+
+			if !yield(&PackageFile{name: name, file: file}, nil) {
+				return
+			}
+		}
+	}
 }

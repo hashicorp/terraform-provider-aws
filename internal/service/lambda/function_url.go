@@ -45,79 +45,81 @@ func resourceFunctionURL() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"authorization_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
-			},
-			"cors": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_credentials": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"allow_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_methods": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"allow_origins": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"expose_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"max_age": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtMost(86400),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
+				},
+				"cors": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_credentials": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"allow_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_methods": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"allow_origins": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"expose_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"max_age": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtMost(86400),
+							},
 						},
 					},
 				},
-			},
-			names.AttrFunctionARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"function_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
-			},
-			"function_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.InvokeModeBuffered,
-				ValidateDiagFunc: enum.Validate[awstypes.InvokeMode](),
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"url_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrFunctionARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"function_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
+				},
+				"function_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invoke_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.InvokeModeBuffered,
+					ValidateDiagFunc: enum.Validate[awstypes.InvokeMode](),
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"url_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_appsync_resolver: Add `max_batch_size` and `sync_config` arguments.
-```

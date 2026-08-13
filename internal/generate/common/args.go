@@ -4,6 +4,7 @@
 package common
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ type Args struct {
 	Keyword    map[string]string
 }
 
-func ParseArgs(s string) Args {
+func ParseArgs(s string) (Args, error) {
 	args := Args{
 		Keyword: make(map[string]string),
 	}
@@ -27,6 +28,12 @@ func ParseArgs(s string) Args {
 			continue
 		}
 		key, value, _ := strings.Cut(key, "=")
+		if err := checkBalancedQuotes(key); err != nil {
+			return args, err
+		}
+		if err := checkBalancedQuotes(value); err != nil {
+			return args, err
+		}
 		// Unquote.
 		key = strings.Trim(key, `"`)
 		value = strings.Trim(value, `"`)
@@ -37,5 +44,13 @@ func ParseArgs(s string) Args {
 		}
 	}
 
-	return args
+	return args, nil
+}
+
+func checkBalancedQuotes(s string) error {
+	count := strings.Count(s, `"`)
+	if count%2 != 0 {
+		return fmt.Errorf("unclosed quote in %q", s)
+	}
+	return nil
 }

@@ -32,9 +32,9 @@ data "aws_secretsmanager_secret" "by-name" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -43,8 +43,9 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the secret.
 * `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
-* `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - ARN of the secret.
+* `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.
+* `type` - Type of secret for managed external secrets.

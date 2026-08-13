@@ -26,12 +26,14 @@ func resourceSecurityTokenServicePreferences() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecurityTokenServicePreferencesUpsert,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"global_endpoint_token_version": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.GlobalEndpointTokenVersion](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"global_endpoint_token_version": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.GlobalEndpointTokenVersion](),
+				},
+			}
 		},
 	}
 }

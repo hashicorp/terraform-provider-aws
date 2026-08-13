@@ -1,8 +1,13 @@
 resource "aws_cloudwatch_metric_stream" "test" {
+{{- template "region" }}
   name          = var.rName
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 
 {{- template "tags" . }}
 }
@@ -51,6 +56,7 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
+{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
@@ -102,6 +108,7 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
+{{- template "region" }}
   name        = var.rName
   destination = "extended_s3"
 

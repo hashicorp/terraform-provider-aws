@@ -20,7 +20,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -51,7 +51,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -85,7 +85,7 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

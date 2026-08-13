@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,16 +20,16 @@ func TestAccXRayEncryptionConfig_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
+		acctest.CtBasic: testAccEncryptionConfig_basic,
 		"Identity":      testAccXRayEncryptionConfig_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccXRayEncryptionConfig_basic(t *testing.T) {
+func testAccEncryptionConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.EncryptionConfig
+	var v awstypes.EncryptionConfig
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"
@@ -71,15 +71,11 @@ func testAccXRayEncryptionConfig_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEncryptionConfigExists(ctx context.Context, t *testing.T, n string, v *types.EncryptionConfig) resource.TestCheckFunc {
+func testAccCheckEncryptionConfigExists(ctx context.Context, t *testing.T, n string, v *awstypes.EncryptionConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)

@@ -61,6 +61,7 @@ var (
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
+	IntegrationIDFromARN                       = integrationIDFromARN
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterChunksForModify                   = parameterChunksForModify
@@ -102,4 +103,8 @@ var (
 	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
 	ValidSubnetGroupName             = validSubnetGroupName
 	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
+
+	WaitDBClusterUpdated = waitDBClusterUpdated
+
+	EngineVersionIsNewer = engineVersionIsNewer
 )

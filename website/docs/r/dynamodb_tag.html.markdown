@@ -10,7 +10,7 @@ description: |-
 
 Manages an individual DynamoDB resource tag. This resource should only be used in cases where DynamoDB resources are created outside Terraform (e.g., Table replicas in other regions).
 
-~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_dynamodb_table` and `aws_dynamodb_tag` to manage tags of the same DynamoDB Table in the same region will cause a perpetual difference where the `aws_dynamodb_cluster` resource will try to remove the tag being added by the `aws_dynamodb_tag` resource.
+~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_dynamodb_table` and `aws_dynamodb_tag` to manage tags of the same DynamoDB Table in the same region will cause a perpetual difference where the `aws_dynamodb_table` resource will try to remove the tag being added by the `aws_dynamodb_tag` resource.
 
 ~> **NOTE:** This tagging resource does not use the [provider `ignore_tags` configuration](/docs/providers/aws/index.html#ignore_tags).
 
@@ -36,14 +36,14 @@ resource "aws_dynamodb_table" "example" {
   # ... other configuration ...
 
   replica {
-    region_name = data.aws_region.replica.name
+    region_name = data.aws_region.replica.region
   }
 }
 
 resource "aws_dynamodb_tag" "test" {
   provider = aws.replica
 
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.replica.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.replica.region)
   key          = "testkey"
   value        = "testvalue"
 }

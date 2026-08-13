@@ -23,34 +23,36 @@ func dataSourceCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCredentialsRead,
 
-		Schema: map[string]*schema.Schema{
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"db_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"db_password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"db_user": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"duration_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      900,
-				ValidateFunc: validation.IntBetween(900, 3600),
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"db_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"db_password": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"db_user": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"duration_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      900,
+					ValidateFunc: validation.IntBetween(900, 3600),
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

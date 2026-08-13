@@ -92,7 +92,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			},
 			"cpu_percentage": schema.Float32Attribute{
 				Computed:    true,
-				Description: "he percentage of total CPU cores currently in use in the Autonomous VM cluster.",
+				Description: "The percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,

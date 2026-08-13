@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_elasticache_replication_group: Allow `auth_token` argument to be rotated without destroy and create
-```

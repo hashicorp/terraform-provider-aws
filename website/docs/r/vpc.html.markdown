@@ -10,6 +10,8 @@ description: |-
 
 Provides a VPC resource.
 
+~> **NOTE:** When AWS GuardDuty is enabled in your account, it automatically creates VPC endpoints and security groups in your VPCs to monitor network traffic. During VPC deletion, the provider automatically detects and removes these GuardDuty-managed VPC endpoints and security groups if they are blocking the deletion. This cleanup only targets resources tagged with `GuardDutyManaged=true` and happens automatically during destroy operations with no manual intervention required. For optimal functionality, the IAM role used by Terraform should have the [optional permissions listed below](#guardduty-cleanup-permissions). If these permissions are not available, the provider will continue with the deletion attempt and surface warnings only if the deletion ultimately fails.
+
 ## Example Usage
 
 Basic usage:
@@ -105,7 +107,35 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that owns the VPC.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during VPC deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSecurityGroups` (on all resources), and `ec2:DeleteVpcEndpoints`, `ec2:ModifyVpcEndpoint`, `ec2:DeleteSecurityGroup` (on resources tagged `GuardDutyManaged: true`).
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc.test_vpc
+  identity = {
+    id = "vpc-a01106c2"
+  }
+}
+
+resource "aws_vpc" "test_vpc" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) VPC ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPCs using the VPC `id`. For example:
 

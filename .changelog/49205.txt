@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_api_gateway_rest_api: Wait for the REST API to reach an available state on create and update, and to be fully deleted on delete, preventing intermittent `BadRequestException: There is already an update in progress` errors
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_rest_api: Add configurable resource timeouts.
+```

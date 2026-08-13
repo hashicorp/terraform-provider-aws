@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -681,10 +680,10 @@ func (r *resourceCloudAutonomousVmCluster) Delete(ctx context.Context, req resou
 }
 
 func waitCloudAutonomousVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudAutonomousVmCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusCloudAutonomousVmCluster(ctx, conn, id),
+		Refresh: statusCloudAutonomousVmCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -697,10 +696,10 @@ func waitCloudAutonomousVmClusterCreated(ctx context.Context, conn *odb.Client, 
 }
 
 func waitCloudAutonomousVmClusterDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudAutonomousVmCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusCloudAutonomousVmCluster(ctx, conn, id),
+		Refresh: statusCloudAutonomousVmCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -712,8 +711,8 @@ func waitCloudAutonomousVmClusterDeleted(ctx context.Context, conn *odb.Client, 
 	return nil, err
 }
 
-func statusCloudAutonomousVmCluster(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCloudAutonomousVmCluster(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findCloudAutonomousVmClusterByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -734,9 +733,8 @@ func findCloudAutonomousVmClusterByID(ctx context.Context, conn *odb.Client, id 
 	out, err := conn.GetCloudAutonomousVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err

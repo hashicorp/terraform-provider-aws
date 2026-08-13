@@ -102,7 +102,7 @@ func TestAccBedrockAgentPrompt_variants(t *testing.T) {
 	var prompt bedrockagent.GetPromptOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -168,7 +168,7 @@ func TestAccBedrockAgentPrompt_extraFields(t *testing.T) {
 	var prompt bedrockagent.GetPromptOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
-	foundationModel := "amazon.titan-text-express-v1"
+	foundationModel := "amazon.nova-micro-v1:0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -241,6 +241,14 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourcePrompt, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
