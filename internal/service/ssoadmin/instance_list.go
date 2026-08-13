@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_ssoadmin_instance")
@@ -41,17 +43,23 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 			arn := aws.ToString(item.InstanceArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("arn"), arn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+			var output *ssoadmin.DescribeInstanceOutput
+			if request.IncludeResource {
+				output, err = findInstanceByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
 			result := request.NewListResult(ctx)
 			var data instanceResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				data.ARN = fwtypes.ARNValue(arn)
 				if request.IncludeResource {
-					output, err := findInstanceByARN(ctx, conn, arn)
-					if err != nil {
-						result.Diagnostics.AddError("Reading SSO Admin Instance", err.Error())
-						return
-					}
 					result.Diagnostics.Append(l.flatten(ctx, output, &data)...)
 				}
 				result.DisplayName = aws.ToString(item.Name)
