@@ -366,6 +366,50 @@ func (r *functionResource) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 }
 
+// ModifyPlan warns when an apply is about to publish a revision that the inline
+// endpoint will not serve. An endpoint with `auto_deployment_mode = "Disabled"`
+// keeps the traffic weights it already has, and weights are only settable
+// through UpdateWebFunctionEndpoint: CreateWebFunction's endpointConfig has no
+// revisionWeights member, so `endpoint_config` cannot express them. Without a
+// warning the apply reports success, the next plan is empty, and the endpoint
+// keeps serving the old revision indefinitely. `MultiRegion` and `PerRegion`
+// endpoints are always affected because the service requires `Disabled` there.
+func (r *functionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var state, plan functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Only a revision_config change publishes a new revision.
+	if plan.RevisionConfig.Equal(state.RevisionConfig) || plan.EndpointConfig.IsNull() || plan.EndpointConfig.IsUnknown() {
+		return
+	}
+
+	ep, d := plan.EndpointConfig.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() || ep == nil || ep.AutoDeploymentMode.IsUnknown() {
+		return
+	}
+	if ep.AutoDeploymentMode.ValueString() != string(awstypes.AutoDeploymentModeDisabled) {
+		return
+	}
+
+	resp.Diagnostics.AddAttributeWarning(path.Root("endpoint_config"),
+		"New revision will not receive traffic",
+		fmt.Sprintf("Endpoint %q uses `auto_deployment_mode = \"Disabled\"`, so it keeps serving the revision its traffic weights already point at. "+
+			"This apply publishes a new revision, but traffic weights are only settable through the UpdateWebFunctionEndpoint API, which `endpoint_config` "+
+			"does not expose. The apply will report success and the next plan will be empty while the endpoint still serves the previous revision.\n\n"+
+			"To shift traffic to new revisions, manage the endpoint with a separate `aws_lambdaweb_endpoint` resource and point its `revision_weights` at "+
+			"`latest_revision_id` of this function. `MultiRegion` and `PerRegion` endpoints always require `auto_deployment_mode = \"Disabled\"`.",
+			ep.EndpointName.ValueString()))
+}
+
 func (r *functionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LambdaWebClient(ctx)
 

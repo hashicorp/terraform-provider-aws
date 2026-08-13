@@ -90,7 +90,7 @@ resource "aws_lambdaweb_function" "example" {
 
 Revisions are immutable: any change to `revision_config` (new package, runtime, environment variables, timeouts, ...) rolls a new revision and waits until it is `Active`. `latest_revision_id` always tracks the newest revision.
 
-~> **Note:** Traffic only follows new revisions automatically on endpoints with `auto_deployment_mode = "LatestRevision"`. On endpoints with `auto_deployment_mode = "Disabled"` (required for `MultiRegion`), creating a new revision does **not** shift traffic: update `revision_weights` on the corresponding [`aws_lambdaweb_endpoint`](lambdaweb_endpoint.html.markdown) to route requests to it.
+~> **Note:** Traffic only follows new revisions automatically on endpoints with `auto_deployment_mode = "LatestRevision"`. On an endpoint with `auto_deployment_mode = "Disabled"` (which `MultiRegion` and `PerRegion` require), publishing a revision does **not** shift traffic, and the `endpoint_config` block cannot shift it either: traffic weights are only settable through the `UpdateWebFunctionEndpoint` API, which has no equivalent in `CreateWebFunction`'s `endpointConfig`. A function whose inline endpoint is `MultiRegion` or `PerRegion` therefore keeps serving the revision the endpoint was created with, even though the apply succeeds and the following plan is empty. To deploy new revisions to such an endpoint, keep the inline `endpoint_config` on `LatestRevision` and manage the traffic-shifted endpoint as a separate [`aws_lambdaweb_endpoint`](lambdaweb_endpoint.html.markdown) resource, whose `revision_weights` can reference this function's `latest_revision_id`. The provider emits a plan warning whenever an apply would publish a revision that the inline endpoint will not serve.
 
 ## Argument Reference
 
@@ -157,7 +157,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`). Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
-* `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
+* `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
 
 ## Attribute Reference
 
