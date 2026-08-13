@@ -150,7 +150,6 @@ func (r *relayResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *relayResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().MailManagerClient(ctx)
 	var plan relayResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -188,7 +187,6 @@ func (r *relayResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *relayResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().MailManagerClient(ctx)
 
 	var state relayResourceModel
@@ -220,7 +218,6 @@ func (r *relayResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *relayResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().MailManagerClient(ctx)
 
 	var plan, state relayResourceModel
@@ -272,7 +269,6 @@ func (r *relayResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *relayResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().MailManagerClient(ctx)
 
 	var state relayResourceModel
