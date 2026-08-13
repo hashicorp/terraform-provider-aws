@@ -35,7 +35,7 @@ import (
 // @IdentityAttribute("organization_arn", optional="true")
 // @IdentityAttribute("organizational_unit_arn", optional="true")
 // @ImportIDHandler("amiLaunchPermissionImportID")
-// @Testing(preIdentityVersion="v6.58.0")
+// @Testing(preIdentityVersion="v6.59.0")
 // @Testing(importStateIdFunc="testAccAMILaunchPermissionImportStateIdFunc")
 func resourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
