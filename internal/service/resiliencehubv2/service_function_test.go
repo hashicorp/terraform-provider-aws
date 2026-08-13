@@ -230,7 +230,7 @@ func TestAccResilienceHubV2ServiceFunction_name(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceFunction/name/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName1),
-					"name":          config.StringVariable(rName1),
+					acctest.CtName:  config.StringVariable(rName1),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceFunctionExists(ctx, t, resourceName, &sf),
@@ -248,7 +248,7 @@ func TestAccResilienceHubV2ServiceFunction_name(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceFunction/name/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName1),
-					"name":          config.StringVariable(rName2),
+					acctest.CtName:  config.StringVariable(rName2),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceFunctionExists(ctx, t, resourceName, &sf),
