@@ -7,16 +7,10 @@ package agentregistry
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net"
-	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ agentregistrycontrol.EndpointResolverV2 = resolverV2{}
@@ -33,53 +27,6 @@ func newEndpointResolverV2() resolverV2 {
 
 func (r resolverV2) ResolveEndpoint(ctx context.Context, params agentregistrycontrol.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
-	useFIPS := aws.ToBool(params.UseFIPS)
-
-	if eps := params.Endpoint; aws.ToString(eps) != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-
-		if useFIPS {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			params.UseFIPS = aws.Bool(false)
-		}
-
-		return r.defaultResolver.ResolveEndpoint(ctx, params)
-	} else if useFIPS {
-		ctx = tflog.SetField(ctx, "tf_aws.use_fips", useFIPS)
-
-		endpoint, err = r.defaultResolver.ResolveEndpoint(ctx, params)
-		if err != nil {
-			return endpoint, smarterr.NewError(err)
-		}
-
-		tflog.Debug(ctx, "endpoint resolved", map[string]any{
-			"tf_aws.endpoint": endpoint.URI.String(),
-		})
-
-		hostname := endpoint.URI.Hostname()
-
-		// Use a short timeout for DNS lookup to avoid hanging in restricted network environments
-		lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-		defer cancel()
-
-		resolver := &net.Resolver{}
-		_, err = resolver.LookupHost(lookupCtx, hostname)
-		if err != nil {
-			if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
-				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
-					"tf_aws.hostname": hostname,
-				})
-				params.UseFIPS = aws.Bool(false)
-			} else {
-				err = fmt.Errorf("looking up agentregistrycontrol endpoint %q: %w", hostname, err)
-				return
-			}
-		} else {
-			return endpoint, smarterr.NewError(err)
-		}
-	}
 
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }

@@ -126,7 +126,8 @@ service "agentregistry" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListRegistries"
+    endpoint_api_call        = "ListRegistries"
+    endpoint_no_fips_support = true
   }
 
   resource_prefix {
