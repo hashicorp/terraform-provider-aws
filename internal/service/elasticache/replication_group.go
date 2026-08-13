@@ -495,6 +495,7 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			suppressDiffIfBelongsToGlobalReplicationGroup,
 			replicationGroupValidateMultiAZAutomaticFailover,
+			customizeDiffValidateEngineVersion,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			authTokenUpdateStrategyValidate,
 			customizeDiffEngineForceNewOnDowngrade(),
