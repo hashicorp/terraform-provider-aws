@@ -60,7 +60,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 					}
 
 				default:
-					val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+					val, ok := getAttributeIfSet(d, attr.ResourceAttributeName())
 					if !ok {
 						continue
 					}
@@ -95,7 +95,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 						}
 
 					default:
-						val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+						val, ok := getAttributeIfSet(d, attr.ResourceAttributeName())
 						if !ok {
 							continue
 						}
@@ -124,7 +124,7 @@ func identityIsFullyNull(identity *schema.IdentityData, identitySpec *inttypes.I
 	return true
 }
 
-func getAttributeOk(d schemaResourceData, name string) (any, bool) {
+func getAttributeIfSet(d schemaResourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}

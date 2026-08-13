@@ -34,7 +34,7 @@ func (d mockResourceData) GetOk(name string) (any, bool) {
 	}
 }
 
-func TestGetAttributeOk(t *testing.T) {
+func TestGetAttributeIfSet(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -85,12 +85,12 @@ func TestGetAttributeOk(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			gotValue, gotOk := getAttributeOk(tc.d, tc.name)
+			gotValue, gotOk := getAttributeIfSet(tc.d, tc.name)
 			if gotOk != tc.wantOk {
-				t.Errorf("getAttributeOk(%q) ok = %v, want %v", tc.name, gotOk, tc.wantOk)
+				t.Errorf("getAttributeIfSet(%q) ok = %v, want %v", tc.name, gotOk, tc.wantOk)
 			}
 			if gotValue != tc.wantValue {
-				t.Errorf("getAttributeOk(%q) value = %v, want %v", tc.name, gotValue, tc.wantValue)
+				t.Errorf("getAttributeIfSet(%q) value = %v, want %v", tc.name, gotValue, tc.wantValue)
 			}
 		})
 	}
