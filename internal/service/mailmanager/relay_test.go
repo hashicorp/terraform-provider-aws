@@ -174,7 +174,7 @@ func TestAccMailManagerRelay_authenticationTypes(t *testing.T) {
 					testAccCheckRelayExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication.0.no_authentication.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication.0.secret_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication.0.secret_arn", "aws_secretsmanager_secret_version.test", names.AttrARN),
 				),
 			},
 		},
