@@ -85,6 +85,7 @@ val services = mapOf(
     "devopsagent" to ServiceSpec("DevOps Agent"),
     "devopsguru" to ServiceSpec("DevOps Guru"),
     "directconnect" to ServiceSpec("Direct Connect", vpcLock = true),
+    "directoryservicedata" to ServiceSpec("Directory Service Data"),
     "dlm" to ServiceSpec("DLM (Data Lifecycle Manager)"),
     "dms" to ServiceSpec("DMS (Database Migration)", vpcLock = true),
     "docdb" to ServiceSpec("DocumentDB", vpcLock = true),

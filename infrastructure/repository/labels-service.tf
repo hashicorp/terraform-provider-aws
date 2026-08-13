@@ -104,6 +104,7 @@ variable "service_labels" {
     "devopsagent",
     "devopsguru",
     "directconnect",
+    "directoryservicedata",
     "discovery",
     "dlm",
     "dms",

@@ -230,6 +230,8 @@ service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dx_'
+service/directoryservicedata:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directoryservicedata_'
 service/discovery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_discovery_'
 service/dlm:

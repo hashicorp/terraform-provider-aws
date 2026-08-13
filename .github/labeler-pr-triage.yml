@@ -735,6 +735,12 @@ service/directconnect:
           - any-glob-to-any-file:
               - 'internal/service/directconnect/**/*'
               - 'website/**/dx_*'
+service/directoryservicedata:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/directoryservicedata/**/*'
+              - 'website/**/directoryservicedata_*'
 service/discovery:
   - any:
       - changed-files:

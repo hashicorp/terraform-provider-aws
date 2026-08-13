@@ -166,6 +166,7 @@ provider "aws" {
 |DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
+|Directory Service Data|`directoryservicedata`|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE_DATA`|`directory_service_data`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
 |DMS (Database Migration)|`dms`(or `databasemigration` or `databasemigrationservice`)|`AWS_ENDPOINT_URL_DATABASE_MIGRATION_SERVICE`|`database_migration_service`|
 |DocumentDB|`docdb`|`AWS_ENDPOINT_URL_DOCDB`|`docdb`|

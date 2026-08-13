@@ -2826,6 +2826,31 @@ service "directconnect" {
   brand                    = "AWS"
 }
 
+service "directoryservicedata" {
+  sdk {
+    id            = "Directory Service Data"
+    arn_namespace = "ds"
+  }
+
+  names {
+    provider_name_upper = "DirectoryServiceData"
+    human_friendly      = "Directory Service Data"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "DirectoryId: aws.String(\"d-1234567890\")"
+  }
+
+  resource_prefix {
+    correct = "aws_directoryservicedata_"
+  }
+
+  provider_package_correct = "directoryservicedata"
+  doc_prefix               = ["directoryservicedata_"]
+  brand                    = "AWS"
+}
+
 service "dlm" {
   sdk {
     id            = "DLM"
