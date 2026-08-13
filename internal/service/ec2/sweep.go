@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -26,6 +27,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_ec2_application_status_check", sweepApplicationStatusChecks)
 	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
 		Name: "aws_customer_gateway",
 		F:    sweepCustomerGateways,
@@ -476,6 +478,26 @@ func RegisterSweepers() {
 	awsv2.Register("aws_vpc_route_server_endpoint", sweepRouteServerEndpoints, "aws_vpc_route_server_peer")
 	awsv2.Register("aws_vpc_route_server_peer", sweepRouteServerPeers)
 	awsv2.Register("aws_vpc_route_server_propagation", sweepRouteServerPropagations)
+}
+
+func sweepApplicationStatusChecks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeApplicationStatusChecksInput
+	var sweepResources []sweep.Sweepable
+
+	err := describeApplicationStatusChecksPages(ctx, conn, &input, func(page *ec2.DescribeApplicationStatusChecksOutput, _ bool) bool {
+		for _, v := range page.ApplicationStatusChecks {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationStatusCheckResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ApplicationStatusCheckId))))
+		}
+
+		return true
+	})
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	return sweepResources, nil
 }
 
 func sweepCapacityReservations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
