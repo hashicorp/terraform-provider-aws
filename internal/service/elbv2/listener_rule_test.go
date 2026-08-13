@@ -5251,8 +5251,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 func testAccListenerRuleConfig_sourceIPAddressType(rName string, ipAddressType string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q
   description = "Used for NLB Testing"
