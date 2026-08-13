@@ -260,8 +260,6 @@ func (r *relayResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 	} else {
-		plan.ARN = state.ARN
-		plan.CreatedTimestamp = state.CreatedTimestamp
 		plan.LastModifiedTimestamp = state.LastModifiedTimestamp
 	}
 
