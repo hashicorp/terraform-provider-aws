@@ -473,6 +473,13 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		ep, err := findEndpointByName(ctx, conn, name, endpointName)
 		switch {
 		case retry.NotFound(err):
+			// The endpoint described by endpoint_config was deleted outside of
+			// Terraform. Clear the block so the plan proposes restoring it:
+			// keeping it reports no changes while the function serves no
+			// traffic, and pairing a stale endpoint_config with the null
+			// domain_name set above breaks every configuration that references
+			// the domain, leaving plan and apply unable to run at all.
+			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
