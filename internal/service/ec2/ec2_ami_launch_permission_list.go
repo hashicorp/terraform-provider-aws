@@ -99,7 +99,6 @@ func listAMILaunchPermissions(ctx context.Context, conn *ec2.Client) iter.Seq2[a
 			return
 		}
 		for _, image := range images {
-			fmt.Println(*image.OwnerId)
 			imageID := aws.ToString(image.ImageId)
 			perms, err := findImageLaunchPermissionsByID(ctx, conn, imageID)
 			if err != nil {
