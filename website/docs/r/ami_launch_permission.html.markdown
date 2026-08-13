@@ -66,7 +66,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ami_launch_permission.example
   identity = {
-    image_id   = "ami-12345678"
+    image_id                     = "ami-12345678"
     launch_permission_account_id = "123456789012"
   }
 }

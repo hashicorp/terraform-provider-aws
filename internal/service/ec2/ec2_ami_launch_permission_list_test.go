@@ -51,11 +51,11 @@ func TestAccEC2AMILaunchPermission_List_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("account_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New(names.AttrAccountID)),
 
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New("account_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 			// Step 2: Query
@@ -107,7 +107,7 @@ func TestAccEC2AMILaunchPermission_List_includeResource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("account_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 			// Step 2: Query
@@ -170,12 +170,12 @@ func TestAccEC2AMILaunchPermission_List_regionOverride(t *testing.T) {
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New("account_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName1, tfjsonpath.New(names.AttrAccountID)),
 
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New("image_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New("account_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName2, tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 			// Step 2: Query
