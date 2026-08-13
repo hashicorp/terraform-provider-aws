@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -72,20 +72,20 @@ func (r *instanceResource) Schema(ctx context.Context, _ resource.SchemaRequest,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Validators:    []validator.String{stringvalidator.LengthBetween(1, 64)},
 			},
-			"created_date":             schema.StringAttribute{CustomType: timetypes.RFC3339Type{}, Computed: true},
-			"encryption_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[encryptionConfigurationModel](ctx),
-			"identity_store_id":        schema.StringAttribute{Computed: true},
+			names.AttrCreatedDate:             schema.StringAttribute{CustomType: timetypes.RFC3339Type{}, Computed: true},
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedSingleNestedObjectAttribute[encryptionConfigurationModel](ctx),
+			"identity_store_id":               schema.StringAttribute{Computed: true},
 			names.AttrName: schema.StringAttribute{
 				Optional:      true,
 				Computed:      true,
-				Validators:    []validator.String{stringvalidator.LengthBetween(1, 32), stringvalidator.RegexMatches(regexp.MustCompile(`^[\w+=,.@-]+$`), "must contain only alphanumeric characters and +=,.@-_")},
+				Validators:    []validator.String{stringvalidator.LengthBetween(1, 32), stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@-]+$`), "must contain only alphanumeric characters and +=,.@-_")},
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"owner_account_id": schema.StringAttribute{Computed: true},
-			names.AttrStatus:   schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.InstanceStatus](), Computed: true},
-			"status_reason":    schema.StringAttribute{Computed: true},
-			names.AttrTags:     tftags.TagsAttribute(),
-			names.AttrTagsAll:  tftags.TagsAttributeComputedOnly(),
+			names.AttrOwnerAccountID: schema.StringAttribute{Computed: true},
+			names.AttrStatus:         schema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.InstanceStatus](), Computed: true},
+			names.AttrStatusReason:   schema.StringAttribute{Computed: true},
+			names.AttrTags:           tftags.TagsAttribute(),
+			names.AttrTagsAll:        tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{Create: true, Update: true, Delete: true}),
@@ -108,11 +108,11 @@ func (r *instanceResource) ValidateConfig(ctx context.Context, req resource.Vali
 	switch config.KeyType.ValueEnum() {
 	case awstypes.KmsKeyTypeCustomerManagedKey:
 		if !hasKeyARN {
-			resp.Diagnostics.AddAttributeError(path.Root("encryption_configuration").AtListIndex(0).AtName("kms_key_arn"), "Missing KMS Key ARN", "kms_key_arn is required when key_type is CUSTOMER_MANAGED_KEY.")
+			resp.Diagnostics.AddAttributeError(path.Root(names.AttrEncryptionConfiguration).AtListIndex(0).AtName(names.AttrKMSKeyARN), "Missing KMS Key ARN", "kms_key_arn is required when key_type is CUSTOMER_MANAGED_KEY.")
 		}
 	case awstypes.KmsKeyTypeAwsOwnedKmsKey:
 		if hasKeyARN {
-			resp.Diagnostics.AddAttributeError(path.Root("encryption_configuration").AtListIndex(0).AtName("kms_key_arn"), "Invalid KMS Key ARN", "kms_key_arn must not be specified when key_type is AWS_OWNED_KMS_KEY.")
+			resp.Diagnostics.AddAttributeError(path.Root(names.AttrEncryptionConfiguration).AtListIndex(0).AtName(names.AttrKMSKeyARN), "Invalid KMS Key ARN", "kms_key_arn must not be specified when key_type is AWS_OWNED_KMS_KEY.")
 		}
 	}
 }
@@ -126,10 +126,10 @@ func (r *instanceResource) Create(ctx context.Context, req resource.CreateReques
 	conn := r.Meta().SSOAdminClient(ctx)
 	input := ssoadmin.CreateInstanceInput{Tags: getTagsIn(ctx)}
 	if !plan.ClientToken.IsNull() {
-		input.ClientToken = aws.String(plan.ClientToken.ValueString())
+		input.ClientToken = plan.ClientToken.ValueStringPointer()
 	}
 	if !plan.Name.IsNull() {
-		input.Name = aws.String(plan.Name.ValueString())
+		input.Name = plan.Name.ValueStringPointer()
 	}
 	output, err := conn.CreateInstance(ctx, &input)
 	if err != nil {
@@ -203,7 +203,7 @@ func (r *instanceResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	conn := r.Meta().SSOAdminClient(ctx)
 	if !old.Name.Equal(plan.Name) {
-		_, err := conn.UpdateInstance(ctx, &ssoadmin.UpdateInstanceInput{InstanceArn: aws.String(plan.ARN.ValueString()), Name: aws.String(plan.Name.ValueString())})
+		_, err := conn.UpdateInstance(ctx, &ssoadmin.UpdateInstanceInput{InstanceArn: plan.ARN.ValueStringPointer(), Name: plan.Name.ValueStringPointer()})
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 			return
@@ -244,7 +244,7 @@ func (r *instanceResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 	conn := r.Meta().SSOAdminClient(ctx)
-	_, err := conn.DeleteInstance(ctx, &ssoadmin.DeleteInstanceInput{InstanceArn: aws.String(state.ARN.ValueString())})
+	_, err := conn.DeleteInstance(ctx, &ssoadmin.DeleteInstanceInput{InstanceArn: state.ARN.ValueStringPointer()})
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -268,7 +268,7 @@ func updateInstanceEncryption(ctx context.Context, conn *ssoadmin.Client, arn st
 	}
 	input := ssoadmin.UpdateInstanceInput{InstanceArn: aws.String(arn), EncryptionConfiguration: &awstypes.EncryptionConfiguration{KeyType: model.KeyType.ValueEnum()}}
 	if !model.KMSKeyARN.IsNull() {
-		input.EncryptionConfiguration.KmsKeyArn = aws.String(model.KMSKeyARN.ValueString())
+		input.EncryptionConfiguration.KmsKeyArn = model.KMSKeyARN.ValueStringPointer()
 	}
 	_, err := conn.UpdateInstance(ctx, &input)
 	return smarterr.NewError(err)
@@ -323,7 +323,7 @@ func waitInstanceActive(ctx context.Context, conn *ssoadmin.Client, arn string, 
 	conf := retry.StateChangeConf{Pending: enum.Slice(awstypes.InstanceStatusCreateInProgress), Target: enum.Slice(awstypes.InstanceStatusActive), Refresh: statusInstance(conn, arn), Timeout: timeout, Delay: 10 * time.Second, NotFoundChecks: 5}
 	output, err := conf.WaitForStateContext(ctx)
 	if out, ok := output.(*ssoadmin.DescribeInstanceOutput); ok && out.Status == awstypes.InstanceStatusCreateFailed {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.StatusReason)))
 		return out, err
 	}
 	if err != nil {
@@ -333,7 +333,8 @@ func waitInstanceActive(ctx context.Context, conn *ssoadmin.Client, arn string, 
 }
 
 func waitInstanceEncryptionEnabled(ctx context.Context, conn *ssoadmin.Client, arn string, timeout time.Duration) (*ssoadmin.DescribeInstanceOutput, error) {
-	conf := retry.StateChangeConf{Pending: []string{"", string(awstypes.KmsKeyStatusUpdating)}, Target: enum.Slice(awstypes.KmsKeyStatusEnabled), Refresh: func(ctx context.Context) (any, string, error) {
+	pending := append([]string{""}, enum.Slice(awstypes.KmsKeyStatusUpdating)...)
+	conf := retry.StateChangeConf{Pending: pending, Target: enum.Slice(awstypes.KmsKeyStatusEnabled), Refresh: func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceByARN(ctx, conn, arn)
 		if err != nil {
 			return nil, "", err
@@ -345,7 +346,7 @@ func waitInstanceEncryptionEnabled(ctx context.Context, conn *ssoadmin.Client, a
 	}, Timeout: timeout, Delay: 10 * time.Second}
 	output, err := conf.WaitForStateContext(ctx)
 	if out, ok := output.(*ssoadmin.DescribeInstanceOutput); ok && out.EncryptionConfigurationDetails != nil && out.EncryptionConfigurationDetails.EncryptionStatus == awstypes.KmsKeyStatusUpdateFailed {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.EncryptionConfigurationDetails.EncryptionStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.EncryptionConfigurationDetails.EncryptionStatusReason)))
 		return out, err
 	}
 	if err != nil {

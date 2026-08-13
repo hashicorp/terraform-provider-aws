@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -86,9 +87,19 @@ func testAccSSOAdminInstance_disappears(t *testing.T) {
 		},
 		ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID), ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
-		Steps: []resource.TestStep{{Config: testAccInstanceConfig_basic(rName), Check: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckInstanceExists(ctx, t, resourceName), acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceInstance, resourceName),
-		), ExpectNonEmptyPlan: true}},
+		Steps: []resource.TestStep{{
+			Config: testAccInstanceConfig_basic(rName),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckInstanceExists(ctx, t, resourceName),
+				acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceInstance, resourceName),
+			),
+			ExpectNonEmptyPlan: true,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+				},
+			},
+		}},
 	})
 }
 
