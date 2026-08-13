@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		{
 			Factory:  newAPIKeyCredentialProviderResource,
 			TypeName: "aws_bedrockagentcore_api_key_credential_provider",
-			Name:     "Api Key Credential Provider",
+			Name:     "API Key Credential Provider",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "credential_provider_arn",
 			}),
