@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_ec2_ebs_volume"
+page_title: "AWS: aws_ebs_volume"
 description: |-
   Lists EC2 (Elastic Compute Cloud) EBS Volume resources.
 ---
 
-# List Resource: aws_ec2_ebs_volume
+# List Resource: aws_ebs_volume
 
 Lists EC2 (Elastic Compute Cloud) EBS Volume resources.
 
@@ -15,7 +15,7 @@ Lists EC2 (Elastic Compute Cloud) EBS Volume resources.
 ### Basic Usage
 
 ```terraform
-list "aws_ec2_ebs_volume" "example" {
+list "aws_ebs_volume" "example" {
   provider = aws
 }
 ```
@@ -25,7 +25,7 @@ list "aws_ec2_ebs_volume" "example" {
 This example returns EBS Volumes in a specific Availability Zone.
 
 ```terraform
-list "aws_ec2_ebs_volume" "example" {
+list "aws_ebs_volume" "example" {
   provider = aws
 
   config {
@@ -40,7 +40,7 @@ list "aws_ec2_ebs_volume" "example" {
 This example returns EBS Volumes with a specific tag value.
 
 ```terraform
-list "aws_ec2_ebs_volume" "example" {
+list "aws_ebs_volume" "example" {
   provider = aws
 
   config {

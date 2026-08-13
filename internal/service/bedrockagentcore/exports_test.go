@@ -48,6 +48,7 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
+	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
 )
 
 type (

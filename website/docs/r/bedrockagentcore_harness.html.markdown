@@ -160,7 +160,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional, Sensitive) Map of environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
-* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below.
+* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
 * `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
@@ -428,6 +428,7 @@ The `claim_match_value` block supports the following:
 The `memory` block supports one of the following:
 
 * `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`agentcore_memory_configuration` Block](#agentcore_memory_configuration-block) below.
+* `disabled` - (Optional) Explicitly disable memory for this harness. See [`disabled` Block](#disabled-block) below.
 * `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`managed_memory_configuration` Block](#managed_memory_configuration-block) below.
 
 ### `agentcore_memory_configuration` Block
@@ -441,10 +442,14 @@ The `memory` block supports one of the following:
 
 `retrieval_config` supports the following:
 
-* `map_block_key` - (Required) Key for the retrieval configuration map block.
+* `map_block_key` - (Required) Namespace path template for retrieval settings.
 * `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
+
+### `disabled` Block
+
+The `disabled` block takes no arguments. Use this to explicitly opt out of memory for the harness.
 
 ### `managed_memory_configuration` Block
 
@@ -460,8 +465,9 @@ In addition, the following attribute is exported:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `harness_id` - Unique identifier of the Harness.
 * `arn` - ARN of the Harness.
+* `harness_id` - Unique identifier of the Harness.
+* `memory_actual` - Actual deployed memory configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

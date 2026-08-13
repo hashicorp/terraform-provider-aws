@@ -10,6 +10,7 @@ var (
 	ResourceOptOutList       = newOptOutListResource
 	ResourcePhoneNumber      = newPhoneNumberResource
 	ResourcePool             = newPoolResource
+	ResourceResourcePolicy   = newResourcePolicyResource
 	ResourceSenderID         = newSenderIDResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
@@ -17,6 +18,7 @@ var (
 	FindOptOutListByID               = findOptOutListByID
 	FindPhoneNumberByID              = findPhoneNumberByID
 	FindPoolByID                     = findPoolByID
+	FindResourcePolicyByARN          = findResourcePolicyByARN
 	FindSenderIDByTwoPartKey         = findSenderIDByTwoPartKey
 
 	ValidatePhoneIdentity  = validatePhoneIdentity

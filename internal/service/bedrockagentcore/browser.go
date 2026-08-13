@@ -48,7 +48,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_browser", name="Browser")
 // @Tags(identifierAttribute="browser_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetBrowserOutput")
+// @Testing(generator="testAccRandomBrowserName(t)")
+// @Testing(importStateIdAttribute="browser_id")
+// @Testing(preCheck="testAccPreCheckBrowser")
 func newBrowserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &browserResource{}
 

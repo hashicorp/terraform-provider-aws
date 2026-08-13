@@ -2826,6 +2826,31 @@ service "directconnect" {
   brand                    = "AWS"
 }
 
+service "directoryservicedata" {
+  sdk {
+    id            = "Directory Service Data"
+    arn_namespace = "ds"
+  }
+
+  names {
+    provider_name_upper = "DirectoryServiceData"
+    human_friendly      = "Directory Service Data"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "DirectoryId: aws.String(\"d-1234567890\")"
+  }
+
+  resource_prefix {
+    correct = "aws_directoryservicedata_"
+  }
+
+  provider_package_correct = "directoryservicedata"
+  doc_prefix               = ["directoryservicedata_"]
+  brand                    = "AWS"
+}
+
 service "dlm" {
   sdk {
     id            = "DLM"
@@ -5091,6 +5116,34 @@ service "lambda" {
   provider_package_correct = "lambda"
   doc_prefix               = ["lambda_"]
   brand                    = "AWS"
+}
+
+service "lambdacore" {
+  cli_v2_command {
+    aws_cli_v2_command           = "lambda-core"
+    aws_cli_v2_command_no_dashes = "lambdacore"
+  }
+
+  sdk {
+    id            = "Lambda Core"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaCore"
+    human_friendly      = "Lambda Core"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListNetworkConnectors"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdacore_"
+  }
+
+  doc_prefix = ["lambdacore_"]
+  brand      = "AWS"
 }
 
 service "lambdamicrovms" {

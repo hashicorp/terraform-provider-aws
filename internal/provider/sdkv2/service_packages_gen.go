@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -153,6 +154,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
@@ -364,6 +366,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		devopsagent.ServicePackage(ctx),
 		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
+		directoryservicedata.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),
 		dms.ServicePackage(ctx),
 		docdb.ServicePackage(ctx),
@@ -426,6 +429,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		lambdacore.ServicePackage(ctx),
 		lambdamicrovms.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),

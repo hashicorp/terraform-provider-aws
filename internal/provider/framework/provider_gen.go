@@ -640,6 +640,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// directoryservicedata
+
+				"directoryservicedata": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dlm
 
 				"dlm": schema.StringAttribute{
@@ -1145,6 +1152,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// lambda
 
 				"lambda": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// lambdacore
+
+				"lambdacore": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
