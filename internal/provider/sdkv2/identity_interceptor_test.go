@@ -492,6 +492,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 					inttypes.BoolIdentityAttribute("bool", false),
 					inttypes.FloatIdentityAttribute("float", false),
 					inttypes.IntIdentityAttribute("int", false),
+					inttypes.StringIdentityAttribute("string", false),
 				},
 			},
 			identityValues: map[string]any{},
@@ -506,11 +507,41 @@ func TestIdentityIsFullyNull(t *testing.T) {
 			expectNull:  false,
 			description: "Some attributes set should return false",
 		},
+		"some_null_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+				},
+			},
+			identityValues: map[string]any{
+				"int": 42,
+			},
+			expectNull:  false,
+			description: "Null bool, float, and int values should return true",
+		},
 		"all_set": {
 			identityValues: map[string]any{
 				names.AttrAccountID: "123456789012",
 				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				names.AttrBucket:    "test-bucket",
+			},
+			expectNull:  false,
+			description: "All attributes set should return false",
+		},
+		"all_set_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+				},
+			},
+			identityValues: map[string]any{
+				"bool":  true,
+				"float": 3.14,
+				"int":   42,
 			},
 			expectNull:  false,
 			description: "All attributes set should return false",
