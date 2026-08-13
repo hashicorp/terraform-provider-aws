@@ -157,7 +157,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`). Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
-* `regions` - (Optional) List of Regions for the endpoint (maximum 5).
+* `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
 
 ## Attribute Reference
 

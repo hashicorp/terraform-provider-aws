@@ -11,14 +11,17 @@ package lambdaweb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -76,6 +79,9 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
@@ -120,6 +126,12 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 											Attributes: map[string]schema.Attribute{
 												"runtime": schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`^[a-z][a-z0-9]*[0-9]+(\.[a-z0-9]+)*$`),
+															"must be a runtime identifier such as nodejs24.x",
+														),
+													},
 												},
 											},
 										},
@@ -249,6 +261,9 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 256),
+							},
 						},
 						names.AttrEndpointType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
@@ -291,6 +306,50 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Delete: true,
 			}),
 		},
+	}
+}
+
+// ValidateConfig applies the endpoint rules the service enforces to the inline
+// endpoint_config block, so they surface at plan time rather than as an API
+// error midway through an apply.
+func (r *functionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var cfg functionResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &cfg))
+	if resp.Diagnostics.HasError() || cfg.EndpointConfig.IsNull() || cfg.EndpointConfig.IsUnknown() {
+		return
+	}
+
+	eps, d := cfg.EndpointConfig.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() || len(eps) == 0 {
+		return
+	}
+	ep := eps[0]
+	if ep.EndpointType.IsUnknown() || ep.AutoDeploymentMode.IsUnknown() {
+		return
+	}
+
+	endpointType := ep.EndpointType.ValueString()
+	if endpointType != string(awstypes.EndpointTypeMultiRegion) && endpointType != string(awstypes.EndpointTypePerRegion) {
+		return
+	}
+
+	mode := awstypes.AutoDeploymentModeLatestRevision
+	if !ep.AutoDeploymentMode.IsNull() {
+		mode = awstypes.AutoDeploymentMode(ep.AutoDeploymentMode.ValueString())
+	}
+	if mode != awstypes.AutoDeploymentModeDisabled {
+		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
+			"Invalid auto_deployment_mode",
+			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"`.", endpointType))
+	}
+
+	// The home region is added automatically and at least two distinct regions
+	// are then required, so a single configured region is always rejected.
+	if !ep.Regions.IsNull() && !ep.Regions.IsUnknown() && len(ep.Regions.Elements()) == 1 {
+		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
+			"Invalid regions",
+			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))
 	}
 }
 

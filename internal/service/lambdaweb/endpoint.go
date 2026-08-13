@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -80,11 +81,17 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			"endpoint_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
 				},
 			},
 			names.AttrEndpointType: schema.StringAttribute{
@@ -201,10 +208,22 @@ func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.Vali
 			"Missing revision_weights",
 			"`revision_weights` is required when `auto_deployment_mode` is `Disabled`.")
 	}
-	if cfg.EndpointType.ValueString() == string(awstypes.EndpointTypeMultiRegion) && mode == awstypes.AutoDeploymentModeLatestRevision {
+	endpointType := cfg.EndpointType.ValueString()
+	multiRegional := endpointType == string(awstypes.EndpointTypeMultiRegion) || endpointType == string(awstypes.EndpointTypePerRegion)
+
+	if multiRegional && mode == awstypes.AutoDeploymentModeLatestRevision {
 		resp.Diagnostics.AddAttributeError(path.Root("auto_deployment_mode"),
 			"Invalid auto_deployment_mode",
-			"MultiRegion endpoints require `auto_deployment_mode = \"Disabled\"` with explicit `revision_weights`.")
+			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"` with explicit `revision_weights`.", endpointType))
+	}
+
+	// The service adds the home region automatically and then requires at least
+	// two distinct regions, so a single configured region is always rejected.
+	// Omitting regions entirely is accepted.
+	if multiRegional && !cfg.Regions.IsNull() && !cfg.Regions.IsUnknown() && len(cfg.Regions.Elements()) == 1 {
+		resp.Diagnostics.AddAttributeError(path.Root("regions"),
+			"Invalid regions",
+			fmt.Sprintf("%s endpoints require at least 2 distinct regions, or no `regions` at all: the home region is added automatically.", endpointType))
 	}
 
 	if hasWeights {
