@@ -467,7 +467,7 @@ func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-
 func TestIdentityIsFullyNull(t *testing.T) {
 	t.Parallel()
 
-	identitySpec := &inttypes.Identity{
+	defaultIdentitySpec := &inttypes.Identity{
 		Attributes: []inttypes.IdentityAttribute{
 			inttypes.StringIdentityAttribute(names.AttrAccountID, false),
 			inttypes.StringIdentityAttribute(names.AttrRegion, false),
@@ -476,17 +476,30 @@ func TestIdentityIsFullyNull(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		identityValues map[string]string
+		identitySpec   *inttypes.Identity
+		identityValues map[string]any
 		expectNull     bool
 		description    string
 	}{
 		"all_null": {
-			identityValues: map[string]string{},
+			identityValues: map[string]any{},
 			expectNull:     true,
 			description:    "All attributes null should return true",
 		},
+		"all_null_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+				},
+			},
+			identityValues: map[string]any{},
+			expectNull:     true,
+			description:    "Null bool, float, and int values should return true",
+		},
 		"some_null": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "123456789012",
 				// region and bucket remain null
 			},
@@ -494,7 +507,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 			description: "Some attributes set should return false",
 		},
 		"all_set": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "123456789012",
 				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				names.AttrBucket:    "test-bucket",
@@ -503,7 +516,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 			description: "All attributes set should return false",
 		},
 		"empty_string_values": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "",
 				names.AttrRegion:    "",
 				names.AttrBucket:    "",
@@ -516,6 +529,11 @@ func TestIdentityIsFullyNull(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			identitySpec := defaultIdentitySpec
+			if tc.identitySpec != nil {
+				identitySpec = tc.identitySpec
+			}
 
 			resourceSchema := map[string]*schema.Schema{
 				names.AttrBucket: {Type: schema.TypeString, Required: true},
