@@ -5335,7 +5335,7 @@ resource "aws_lb_listener_rule" "test" {
 
   condition {
     source_ip {
-      ip_address_type = %[2]q 
+      ip_address_type = "%[2]s"
     }
   }
 }
