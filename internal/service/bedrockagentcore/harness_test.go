@@ -88,7 +88,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 									"agent_runtime_arn":            tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
 									"agent_runtime_id":             knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
 									"agent_runtime_name":           knownvalue.StringExact("harness_" + rName),
-									"filesystem_configuration":     knownvalue.ListSizeExact(0),
+									"filesystem_configuration":     knownvalue.Null(),
 									"lifecycle_configuration":      knownvalue.NotNull(),
 									names.AttrNetworkConfiguration: knownvalue.NotNull(),
 								}),
@@ -1658,6 +1658,248 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionS
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_Environment_addEnvironment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environment_none(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_actual").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.Null(),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(900),
+										"max_lifetime":                 knownvalue.Int32Exact(28800),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.Null(),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environment_lifecycleConfiguration(rName, 600, 14400),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.ListSizeExact(0),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+										"max_lifetime":                 knownvalue.Int32Exact(14400),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.ListSizeExact(0),
+									}),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_actual").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.Null(),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+										"max_lifetime":                 knownvalue.Int32Exact(14400),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.Null(),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Environment_removeEnvironment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environment_lifecycleConfiguration(rName, 600, 14400),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.ListSizeExact(0),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+										"max_lifetime":                 knownvalue.Int32Exact(14400),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.ListSizeExact(0),
+									}),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_actual").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.Null(),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+										"max_lifetime":                 knownvalue.Int32Exact(14400),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.Null(),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environment_none(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("environment_actual").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agentcore_runtime_environment": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"agent_runtime_arn":        tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`runtime/harness_`+rName+`-[a-zA-Z0-9]+`)),
+								"agent_runtime_id":         knownvalue.StringRegexp(regexache.MustCompile(`^harness_` + rName + `-[a-zA-Z0-9]+$`)),
+								"agent_runtime_name":       knownvalue.StringExact("harness_" + rName),
+								"filesystem_configuration": knownvalue.Null(),
+								"lifecycle_configuration": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+										"max_lifetime":                 knownvalue.Int32Exact(14400),
+									}),
+								}),
+								names.AttrNetworkConfiguration: knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"network_mode":        knownvalue.StringExact("PUBLIC"),
+										"network_mode_config": knownvalue.Null(),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{names.AttrEnvironment, "memory"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -2766,6 +3008,27 @@ resource "aws_bedrockagentcore_harness" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccHarnessConfig_environment_none(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
 }
 
 func testAccHarnessConfig_environment_lifecycleConfiguration(rName string, idleTimeout, maxLifetime int) string {

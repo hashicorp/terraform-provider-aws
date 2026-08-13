@@ -149,19 +149,19 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										CustomType: fwtypes.ARNType,
 										Computed:   true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"agent_runtime_id": schema.StringAttribute{
 										Computed: true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"agent_runtime_name": schema.StringAttribute{
 										Computed: true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"lifecycle_configuration": schema.ListAttribute{
