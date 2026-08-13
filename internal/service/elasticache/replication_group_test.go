@@ -4516,7 +4516,7 @@ func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshot(t *testing.T) {
 				Config: testAccReplicationGroupConfig_serverlessCacheSource(rName),
 			},
 			{
-				// Snapshot the serverless cache out-of-band, then restore it into a Multi-AZ-disabled group (topology is inherited from the snapshot; also exercises the multi_az_enabled create fix).
+				// Snapshot the serverless cache out-of-band, then restore it. The snapshot is cluster-mode (which requires automatic_failover), while multi_az_enabled=false exercises the create fix; topology is inherited from the snapshot.
 				PreConfig: func() {
 					testAccCreateServerlessCacheSnapshot(ctx, t, rName, rName)
 				},
@@ -4524,6 +4524,7 @@ func TestAccElastiCacheReplicationGroup_serverlessCacheSnapshot(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "serverless_cache_snapshot_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 				),
 			},
@@ -7015,7 +7016,9 @@ func testAccCreateServerlessCacheSnapshot(ctx context.Context, t *testing.T, cac
 	}
 
 	t.Cleanup(func() {
-		_, err := conn.DeleteServerlessCacheSnapshot(ctx, &elasticache.DeleteServerlessCacheSnapshotInput{
+		// Use a fresh context: the test's context is already canceled by the time
+		// t.Cleanup runs, which would otherwise cancel the delete and leak the snapshot.
+		_, err := conn.DeleteServerlessCacheSnapshot(context.Background(), &elasticache.DeleteServerlessCacheSnapshotInput{
 			ServerlessCacheSnapshotName: aws.String(snapshotName),
 		})
 		if err != nil {
@@ -7062,10 +7065,11 @@ resource "aws_elasticache_serverless_cache" "test" {
 }
 
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id           = %[1]q
+  replication_group_id           = "%[1]s-rg"
   description                    = "test description"
   engine                         = "redis"
   node_type                      = "cache.t3.micro"
+  automatic_failover_enabled     = true
   multi_az_enabled               = false
   apply_immediately              = true
   serverless_cache_snapshot_name = %[2]q
