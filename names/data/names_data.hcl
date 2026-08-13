@@ -105,6 +105,39 @@ service "acmpca" {
   brand                    = "AWS"
 }
 
+service "agentregistry" {
+  cli_v2_command {
+    aws_cli_v2_command           = "agent-registry-control"
+    aws_cli_v2_command_no_dashes = "agentregistrycontrol"
+  }
+
+  go_packages {
+    v2_package = "agentregistrycontrol"
+  }
+
+  sdk {
+    id            = "Agent Registry Control"
+    arn_namespace = "agent-registry"
+  }
+
+  names {
+    provider_name_upper = "AgentRegistry"
+    human_friendly      = "Agent Registry"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListRegistries"
+  }
+
+  resource_prefix {
+    correct = "aws_agentregistry_"
+  }
+
+  provider_package_correct = "agentregistry"
+  doc_prefix               = ["agentregistry_"]
+  brand                    = "AWS"
+}
+
 service "alexaforbusiness" {
   sdk {
     id            = "Alexa For Business"

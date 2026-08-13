@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -289,6 +290,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		account.ServicePackage(ctx),
 		acm.ServicePackage(ctx),
 		acmpca.ServicePackage(ctx),
+		agentregistry.ServicePackage(ctx),
 		amp.ServicePackage(ctx),
 		amplify.ServicePackage(ctx),
 		apigateway.ServicePackage(ctx),
