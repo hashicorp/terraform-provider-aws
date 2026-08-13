@@ -69,9 +69,6 @@ func TestAccLambdaWebFunction_Identity_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
-				ImportStateVerifyIgnore: []string{
-					"revision_config", "endpoint_config",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -86,12 +83,10 @@ func TestAccLambdaWebFunction_Identity_basic(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -105,12 +100,10 @@ func TestAccLambdaWebFunction_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -162,9 +155,6 @@ func TestAccLambdaWebFunction_Identity_regionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
-				ImportStateVerifyIgnore: []string{
-					"revision_config", "endpoint_config",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -180,12 +170,10 @@ func TestAccLambdaWebFunction_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "function_name"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -200,12 +188,10 @@ func TestAccLambdaWebFunction_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

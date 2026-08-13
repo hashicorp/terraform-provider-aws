@@ -52,10 +52,6 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateId:     rName,
-				ImportStateVerifyIgnore: []string{
-					"revision_config",
-					"endpoint_config",
-				},
 			},
 		},
 	})
@@ -375,42 +371,4 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 `, rName)
-}
-
-func testAccFunctionConfig_tagsBase(rName, tagsBlock string) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_base(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_function" "test" {
-  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
-
-  function_name = %[1]q
-
-  revision_config {
-    build_config {
-      runtime_config {
-        runtime = "nodejs24.x"
-      }
-
-      code_config {
-        s3_object {
-          bucket = aws_s3_object.test.bucket
-          key    = aws_s3_object.test.key
-        }
-      }
-    }
-
-    service_config {
-      execution_role_arn = aws_iam_role.test.arn
-    }
-  }
-
-  endpoint_config {
-    endpoint_name = "default"
-    endpoint_type = "HomeRegion"
-    auth_type     = "ApplicationManaged"
-    regions       = [data.aws_region.current.region]
-  }
-
-%[2]s
-}
-`, rName, tagsBlock))
 }

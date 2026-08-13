@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -43,7 +44,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionOutput")
 // @Testing(importStateIdAttribute="function_name")
-// @Testing(importIgnore="revision_config;endpoint_config")
 func newFunctionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &functionResource{}
 
@@ -169,12 +169,25 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 									},
 									"timeout_seconds": schema.Int64Attribute{
 										Optional: true,
+										// Assigned by the service (30) when unset: must be
+										// Computed, otherwise the value read back produces a
+										// perpetual diff.
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int64{
 											int64validator.Between(3, 900),
 										},
 									},
 									"max_concurrency_per_environment": schema.Int64Attribute{
 										Optional: true,
+										// Assigned by the service (64) when unset: see
+										// timeout_seconds above.
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 										Validators: []validator.Int64{
 											int64validator.Between(1, 128),
 										},
@@ -346,6 +359,22 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 	plan.LatestRevisionID = types.StringNull()
 	if createOut.Revision != nil {
 		plan.LatestRevisionID = fwflex.StringToFramework(ctx, createOut.Revision.RevisionId)
+
+		// Read the revision back: the function-level output carries no build or
+		// service configuration, so server-assigned values inside
+		// revision_config would otherwise remain unknown after apply.
+		rev, err := findRevisionByID(ctx, conn, name, aws.ToString(createOut.Revision.RevisionId))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		var revModel revisionConfigModel
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, rev, &revModel))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
 	}
 
 	plan.DomainName = types.StringNull()
@@ -368,6 +397,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		epModel.Description = normalizeDescription(epModel.Description)
 		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 	}
 
@@ -411,6 +441,29 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	state.LatestRevisionID = fwflex.StringToFramework(ctx, revisionID)
 
+	// Refresh revision_config from the latest revision. GetWebFunction does not
+	// return the build and service configuration, but GetWebFunctionRevision
+	// does, so read it explicitly: otherwise revision_config is never
+	// reconciled with the service (no drift detection on code, environment
+	// variables, description or the KMS key) and cannot be populated on import.
+	state.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
+	if revisionID != nil {
+		rev, err := findRevisionByID(ctx, conn, name, aws.ToString(revisionID))
+		switch {
+		case retry.NotFound(err):
+		case err != nil:
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		default:
+			var revModel revisionConfigModel
+			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, rev, &revModel))
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			state.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
+		}
+	}
+
 	state.DomainName = types.StringNull()
 	switch endpointName, err := readEndpointName(ctx, conn, name, state.EndpointConfig); {
 	case err != nil:
@@ -431,6 +484,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			if resp.Diagnostics.HasError() {
 				return
 			}
+			epModel.Description = normalizeDescription(epModel.Description)
 			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 		}
 	}
@@ -507,6 +561,13 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 		input.FunctionName = aws.String(name)
 		input.EndpointName = aws.String(endpointName)
+		// An omitted description means "leave unchanged" to the API, so an empty
+		// string is what clears one that was removed from the configuration.
+		if endpointConfig.Description.IsNull() {
+			if prior, d := state.EndpointConfig.ToPtr(ctx); !d.HasError() && prior != nil && !prior.Description.IsNull() {
+				input.Description = aws.String("")
+			}
+		}
 
 		if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
@@ -519,6 +580,16 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
+
+		// Mirror Create: flatten the endpoint back so computed sub-attributes
+		// (auto_deployment_mode, regions) are known after apply.
+		var epModel endpointConfigModel
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		epModel.Description = normalizeDescription(epModel.Description)
+		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 	}
 
 	out, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
@@ -569,17 +640,39 @@ func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName 
 		return endpointNameFromConfig(ctx, cfg)
 	}
 
+	// No configuration to match against, i.e. import. CreateWebFunction always
+	// creates an endpoint with the function, so the oldest endpoint is the one
+	// endpoint_config describes. Giving up when a function has several
+	// endpoints would leave the Required endpoint_config block empty in state,
+	// and populating it from null triggers the RequiresReplace plan modifiers
+	// on endpoint_name and endpoint_type: the first apply after import would
+	// then replace the function, silently deleting every other endpoint it
+	// owns along with their domain names.
 	input := lambdaweb.ListWebFunctionEndpointsInput{
 		FunctionName: aws.String(functionName),
 	}
-	out, err := conn.ListWebFunctionEndpoints(ctx, &input)
-	if err != nil {
-		return "", err
+
+	var oldest *awstypes.FunctionEndpointSummary
+	for {
+		out, err := conn.ListWebFunctionEndpoints(ctx, &input)
+		if err != nil {
+			return "", err
+		}
+		for i := range out.Endpoints {
+			if oldest == nil || createdBefore(aws.ToString(out.Endpoints[i].CreatedAt), aws.ToString(oldest.CreatedAt)) {
+				oldest = &out.Endpoints[i]
+			}
+		}
+		if out.NextToken == nil {
+			break
+		}
+		input.NextToken = out.NextToken
 	}
-	if len(out.Endpoints) == 1 {
-		return aws.ToString(out.Endpoints[0].EndpointName), nil
+
+	if oldest == nil {
+		return "", nil
 	}
-	return "", nil
+	return aws.ToString(oldest.EndpointName), nil
 }
 
 func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
