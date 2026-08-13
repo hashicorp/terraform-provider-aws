@@ -85,8 +85,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN:         framework.ARNAttributeComputedOnly(),
-			names.AttrEnvironment: framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessEnvironmentProviderModel](ctx),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -130,6 +129,105 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			names.AttrEnvironment: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentProviderModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"agentcore_runtime_environment": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreRuntimeEnvironmentModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									// Server-assigned: the API derives these from the harness after
+									// create, so they must be Computed to avoid a post-apply
+									// inconsistency (see hashicorp/terraform-provider-aws#48159).
+									"agent_runtime_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"agent_runtime_id": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"agent_runtime_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									// Optional+Computed list-of-object attribute (not a block): the
+									// API defaults this when not supplied (idle_runtime_session_timeout=900,
+									// max_lifetime=28800), so an unset lifecycle_configuration must be
+									// able to become known after apply. A block cannot be Computed, and
+									// protocol v5 cannot nest attribute metadata inside a block, so this
+									// is modeled as a typed ListAttribute (see #48159).
+									"lifecycle_configuration": schema.ListAttribute{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
+										Optional:   true,
+										Computed:   true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+										ElementType: types.ObjectType{
+											AttrTypes: fwtypes.AttributeTypesMust[lifecycleConfigurationModel](ctx),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"filesystem_configuration": filesystemConfigurationSchema(ctx),
+									names.AttrNetworkConfiguration: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessNetworkConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"network_mode": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.NetworkMode](),
+													Required:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"network_mode_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigNoS3EndpointModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrSecurityGroups: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+															names.AttrSubnets: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"environment_artifact": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentArtifactModel](ctx),
 				Validators: []validator.List{
@@ -1428,12 +1526,20 @@ func (m harnessEnvironmentProviderModel) Expand(ctx context.Context) (any, diag.
 }
 
 type harnessAgentCoreRuntimeEnvironmentModel struct {
-	AgentRuntimeARN          types.String                                                  `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeID           types.String                                                  `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName         types.String                                                  `tfsdk:"agent_runtime_name"`
-	FilesystemConfigurations fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel] `tfsdk:"filesystem_configuration"`
-	LifecycleConfiguration   fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]  `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration     fwtypes.ListNestedObjectValueOf[networkConfigurationModel]    `tfsdk:"network_configuration"`
+	AgentRuntimeARN          types.String                                                      `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeID           types.String                                                      `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName         types.String                                                      `tfsdk:"agent_runtime_name"`
+	FilesystemConfigurations fwtypes.ListNestedObjectValueOf[filesystemConfigurationModel]     `tfsdk:"filesystem_configuration"`
+	LifecycleConfiguration   fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]      `tfsdk:"lifecycle_configuration"`
+	NetworkConfiguration     fwtypes.ListNestedObjectValueOf[harnessNetworkConfigurationModel] `tfsdk:"network_configuration"`
+}
+
+// harnessNetworkConfigurationModel is like networkConfigurationModel but uses
+// vpcConfigNoS3EndpointModel because the harness network_mode_config only has
+// security_groups and subnets (no require_service_s3_endpoint).
+type harnessNetworkConfigurationModel struct {
+	NetworkMode       fwtypes.StringEnum[awstypes.NetworkMode]                    `tfsdk:"network_mode"`
+	NetworkModeConfig fwtypes.ListNestedObjectValueOf[vpcConfigNoS3EndpointModel] `tfsdk:"network_mode_config"`
 }
 
 // Environment artifact union.
