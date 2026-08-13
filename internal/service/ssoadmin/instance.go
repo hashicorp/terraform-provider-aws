@@ -146,7 +146,7 @@ func (r *instanceResource) Create(ctx context.Context, req resource.CreateReques
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 		return
 	}
-	if !plan.EncryptionConfiguration.IsNull() {
+	if !plan.EncryptionConfiguration.IsNull() && !plan.EncryptionConfiguration.IsUnknown() {
 		if err := updateInstanceEncryption(ctx, conn, plan.ARN.ValueString(), plan.EncryptionConfiguration); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 			return
@@ -278,7 +278,16 @@ func (r *instanceResource) flatten(ctx context.Context, output *ssoadmin.Describ
 	diags.Append(fwflex.Flatten(ctx, output, data)...)
 	if output.EncryptionConfigurationDetails != nil {
 		d := output.EncryptionConfigurationDetails
-		data.EncryptionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &encryptionConfigurationModel{EncryptionStatus: fwtypes.StringEnumValue(d.EncryptionStatus), EncryptionStatusReason: fwflex.StringToFramework(ctx, d.EncryptionStatusReason), KeyType: fwtypes.StringEnumValue(d.KeyType), KMSKeyARN: fwtypes.ARNValue(aws.ToString(d.KmsKeyArn))})
+		kmsKeyARN := fwtypes.ARNNull()
+		if d.KmsKeyArn != nil {
+			kmsKeyARN = fwtypes.ARNValue(aws.ToString(d.KmsKeyArn))
+		}
+		data.EncryptionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &encryptionConfigurationModel{
+			EncryptionStatus:       fwtypes.StringEnumValue(d.EncryptionStatus),
+			EncryptionStatusReason: fwflex.StringToFramework(ctx, d.EncryptionStatusReason),
+			KeyType:                fwtypes.StringEnumValue(d.KeyType),
+			KMSKeyARN:              kmsKeyARN,
+		})
 	}
 	return diags
 }
