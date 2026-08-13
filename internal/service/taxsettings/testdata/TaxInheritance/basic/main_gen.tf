@@ -4,8 +4,3 @@
 resource "aws_taxsettings_tax_inheritance" "test" {
   heritage_status = "OptOut"
 }
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

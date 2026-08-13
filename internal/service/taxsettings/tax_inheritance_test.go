@@ -77,7 +77,7 @@ func testAccCheckTaxInheritanceExists(ctx context.Context, t *testing.T, name st
 
 		heritageStatus, err := tftaxsettings.FindTaxInheritanceHeritageStatus(ctx, conn)
 		if err != nil {
-			create.Error(names.TaxSettings, create.ErrActionCheckingExistence, tftaxsettings.ResNameTaxInheritance, name, err)
+			return create.Error(names.TaxSettings, create.ErrActionCheckingExistence, tftaxsettings.ResNameTaxInheritance, name, err)
 		}
 
 		if rs.Primary.Attributes["heritage_status"] != string(*heritageStatus) {

@@ -34,6 +34,7 @@ import (
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
+// @Testing(generator=false)
 // @Testing(importStateIdFunc=testAccTaxInheritanceImportStateIdFunc)
 // @Testing(importStateIdAttribute=heritage_status)
 // @Testing(checkDestroyNoop=true)
