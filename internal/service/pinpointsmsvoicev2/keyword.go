@@ -64,7 +64,10 @@ type keywordResource struct {
 	framework.WithImportByIdentity
 }
 
-var _ resource.ResourceWithValidateConfig = (*keywordResource)(nil)
+var (
+	_ resource.ResourceWithValidateConfig = (*keywordResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*keywordResource)(nil)
+)
 
 func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -141,6 +144,27 @@ func (r *keywordResource) ValidateConfig(ctx context.Context, req resource.Valid
 	}
 }
 
+func (r *keywordResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// On destroy the plan is null. Mandatory keywords cannot be deleted, so warn that
+	// removing the resource only drops it from state and leaves the keyword in place.
+	if !req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var state keywordResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if isMandatoryKeyword(state.Keyword.ValueString()) {
+		resp.Diagnostics.AddWarning(
+			"Mandatory Keyword Not Deleted",
+			fmt.Sprintf("%q is an AWS-managed mandatory keyword that cannot be deleted. Removing this resource drops it from Terraform state, but the keyword remains on the origination identity with its last-applied message.", state.Keyword.ValueString()),
+		)
+	}
+}
+
 func (r *keywordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
@@ -164,10 +188,7 @@ func (r *keywordResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// PutKeyword response: keyword uppercased and the origination identity as an ID.
 	// keep the user-configured values so the resource identity remains stable.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan,
-		fwflex.WithIgnoredFieldNamesAppend("Keyword"),
-		fwflex.WithIgnoredFieldNamesAppend("OriginationIdentity"),
-	))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenPutKeyword(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -226,10 +247,7 @@ func (r *keywordResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Preserve the user-configured values for Keyword and OriginationIdentity so the resource identity remains stable.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan,
-		fwflex.WithIgnoredFieldNamesAppend("Keyword"),
-		fwflex.WithIgnoredFieldNamesAppend("OriginationIdentity"),
-	))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenPutKeyword(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -292,6 +310,18 @@ func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInfor
 	data.OriginationIdentityARN = fwtypes.ARNValue(aws.ToString(originationIdentityARN))
 
 	return diags
+}
+
+// flattenPutKeyword maps a PutKeyword response onto the model. The API echoes the
+// keyword upper-cased and the origination identity as an ID, so both are ignored to
+// preserve the user-configured values and keep the resource identity stable.
+// PutKeywordOutput carries the origination identity ARN, so (unlike flatten) it does
+// not need to be supplied separately.
+func (r *keywordResource) flattenPutKeyword(ctx context.Context, out *pinpointsmsvoicev2.PutKeywordOutput, data *keywordResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, out, data,
+		fwflex.WithIgnoredFieldNamesAppend("Keyword"),
+		fwflex.WithIgnoredFieldNamesAppend("OriginationIdentity"),
+	)
 }
 
 func findKeywordByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, originationIdentity, keyword string) (*awstypes.KeywordInformation, *string, error) {

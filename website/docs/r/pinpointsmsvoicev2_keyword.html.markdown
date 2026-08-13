@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS End User Messaging SMS Keyword.
 
-~> **Note:** The mandatory keywords `HELP` and `STOP` exist on every origination identity and cannot be created or deleted independently of it. This resource adopts and manages their `keyword_message` in place, while `keyword_action` is managed by AWS and cannot be set. Destroying the resource does not delete or reset the keyword; it remains on the origination identity with its last-applied message.
+~> **Note:** The mandatory keywords `HELP` and `STOP` exist on every origination identity and cannot be created or deleted independently of it. For these mandatory keywords only, this resource adopts and manages the `keyword_message` in place, while `keyword_action` is managed by AWS and cannot be set. Destroying a resource that manages a mandatory keyword does not delete or reset it in AWS; the keyword remains on the origination identity with its last-applied message. Non-mandatory keywords are created and deleted normally.
 
 ## Example Usage
 
@@ -78,7 +78,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "help" {
 
 The following arguments are required:
 
-* `keyword` - (Required) Keyword to configure. Changing this forces a new resource.
+* `keyword` - (Required) Keyword to configure. Case-insensitive; AWS stores and returns keywords in upper-case. Changing this forces a new resource.
 * `keyword_message` - (Required) Message to send when the keyword is received.
 * `origination_identity` - (Required) Origination identity to attach the keyword to. Value is the ID or ARN of a phone number or pool. Changing this forces a new resource.
 
