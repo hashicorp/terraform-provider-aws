@@ -32,7 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `cloud_vm_clusters` - List of Cloud VM Clusters. It returns only basic information about the cloud VM clusters.
 
-### cloud_vm_clusters
+### `cloud_vm_clusters` Block
 
 * `arn` - Amazon Resource Name (ARN) for the cloud vm cluster.
 * `cloud_exadata_infrastructure_id` - ID of the Cloud Exadata Infrastructure.

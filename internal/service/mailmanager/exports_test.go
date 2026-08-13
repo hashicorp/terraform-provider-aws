@@ -12,4 +12,6 @@ var (
 
 	ResourceRelay = newRelayResource
 	FindRelayByID = findRelayByID
+	FindIngressPointByID = findIngressPointByID
+	ResourceIngressPoint = newIngressPointResource
 )

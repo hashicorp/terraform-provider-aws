@@ -31,7 +31,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `odb_networks` - List of odb networks returns basic information about odb networks.
 
-### odb_networks
+### `odb_networks` Block
 
 * `arn` - Amazon Resource Name (ARN) of the odb network resource.
 * `display_name` - Display name for the network resource.

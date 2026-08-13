@@ -112,13 +112,109 @@ type clusterVersionsDataSourceModel struct {
 }
 
 type customDataSourceClusterVersion struct {
-	ClusterType              types.String                               `tfsdk:"cluster_type"`
-	ClusterVersion           types.String                               `tfsdk:"cluster_version"`
-	DefaultPlatformVersion   types.String                               `tfsdk:"default_platform_version"`
-	DefaultVersion           types.Bool                                 `tfsdk:"default_version"`
-	EndOfExtendedSupportDate timetypes.RFC3339                          `tfsdk:"end_of_extended_support_date"`
-	EndOfStandardSupportDate timetypes.RFC3339                          `tfsdk:"end_of_standard_support_date"`
-	KubernetesPatchVersion   types.String                               `tfsdk:"kubernetes_patch_version"`
-	ReleaseDate              timetypes.RFC3339                          `tfsdk:"release_date"`
-	VersionStatus            fwtypes.StringEnum[awstypes.VersionStatus] `tfsdk:"version_status"`
+	ClusterType                 types.String                                                      `tfsdk:"cluster_type"`
+	ClusterVersion              types.String                                                      `tfsdk:"cluster_version"`
+	ControlPlaneComponentConfig fwtypes.ListNestedObjectValueOf[controlPlaneConfigInfoModel]      `tfsdk:"control_plane_component_config"`
+	ControlPlaneScalingTiers    fwtypes.ListNestedObjectValueOf[controlPlaneScalingTierInfoModel] `tfsdk:"control_plane_scaling_tiers"`
+	DefaultPlatformVersion      types.String                                                      `tfsdk:"default_platform_version"`
+	DefaultVersion              types.Bool                                                        `tfsdk:"default_version"`
+	EndOfExtendedSupportDate    timetypes.RFC3339                                                 `tfsdk:"end_of_extended_support_date"`
+	EndOfStandardSupportDate    timetypes.RFC3339                                                 `tfsdk:"end_of_standard_support_date"`
+	KubernetesPatchVersion      types.String                                                      `tfsdk:"kubernetes_patch_version"`
+	ReleaseDate                 timetypes.RFC3339                                                 `tfsdk:"release_date"`
+	VersionStatus               fwtypes.StringEnum[awstypes.VersionStatus]                        `tfsdk:"version_status"`
+}
+
+type controlPlaneConfigInfoModel struct {
+	KubeApiServerConfig         fwtypes.ListNestedObjectValueOf[kubeAPIServerVersionConfigModel]         `tfsdk:"kube_api_server_config"`
+	KubeControllerManagerConfig fwtypes.ListNestedObjectValueOf[kubeControllerManagerVersionConfigModel] `tfsdk:"kube_controller_manager_config"`
+	KubeSchedulerConfig         fwtypes.ListNestedObjectValueOf[kubeSchedulerVersionConfigModel]         `tfsdk:"kube_scheduler_config"`
+}
+
+type kubeAPIServerVersionConfigModel struct {
+	EventTtl             fwtypes.ListNestedObjectValueOf[durationParameterConfigModel]  `tfsdk:"event_ttl"`
+	ServiceNodePortRange fwtypes.ListNestedObjectValueOf[portRangeParameterConfigModel] `tfsdk:"service_node_port_range"`
+}
+
+type kubeControllerManagerVersionConfigModel struct {
+	HorizontalPodAutoscalerControllerConfig fwtypes.ListNestedObjectValueOf[horizontalPodAutoscalerControllerVersionConfigModel] `tfsdk:"horizontal_pod_autoscaler_controller_config"`
+}
+
+type horizontalPodAutoscalerControllerVersionConfigModel struct {
+	HorizontalPodAutoscalerSyncPeriod fwtypes.ListNestedObjectValueOf[durationParameterConfigModel] `tfsdk:"horizontal_pod_autoscaler_sync_period"`
+}
+
+type kubeSchedulerVersionConfigModel struct {
+	NodeResourcesFit fwtypes.ListNestedObjectValueOf[nodeResourcesFitVersionConfigModel] `tfsdk:"node_resources_fit"`
+}
+
+type nodeResourcesFitVersionConfigModel struct {
+	ScoringStrategy fwtypes.ListNestedObjectValueOf[scoringStrategyConfigModel] `tfsdk:"scoring_strategy"`
+}
+
+type scoringStrategyConfigModel struct {
+	Constraints  fwtypes.ListNestedObjectValueOf[scoringStrategyConstraintsModel] `tfsdk:"constraints"`
+	DefaultValue fwtypes.ListNestedObjectValueOf[scoringStrategyModel]            `tfsdk:"default_value"`
+}
+
+type scoringStrategyModel struct {
+	Resources fwtypes.ListNestedObjectValueOf[resourceWeightModel] `tfsdk:"resources"`
+	Type      fwtypes.StringEnum[awstypes.ScoringStrategyType]     `tfsdk:"type"`
+}
+
+type resourceWeightModel struct {
+	Name   types.String `tfsdk:"name"`
+	Weight types.Int32  `tfsdk:"weight"`
+}
+
+type scoringStrategyConstraintsModel struct {
+	Resources       fwtypes.ListNestedObjectValueOf[resourceConstraintsModel]     `tfsdk:"resources"`
+	ScoringStrategy fwtypes.ListNestedObjectValueOf[allowedValuesConstraintModel] `tfsdk:"scoring_strategy"`
+}
+
+type resourceConstraintsModel struct {
+	Name   fwtypes.ListNestedObjectValueOf[allowedValuesConstraintModel] `tfsdk:"name"`
+	Weight fwtypes.ListNestedObjectValueOf[integerRangeConstraintModel]  `tfsdk:"weight"`
+}
+
+type allowedValuesConstraintModel struct {
+	AllowedValues fwtypes.ListValueOf[types.String] `tfsdk:"allowed_values"`
+}
+
+type integerRangeConstraintModel struct {
+	Max types.Int32 `tfsdk:"max"`
+	Min types.Int32 `tfsdk:"min"`
+}
+
+type durationParameterConfigModel struct {
+	Constraints  fwtypes.ListNestedObjectValueOf[durationConstraintsModel] `tfsdk:"constraints"`
+	DefaultValue types.String                                              `tfsdk:"default_value"`
+}
+
+type durationConstraintsModel struct {
+	Max types.String `tfsdk:"max"`
+	Min types.String `tfsdk:"min"`
+}
+
+type portRangeParameterConfigModel struct {
+	Constraints  fwtypes.ListNestedObjectValueOf[portRangeConstraintsModel] `tfsdk:"constraints"`
+	DefaultValue fwtypes.ListNestedObjectValueOf[serviceNodePortRangeModel] `tfsdk:"default_value"`
+}
+
+type portRangeConstraintsModel struct {
+	MaxPort fwtypes.ListNestedObjectValueOf[integerRangeConstraintModel] `tfsdk:"max_port"`
+	MinPort fwtypes.ListNestedObjectValueOf[integerRangeConstraintModel] `tfsdk:"min_port"`
+}
+
+type serviceNodePortRangeModel struct {
+	MaxPort types.Int32 `tfsdk:"max_port"`
+	MinPort types.Int32 `tfsdk:"min_port"`
+}
+
+type controlPlaneScalingTierInfoModel struct {
+	ApiRequestConcurrency                types.Int32                                                  `tfsdk:"api_request_concurrency"`
+	ClusterDatabaseSizeGb                types.Int32                                                  `tfsdk:"cluster_database_size_gb"`
+	ControlPlaneComponentConfigOverrides fwtypes.ListNestedObjectValueOf[controlPlaneConfigInfoModel] `tfsdk:"control_plane_component_config_overrides"`
+	PodSchedulingRatePerSecond           types.Int32                                                  `tfsdk:"pod_scheduling_rate_per_second"`
+	TierName                             types.String                                                 `tfsdk:"tier_name"`
 }

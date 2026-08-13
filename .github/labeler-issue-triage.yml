@@ -230,6 +230,8 @@ service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dx_'
+service/directoryservicedata:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directoryservicedata_'
 service/discovery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_discovery_'
 service/dlm:
@@ -418,6 +420,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/lambdacore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdacore_'
 service/lambdamicrovms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
 service/launchwizard:

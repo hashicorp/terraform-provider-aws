@@ -32,6 +32,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newRelayResource,
 			TypeName: "aws_mailmanager_relay",
 			Name:     "Relay",
+			Factory:  newIngressPointResource,
+			TypeName: "aws_mailmanager_ingress_point",
+			Name:     "Ingress Point",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
@@ -76,6 +79,9 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newRelayResourceAsListResource,
 			TypeName: "aws_mailmanager_relay",
 			Name:     "Relay",
+			Factory:  newIngressPointResourceAsListResource,
+			TypeName: "aws_mailmanager_ingress_point",
+			Name:     "Ingress Point",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),

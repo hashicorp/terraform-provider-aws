@@ -542,7 +542,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							Optional:    true,
 							Description: "A list of HTTP headers that are allowed to be propagated from incoming client requests to the target.",
 							Validators: []validator.Set{
-								setvalidator.SizeAtMost(10),
 								setvalidator.ValueStringsAre(headerNameValidators()...),
 							},
 						},
@@ -551,7 +550,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							Optional:    true,
 							Description: "A list of HTTP headers that are allowed to be propagated from the target response back to the client.",
 							Validators: []validator.Set{
-								setvalidator.SizeAtMost(10),
 								setvalidator.ValueStringsAre(headerNameValidators()...),
 							},
 						},

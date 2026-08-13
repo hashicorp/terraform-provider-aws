@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
@@ -82,6 +83,19 @@ func (l *userListResource) List(ctx context.Context, request list.ListRequest, s
 			userName := aws.ToString(item.Name)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("user_id"), userID)
 
+			var out *workmail.DescribeUserOutput
+			if request.IncludeResource {
+				var err error
+				out, err = findUserByTwoPartKey(ctx, conn, organizationID, userID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data userResourceModel
@@ -90,12 +104,6 @@ func (l *userListResource) List(ctx context.Context, request list.ListRequest, s
 				data.UserId = flex.StringValueToFramework(ctx, userID)
 
 				if request.IncludeResource {
-					out, err := findUserByTwoPartKey(ctx, conn, organizationID, userID)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewListResultErrorDiagnostic(err).Diagnostics...)
-						return
-					}
-
 					result.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 					if result.Diagnostics.HasError() {
 						return

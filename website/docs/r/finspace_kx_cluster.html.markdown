@@ -107,7 +107,7 @@ The `auto_scaling_configuration` block supports the following arguments:
 The `capacity_configuration` block supports the following arguments:
 
 * `node_count` - (Required) Number of instances running in a cluster. Must be at least 1 and at most 5.
-* `node_type` - (Required) Determines the hardware of the host computer used for your cluster instance. Valid values are `kx.s.large`, `kx.s.xlarge`, `kx.s.2xlarge`, `kx.s.4xlarge`, `kx.s.8xlarge`, `kx.s.16xlarge`, and `kx.s.32xlarge`.
+* `node_type` - (Required) Hardware of the host computer used for your cluster instance. Valid values are `kx.s.large`, `kx.s.xlarge`, `kx.s.2xlarge`, `kx.s.4xlarge`, `kx.s.8xlarge`, `kx.s.16xlarge`, and `kx.s.32xlarge`.
 
 ### `cache_storage_configurations` Block
 
