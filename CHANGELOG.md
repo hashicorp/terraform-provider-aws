@@ -9,6 +9,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
+* list-resource/aws_bedrockagentcore_policy_engine: Prevents error when remote resource disappears during List ([#49478](https://github.com/hashicorp/terraform-provider-aws/issues/49478))
 
 ## 6.60.0 (August 13, 2026)
 
