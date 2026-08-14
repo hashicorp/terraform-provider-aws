@@ -14904,12 +14904,12 @@ func TestAccRDSInstance_engineVersion_outOfBand(t *testing.T) {
 					}
 				},
 				// Configuration is unchanged. The running version is now newer than the
-				// configured version, so with auto_minor_version_upgrade=true the diff
-				// must be suppressed instead of attempting a downgrade.
+				// configured version, so with auto_minor_version_upgrade=true the
+				// instance must plan as a no-op instead of attempting a downgrade.
 				Config: testAccInstanceConfig_engineVersionAutoMinorPostgres(rName, 0),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(

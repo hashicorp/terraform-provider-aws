@@ -319,27 +319,16 @@ func resourceInstance() *schema.Resource {
 					Optional: true,
 					Computed: true,
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						// Only suppress when automatic minor version upgrades are enabled.
-						// In that mode RDS owns the running minor version, so a configured
-						// value that is a major-only prefix (e.g. "14" while running "14.22")
-						// or an older minor must not be sent as an engine downgrade. When
-						// auto_minor_version_upgrade is disabled the configured engine_version
-						// is a user-managed pin and any drift must remain visible.
-						//
-						// During diff, d.Get returns the new (configured) value for
-						// auto_minor_version_upgrade and the prior-state value for the
-						// computed engine_version_actual, which is exactly what we need to
-						// evaluate the pending change.
+						// When automatic minor upgrades are enabled, RDS can advance
+						// engine_version_actual beyond the configured version. Suppress the
+						// resulting downgrade/prefix diff (e.g. "14" or "14.22" while running
+						// "14.23") while preserving intentional upgrades (configured newer than
+						// actual). When disabled, engine_version is an explicit pin and any
+						// difference stays visible.
+						// https://github.com/hashicorp/terraform-provider-aws/issues/39579
 						if !d.Get(names.AttrAutoMinorVersionUpgrade).(bool) {
 							return false
 						}
-
-						// Suppress unless the configured version is strictly newer than the
-						// actual running version. A newer configured version is an intentional
-						// upgrade and must produce a diff; anything else (equal, older, or a
-						// major-only prefix of the running version) would be rejected by RDS
-						// as a downgrade.
-						// See https://github.com/hashicorp/terraform-provider-aws/issues/39579
 						return !engineVersionIsNewer(new, d.Get("engine_version_actual").(string))
 					},
 				},
