@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb: Fix attribute key not recognized issue preventing creation in ISO-B regions
-```

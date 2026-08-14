@@ -37,7 +37,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_portal", name="Portal")
 // @Tags(identifierAttribute="portal_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.Portal")
 // @Testing(importStateIdAttribute="portal_arn")

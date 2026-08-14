@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_network_interface_sg_attachment: Increase default timeouts to 3 minutes and allow them to be configured
-```

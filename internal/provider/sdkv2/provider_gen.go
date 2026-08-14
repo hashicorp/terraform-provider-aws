@@ -54,6 +54,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// agentregistry
+
+				"agentregistry": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// amp
 
 				"amp": {
@@ -742,6 +750,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// directoryservicedata
+
+				"directoryservicedata": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dlm
 
 				"dlm": {
@@ -1328,6 +1344,22 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdacore
+
+				"lambdacore": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// lambdamicrovms
+
+				"lambdamicrovms": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": {
@@ -1437,6 +1469,14 @@ func endpointsSchema() *schema.Schema {
 				// macie2
 
 				"macie2": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mailmanager
+
+				"mailmanager": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -1865,6 +1905,14 @@ func endpointsSchema() *schema.Schema {
 				// resiliencehub
 
 				"resiliencehub": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// resiliencehubv2
+
+				"resiliencehubv2": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

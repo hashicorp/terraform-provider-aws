@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -37,6 +36,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,7 +48,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_browser", name="Browser")
 // @Tags(identifierAttribute="browser_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetBrowserOutput")
+// @Testing(generator="testAccRandomBrowserName(t)")
+// @Testing(importStateIdAttribute="browser_id")
+// @Testing(preCheck="testAccPreCheckBrowser")
 func newBrowserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &browserResource{}
 
@@ -139,15 +144,16 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("s3"),
+									),
+								},
 								Blocks: map[string]schema.Block{
 									"s3": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[enterprisePolicyS3LocationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
-											listvalidator.ExactlyOneOf(
-												// If another member is added to the union, this will need to be updated.
-												path.MatchRelative().AtParent().AtName("s3"),
-											),
 										},
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
@@ -157,7 +163,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 												names.AttrBucket: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+														fwvalidators.S3BucketName,
 													},
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -205,6 +211,11 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 						"network_mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.BrowserNetworkMode](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.BrowserNetworkMode]path.Expression{
+									awstypes.BrowserNetworkModeVpc: path.MatchRelative().AtParent().AtName(names.AttrVPCConfig),
+								}),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -212,7 +223,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 					Blocks: map[string]schema.Block{
 						names.AttrVPCConfig: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigNoS3EndpointModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -272,7 +283,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 									names.AttrBucket: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+											fwvalidators.S3BucketName,
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -327,15 +338,16 @@ func certificateSchema(ctx context.Context) schema.ListNestedBlock {
 						listplanmodifier.RequiresReplace(),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("secrets_manager"),
+							),
+						},
 						Blocks: map[string]schema.Block{
 							"secrets_manager": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[secretsManagerLocationModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
-									listvalidator.ExactlyOneOf(
-										// If another member is added to the union, this will need to be updated.
-										path.MatchRelative().AtParent().AtName("secrets_manager"),
-									),
 								},
 								PlanModifiers: []planmodifier.List{
 									listplanmodifier.RequiresReplace(),
@@ -575,8 +587,8 @@ type browserResourceModel struct {
 }
 
 type browserNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"vpc_config"`
+	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode]             `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigNoS3EndpointModel] `tfsdk:"vpc_config"`
 }
 
 type recordingConfigModel struct {

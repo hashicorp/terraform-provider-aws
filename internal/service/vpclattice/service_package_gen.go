@@ -23,9 +23,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceServiceNetworkResourceAssociations,
-			TypeName: "aws_vpclattice_service_network_resource_associations",
-			Name:     "Service Network Resource Associations",
+			Factory:  newDataSourceServiceNetworkServiceAssociations,
+			TypeName: "aws_vpclattice_service_network_service_associations",
+			Name:     "Service Network Service Associations",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}

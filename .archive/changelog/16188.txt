@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_instance_profile: Detach role when role doesn't exist + remove when deleted from state.
-```

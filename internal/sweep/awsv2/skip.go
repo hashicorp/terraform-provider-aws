@@ -71,10 +71,6 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	// For example from GovCloud SES.SetActiveReceiptRuleSet.
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
-		return true
-	}
 	// Example (lightsail): InvalidInputException: Distribution-related APIs are only available in the us-east-1 Region
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Distribution-related APIs are only available in the us-east-1 Region") {
 		return true

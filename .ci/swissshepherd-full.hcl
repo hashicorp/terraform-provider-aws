@@ -5,9 +5,7 @@ provider_source = "registry.terraform.io/hashicorp/aws"
 provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
 
-file_aliases = {
-  "list_resource/aws_ebs_volume" = "aws_ec2_ebs_volume"
-}
+file_aliases = {}
 
 ignore_contents_check = [
   "data_source/aws_kms_secret",

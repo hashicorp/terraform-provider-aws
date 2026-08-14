@@ -38,7 +38,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_data_protection_settings", name="Data Protection Settings")
 // @Tags(identifierAttribute="data_protection_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.DataProtectionSettings")
 // @Testing(importStateIdAttribute="data_protection_settings_arn")

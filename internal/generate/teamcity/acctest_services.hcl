@@ -182,6 +182,10 @@ service "imagebuilder" {
   vpc_lock = true
 }
 
+service "inspector" {
+  skip = true
+}
+
 service "ipam" {
   vpc_lock                   = true
   pattern_override           = "TestAccIPAM"

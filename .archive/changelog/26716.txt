@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_eip: Defaults to default regional `domain` when `vpc` not set
-```

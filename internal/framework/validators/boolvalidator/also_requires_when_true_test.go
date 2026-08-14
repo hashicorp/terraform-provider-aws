@@ -102,11 +102,47 @@ func TestAlsoRequiresWhenTrue(t *testing.T) {
 			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
 			expErrors:   1,
 		},
+		"self-true-multiple-targets-other-null": {
+			configValue: types.BoolValue(true),
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, true, nil, "value") },
+			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
+			expErrors:   1,
+		},
 		"self-true-multiple-targets-all-null": {
 			configValue: types.BoolValue(true),
 			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, true, nil, nil) },
 			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
 			expErrors:   2,
+		},
+		"self-true-multiple-targets-all-set": {
+			configValue: types.BoolValue(true),
+			config:      func(t *testing.T) tfsdk.Config { return testConfig(t, true, "valueA", "valueB") },
+			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
+			expErrors:   0,
+		},
+		"self-true-multiple-targets-one-unknown-other-null": {
+			configValue: types.BoolValue(true),
+			config: func(t *testing.T) tfsdk.Config {
+				return testConfig(t, true, tftypes.UnknownValue, nil)
+			},
+			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
+			expErrors:   0,
+		},
+		"self-true-multiple-targets-one-null-other-unknown": {
+			configValue: types.BoolValue(true),
+			config: func(t *testing.T) tfsdk.Config {
+				return testConfig(t, true, nil, tftypes.UnknownValue)
+			},
+			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
+			expErrors:   0,
+		},
+		"self-true-multiple-targets-all-unknown": {
+			configValue: types.BoolValue(true),
+			config: func(t *testing.T) tfsdk.Config {
+				return testConfig(t, true, tftypes.UnknownValue, tftypes.UnknownValue)
+			},
+			expressions: []path.Expression{path.MatchRoot("a"), path.MatchRoot("b")},
+			expErrors:   0,
 		},
 		"self-true-self-reference-ignored": {
 			// pointing at self is a no-op (does not crash or flag)

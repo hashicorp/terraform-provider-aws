@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `backup_summaries` - List of backups. See below.
 
-### `backup_summaries` Attribute Reference
+### `backup_summaries` Block
 
 * `backup_arn` - ARN of the backup.
 * `backup_creation_date_time` - Time at which the backup was created.
