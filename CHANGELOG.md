@@ -1,5 +1,10 @@
 ## 6.61.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+* **New Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+
 ENHANCEMENTS:
 
 * data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
