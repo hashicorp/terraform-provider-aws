@@ -16,7 +16,11 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_resourceexplorer2_index", sweepIndexes, "aws_resourceexplorer2_view")
+	awsv2.Register("aws_resourceexplorer2_index", sweepIndexes,
+		"aws_resourceexplorer2_view",
+		// To delete AWSManagedViewForCloudWatchTelemetryEnrichment.
+		"aws_observabilityadmin_telemetry_enrichment",
+	)
 	awsv2.Register("aws_resourceexplorer2_view", sweepViews)
 }
 
