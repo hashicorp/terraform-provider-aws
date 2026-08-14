@@ -45,6 +45,14 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
+					// The service explains every state, including the healthy one,
+					// and the attribute is what surfaces a Pending or Failed cause.
+					resource.TestCheckResourceAttrWith(resourceName, "state_reason", func(v string) error {
+						if v == "" {
+							return errors.New("state_reason should not be empty")
+						}
+						return nil
+					}),
 				),
 			},
 			{
