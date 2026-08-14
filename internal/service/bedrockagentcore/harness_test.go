@@ -1389,6 +1389,8 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_Network_VPC(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -1583,6 +1585,8 @@ func TestAccBedrockAgentCoreHarness_Environment_lifecycleConfiguration(t *testin
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionStorage(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -1901,6 +1905,8 @@ func TestAccBedrockAgentCoreHarness_Environment_removeEnvironment(t *testing.T) 
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_s3FilesAccessPoint(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -1955,6 +1961,8 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_s3FilesA
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_efsAccessPoint(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -2009,6 +2017,8 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_efsAcces
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -2075,6 +2085,8 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_addFilesystem(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -2141,6 +2153,8 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_addFiles
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_removeFilesystem(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -2207,6 +2221,8 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_removeFi
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
@@ -2317,6 +2333,8 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *tes
 }
 
 func TestAccBedrockAgentCoreHarness_Environment_Network_updateVPCToPublic(t *testing.T) {
+	t.Skip("Tests with VPC network mode are failing due to a lingering ENI issue.")
+
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
 	rName := testAccRandomHarnessName(t)
