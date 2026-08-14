@@ -135,11 +135,13 @@ The following arguments are optional:
 
 #### `service_config` Block
 
-* `environment_variables` - (Optional) Map of environment variables.
+* `environment_variables` - (Optional) Map of environment variables, up to 32 KB across all names and values.
 * `execution_role_arn` - (Required) ARN of the IAM execution role. The trust principal must be `lambda.amazonaws.com`.
 * `max_concurrency_per_environment` - (Optional) Maximum concurrent requests per execution environment (1-128, default 64).
 * `telemetry_config` - (Optional) Telemetry configuration. [See below](#telemetry_config-block).
 * `timeout_seconds` - (Optional) Request timeout in seconds (3-900, default 30).
+
+~> **Note:** The runtime starts `index.js` and expects it to listen on `0.0.0.0:3000`. To serve an entry point with another name, set `AWS_LAMBDA_ENTRYPOINT` in `environment_variables` to that file. Without it a package whose server lives elsewhere starts nothing, and the endpoint answers an opaque `HTTP 500` with no log line explaining it.
 
 ##### `telemetry_config` Block
 

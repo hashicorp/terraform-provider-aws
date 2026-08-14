@@ -326,13 +326,19 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-// ValidateConfig applies the endpoint rules the service enforces to the inline
-// endpoint_config block, so they surface at plan time rather than as an API
-// error midway through an apply.
+// ValidateConfig applies the rules the service enforces on the inline
+// endpoint_config block and on the environment variables, so they surface at
+// plan time rather than as an API error midway through an apply.
 func (r *functionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var cfg functionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &cfg))
-	if resp.Diagnostics.HasError() || cfg.EndpointConfig.IsNull() || cfg.EndpointConfig.IsUnknown() {
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	validateEnvironmentVariablesSize(ctx, cfg, resp)
+
+	if cfg.EndpointConfig.IsNull() || cfg.EndpointConfig.IsUnknown() {
 		return
 	}
 
@@ -378,6 +384,51 @@ func (r *functionResource) ValidateConfig(ctx context.Context, req resource.Vali
 // warning the apply reports success, the next plan is empty, and the endpoint
 // keeps serving the old revision indefinitely. `MultiRegion` and `PerRegion`
 // endpoints are always affected because the service requires `Disabled` there.
+// environmentVariablesMaxBytes is the documented 32 KB limit the service
+// enforces on a revision's environment variables.
+const environmentVariablesMaxBytes = 32 * 1024
+
+// validateEnvironmentVariablesSize reports environment variables that cannot
+// fit. The service rejects them, but only up to a point: past roughly 37 KB the
+// whole request is too large and the error stops mentioning environment
+// variables at all ("Request must be smaller than 37888 bytes"), which sends
+// people looking in the wrong place. The keys and values are summed without the
+// serialization overhead the service also counts, so this only ever rejects a
+// configuration the service would reject too.
+func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceModel, resp *resource.ValidateConfigResponse) {
+	if cfg.RevisionConfig.IsNull() || cfg.RevisionConfig.IsUnknown() {
+		return
+	}
+
+	revisionConfig, d := cfg.RevisionConfig.ToPtr(ctx)
+	if d.HasError() || revisionConfig == nil || revisionConfig.ServiceConfig.IsNull() || revisionConfig.ServiceConfig.IsUnknown() {
+		return
+	}
+
+	serviceConfig, d := revisionConfig.ServiceConfig.ToPtr(ctx)
+	if d.HasError() || serviceConfig == nil || serviceConfig.EnvironmentVariables.IsNull() || serviceConfig.EnvironmentVariables.IsUnknown() {
+		return
+	}
+
+	var size int
+	for name, value := range serviceConfig.EnvironmentVariables.Elements() {
+		if value.IsUnknown() {
+			return
+		}
+		size += len(name)
+		if v, ok := value.(types.String); ok {
+			size += len(v.ValueString())
+		}
+	}
+
+	if size > environmentVariablesMaxBytes {
+		resp.Diagnostics.AddAttributeError(path.Root("revision_config"),
+			"Environment variables too large",
+			fmt.Sprintf("`environment_variables` must not exceed %d bytes across all names and values; the configuration holds %d.",
+				environmentVariablesMaxBytes, size))
+	}
+}
+
 func (r *functionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
