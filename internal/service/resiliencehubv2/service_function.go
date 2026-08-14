@@ -107,13 +107,10 @@ func (r *serviceFunctionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output.ServiceFunction, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output.ServiceFunction, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Set values for unknowns.
-	plan.ServiceFunctionID = fwflex.StringToFramework(ctx, output.ServiceFunction.ServiceFunctionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
