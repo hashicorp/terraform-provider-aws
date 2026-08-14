@@ -64,6 +64,7 @@ func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 					"build_role_arn",
 					"code_artifact",
 					"egress_network_connectors",
+					"image_version",
 				},
 			},
 		},

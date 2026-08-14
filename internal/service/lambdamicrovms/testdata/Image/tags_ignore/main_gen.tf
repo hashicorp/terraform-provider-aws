@@ -1,5 +1,16 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+provider "aws" {
+  default_tags {
+    tags = var.provider_tags
+  }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
+}
+
 resource "aws_lambdamicrovms_image" "test" {
-{{- template "region" }}
   name           = var.rName
   base_image_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:aws:microvm-image:al2023-1"
   build_role_arn = aws_iam_role.test.arn
@@ -7,14 +18,13 @@ resource "aws_lambdamicrovms_image" "test" {
   code_artifact {
     uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   }
-{{- template "tags" . }}
+
+  tags = var.resource_tags
 }
 
 data "aws_partition" "current" {}
 
-data "aws_region" "current" {
-{{- template "region" -}}
-}
+data "aws_region" "current" {}
 
 resource "aws_iam_role" "test" {
   name = var.rName
@@ -46,14 +56,36 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
 
 resource "aws_s3_object" "test" {
-{{- template "region" }}
   bucket = aws_s3_bucket.test.bucket
   key    = "code.zip"
   source = "test-fixtures/code.zip"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
+
+variable "provider_tags" {
+  type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
+  nullable = false
 }

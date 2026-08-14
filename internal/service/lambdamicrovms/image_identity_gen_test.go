@@ -70,7 +70,7 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 
@@ -164,7 +164,7 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 
@@ -182,7 +182,7 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 
