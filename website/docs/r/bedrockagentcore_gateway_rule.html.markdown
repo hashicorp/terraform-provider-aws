@@ -196,7 +196,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `gateway_arn` - ARN of the gateway that owns the rule.
 * `rule_id` - Identifier of the rule.
-* `system` - Present when the rule is system-managed. A single-element list with a `managed_by` string.
+* `system` - Present when the rule is system-managed. See [`system` Block](#system-block) below.
+
+### `system` Block
+
+* `managed_by` - Name of the system that manages the rule.
 
 ## Timeouts
 

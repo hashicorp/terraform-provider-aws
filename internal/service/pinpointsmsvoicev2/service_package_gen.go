@@ -83,6 +83,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSenderIDResource,
 			TypeName: "aws_pinpointsmsvoicev2_sender_id",
 			Name:     "Sender ID",
@@ -123,6 +133,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
 		{
 			Factory:  newSenderIDResourceAsListResource,

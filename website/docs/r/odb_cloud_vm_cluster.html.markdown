@@ -154,7 +154,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `gi_version_computed` - Complete software version of Oracle Grid Infrastructure (GI).
 * `hostname_prefix_computed` - Host name for the VM cluster. Constraints: - Can't be "localhost" or "hostname". - Can't contain "-version". - Maximum length of the combined hostname and domain is 63 characters. - Hostname must be unique within the subnet.
 * `id` - Unique identifier of vm cluster.
-* `iorm_config_cache` - Exadata IORM (I/O Resource Manager) configuration cache details for the VM cluster.
+* `iorm_config_cache` - Exadata IORM (I/O Resource Manager) configuration cache details for the VM cluster. See [`iorm_config_cache` Block](#iorm_config_cache-block) below.
 * `last_update_history_entry_id` - OCID of the most recent maintenance update history entry.
 * `listener_port` - Listener port number configured on the VM cluster.
 * `node_count` - Total number of nodes in the VM cluster.
@@ -172,6 +172,19 @@ This resource exports the following attributes in addition to the arguments abov
 * `system_version` - Operating system version of the image chosen for the VM cluster.
 * `tags_all` - Combined set of user-defined and provider-defined tags.
 * `vip_ids` - Virtual IP (VIP) addresses assigned to the VM cluster. CRS assigns one VIP per node for failover support.
+
+### `iorm_config_cache` Block
+
+* `db_plans` - List of IORM (I/O Resource Manager) database plans for the VM cluster. See [`db_plans` Block](#db_plans-block) below.
+* `lifecycle_details` - Additional information about the current lifecycle state of the IORM configuration.
+* `lifecycle_state` - Current lifecycle state of the IORM configuration.
+* `objective` - Current value for the IORM objective.
+
+### `db_plans` Block
+
+* `db_name` - Database name to which the IORM plan applies.
+* `flash_cache_limit` - Flash cache limit for the database plan.
+* `share` - Relative priority of the database in the IORM plan.
 
 ## Timeouts
 

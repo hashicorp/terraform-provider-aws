@@ -88,7 +88,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 ### `security_service_policy_data` Block
 
 * `managed_service_data` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
-* `policy_option` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. See the [`policy_option`](#policy_option-block) block.
+* `policy_option` - (Optional) Network Firewall firewall policy options to configure a centralized deployment model. See the [`policy_option`](#policy_option-block) block.
 * `type` - (Required, Forces new resource) Service that the policy uses to protect the resources. For the current list of supported types, refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
 
 ### `policy_option` Block

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"slices"
 	"strings"
 	"time"
 
@@ -52,6 +53,8 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const gatewayTargetPolicySessionIDHeader = "x-amzn-bedrock-agentcore-policy-session-id"
 
 // @FrameworkResource("aws_bedrockagentcore_gateway_target", name="Gateway Target")
 func newGatewayTargetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -542,7 +545,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							Optional:    true,
 							Description: "A list of HTTP headers that are allowed to be propagated from incoming client requests to the target.",
 							Validators: []validator.Set{
-								setvalidator.SizeAtMost(10),
 								setvalidator.ValueStringsAre(headerNameValidators()...),
 							},
 						},
@@ -551,7 +553,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							Optional:    true,
 							Description: "A list of HTTP headers that are allowed to be propagated from the target response back to the client.",
 							Validators: []validator.Set{
-								setvalidator.SizeAtMost(10),
 								setvalidator.ValueStringsAre(headerNameValidators()...),
 							},
 						},
@@ -979,6 +980,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Set values for unknowns.
+	target = normalizeGatewayTargetOutputForState(target, data.MetadataConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, target, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -1008,6 +1010,7 @@ func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
+	out = normalizeGatewayTargetOutputForState(out, data.MetadataConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
 	if response.Diagnostics.HasError() {
 		return
@@ -1053,6 +1056,33 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+}
+
+func normalizeGatewayTargetOutputForState(out *bedrockagentcorecontrol.GetGatewayTargetOutput, preserveEmptyMetadataConfiguration bool) *bedrockagentcorecontrol.GetGatewayTargetOutput {
+	if out == nil || out.MetadataConfiguration == nil {
+		return out
+	}
+
+	allowedRequestHeaders := slices.DeleteFunc(slices.Clone(out.MetadataConfiguration.AllowedRequestHeaders), func(header string) bool {
+		return strings.EqualFold(header, gatewayTargetPolicySessionIDHeader)
+	})
+	if len(allowedRequestHeaders) == len(out.MetadataConfiguration.AllowedRequestHeaders) {
+		return out
+	}
+
+	normalized := *out
+	metadataConfiguration := *out.MetadataConfiguration
+	metadataConfiguration.AllowedRequestHeaders = allowedRequestHeaders
+	if !preserveEmptyMetadataConfiguration &&
+		len(metadataConfiguration.AllowedRequestHeaders) == 0 &&
+		len(metadataConfiguration.AllowedResponseHeaders) == 0 &&
+		len(metadataConfiguration.AllowedQueryParameters) == 0 {
+		normalized.MetadataConfiguration = nil
+	} else {
+		normalized.MetadataConfiguration = &metadataConfiguration
+	}
+
+	return &normalized
 }
 
 func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

@@ -613,6 +613,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Lambda"
     severity: WARNING
+  - id: lambdacore-in-func-name
+    languages:
+      - go
+    message: Do not use "LambdaCore" in func name inside lambdacore package
+    paths:
+      include:
+        - "/internal/service/lambdacore"
+      exclude:
+        - "/internal/service/lambdacore/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaCore"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: lambdacore-in-test-name
+    languages:
+      - go
+    message: Include "LambdaCore" in test name
+    paths:
+      include:
+        - "/internal/service/lambdacore/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccLambdaCore"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: lambdacore-in-const-name
+    languages:
+      - go
+    message: Do not use "LambdaCore" in const name inside lambdacore package
+    paths:
+      include:
+        - "/internal/service/lambdacore"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaCore"
+    severity: WARNING
+  - id: lambdacore-in-var-name
+    languages:
+      - go
+    message: Do not use "LambdaCore" in var name inside lambdacore package
+    paths:
+      include:
+        - "/internal/service/lambdacore"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaCore"
+    severity: WARNING
   - id: lambdamicrovms-in-func-name
     languages:
       - go
@@ -4632,37 +4693,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)recyclebin"
-    severity: WARNING
-  - id: redshift-in-func-name
-    languages:
-      - go
-    message: Do not use "Redshift" in func name inside redshift package
-    paths:
-      include:
-        - "/internal/service/redshift"
-      exclude:
-        - "/internal/service/redshift/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Redshift"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: redshift-in-test-name
-    languages:
-      - go
-    message: Include "Redshift" in test name
-    paths:
-      include:
-        - "/internal/service/redshift/*_test.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccRedshift"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

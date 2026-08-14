@@ -166,6 +166,7 @@ provider "aws" {
 |DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
+|Directory Service Data|`directoryservicedata`|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE_DATA`|`directory_service_data`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
 |DMS (Database Migration)|`dms`(or `databasemigration` or `databasemigrationservice`)|`AWS_ENDPOINT_URL_DATABASE_MIGRATION_SERVICE`|`database_migration_service`|
 |DocumentDB|`docdb`|`AWS_ENDPOINT_URL_DOCDB`|`docdb`|
@@ -228,6 +229,7 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda Core|`lambdacore`|`AWS_ENDPOINT_URL_LAMBDA_CORE`|`lambda_core`|
 |Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|

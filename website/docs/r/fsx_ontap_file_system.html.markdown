@@ -93,14 +93,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `dns_name` - DNS name for the file system.
 
   **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
-* `endpoints` - Endpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
+* `endpoints` - Endpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [`endpoints`](#endpoints-block) below.
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
 
-### Endpoints
+### `endpoints` Block
 
 * `intercluster` - Endpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [Endpoint](#endpoint).
 * `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
