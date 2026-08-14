@@ -22,7 +22,7 @@ func RegisterSweepers() {
 
 func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := lambdamicrovms.ListMicrovmImagesInput{}
-	conn := client.LambdaMicrovmsClient(ctx)
+	conn := client.LambdaMicroVMsClient(ctx)
 	var sweepResources []sweep.Sweepable
 
 	pages := lambdamicrovms.NewListMicrovmImagesPaginator(conn, &input)

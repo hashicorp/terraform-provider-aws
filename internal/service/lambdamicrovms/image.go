@@ -174,7 +174,7 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var plan imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -220,7 +220,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -249,7 +249,7 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var plan, state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -319,7 +319,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))

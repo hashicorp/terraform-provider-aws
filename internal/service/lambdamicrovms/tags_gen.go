@@ -38,7 +38,7 @@ func listTags(ctx context.Context, conn *lambdamicrovms.Client, identifier strin
 // ListTags lists lambdamicrovms service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaMicrovmsClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaMicroVMsClient(ctx), identifier)
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -92,7 +92,7 @@ func updateTags(ctx context.Context, conn *lambdamicrovms.Client, identifier str
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
-	removedTags = removedTags.IgnoreSystem(names.LambdaMicrovms)
+	removedTags = removedTags.IgnoreSystem(names.LambdaMicroVMs)
 	if len(removedTags) > 0 {
 		input := lambdamicrovms.UntagResourceInput{
 			Resource: aws.String(identifier),
@@ -107,7 +107,7 @@ func updateTags(ctx context.Context, conn *lambdamicrovms.Client, identifier str
 	}
 
 	updatedTags := oldTags.Updated(newTags)
-	updatedTags = updatedTags.IgnoreSystem(names.LambdaMicrovms)
+	updatedTags = updatedTags.IgnoreSystem(names.LambdaMicroVMs)
 	if len(updatedTags) > 0 {
 		input := lambdamicrovms.TagResourceInput{
 			Resource: aws.String(identifier),
@@ -127,5 +127,5 @@ func updateTags(ctx context.Context, conn *lambdamicrovms.Client, identifier str
 // UpdateTags updates lambdamicrovms service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).LambdaMicrovmsClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).LambdaMicroVMsClient(ctx), identifier, oldTags, newTags)
 }

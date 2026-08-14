@@ -5100,7 +5100,7 @@ service "lambdamicrovms" {
   }
 
   names {
-    provider_name_upper = "LambdaMicrovms"
+    provider_name_upper = "LambdaMicroVMs"
     human_friendly      = "Lambda MicroVMs"
   }
 

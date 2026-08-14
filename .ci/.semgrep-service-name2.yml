@@ -616,7 +616,7 @@ rules:
   - id: lambdamicrovms-in-func-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in func name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in func name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -627,14 +627,14 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: lambdamicrovms-in-test-name
     languages:
       - go
-    message: Include "LambdaMicrovms" in test name
+    message: Include "LambdaMicroVMs" in test name
     paths:
       include:
         - "/internal/service/lambdamicrovms/*_test.go"
@@ -643,13 +643,13 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-not-regex: "^TestAccLambdaMicrovms"
+            - pattern-not-regex: "^TestAccLambdaMicroVMs"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
   - id: lambdamicrovms-in-const-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in const name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in const name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -658,12 +658,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
     severity: WARNING
   - id: lambdamicrovms-in-var-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in var name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in var name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -672,7 +672,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
     severity: WARNING
   - id: launchwizard-in-func-name
     languages:

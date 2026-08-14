@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicrovmsImage_tags(t *testing.T) {
+func TestAccLambdaMicroVMsImage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -35,7 +35,7 @@ func TestAccLambdaMicrovmsImage_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -229,7 +229,7 @@ func TestAccLambdaMicrovmsImage_tags(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_null(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -244,7 +244,7 @@ func TestAccLambdaMicrovmsImage_Tags_null(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -301,7 +301,7 @@ func TestAccLambdaMicrovmsImage_Tags_null(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_emptyMap(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -316,7 +316,7 @@ func TestAccLambdaMicrovmsImage_Tags_emptyMap(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -361,7 +361,7 @@ func TestAccLambdaMicrovmsImage_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_addOnUpdate(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -376,7 +376,7 @@ func TestAccLambdaMicrovmsImage_Tags_addOnUpdate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -453,7 +453,7 @@ func TestAccLambdaMicrovmsImage_Tags_addOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_EmptyTag_onCreate(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -468,7 +468,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_onCreate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -560,7 +560,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -575,7 +575,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -716,7 +716,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -731,7 +731,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -818,7 +818,7 @@ func TestAccLambdaMicrovmsImage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -833,7 +833,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1026,7 +1026,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1041,7 +1041,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1208,7 +1208,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1223,7 +1223,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1406,7 +1406,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1421,7 +1421,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToProviderOnly(t *testing
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1508,7 +1508,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToProviderOnly(t *testing
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1523,7 +1523,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToResourceOnly(t *testing
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1609,7 +1609,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_updateToResourceOnly(t *testing
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1624,7 +1624,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyResourceTag(t *testing.T) 
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1687,7 +1687,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyResourceTag(t *testing.T) 
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1702,7 +1702,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1757,7 +1757,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1772,7 +1772,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullOverlappingResourceTag(t *t
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1836,7 +1836,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullOverlappingResourceTag(t *t
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1851,7 +1851,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullNonOverlappingResourceTag(t
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1917,7 +1917,7 @@ func TestAccLambdaMicrovmsImage_Tags_DefaultTags_nullNonOverlappingResourceTag(t
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_ComputedTag_onCreate(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1932,7 +1932,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_onCreate(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -1984,7 +1984,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -1999,7 +1999,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -2093,7 +2093,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -2108,7 +2108,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) 
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -2192,7 +2192,7 @@ func TestAccLambdaMicrovmsImage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) 
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -2207,7 +2207,7 @@ func TestAccLambdaMicrovmsImage_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
@@ -2361,7 +2361,7 @@ func TestAccLambdaMicrovmsImage_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T)
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -2376,7 +2376,7 @@ func TestAccLambdaMicrovmsImage_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy: testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create

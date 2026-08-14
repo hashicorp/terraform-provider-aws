@@ -851,8 +851,8 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
-func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
-	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicrovms, make(map[string]any)))
+func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
+	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
 }
 
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {

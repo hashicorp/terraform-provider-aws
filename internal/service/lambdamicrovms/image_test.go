@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
+func TestAccLambdaMicroVMsImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -38,7 +38,7 @@ func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccLambdaMicrovmsImage_basic(t *testing.T) {
 		},
 	})
 }
-func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
+func TestAccLambdaMicroVMsImage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -85,7 +85,7 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccLambdaMicrovmsImage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_update(t *testing.T) {
+func TestAccLambdaMicroVMsImage_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -124,7 +124,7 @@ func TestAccLambdaMicrovmsImage_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -154,7 +154,7 @@ func TestAccLambdaMicrovmsImage_update(t *testing.T) {
 
 func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambdamicrovms_image" {
@@ -166,10 +166,10 @@ func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], err)
+				return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], err)
 			}
 
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -180,19 +180,19 @@ func testAccCheckImageExists(ctx context.Context, t *testing.T, name string, v *
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not found"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not found"))
 		}
 
 		arn := rs.Primary.Attributes[names.AttrARN]
 		if arn == "" {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not set"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not set"))
 		}
 
-		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
 		out, err := tflambdamicrovms.FindImageByARN(ctx, conn, arn)
 		if err != nil {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
 		}
 		*v = *out
 
@@ -210,7 +210,7 @@ func testAccCheckImageNotRecreated(before, after *lambdamicrovms.GetMicrovmImage
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
 	input := lambdamicrovms.ListMicrovmImagesInput{}
 
