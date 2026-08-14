@@ -108,7 +108,7 @@ func TestAccPinpointSMSVoiceV2Keyword_disappears(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_KeywordHELP(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_Mandatory_help(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	resourceName := "aws_pinpointsmsvoicev2_keyword.test"
@@ -124,7 +124,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordHELP(t *testing.T) {
 		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeywordConfig_Keyword_mandatory("HELP", "mandatory help message"),
+				Config: testAccKeywordConfig_mandatory("HELP", "mandatory help message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
 				),
@@ -135,7 +135,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordHELP(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_Keyword_mandatory("HELP", "updated help message"),
+				Config: testAccKeywordConfig_mandatory("HELP", "updated help message"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -146,7 +146,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordHELP(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_Keyword_mandatoryBase(),
+				Config: testAccKeywordConfig_mandatoryBase(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
@@ -158,7 +158,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordHELP(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_KeywordMessage(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_keywordMessage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	rName := randomKeywordName(t)
@@ -183,7 +183,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordMessage(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_KeywordMessage_updated(rName),
+				Config: testAccKeywordConfig_keywordMessageUpdated(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -194,7 +194,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordMessage(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_KeywordMessage_updated(rName),
+				Config: testAccKeywordConfig_keywordMessageUpdated(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -205,7 +205,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordMessage(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_KeywordAction(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_keywordAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	rName := randomKeywordName(t)
@@ -230,7 +230,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordAction(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_KeywordActionOptOut(rName),
+				Config: testAccKeywordConfig_keywordActionOptOut(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -241,7 +241,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordAction(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_KeywordActionOptOut(rName),
+				Config: testAccKeywordConfig_keywordActionOptOut(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -252,7 +252,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordAction(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_Keyword_mandatoryActionError(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_Mandatory_actionError(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -265,14 +265,14 @@ func TestAccPinpointSMSVoiceV2Keyword_Keyword_mandatoryActionError(t *testing.T)
 		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccKeywordConfig_Keyword_mandatoryWithAction("HELP", "AUTOMATIC_RESPONSE"),
+				Config:      testAccKeywordConfig_mandatoryWithAction("HELP", "AUTOMATIC_RESPONSE"),
 				ExpectError: regexache.MustCompile(`keyword_action is managed by AWS for the mandatory keyword "HELP"`),
 			},
 		},
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_Mandatory_stop(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	resourceName := "aws_pinpointsmsvoicev2_keyword.test"
@@ -288,7 +288,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
 		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeywordConfig_Keyword_mandatory("STOP", "mandatory stop message"),
+				Config: testAccKeywordConfig_mandatory("STOP", "mandatory stop message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
 				),
@@ -299,7 +299,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_Keyword_mandatory("STOP", "updated stop message"),
+				Config: testAccKeywordConfig_mandatory("STOP", "updated stop message"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -310,7 +310,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_Keyword_mandatoryBase(),
+				Config: testAccKeywordConfig_mandatoryBase(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
@@ -322,7 +322,7 @@ func TestAccPinpointSMSVoiceV2Keyword_KeywordSTOP(t *testing.T) {
 	})
 }
 
-func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPool(t *testing.T) {
+func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentity_pool(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyword awstypes.KeywordInformation
 	rName := randomKeywordName(t)
@@ -338,7 +338,7 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPool(t *testing.T) {
 		CheckDestroy:             testAccCheckKeywordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeywordConfig_OriginationIdentityPool(rName),
+				Config: testAccKeywordConfig_originationIdentityPool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeywordExists(ctx, t, resourceName, &keyword),
 				),
@@ -349,7 +349,7 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentityPool(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccKeywordConfig_OriginationIdentityPool(rName),
+				Config: testAccKeywordConfig_originationIdentityPool(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -445,7 +445,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 `, keyword)
 }
 
-func testAccKeywordConfig_KeywordActionOptOut(keyword string) string {
+func testAccKeywordConfig_keywordActionOptOut(keyword string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code    = "US"
@@ -463,7 +463,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 `, keyword)
 }
 
-func testAccKeywordConfig_Keyword_mandatoryBase() string {
+func testAccKeywordConfig_mandatoryBase() string {
 	return `
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code    = "US"
@@ -474,8 +474,8 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 `
 }
 
-func testAccKeywordConfig_Keyword_mandatory(keyword, message string) string {
-	return acctest.ConfigCompose(testAccKeywordConfig_Keyword_mandatoryBase(), fmt.Sprintf(`
+func testAccKeywordConfig_mandatory(keyword, message string) string {
+	return acctest.ConfigCompose(testAccKeywordConfig_mandatoryBase(), fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
   origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
   keyword                  = %[1]q
@@ -484,8 +484,8 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 `, keyword, message))
 }
 
-func testAccKeywordConfig_Keyword_mandatoryWithAction(keyword, action string) string {
-	return acctest.ConfigCompose(testAccKeywordConfig_Keyword_mandatoryBase(), fmt.Sprintf(`
+func testAccKeywordConfig_mandatoryWithAction(keyword, action string) string {
+	return acctest.ConfigCompose(testAccKeywordConfig_mandatoryBase(), fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_keyword" "test" {
   origination_identity_arn = aws_pinpointsmsvoicev2_phone_number.test.arn
   keyword                  = %[1]q
@@ -495,7 +495,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 `, keyword, action))
 }
 
-func testAccKeywordConfig_KeywordMessage_updated(keyword string) string {
+func testAccKeywordConfig_keywordMessageUpdated(keyword string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   iso_country_code    = "US"
@@ -512,7 +512,7 @@ resource "aws_pinpointsmsvoicev2_keyword" "test" {
 `, keyword)
 }
 
-func testAccKeywordConfig_OriginationIdentityPool(keyword string) string {
+func testAccKeywordConfig_originationIdentityPool(keyword string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   force_disassociate  = true
