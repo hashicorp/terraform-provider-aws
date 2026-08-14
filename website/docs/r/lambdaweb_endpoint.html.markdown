@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambdaweb_endpoint
 
-Manages an AWS Lambda Web endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 20 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
+Manages an AWS Lambda Web endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 10 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
 
 ~> **Note:** Lambda Web is available in select regions. Regions active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
 
@@ -36,18 +36,99 @@ resource "aws_lambdaweb_endpoint" "example" {
   auth_type            = "IamAuth"
   auto_deployment_mode = "Disabled"
 
-  revision_weights = [
-    {
-      revision_id = "rev-aaaaaaaa"
-      weight      = 90
-    },
-    {
-      revision_id = aws_lambdaweb_function.example.latest_revision_id
-      weight      = 10
-    },
-  ]
+  revision_weights {
+    revision_id = "rev-aaaaaaaa"
+    weight      = 90
+  }
+
+  revision_weights {
+    revision_id = aws_lambdaweb_function.example.latest_revision_id
+    weight      = 10
+  }
 }
 ```
+
+### Behind CloudFront
+
+An endpoint is a plain HTTPS origin, so a distribution can front it to add edge
+caching for static paths and terminate TLS closer to the viewer. Use
+`domain_name` as the origin: on a `MultiRegion` endpoint it routes each request
+to the nearest deployed Region, and `regional_domain_names` is empty because the
+service does not publish per-Region domains for that endpoint type.
+
+```terraform
+resource "aws_lambdaweb_endpoint" "app" {
+  function_name        = aws_lambdaweb_function.example.function_name
+  endpoint_name        = "public"
+  endpoint_type        = "MultiRegion"
+  regions              = ["us-east-1", "eu-west-1"]
+  auth_type            = "ApplicationManaged"
+  auto_deployment_mode = "Disabled"
+
+  revision_weights {
+    revision_id = aws_lambdaweb_function.example.latest_revision_id
+    weight      = 100
+  }
+}
+
+data "aws_cloudfront_cache_policy" "disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
+resource "aws_cloudfront_distribution" "app" {
+  enabled = true
+
+  origin {
+    origin_id   = "lambdaweb"
+    domain_name = aws_lambdaweb_endpoint.app.domain_name
+
+    custom_origin_config {
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      http_port              = 80
+      https_port             = 443
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "lambdaweb"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods  = ["GET", "HEAD"]
+
+    # The endpoint routes on its own domain, so the viewer Host header must not
+    # be forwarded, and dynamic responses must not be cached.
+    cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+```
+
+~> **Note:** Do not set `default_root_object` on a distribution that fronts a
+web function. CloudFront rewrites `/` to that object after viewer-request
+functions run, which frameworks that own their routing answer with a 404.
+
+Streaming survives the extra hop: a Server-Sent Events response is relayed
+without buffering. Origin groups, on the other hand, reject behaviors that allow
+write methods, so a failover group can only serve the read paths and writes need
+a behavior pointing at a single origin. A `PerRegion` endpoint is the one that
+publishes `regional_domain_names`, which is what an origin group needs for its
+primary and failover members.
 
 ## Argument Reference
 
