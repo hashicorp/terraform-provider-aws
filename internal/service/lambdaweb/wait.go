@@ -6,6 +6,10 @@ package lambdaweb
 import (
 	"context"
 	"errors"
+	"fmt"
+	"maps"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -276,13 +280,68 @@ func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionNam
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
+		if reason := endpointStateReason(out); reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
+}
+
+// endpointStateReason expands an endpoint's state reason with the per-region
+// reasons. When a MultiRegion or PerRegion endpoint fails in one of its regions
+// the top-level reason only says to "check the regional endpoint states for more
+// details", which a Terraform user never sees: the detail lives in
+// regionalEndpoints. Appending it turns an opaque failed apply into one that
+// names the region and the cause.
+func endpointStateReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
+	if out == nil {
+		return ""
+	}
+
+	return appendRegionalReasons(aws.ToString(out.StateReason), out.RegionalEndpoints,
+		func(regional awstypes.RegionalEndpoint) (string, bool) {
+			if regional.State == awstypes.EndpointStateActive {
+				return "", false
+			}
+			if reason := aws.ToString(regional.StateReason); reason != "" {
+				return reason, true
+			}
+			return string(regional.State), true
+		})
+}
+
+// endpointUpdateStatusReason is endpointStateReason for the update path, where
+// the regional detail lives in updateStatusReason instead.
+func endpointUpdateStatusReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
+	if out == nil {
+		return ""
+	}
+
+	return appendRegionalReasons(aws.ToString(out.UpdateStatusReason), out.RegionalEndpoints,
+		func(regional awstypes.RegionalEndpoint) (string, bool) {
+			if regional.UpdateStatus == awstypes.EndpointUpdateStatusSuccessful || regional.UpdateStatus == "" {
+				return "", false
+			}
+			if reason := aws.ToString(regional.UpdateStatusReason); reason != "" {
+				return reason, true
+			}
+			return string(regional.UpdateStatus), true
+		})
+}
+
+func appendRegionalReasons(reason string, regionalEndpoints map[string]awstypes.RegionalEndpoint, detail func(awstypes.RegionalEndpoint) (string, bool)) string {
+	var b strings.Builder
+	b.WriteString(reason)
+
+	for _, region := range slices.Sorted(maps.Keys(regionalEndpoints)) {
+		if d, ok := detail(regionalEndpoints[region]); ok {
+			fmt.Fprintf(&b, " [%s: %s]", region, d)
+		}
+	}
+
+	return b.String()
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
@@ -299,7 +358,7 @@ func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionNa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
-		if reason := aws.ToString(out.UpdateStatusReason); reason != "" {
+		if reason := endpointUpdateStatusReason(out); reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
 		return out, smarterr.NewError(err)

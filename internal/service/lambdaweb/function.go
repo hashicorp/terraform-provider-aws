@@ -83,7 +83,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 256),
+					stringvalidator.LengthBetween(1, 64),
 				},
 			},
 			names.AttrState: schema.StringAttribute{
@@ -279,7 +279,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 								stringplanmodifier.RequiresReplace(),
 							},
 							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 256),
+								stringvalidator.LengthBetween(1, 64),
 							},
 						},
 						names.AttrEndpointType: schema.StringAttribute{

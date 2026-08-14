@@ -82,7 +82,7 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 256),
+					stringvalidator.LengthBetween(1, 64),
 				},
 			},
 			"endpoint_name": schema.StringAttribute{
@@ -91,7 +91,7 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 256),
+					stringvalidator.LengthBetween(1, 64),
 				},
 			},
 			names.AttrEndpointType: schema.StringAttribute{

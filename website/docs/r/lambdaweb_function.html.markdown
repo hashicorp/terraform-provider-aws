@@ -96,7 +96,7 @@ Revisions are immutable: any change to `revision_config` (new package, runtime, 
 
 The following arguments are required:
 
-* `function_name` - (Required) Name of the function. Changing this forces a new resource to be created.
+* `function_name` - (Required) Name of the function, up to 64 characters. Changing this forces a new resource to be created.
 
 The following arguments are optional:
 
@@ -111,7 +111,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the revision.
 * `kms_key_arn` - (Optional) ARN of the customer managed KMS key used to encrypt the function's code and environment variables.
 
-~> **Note:** A revision encrypted with a customer managed key cannot be replicated to other Regions: `MultiRegion` and `PerRegion` endpoints fail to deploy in every Region other than the key's. Only combine `kms_key_arn` with `HomeRegion` endpoints.
+~> **Note:** A revision encrypted with a single-Region customer managed key cannot be deployed to the other Regions of a `MultiRegion` or `PerRegion` endpoint: those Regions report `Failed to deploy all the specified revision(s)` while the home Region goes `Active`, so the endpoint ends up `Failed` even though the function and the revision report `Active`. Either keep `kms_key_arn` with a `HomeRegion` endpoint, or use an [AWS KMS multi-Region key](https://docs.aws.amazon.com/kms/latest/developerguide/multi-region-keys-overview.html) replicated into every Region of the endpoint, which is verified to work.
 * `service_config` - (Required) Execution environment configuration. [See below](#service_config-block).
 
 #### `build_config` Block
@@ -156,7 +156,7 @@ The following arguments are optional:
 * `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`. (`AWS_SERVICE_AUTH` was removed in V2.)
 * `auto_deployment_mode` - (Optional) Automatic deployment mode. Valid values: `LatestRevision`, `Disabled`.
 * `description` - (Optional) Description of the endpoint.
-* `endpoint_name` - (Required) Name of the endpoint (typically `default`). Changing this forces a new resource to be created.
+* `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
 * `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
 
