@@ -148,6 +148,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "The requested operation is not supported in the called region") {
 		return true
 	}
+	// For example from GovCloud CloudWatch Logs: ListLogAnomalyDetectors
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "UnknownError") {
+		return true
+	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
