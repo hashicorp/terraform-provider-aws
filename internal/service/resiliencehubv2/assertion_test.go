@@ -60,6 +60,17 @@ func TestAccResilienceHubV2Assertion_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("text"), knownvalue.StringExact("The service must recover within 5 minutes")),
 				},
 			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccCheckAssertionImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "assertion_id",
+			},
 		},
 	})
 }
@@ -98,16 +109,60 @@ func TestAccResilienceHubV2Assertion_disappears(t *testing.T) {
 					},
 				},
 			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Assertion_text(t *testing.T) {
+	ctx := acctest.Context(t)
+	var assertion awstypes.Assertion
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_assertion.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssertionDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Assertion/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/text/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"text":          config.StringVariable("Assertion #1"),
 				},
-				ImportStateIdFunc:                    testAccCheckAssertionImportStateIDFunc(resourceName),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "assertion_id",
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssertionExists(ctx, t, resourceName, &assertion),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("text"), knownvalue.StringExact("Assertion #1")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/text/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"text":          config.StringVariable("Assertion #2"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssertionExists(ctx, t, resourceName, &assertion),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("text"), knownvalue.StringExact("Assertion #2")),
+				},
 			},
 		},
 	})
