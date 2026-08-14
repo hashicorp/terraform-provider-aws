@@ -17,6 +17,9 @@ BUG FIXES:
 
 * list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
 * list-resource/aws_bedrockagentcore_policy_engine: Prevents error when remote resource disappears during List ([#49478](https://github.com/hashicorp/terraform-provider-aws/issues/49478))
+* resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
 
 ## 6.60.0 (August 13, 2026)
 
