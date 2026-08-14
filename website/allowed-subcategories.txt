@@ -7,6 +7,7 @@ API Gateway V2
 ARC (Application Recovery Controller) Region Switch
 ARC (Application Recovery Controller) Zonal Shift
 Account Management
+Agent Registry
 Amazon Q Business
 Amplify
 App Mesh

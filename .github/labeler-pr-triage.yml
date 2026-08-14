@@ -147,6 +147,12 @@ service/acmpca:
           - any-glob-to-any-file:
               - 'internal/service/acmpca/**/*'
               - 'website/**/acmpca_*'
+service/agentregistry:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/agentregistry/**/*'
+              - 'website/**/agentregistry_*'
 service/alexaforbusiness:
   - any:
       - changed-files:

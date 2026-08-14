@@ -8,6 +8,7 @@ variable "service_labels" {
     "account",
     "acm",
     "acmpca",
+    "agentregistry",
     "alexaforbusiness",
     "amp",
     "amplify",

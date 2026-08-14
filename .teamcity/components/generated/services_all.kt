@@ -8,6 +8,7 @@ val services = mapOf(
     "account" to ServiceSpec("Account Management"),
     "acm" to ServiceSpec("ACM (Certificate Manager)"),
     "acmpca" to ServiceSpec("ACM PCA (Certificate Manager Private Certificate Authority)"),
+    "agentregistry" to ServiceSpec("Agent Registry"),
     "amp" to ServiceSpec("AMP (Managed Prometheus)", parallelismOverride = 10),
     "amplify" to ServiceSpec("Amplify"),
     "apigateway" to ServiceSpec("API Gateway", vpcLock = true),
