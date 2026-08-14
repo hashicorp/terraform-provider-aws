@@ -1,36 +1,106 @@
-## 6.59.0 (Unreleased)
+## 6.61.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+* **New Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+
+ENHANCEMENTS:
+
+* data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` argument ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+
+BUG FIXES:
+
+* list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
+* list-resource/aws_bedrockagentcore_policy_engine: Prevents error when remote resource disappears during List ([#49478](https://github.com/hashicorp/terraform-provider-aws/issues/49478))
+* resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+
+## 6.60.0 (August 13, 2026)
+
+FEATURES:
+
+* **New List Resource:** `aws_db_parameter_group` ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+* **New List Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+* **New Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+
+ENHANCEMENTS:
+
+* resource/aws_db_parameter_group: Add Resource Identity support ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway_target: Prevent state inconsistencies caused by the service-managed policy session header ([#49447](https://github.com/hashicorp/terraform-provider-aws/issues/49447))
+* resource/aws_network_acl_rule: Fix `Missing Resource Identity After Read` errors. This fixes a regression introduced in [v6.59.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6590-august-12-2026) ([#49470](https://github.com/hashicorp/terraform-provider-aws/issues/49470))
+
+## 6.59.0 (August 12, 2026)
 
 FEATURES:
 
 * **New Data Source:** `aws_rds_snapshots` ([#49259](https://github.com/hashicorp/terraform-provider-aws/issues/49259))
+* **New Data Source:** `aws_resiliencehubv2_policy` ([#48324](https://github.com/hashicorp/terraform-provider-aws/issues/48324))
+* **New Data Source:** `aws_resiliencehubv2_service` ([#48326](https://github.com/hashicorp/terraform-provider-aws/issues/48326))
+* **New Data Source:** `aws_resiliencehubv2_system` ([#48325](https://github.com/hashicorp/terraform-provider-aws/issues/48325))
 * **New Data Source:** `aws_vpclattice_service_network_service_associations` ([#42680](https://github.com/hashicorp/terraform-provider-aws/issues/42680))
 * **New List Resource:** `aws_backup_plan` ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
 * **New List Resource:** `aws_backup_selection` ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+* **New List Resource:** `aws_backup_vault` ([#49423](https://github.com/hashicorp/terraform-provider-aws/issues/49423))
 * **New List Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
 * **New List Resource:** `aws_mailmanager_ingress_point` ([#49322](https://github.com/hashicorp/terraform-provider-aws/issues/49322))
 * **New List Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
+* **New List Resource:** `aws_networkfirewall_container_association` ([#49321](https://github.com/hashicorp/terraform-provider-aws/issues/49321))
+* **New List Resource:** `aws_pinpointsmsvoicev2_resource_policy` ([#48771](https://github.com/hashicorp/terraform-provider-aws/issues/48771))
 * **New List Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
+* **New List Resource:** `aws_resiliencehubv2_service` ([#48323](https://github.com/hashicorp/terraform-provider-aws/issues/48323))
 * **New List Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
 * **New List Resource:** `aws_ssm_patch_baseline` ([#49332](https://github.com/hashicorp/terraform-provider-aws/issues/49332))
 * **New Resource:** `aws_bedrockagentcore_gateway_rule` ([#48804](https://github.com/hashicorp/terraform-provider-aws/issues/48804))
 * **New Resource:** `aws_mailmanager_ingress_point` ([#49322](https://github.com/hashicorp/terraform-provider-aws/issues/49322))
 * **New Resource:** `aws_neptunegraph_private_graph_endpoint` ([#45929](https://github.com/hashicorp/terraform-provider-aws/issues/45929))
+* **New Resource:** `aws_networkfirewall_container_association` ([#49321](https://github.com/hashicorp/terraform-provider-aws/issues/49321))
+* **New Resource:** `aws_pinpointsmsvoicev2_resource_policy` ([#48771](https://github.com/hashicorp/terraform-provider-aws/issues/48771))
 * **New Resource:** `aws_pinpointsmsvoicev2_sender_id` ([#46472](https://github.com/hashicorp/terraform-provider-aws/issues/46472))
+* **New Resource:** `aws_resiliencehubv2_service` ([#48323](https://github.com/hashicorp/terraform-provider-aws/issues/48323))
 * **New Resource:** `aws_resiliencehubv2_system` ([#48322](https://github.com/hashicorp/terraform-provider-aws/issues/48322))
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` attributes ([#49420](https://github.com/hashicorp/terraform-provider-aws/issues/49420))
+* data-source/aws_eks_cluster_versions: Add `control_plane_component_config` and `control_plane_scaling_tiers` attributes ([#49421](https://github.com/hashicorp/terraform-provider-aws/issues/49421))
+* resource/aws_arcregionswitch_plan: Add `step.aurora_provisioned_scaling_config`, `step.aurora_serverless_scaling_config`, `step.neptune_global_database_config`, and `step.lambda_event_source_mapping_config` arguments ([#48392](https://github.com/hashicorp/terraform-provider-aws/issues/48392))
+* resource/aws_arcregionswitch_plan: Add provider-side validation restricting `report_configuration` and `report_configuration.report_output.s3_configuration` to a single block each ([#46758](https://github.com/hashicorp/terraform-provider-aws/issues/46758))
 * resource/aws_backup_plan: Add resource identity support ([#49329](https://github.com/hashicorp/terraform-provider-aws/issues/49329))
 * resource/aws_backup_selection: Add resource identity support ([#49283](https://github.com/hashicorp/terraform-provider-aws/issues/49283))
+* resource/aws_backup_vault: Add resource identity support ([#49423](https://github.com/hashicorp/terraform-provider-aws/issues/49423))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server.mcp_tool_schema` configuration block and `target_configuration.mcp.mcp_server.resource_priority` argument ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
+* resource/aws_bedrockagentcore_harness: Adds computed attribute `memory_actual` ([#49383](https://github.com/hashicorp/terraform-provider-aws/issues/49383))
+* resource/aws_bedrockagentcore_harness: Adds support for `memory.disabled` ([#49334](https://github.com/hashicorp/terraform-provider-aws/issues/49334))
+* resource/aws_bedrockagentcore_harness: Adds support for `memory.managed_memory_configuration` ([#49285](https://github.com/hashicorp/terraform-provider-aws/issues/49285))
 * resource/aws_dlm_lifecycle_policy: Add `policy_details.parameters.exclude_data_volume_tags` argument ([#45113](https://github.com/hashicorp/terraform-provider-aws/issues/45113))
+* resource/aws_ec2_client_vpn_route: Add `transit_gateway_attachment_id` attribute ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
+* resource/aws_ec2_client_vpn_route: Change `target_vpc_subnet_id` to Optional ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
+* resource/aws_ec2_client_vpn_route: Increase default `timeouts` values to `30m` ([#49274](https://github.com/hashicorp/terraform-provider-aws/issues/49274))
+* resource/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` arguments ([#49412](https://github.com/hashicorp/terraform-provider-aws/issues/49412))
+* resource/aws_prometheus_scraper: Add `exporter` configuration block with OpenSearch exporter support ([#49346](https://github.com/hashicorp/terraform-provider-aws/issues/49346))
+* resource/aws_wafv2_rule_group: Add `pre_parse_text_transformation` argument to `byte_match_statement`, `regex_match_statement`, `regex_pattern_set_reference_statement`, `size_constraint_statement`, `sqli_match_statement`, and `xss_match_statement` rule statements ([#49381](https://github.com/hashicorp/terraform-provider-aws/issues/49381))
+* resource/aws_wafv2_web_acl: Add `pre_parse_text_transformation` argument to `byte_match_statement`, `regex_match_statement`, `regex_pattern_set_reference_statement`, `size_constraint_statement`, `sqli_match_statement`, and `xss_match_statement` rule statements ([#49381](https://github.com/hashicorp/terraform-provider-aws/issues/49381))
 
 BUG FIXES:
 
+* data-source/aws_lakeformation_permissions: Fix failure to read cross-account IAM principals ([#49398](https://github.com/hashicorp/terraform-provider-aws/issues/49398))
 * data-source/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US) ([#49340](https://github.com/hashicorp/terraform-provider-aws/issues/49340))
+* resource/aws_bedrockagentcore_gateway_target: Remove client-side count validation for `metadata_configuration` request and response headers ([#49374](https://github.com/hashicorp/terraform-provider-aws/issues/49374))
 * resource/aws_bedrockagentcore_gateway_target: Treat OAuth `CREATE_PENDING_AUTH` and `UPDATE_PENDING_AUTH` statuses as successful terminal states ([#48703](https://github.com/hashicorp/terraform-provider-aws/issues/48703))
+* resource/aws_lakeformation_permissions: Fix failure to read cross-account IAM principals ([#49398](https://github.com/hashicorp/terraform-provider-aws/issues/49398))
 * resource/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US) ([#49340](https://github.com/hashicorp/terraform-provider-aws/issues/49340))
+* resource/aws_rds_cluster: Fix `InvalidParameterCombination` error when `engine_version` is updated externally ([#49396](https://github.com/hashicorp/terraform-provider-aws/issues/49396))
 * resource/aws_route53domains_registered_domain: Fix `UpdateDomainContactPrivacy` being incorrectly triggered when `billing_contact` changes ([#49314](https://github.com/hashicorp/terraform-provider-aws/issues/49314))
+* resource/aws_ssm_parameter: Fixes error where `name` with a leading slash and no other slashes was stripping the leading slash. ([#49339](https://github.com/hashicorp/terraform-provider-aws/issues/49339))
 
 ## 6.58.0 (August 5, 2026)
 

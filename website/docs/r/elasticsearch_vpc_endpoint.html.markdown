@@ -56,17 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import elasticsearch VPC endpoint connections using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import elasticsearch VPC endpoints using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_elasticsearch_vpc_endpoint_connection.example
+  to = aws_elasticsearch_vpc_endpoint.example
   id = "endpoint-id"
 }
 ```
 
-Using `terraform import`, import elasticsearch VPC endpoint connections using the `id`. For example:
+Using `terraform import`, import elasticsearch VPC endpoints using the `id`. For example:
 
 ```console
-% terraform import aws_elasticsearch_vpc_endpoint_connection.example endpoint-id
+% terraform import aws_elasticsearch_vpc_endpoint.example endpoint-id
 ```

@@ -50,7 +50,6 @@ import (
 // @IdentityAttribute("online_evaluation_config_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput")
 // @Testing(generator="testAccRandomOnlineEvaluationConfigName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="online_evaluation_config_id")
 // @Testing(importIgnore="enable_on_create")

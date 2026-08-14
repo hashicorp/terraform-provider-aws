@@ -774,11 +774,17 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 												},
 											},
 										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 									},
 								},
 							},
 						},
 					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
 			},
 			names.AttrTriggers: fwschema.ListNestedBlock{

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
@@ -91,6 +92,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -151,6 +153,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
@@ -313,6 +316,10 @@ func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Cl
 
 func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
 	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
+}
+
+func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {
+	return errs.Must(client[*agentregistrycontrol.Client](ctx, c, names.AgentRegistry, make(map[string]any)))
 }
 
 func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify.Client {
@@ -623,6 +630,10 @@ func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Clie
 	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
+func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
+	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
+}
+
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
 	return errs.Must(client[*docdb.Client](ctx, c, names.DocDB, make(map[string]any)))
 }
@@ -849,6 +860,10 @@ func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation.Clie
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
+	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
