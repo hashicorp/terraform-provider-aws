@@ -6,12 +6,11 @@ package resiliencehubv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -32,14 +31,19 @@ func (d *serviceDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: fwschema.StringAttribute{
-				Required: true,
-			},
-			names.AttrName: fwschema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			names.AttrDescription: fwschema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrKMSKeyID: fwschema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrName: fwschema.StringAttribute{
+				Computed: true,
+			},
+			"permission_model": framework.DataSourceComputedListOfObjectAttribute[permissionModelModel](ctx),
 			"policy_arn": fwschema.StringAttribute{
 				Computed: true,
 			},
@@ -48,18 +52,6 @@ func (d *serviceDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:   true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]fwschema.Block{
-			"permission_model": fwschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[permissionModelModel](ctx),
-				NestedObject: fwschema.NestedBlockObject{
-					Attributes: map[string]fwschema.Attribute{
-						"invoker_role_name": fwschema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -73,36 +65,31 @@ func (d *serviceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	conn := d.Meta().ResilienceHubV2Client(ctx)
 
-	svc, err := findServiceByARN(ctx, conn, data.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, data.ServiceARN)
+	svc, err := findServiceByARN(ctx, conn, arn)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, svc, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, svc, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.ARN = types.StringValue(aws.ToString(svc.ServiceArn))
-
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
-		return
-	}
-	setTagsOut(ctx, tags.Map())
+	setTagsOut(ctx, svc.Tags)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type serviceDataSourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
 	Description     types.String                                          `tfsdk:"description"`
+	KMSKeyID        types.String                                          `tfsdk:"kms_key_id"`
 	Name            types.String                                          `tfsdk:"name"`
 	PermissionModel fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
-	PolicyArn       types.String                                          `tfsdk:"policy_arn"`
+	PolicyARN       types.String                                          `tfsdk:"policy_arn"`
 	Regions         fwtypes.ListOfString                                  `tfsdk:"regions"`
+	ServiceARN      fwtypes.ARN                                           `tfsdk:"arn"`
 	Tags            tftags.Map                                            `tfsdk:"tags"`
 }

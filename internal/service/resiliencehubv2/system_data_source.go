@@ -6,12 +6,12 @@ package resiliencehubv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,15 +31,28 @@ func (d *systemDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: fwschema.StringAttribute{
-				Required: true,
-			},
-			names.AttrName: fwschema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			names.AttrDescription: fwschema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrKMSKeyID: fwschema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrName: fwschema.StringAttribute{
+				Computed: true,
+			},
+			"organization_id": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"ou_id": fwschema.StringAttribute{
+				Computed: true,
+			},
 			"sharing_enabled": fwschema.BoolAttribute{
+				Computed: true,
+			},
+			"system_id": fwschema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
@@ -56,34 +69,32 @@ func (d *systemDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	conn := d.Meta().ResilienceHubV2Client(ctx)
 
-	system, err := findSystemByARN(ctx, conn, data.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, data.SystemARN)
+	system, err := findSystemByARN(ctx, conn, arn)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, system, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, system, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.ARN = types.StringValue(aws.ToString(system.SystemArn))
-
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
-		return
-	}
-	setTagsOut(ctx, tags.Map())
+	setTagsOut(ctx, system.Tags)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type systemDataSourceModel struct {
 	framework.WithRegionModel
-	ARN            types.String `tfsdk:"arn"`
 	Description    types.String `tfsdk:"description"`
+	KMSKeyID       types.String `tfsdk:"kms_key_id"`
 	Name           types.String `tfsdk:"name"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	OUID           types.String `tfsdk:"ou_id"`
 	SharingEnabled types.Bool   `tfsdk:"sharing_enabled"`
+	SystemARN      fwtypes.ARN  `tfsdk:"arn"`
+	SystemID       types.String `tfsdk:"system_id"`
 	Tags           tftags.Map   `tfsdk:"tags"`
 }

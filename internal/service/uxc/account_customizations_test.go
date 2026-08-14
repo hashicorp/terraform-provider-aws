@@ -39,6 +39,7 @@ func TestAccUXC_serial(t *testing.T) {
 			"visibleServicesNil":   testAccAccountCustomizations_visibleServicesNil,
 			acctest.CtDisappears:   testAccAccountCustomizations_disappears,
 			"migrate":              testAccAccountCustomizations_Migrate_basic,
+			"Identity":             testAccUXCAccountCustomizations_identitySerial,
 		},
 		"ServicesDataSource": {
 			acctest.CtBasic: testAccServicesDataSource_basic,

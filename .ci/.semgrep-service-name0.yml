@@ -247,6 +247,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ACMPCA"
     severity: WARNING
+  - id: agentregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in func name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+      exclude:
+        - "/internal/service/agentregistry/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: agentregistry-in-test-name
+    languages:
+      - go
+    message: Include "AgentRegistry" in test name
+    paths:
+      include:
+        - "/internal/service/agentregistry/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAgentRegistry"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: agentregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in const name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
+    severity: WARNING
+  - id: agentregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "AgentRegistry" in var name inside agentregistry package
+    paths:
+      include:
+        - "/internal/service/agentregistry"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AgentRegistry"
+    severity: WARNING
   - id: amg-in-func-name
     languages:
       - go
@@ -4639,4 +4700,18 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConnectCases"
             - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: connectcases-in-const-name
+    languages:
+      - go
+    message: Do not use "ConnectCases" in const name inside connectcases package
+    paths:
+      include:
+        - "/internal/service/connectcases"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConnectCases"
     severity: WARNING

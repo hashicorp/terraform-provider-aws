@@ -1,0 +1,108 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_osis_pipeline_endpoint" "test" {
+  count = var.resource_count
+
+  pipeline_arn = aws_osis_pipeline.pipeline[count.index].pipeline_arn
+
+  vpc_options {
+    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids = [aws_security_group.test.id]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test" {
+  name   = "${var.rName}-endpoint"
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_osis_pipeline" "pipeline" {
+  count = var.resource_count
+
+  pipeline_name               = "${var.rName}-${count.index}"
+  pipeline_configuration_body = <<-EOT
+            version: "2"
+            test-pipeline:
+              source:
+                http:
+                  path: "/test"
+              sink:
+                - s3:
+                    aws:
+                      sts_role_arn: "${aws_iam_role.test.arn}"
+                      region: "${data.aws_region.current.region}"
+                    bucket: "test"
+                    threshold:
+                      event_collect_timeout: "60s"
+                    codec:
+                      ndjson:
+        EOT
+  max_units                   = 1
+  min_units                   = 1
+
+  vpc_options {
+    security_group_ids      = [aws_security_group.pipeline.id]
+    subnet_ids              = [aws_subnet.pipeline.id]
+    vpc_endpoint_management = "SERVICE"
+  }
+}
+
+resource "aws_vpc" "pipeline" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "pipeline" {
+  cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.pipeline.id
+}
+
+resource "aws_security_group" "pipeline" {
+  name   = var.rName
+  vpc_id = aws_vpc.pipeline.id
+}
+
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = var.rName
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "osis-pipelines.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

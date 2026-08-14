@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `kube_api_server_config`, `kube_controller_manager_config`, and `kube_scheduler_config` attributes
+```

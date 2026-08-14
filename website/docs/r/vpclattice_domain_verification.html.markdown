@@ -48,7 +48,7 @@ resource "aws_vpclattice_domain_verification" "example" {
 
 The following arguments are required:
 
-* `domain_name` - (Required) The domain name to verify ownership for.
+* `domain_name` - (Required) Domain name to verify ownership for.
 
 The following arguments are optional:
 
@@ -59,14 +59,14 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the domain verification.
-* `created_at` - The date and time that the domain verification was created, in ISO-8601 format.
-* `id` - The ID of the domain verification.
-* `last_verified_time` - The date and time that the domain was last successfully verified, in ISO-8601 format.
-* `status` - The current status of the domain verification process. Valid values: `VERIFIED`, `PENDING`, `VERIFICATION_TIMED_OUT`.
+* `arn` - Amazon Resource Name (ARN) of the domain verification.
+* `created_at` - Date and time that the domain verification was created, in ISO-8601 format.
+* `id` - ID of the domain verification.
+* `last_verified_time` - Date and time that the domain was last successfully verified, in ISO-8601 format.
+* `status` - Current status of the domain verification process. Valid values: `VERIFIED`, `PENDING`, `VERIFICATION_TIMED_OUT`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `txt_record_name` - The name of the TXT record that must be created for domain verification.
-* `txt_record_value` - The value that must be added to the TXT record for domain verification.
+* `txt_record_name` - Name of the TXT record that must be created for domain verification.
+* `txt_record_value` - Value that must be added to the TXT record for domain verification.
 
 ## Import
 

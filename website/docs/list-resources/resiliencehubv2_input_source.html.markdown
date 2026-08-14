@@ -30,3 +30,4 @@ This list resource supports the following arguments:
 
 * `region` - (Optional) Region to list resources in. Defaults to the provider's configured region.
 * `service_arn` - (Required) ARN of the service whose input sources are listed.
+* `type` - (Optional) Filter input sources by type. Valid values: `CFN_STACK`, `TAGS`, `EKS`, `TERRAFORM`, `DESIGN_FILE`, `MONITORING`.

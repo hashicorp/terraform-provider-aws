@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "example" {
       identifiers = ["*"]
     }
     resources = [
-      aws_bedrockagentcore.agent_runtime.example.agent_runtime_arn
+      aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
     ]
     condition {
       test     = "StringEquals"

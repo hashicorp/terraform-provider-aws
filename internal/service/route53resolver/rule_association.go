@@ -111,6 +111,12 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
+	return resourceRuleAssociationFlatten(d, ruleAssociation)
+}
+
+func resourceRuleAssociationFlatten(d *schema.ResourceData, ruleAssociation *awstypes.ResolverRuleAssociation) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)
 	d.Set(names.AttrVPCID, ruleAssociation.VPCId)

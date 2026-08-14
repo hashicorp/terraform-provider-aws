@@ -641,6 +641,15 @@ The `mcp_server` block supports the following:
 
 * `endpoint` - (Required) Endpoint for the MCP server target configuration.
 * `listing_mode` - (Optional) Listing mode for the MCP server target. Valid values are `DEFAULT` and `DYNAMIC`. MCP resources for `DEFAULT` targets are cached at the control plane for faster access, while resources for `DYNAMIC` targets are retrieved dynamically when listing tools.
+* `mcp_tool_schema` - (Optional) Tool schema configuration for the MCP server target. Supported only when the credential provider is configured with an authorization code grant type. When set, dynamic tool discovery and synchronization are disabled. See [`mcp_tool_schema`](#mcp_tool_schema) below.
+* `resource_priority` - (Optional) Priority for resolving MCP server targets with shared resource URIs. Lower values take precedence. Defaults to `1000` when not set.
+
+### `mcp_tool_schema`
+
+The `mcp_tool_schema` block supports exactly one of the following:
+
+* `inline_payload` - (Optional) Inline tool schema payload. The `inline_payload` block requires a `payload` (string) containing the MCP tool schema definition.
+* `s3` - (Optional) S3 location of the tool schema. See [`s3`](#s3) below.
 
 ### `http`
 

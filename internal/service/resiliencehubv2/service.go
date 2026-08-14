@@ -5,21 +5,28 @@ package resiliencehubv2
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -32,45 +39,95 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types;awstypes;awstypes.Service")
 // @Testing(hasNoPreExistingResource=true)
-func newResourceService(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceService{}, nil
+func newServiceResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &serviceResource{}, nil
 }
 
-type resourceService struct {
-	framework.ResourceWithModel[resourceServiceModel]
+type serviceResource struct {
+	framework.ResourceWithModel[serviceResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *resourceService) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrName: fwschema.StringAttribute{
-				Required: true,
+			"dependency_discovery": fwschema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DependencyDiscoveryInput](),
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDescription: fwschema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 615),
+				},
+			},
+			names.AttrKMSKeyID: fwschema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrName: fwschema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					validResourceName,
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"policy_arn": fwschema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
-			"regions": fwschema.ListAttribute{
+			"regions": fwschema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
 				Required:   true,
-				CustomType: fwtypes.ListOfStringType,
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 5),
+					setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]fwschema.Block{
 			"permission_model": fwschema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[permissionModelModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"invoker_role_name": fwschema.StringAttribute{
 							Required: true,
+						},
+					},
+					Blocks: map[string]fwschema.Block{
+						"cross_account_role": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[crossAccountRoleModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeBetween(0, 5),
+							},
+							NestedObject: fwschema.NestedBlockObject{
+								Attributes: map[string]fwschema.Attribute{
+									"cross_account_role_arn": fwschema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									names.AttrExternalID: fwschema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -79,8 +136,8 @@ func (r *resourceService) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceService) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceServiceModel
+func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan serviceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -88,32 +145,36 @@ func (r *resourceService) Create(ctx context.Context, req resource.CreateRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateServiceInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateService(ctx, &input)
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*resiliencehubv2.CreateServiceOutput, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (*resiliencehubv2.CreateServiceOutput, error) {
+		return conn.CreateService(ctx, &input)
+	}, "Ensure the role exists and its trust policy allows access")
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.Service, &plan))
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output.Service, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.ARN = types.StringValue(aws.ToString(output.Service.ServiceArn))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceService) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceServiceModel
+func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state serviceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,13 +182,15 @@ func (r *resourceService) Read(ctx context.Context, req resource.ReadRequest, re
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	svc, err := findServiceByARN(ctx, conn, state.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
+	svc, err := findServiceByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
@@ -136,18 +199,11 @@ func (r *resourceService) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	tags, err := listTags(ctx, conn, state.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
-		return
-	}
-	setTagsOut(ctx, tags.Map())
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
-func (r *resourceService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceServiceModel
+func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state serviceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -156,30 +212,25 @@ func (r *resourceService) Update(ctx context.Context, req resource.UpdateRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
-	var input resiliencehubv2.UpdateServiceInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input.ServiceArn = state.ARN.ValueStringPointer()
+	if diff.HasChanges() {
+		arn := fwflex.StringValueFromFramework(ctx, plan.ServiceARN)
+		var input resiliencehubv2.UpdateServiceInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	output, err := conn.UpdateService(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output.Service, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.ARN = types.StringValue(aws.ToString(output.Service.ServiceArn))
-
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := updateTags(ctx, conn, state.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.UpdateService(ctx, &input)
+		}, "Ensure the role exists and its trust policy allows access")
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 	}
@@ -187,8 +238,8 @@ func (r *resourceService) Update(ctx context.Context, req resource.UpdateRequest
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceServiceModel
+func (r *serviceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state serviceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,28 +247,38 @@ func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	arn := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	input := resiliencehubv2.DeleteServiceInput{
-		ServiceArn: state.ARN.ValueStringPointer(),
+		ServiceArn: aws.String(arn),
 	}
 	_, err := conn.DeleteService(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 	}
 }
 
-func (r *resourceService) flatten(ctx context.Context, svc *awstypes.Service, data *resourceServiceModel) diag.Diagnostics {
+func (r *serviceResource) flatten(ctx context.Context, svc *awstypes.Service, data *serviceResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(flex.Flatten(ctx, svc, data)...)
+	diags.Append(fwflex.Flatten(ctx, svc, data)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	data.ARN = types.StringValue(aws.ToString(svc.ServiceArn))
+	data.DependencyDiscovery = fwtypes.StringEnumNull[awstypes.DependencyDiscoveryInput]()
+	if v := svc.DependencyDiscovery; v != nil {
+		switch v.Status {
+		case awstypes.DependencyDiscoveryStatusEnabled, awstypes.DependencyDiscoveryStatusInitializing:
+			data.DependencyDiscovery = fwtypes.StringEnumValue(awstypes.DependencyDiscoveryInputEnabled)
+		case awstypes.DependencyDiscoveryStatusDisabled:
+			data.DependencyDiscovery = fwtypes.StringEnumValue(awstypes.DependencyDiscoveryInputDisabled)
+		}
+	}
+
+	setTagsOut(ctx, svc.Tags)
 
 	return diags
 }
@@ -226,32 +287,50 @@ func findServiceByARN(ctx context.Context, conn *resiliencehubv2.Client, arn str
 	input := resiliencehubv2.GetServiceInput{
 		ServiceArn: aws.String(arn),
 	}
-	output, err := conn.GetService(ctx, &input)
+
+	return findService(ctx, conn, &input)
+}
+
+func findService(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.GetServiceInput) (*awstypes.Service, error) {
+	output, err := conn.GetService(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
-		}
 		return nil, smarterr.NewError(err)
 	}
+
 	if output == nil || output.Service == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+
 	return output.Service, nil
 }
 
-type resourceServiceModel struct {
+type serviceResourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	Description     types.String                                          `tfsdk:"description"`
-	Name            types.String                                          `tfsdk:"name"`
-	PermissionModel fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
-	PolicyArn       types.String                                          `tfsdk:"policy_arn"`
-	Regions         fwtypes.ListOfString                                  `tfsdk:"regions"`
-	Tags            tftags.Map                                            `tfsdk:"tags"`
-	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
+	DependencyDiscovery fwtypes.StringEnum[awstypes.DependencyDiscoveryInput] `tfsdk:"dependency_discovery" autoflex:",noflatten"`
+	Description         types.String                                          `tfsdk:"description"`
+	KMSKeyID            fwtypes.ARN                                           `tfsdk:"kms_key_id"`
+	Name                types.String                                          `tfsdk:"name"`
+	PermissionModel     fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
+	PolicyARN           fwtypes.ARN                                           `tfsdk:"policy_arn"`
+	Regions             fwtypes.SetOfString                                   `tfsdk:"regions"`
+	ServiceARN          types.String                                          `tfsdk:"arn"`
+	Tags                tftags.Map                                            `tfsdk:"tags"`
+	TagsAll             tftags.Map                                            `tfsdk:"tags_all"`
 }
 
 type permissionModelModel struct {
-	InvokerRoleName types.String `tfsdk:"invoker_role_name"`
+	CrossAccountRole fwtypes.ListNestedObjectValueOf[crossAccountRoleModel] `tfsdk:"cross_account_role"`
+	InvokerRoleName  types.String                                           `tfsdk:"invoker_role_name"`
+}
+
+type crossAccountRoleModel struct {
+	CrossAccountRoleARN fwtypes.ARN  `tfsdk:"cross_account_role_arn"`
+	ExternalID          types.String `tfsdk:"external_id"`
 }
