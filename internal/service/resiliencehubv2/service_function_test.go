@@ -59,6 +59,7 @@ func TestAccResilienceHubV2ServiceFunction_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("criticality"), tfknownvalue.StringExact(awstypes.ServiceFunctionCriticalityPrimary)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), checkServiceARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 				},
 			},
