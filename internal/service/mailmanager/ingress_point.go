@@ -457,6 +457,7 @@ func waitIngressPointDeleted(ctx context.Context, conn *mailmanager.Client, id s
 		Pending: enum.Slice(
 			awstypes.IngressPointStatusActive,
 			awstypes.IngressPointStatusDeprovisioning,
+			awstypes.IngressPointStatusFailed,
 		),
 		Target:  []string{},
 		Refresh: statusIngressPoint(conn, id),
