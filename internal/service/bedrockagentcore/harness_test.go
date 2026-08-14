@@ -1954,6 +1954,60 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_s3FilesA
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_efsAccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environment_FilesystemConfiguration_efsAccessPoint(rName, "/mnt/efsdata"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"efs_access_point": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"access_point_arn": knownvalue.NotNull(),
+									"mount_path":       knownvalue.StringExact("/mnt/efsdata"),
+								}),
+							}),
+							"s3_files_access_point": knownvalue.ListSizeExact(0),
+							"session_storage":       knownvalue.ListSizeExact(0),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration").AtSliceIndex(0).AtMapKey("efs_access_point").AtSliceIndex(0).AtMapKey("access_point_arn"), "aws_efs_access_point.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -3317,6 +3371,97 @@ resource "aws_s3files_mount_target" "test" {
   security_groups = [aws_security_group.test.id]
 }
 `, rName, mountPath, bucketName))
+}
+
+func testAccHarnessConfig_environment_FilesystemConfiguration_efsAccessPoint(rName, mountPath string) string {
+	return acctest.ConfigCompose(
+		testAccHarnessConfig_iamRole(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  environment {
+    agentcore_runtime_environment {
+      filesystem_configuration {
+        efs_access_point {
+          access_point_arn = aws_efs_access_point.test.arn
+          mount_path       = %[2]q
+        }
+      }
+
+      network_configuration {
+        network_mode = "VPC"
+        network_mode_config {
+          security_groups = [aws_security_group.test.id]
+          subnets         = aws_subnet.test[*].id
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_iam_role_policy.test_efs, aws_efs_mount_target.test]
+}
+
+resource "aws_iam_role_policy" "test_efs" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["elasticfilesystem:DescribeAccessPoints", "elasticfilesystem:DescribeMountTargets", "elasticfilesystem:DescribeFileSystems"]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+}
+
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_mount_target" "test" {
+  count           = 2
+  file_system_id  = aws_efs_file_system.test.id
+  subnet_id       = aws_subnet.test[count.index].id
+  security_groups = [aws_security_group.test.id]
+}
+
+resource "aws_efs_access_point" "test" {
+  file_system_id = aws_efs_file_system.test.id
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+
+  root_directory {
+    path = "/data"
+
+    creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+}
+`, rName, mountPath))
 }
 
 func testAccHarnessConfig_environment_Network_VPC(rName string) string {
