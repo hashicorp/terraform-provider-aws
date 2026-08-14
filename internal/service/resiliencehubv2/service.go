@@ -160,7 +160,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 		return conn.CreateService(ctx, &input)
 	}, "Ensure the role exists and its trust policy allows access")
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 

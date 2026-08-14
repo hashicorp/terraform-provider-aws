@@ -120,7 +120,7 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := conn.CreateSystem(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 

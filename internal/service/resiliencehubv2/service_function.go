@@ -103,7 +103,7 @@ func (r *serviceFunctionResource) Create(ctx context.Context, req resource.Creat
 
 	output, err := conn.CreateServiceFunction(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
