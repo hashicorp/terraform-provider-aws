@@ -38,6 +38,9 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 			"auto_deployment_mode": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrDescription: schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrDomainName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -62,6 +65,28 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
+			},
+			"state_reason": schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		// A nested block rather than a nested attribute: the provider serves
+		// protocol version 5, which cannot carry nested attributes.
+		Blocks: map[string]schema.Block{
+			// The routing an endpoint serves is the main thing worth reading back:
+			// under Disabled these are the weights a canary or blue/green shift set.
+			"revision_weights": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionWeightModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"revision_id": schema.StringAttribute{
+							Computed: true,
+						},
+						names.AttrWeight: schema.Int64Attribute{
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -105,14 +130,17 @@ func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 type endpointDataSourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String        `tfsdk:"arn"`
-	AuthType            types.String        `tfsdk:"auth_type"`
-	AutoDeploymentMode  types.String        `tfsdk:"auto_deployment_mode"`
-	DomainName          types.String        `tfsdk:"domain_name"`
-	EndpointName        types.String        `tfsdk:"endpoint_name"`
-	EndpointType        types.String        `tfsdk:"endpoint_type"`
-	FunctionName        types.String        `tfsdk:"function_name"`
-	RegionalDomainNames fwtypes.MapOfString `tfsdk:"regional_domain_names"`
-	Regions             fwtypes.SetOfString `tfsdk:"regions"`
-	State               types.String        `tfsdk:"state"`
+	ARN                 types.String                                         `tfsdk:"arn"`
+	AuthType            types.String                                         `tfsdk:"auth_type"`
+	AutoDeploymentMode  types.String                                         `tfsdk:"auto_deployment_mode"`
+	Description         types.String                                         `tfsdk:"description"`
+	DomainName          types.String                                         `tfsdk:"domain_name"`
+	EndpointName        types.String                                         `tfsdk:"endpoint_name"`
+	EndpointType        types.String                                         `tfsdk:"endpoint_type"`
+	FunctionName        types.String                                         `tfsdk:"function_name"`
+	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
+	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
+	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	State               types.String                                         `tfsdk:"state"`
+	StateReason         types.String                                         `tfsdk:"state_reason"`
 }

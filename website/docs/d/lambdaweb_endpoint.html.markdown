@@ -40,8 +40,16 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the endpoint.
 * `auth_type` - Authentication mode of the endpoint.
 * `auto_deployment_mode` - Deployment mode of the endpoint.
+* `description` - Description of the endpoint.
 * `domain_name` - HTTPS domain of the endpoint. Empty for `PerRegion` endpoints, which only expose `regional_domain_names`.
 * `endpoint_type` - Endpoint type (`HomeRegion`, `MultiRegion` or `PerRegion`).
 * `regional_domain_names` - Map of Region to that Region's independent domain name.
 * `regions` - Regions the endpoint spans.
+* `revision_weights` - Revisions the endpoint routes to, each with `revision_id` and `weight`. Under `auto_deployment_mode = "Disabled"` these are the weights a canary or blue/green shift set; under `LatestRevision` the service reports its own ephemeral routing.
 * `state` - Current state of the endpoint.
+* `state_reason` - Reason for the current state, which names the failing Region when a `MultiRegion` or `PerRegion` endpoint could not deploy everywhere.
+
+### `revision_weights` Block
+
+* `revision_id` - ID of the revision traffic is routed to.
+* `weight` - Percentage of traffic served by that revision.
