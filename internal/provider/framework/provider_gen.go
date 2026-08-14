@@ -41,6 +41,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// agentregistry
+
+				"agentregistry": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// amp
 
 				"amp": schema.StringAttribute{

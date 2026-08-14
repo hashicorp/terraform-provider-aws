@@ -1,5 +1,15 @@
 ## 6.61.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` argument ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+
+BUG FIXES:
+
+* list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
+
 ## 6.60.0 (August 13, 2026)
 
 FEATURES:

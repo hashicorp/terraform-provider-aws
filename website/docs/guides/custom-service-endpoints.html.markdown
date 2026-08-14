@@ -89,6 +89,7 @@ provider "aws" {
 |Account Management|`account`|`AWS_ENDPOINT_URL_ACCOUNT`|`account`|
 |ACM (Certificate Manager)|`acm`|`AWS_ENDPOINT_URL_ACM`|`acm`|
 |ACM PCA (Certificate Manager Private Certificate Authority)|`acmpca`|`AWS_ENDPOINT_URL_ACM_PCA`|`acm_pca`|
+|Agent Registry|`agentregistry`|`AWS_ENDPOINT_URL_AGENT_REGISTRY_CONTROL`|`agent_registry_control`|
 |AMP (Managed Prometheus)|`amp`(or `prometheus` or `prometheusservice`)|`AWS_ENDPOINT_URL_AMP`|`amp`|
 |Amplify|`amplify`|`AWS_ENDPOINT_URL_AMPLIFY`|`amplify`|
 |API Gateway|`apigateway`|`AWS_ENDPOINT_URL_API_GATEWAY`|`api_gateway`|
