@@ -25,6 +25,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
     }
   }
 
+  depends_on = [aws_iam_role_policy.test]
+
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
