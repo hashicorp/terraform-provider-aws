@@ -5,3 +5,4 @@ resource "aws_ec2_application_status_check" "test" {
 
 {{- template "tags" . }}
 }
+{{- /* Trim trailing whitespace when generator=false. */ -}}

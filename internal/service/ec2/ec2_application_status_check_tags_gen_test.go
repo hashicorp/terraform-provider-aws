@@ -23,7 +23,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -40,7 +39,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -71,7 +69,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -83,7 +80,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -119,7 +115,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -132,7 +127,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -163,7 +157,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -175,7 +168,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -196,7 +188,6 @@ func TestAccEC2ApplicationStatusCheck_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -211,7 +202,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -228,7 +218,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -259,7 +248,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -279,7 +267,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -296,7 +283,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -317,7 +303,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
@@ -335,7 +320,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -352,7 +336,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -373,7 +356,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -404,7 +386,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -421,7 +402,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -438,7 +418,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -469,7 +448,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -481,7 +459,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -502,7 +479,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -517,7 +493,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -534,7 +509,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -565,7 +539,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -601,7 +574,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -614,7 +586,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -645,7 +616,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -662,7 +632,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_replace(t *testing.
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -679,7 +648,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_replace(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -710,7 +678,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_replace(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -741,7 +708,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_EmptyTag_OnUpdate_replace(t *testing.
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -758,7 +724,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -775,7 +740,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -804,7 +768,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -818,7 +781,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -850,7 +812,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -865,7 +826,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -894,7 +854,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -908,7 +867,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -930,7 +888,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_providerOnly(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -945,7 +902,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -962,7 +918,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -999,7 +954,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1015,7 +969,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1057,7 +1010,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1074,7 +1026,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1096,7 +1047,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nonOverlapping(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -1111,7 +1061,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1128,7 +1077,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1163,7 +1111,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1179,7 +1126,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1220,7 +1166,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1238,7 +1183,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1273,7 +1217,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_overlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1293,7 +1236,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToProviderOnly(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1310,7 +1252,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToProviderOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1342,7 +1283,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToProviderOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1371,7 +1311,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToProviderOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1389,7 +1328,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToResourceOnly(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1406,7 +1344,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToResourceOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1435,7 +1372,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToResourceOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1467,7 +1403,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_updateToResourceOnly(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1484,7 +1419,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyResourceTag(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1501,7 +1435,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyResourceTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1536,7 +1469,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyResourceTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1556,7 +1488,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyProviderOnlyTag(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1573,7 +1504,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyProviderOnlyTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1602,7 +1532,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_emptyProviderOnlyTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1620,7 +1549,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullOverlappingResourceTa
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1637,7 +1565,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullOverlappingResourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1672,7 +1599,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullOverlappingResourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1695,7 +1621,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullNonOverlappingResourc
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1712,7 +1637,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullNonOverlappingResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1749,7 +1673,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_DefaultTags_nullNonOverlappingResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1772,7 +1695,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1789,7 +1711,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1818,7 +1739,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1833,7 +1753,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_add(t *testing.T
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1850,7 +1769,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_add(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1882,7 +1800,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_add(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1919,7 +1836,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_add(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1936,7 +1852,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_replace(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1953,7 +1868,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_replace(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1985,7 +1899,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_replace(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2014,7 +1927,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_ComputedTag_OnUpdate_replace(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
@@ -2029,7 +1941,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_defaultTag(t *test
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2047,7 +1958,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_defaultTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -2096,7 +2006,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_defaultTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2145,7 +2054,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_defaultTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2197,7 +2105,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_application_status_check.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2215,7 +2122,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2273,7 +2179,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2330,7 +2235,6 @@ func TestAccEC2ApplicationStatusCheck_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationStatusCheck/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),

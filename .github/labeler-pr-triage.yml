@@ -815,6 +815,7 @@ service/ec2:
               - 'website/**/ami*'
               - 'website/**/availability_zone*'
               - 'website/**/ec2_allowed_images_settings*'
+              - 'website/**/ec2_application_status_check*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
               - 'website/**/ec2_default_credit_specification*'

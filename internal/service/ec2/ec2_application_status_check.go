@@ -39,9 +39,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	applicationStatusCheckDefaultThreshold                        = 2
+	applicationStatusCheckDefaultInitializationGracePeriodSeconds = 300
+	applicationStatusCheckDefaultInterval                         = 60
+	applicationStatusCheckDefaultTimeout                          = 6
+)
+
 // @FrameworkResource("aws_ec2_application_status_check", name="Application Status Check")
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
+// @Testing(generator=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckApplicationStatusCheck")
 func newApplicationStatusCheckResource(context.Context) (resource.ResourceWithConfigure, error) {
@@ -75,7 +83,7 @@ func (r *applicationStatusCheckResource) Schema(ctx context.Context, _ resource.
 			"failure_threshold": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(2),
+				Default:  int64default.StaticInt64(applicationStatusCheckDefaultThreshold),
 				Validators: []validator.Int64{
 					int64validator.AtLeast(1),
 				},
@@ -84,7 +92,7 @@ func (r *applicationStatusCheckResource) Schema(ctx context.Context, _ resource.
 			"initialization_grace_period_seconds": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(300),
+				Default:  int64default.StaticInt64(applicationStatusCheckDefaultInitializationGracePeriodSeconds),
 				Validators: []validator.Int64{
 					int64validator.Between(1, 600),
 				},
@@ -92,7 +100,7 @@ func (r *applicationStatusCheckResource) Schema(ctx context.Context, _ resource.
 			names.AttrInterval: schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(60),
+				Default:  int64default.StaticInt64(applicationStatusCheckDefaultInterval),
 				Validators: []validator.Int64{
 					int64validator.OneOf(60),
 				},
@@ -138,7 +146,7 @@ func (r *applicationStatusCheckResource) Schema(ctx context.Context, _ resource.
 			"success_threshold": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(2),
+				Default:  int64default.StaticInt64(applicationStatusCheckDefaultThreshold),
 				Validators: []validator.Int64{
 					int64validator.AtLeast(1),
 				},
@@ -148,7 +156,7 @@ func (r *applicationStatusCheckResource) Schema(ctx context.Context, _ resource.
 			names.AttrTimeout: schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(6),
+				Default:  int64default.StaticInt64(applicationStatusCheckDefaultTimeout),
 				Validators: []validator.Int64{
 					int64validator.Between(1, 30),
 				},

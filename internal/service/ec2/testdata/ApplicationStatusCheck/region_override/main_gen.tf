@@ -8,12 +8,6 @@ resource "aws_ec2_application_status_check" "test" {
   port     = 80
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "region" {
   description = "Region to deploy resource in"
   type        = string

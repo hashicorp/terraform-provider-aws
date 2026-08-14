@@ -11,14 +11,7 @@ resource "aws_ec2_application_status_check" "test" {
     (var.unknownTagKey) = null_resource.test.id
   }
 }
-
 resource "null_resource" "test" {}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "unknownTagKey" {
   type     = string

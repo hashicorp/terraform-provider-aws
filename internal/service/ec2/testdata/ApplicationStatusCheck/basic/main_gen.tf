@@ -5,9 +5,3 @@ resource "aws_ec2_application_status_check" "test" {
   protocol = "http"
   port     = 80
 }
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

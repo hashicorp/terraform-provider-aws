@@ -9915,7 +9915,7 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_secondary_network", "ec2_secondary_subnet", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_application_status_check", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_secondary_network", "ec2_secondary_subnet", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
 
