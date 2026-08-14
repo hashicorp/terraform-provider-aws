@@ -199,7 +199,7 @@ func sweepAssertions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 				}
 
 				for _, v := range page.Assertions {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssertion, client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newAssertionResource, client,
 						framework.NewAttribute("service_arn", serviceARN),
 						framework.NewAttribute("assertion_id", aws.ToString(v.AssertionId)),
 					))

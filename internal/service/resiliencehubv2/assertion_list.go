@@ -29,7 +29,7 @@ func newResourceAssertionAsListResource() list.ListResourceWithConfigure {
 var _ list.ListResource = &assertionListResource{}
 
 type assertionListResource struct {
-	resourceAssertion
+	assertionResource
 	framework.WithList
 }
 
@@ -71,7 +71,7 @@ func (l *assertionListResource) List(ctx context.Context, request list.ListReque
 
 			result := request.NewListResult(ctx)
 
-			var data resourceAssertionModel
+			var data assertionResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 				if result.Diagnostics.HasError() {

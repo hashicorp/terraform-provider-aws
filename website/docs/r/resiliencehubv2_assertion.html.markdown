@@ -39,7 +39,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `assertion_id` - Unique identifier of the assertion.
-* `id` - Composite identifier in the format `service_arn,assertion_id`.
 
 ## Import
 

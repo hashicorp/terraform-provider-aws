@@ -57,7 +57,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAssertion,
+			Factory:  newAssertionResource,
 			TypeName: "aws_resiliencehubv2_assertion",
 			Name:     "Assertion",
 			Region:   inttypes.ResourceRegionDefault(),
@@ -68,7 +68,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      assertionImportID{},
-				SetIDAttr:     true,
 			},
 		},
 		{

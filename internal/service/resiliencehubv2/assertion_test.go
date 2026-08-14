@@ -9,17 +9,27 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresiliencehubv2 "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccCheckAssertionImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "service_arn", "assertion_id")
+}
+
 func TestAccResilienceHubV2Assertion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var assertion awstypes.Assertion
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_assertion.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -32,12 +42,72 @@ func TestAccResilienceHubV2Assertion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAssertionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssertionConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssertionExists(ctx, t, resourceName, &assertion),
-					resource.TestCheckResourceAttr(resourceName, "text", "The service must recover within 5 minutes"),
-					resource.TestCheckResourceAttrSet(resourceName, "assertion_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("text"), knownvalue.StringExact("The service must recover within 5 minutes")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Assertion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var assertion awstypes.Assertion
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_assertion.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssertionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssertionExists(ctx, t, resourceName, &assertion),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresiliencehubv2.ResourceAssertion, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Assertion/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccCheckAssertionImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "assertion_id",
 			},
 		},
 	})
@@ -52,10 +122,17 @@ func testAccCheckAssertionDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			_, err := tfresiliencehubv2.FindAssertionByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["assertion_id"])
-			if err == nil {
-				return fmt.Errorf("Resilience Hub V2 Assertion %s still exists", rs.Primary.Attributes[names.AttrID])
+			_, err := tfresiliencehubv2.FindAssertionByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["assertion_id"])
+
+			if retry.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Resilience Hub V2 Assertion %s still exists", rs.Primary.Attributes["assertion_id"])
 		}
 
 		return nil
@@ -66,12 +143,12 @@ func testAccCheckAssertionExists(ctx context.Context, t *testing.T, n string, v 
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Assertion not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
 
-		output, err := tfresiliencehubv2.FindAssertionByID(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["assertion_id"])
+		output, err := tfresiliencehubv2.FindAssertionByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_arn"], rs.Primary.Attributes["assertion_id"])
 		if err != nil {
 			return err
 		}
@@ -80,34 +157,4 @@ func testAccCheckAssertionExists(ctx context.Context, t *testing.T, n string, v 
 
 		return nil
 	}
-}
-
-func testAccAssertionConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_resiliencehubv2_policy" "test" {
-  name = "%[1]s-policy"
-
-  availability_slo {
-    target = 99.9
-  }
-}
-
-resource "aws_resiliencehubv2_service" "test" {
-  name    = "%[1]s-service"
-  regions = [data.aws_region.current.name]
-
-  policy_arn = aws_resiliencehubv2_policy.test.arn
-
-  permission_model {
-    invoker_role_name = "AWSResilienceHubAssessmentRole"
-  }
-}
-
-resource "aws_resiliencehubv2_assertion" "test" {
-  service_arn = aws_resiliencehubv2_service.test.arn
-  text        = "The service must recover within 5 minutes"
-}
-`, rName)
 }
