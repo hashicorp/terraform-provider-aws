@@ -143,7 +143,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  newResourceAssertionAsListResource,
+			Factory:  newAssertionResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_assertion",
 			Name:     "Assertion",
 			Region:   inttypes.ResourceRegionDefault(),
@@ -183,7 +183,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
-			Factory:  newResourceServiceFunctionAsListResource,
+			Factory:  newServiceFunctionResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_service_function",
 			Name:     "Service Function",
 			Region:   inttypes.ResourceRegionDefault(),
