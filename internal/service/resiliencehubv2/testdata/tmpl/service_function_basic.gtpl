@@ -1,25 +1,8 @@
-resource "aws_resiliencehubv2_input_source" "test" {
+resource "aws_resiliencehubv2_service_function" "test" {
 {{- template "region" }}
+  name        = var.rName
   service_arn = aws_resiliencehubv2_service.test.arn
-
-  resource_configuration {
-    cfn_stack_arn = aws_cloudformation_stack.test.id
-  }
-}
-
-resource "aws_cloudformation_stack" "test" {
-{{- template "region" }}
-  name = var.rName
-
-  template_body = jsonencode({
-    AWSTemplateFormatVersion = "2010-09-09"
-    Description              = "Test stack for NGRH input source"
-    Resources = {
-      WaitHandle = {
-        Type = "AWS::CloudFormation::WaitConditionHandle"
-      }
-    }
-  })
+  criticality = "PRIMARY"
 }
 
 resource "aws_resiliencehubv2_service" "test" {
