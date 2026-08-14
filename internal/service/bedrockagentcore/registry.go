@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -65,7 +64,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
 		Attributes: map[string]schema.Attribute{
-			"approval_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[approvalConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"approval_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[approvalConfigurationModel](ctx),
 			"authorizer_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
 				Optional:   true,

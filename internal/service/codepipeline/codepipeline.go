@@ -983,7 +983,7 @@ func expandArtifactStores(tfList []any) map[string]types.ArtifactStore {
 			region = v
 		}
 
-		apiObjects[region] = *apiObject // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+		apiObjects[region] = *apiObject
 	}
 
 	return apiObjects

@@ -735,6 +735,12 @@ service/directconnect:
           - any-glob-to-any-file:
               - 'internal/service/directconnect/**/*'
               - 'website/**/dx_*'
+service/directoryservicedata:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/directoryservicedata/**/*'
+              - 'website/**/directoryservicedata_*'
 service/discovery:
   - any:
       - changed-files:
@@ -1335,6 +1341,12 @@ service/lambda:
           - any-glob-to-any-file:
               - 'internal/service/lambda/**/*'
               - 'website/**/lambda_*'
+service/lambdacore:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/lambdacore/**/*'
+              - 'website/**/lambdacore_*'
 service/lambdamicrovms:
   - any:
       - changed-files:
@@ -1902,6 +1914,12 @@ service/resiliencehub:
           - any-glob-to-any-file:
               - 'internal/service/resiliencehub/**/*'
               - 'website/**/resiliencehub_*'
+service/resiliencehubv2:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/resiliencehubv2/**/*'
+              - 'website/**/resiliencehubv2_*'
 service/resourceexplorer2:
   - any:
       - changed-files:

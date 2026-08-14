@@ -9,11 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -457,6 +459,16 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 	}
 
 	return findMemory(ctx, conn, &input)
+}
+
+func findMemoryByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryARN string) (*awstypes.Memory, error) {
+	parsedARN, err := arn.Parse(memoryARN)
+	if err != nil {
+		return nil, smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
+	}
+	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
+
+	return findMemoryByID(ctx, conn, memoryID)
 }
 
 func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetMemoryInput) (*awstypes.Memory, error) {

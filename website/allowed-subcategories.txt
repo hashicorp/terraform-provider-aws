@@ -93,6 +93,7 @@ DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB
@@ -159,6 +160,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
 Lambda MicroVMs
 Launch Wizard
 Lex Model Building
@@ -204,6 +206,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging

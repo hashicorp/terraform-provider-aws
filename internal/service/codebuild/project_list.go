@@ -100,6 +100,9 @@ func (l *projectListResource) List(ctx context.Context, request list.ListRequest
 						})
 						continue
 					}
+				} else if request.IncludeResource {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
 				}
 				result.DisplayName = projectName
 

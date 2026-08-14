@@ -91,6 +91,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -151,6 +152,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdacore"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
@@ -210,6 +212,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
+	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -622,6 +625,10 @@ func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Clie
 	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
+func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
+	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
+}
+
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
 	return errs.Must(client[*docdb.Client](ctx, c, names.DocDB, make(map[string]any)))
 }
@@ -848,6 +855,10 @@ func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation.Clie
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
 	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
+	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaMicrovmsClient(ctx context.Context) *lambdamicrovms.Client {
@@ -1092,6 +1103,10 @@ func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition.Client {
 
 func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub.Client {
 	return errs.Must(client[*resiliencehub.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
+}
+
+func (c *AWSClient) ResilienceHubV2Client(ctx context.Context) *resiliencehubv2.Client {
+	return errs.Must(client[*resiliencehubv2.Client](ctx, c, names.ResilienceHubV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2.Client {

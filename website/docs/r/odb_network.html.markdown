@@ -1,6 +1,6 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "AWS: aws_odb_network"
+layout: "aws"
 page_title: "AWS: aws_odb_network"
 description: |-
   Terraform resource for managing odb network of an Oracle Database@AWS.
@@ -12,10 +12,9 @@ Terraform resource for managing odb Network resource in AWS for Oracle Database@
 
 ## Example Usage
 
-### Basic Usage
+### Disabled S3 and Zero-ETL Access
 
 ```terraform
-
 resource "aws_odb_network" "example" {
   display_name         = "odb-my-net"
   availability_zone_id = "use1-az6"
@@ -27,7 +26,11 @@ resource "aws_odb_network" "example" {
     "env" = "dev"
   }
 }
+```
 
+### Enabled S3 and Zero-ETL Access
+
+```terraform
 resource "aws_odb_network" "example" {
   display_name         = "odb-my-net"
   availability_zone_id = "use1-az6"
@@ -54,9 +57,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure availability_zone maps correctly with availability_zone_id.
+* `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure `availability_zone` maps correctly with `availability_zone_id`.
 * `cross_region_s3_restore_sources_access` - (Optional) List of regions enabled for cross-region restore in the ODB network.
-* `custom_domain_name` - (Optional) Name of the custom domain that the network is located. Custom_domain_name and default_dns_prefix both can't be given. Changing this will force terraform to create new resource.
+* `custom_domain_name` - (Optional) Name of the custom domain that the network is located. `custom_domain_name` and `default_dns_prefix` both can't be given. Changing this will force terraform to create new resource.
 * `default_dns_prefix` - (Optional) Default DNS prefix for the network resource. Changing this will force terraform to create new resource.
 * `delete_associated_resources` - (Optional) If set to true deletes associated OCI resources. Default false.
 * `kms_access` - (Optional) Configuration for KMS access from the ODB network.
@@ -75,17 +78,77 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_at` - Date and time when the ODB network was created.
 * `ec2_placement_group_ids` - List of EC2 placement group IDs associated with the ODB network.
 * `id` - Unique identifier of the odb network resource.
-* `managed_services` - Managed services configuration for the ODB network.
-* `oci_dns_forwarding_configs` - Number of storage servers requested for the Exadata infrastructure.
+* `managed_services` - Managed services configuration for the ODB network. See [`managed_services` Block](#managed_services-block) below.
+* `oci_dns_forwarding_configs` - DNS resolver endpoints in OCI for forwarding DNS queries for the `ociPrivateZone` domain. See [`oci_dns_forwarding_configs` Block](#oci_dns_forwarding_configs-block) below.
 * `oci_network_anchor_id` - Unique identifier of the OCI network anchor for the ODB network.
 * `oci_network_anchor_url` - URL of the OCI network anchor for the ODB network.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the ODB network.
 * `oci_vcn_id` - Unique identifier Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.
 * `oci_vcn_url` - URL of the OCI VCN for the ODB network.
-* `peered_cidrs` - List of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.
+* `peered_cidrs` - List of CIDR ranges from the peered VPC that are allowed access to the ODB network. See the [ODB network peering documentation](https://docs.aws.amazon.com/odb/latest/UserGuide/network-peering.html) for more information.
 * `percent_progress` - Amount of progress made on the current operation on the ODB network, expressed as a percentage.
 * `status` - Status of the network resource.
 * `status_reason` - Additional information about the current status of the ODB network.
+
+### `managed_services` Block
+
+* `cross_region_s3_restore_sources_access` - Cross-region S3 restore sources access configuration. See [`cross_region_s3_restore_sources_access` Block](#cross_region_s3_restore_sources_access-block) below.
+* `kms_access` - Amazon KMS access configuration. See [`kms_access` Block](#kms_access-block) below.
+* `managed_s3_backup_access` - Managed S3 backup access configuration. See [`managed_s3_backup_access` Block](#managed_s3_backup_access-block) below.
+* `managed_service_ipv4_cidrs` - List of IPv4 CIDR ranges used by the managed services.
+* `resource_gateway_arn` - ARN of the resource gateway.
+* `s3_access` - Amazon S3 access configuration. See [`s3_access` Block](#s3_access-block) below.
+* `service_network_arn` - ARN of the service network.
+* `service_network_endpoint` - Service network endpoint configuration. See [`service_network_endpoint` Block](#service_network_endpoint-block) below.
+* `sts_access` - Amazon STS access configuration. See [`sts_access` Block](#sts_access-block) below.
+* `zero_etl_access` - Zero-ETL access configuration. See [`zero_etl_access` Block](#zero_etl_access-block) below.
+
+#### `cross_region_s3_restore_sources_access` Block
+
+* `ipv4_addresses` - List of IPv4 addresses for the cross-region S3 restore sources access.
+* `region` - Region enabled for cross-region S3 restore.
+* `status` - Status of the cross-region S3 restore sources access.
+
+#### `kms_access` Block
+
+* `domain_name` - Domain name for the Amazon KMS access.
+* `ipv4_addresses` - List of IPv4 addresses for the Amazon KMS access.
+* `kms_policy_document` - Endpoint policy for the Amazon KMS access.
+* `status` - Status of the Amazon KMS access.
+
+#### `managed_s3_backup_access` Block
+
+* `ipv4_addresses` - List of IPv4 addresses for the managed S3 backup access.
+* `status` - Status of the managed S3 backup access.
+
+#### `s3_access` Block
+
+* `domain_name` - Domain name for the Amazon S3 access.
+* `ipv4_addresses` - List of IPv4 addresses for the Amazon S3 access.
+* `s3_policy_document` - Endpoint policy for the Amazon S3 access.
+* `status` - Status of the Amazon S3 access.
+
+#### `service_network_endpoint` Block
+
+* `vpc_endpoint_id` - Unique identifier of the VPC endpoint.
+* `vpc_endpoint_type` - Type of the VPC endpoint.
+
+#### `sts_access` Block
+
+* `domain_name` - Domain name for the Amazon STS access.
+* `ipv4_addresses` - List of IPv4 addresses for the Amazon STS access.
+* `status` - Status of the Amazon STS access.
+* `sts_policy_document` - Endpoint policy for the Amazon STS access.
+
+#### `zero_etl_access` Block
+
+* `cidr` - CIDR range for the Zero-ETL access.
+* `status` - Status of the Zero-ETL access.
+
+### `oci_dns_forwarding_configs` Block
+
+* `domain_name` - Domain name for which the DNS queries are forwarded.
+* `oci_dns_listener_ip` - IP address of the OCI DNS listener.
 
 ## Timeouts
 
@@ -97,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Ingestion Pipeline using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ODB Network using the `id`. For example:
 
 ```terraform
 import {
