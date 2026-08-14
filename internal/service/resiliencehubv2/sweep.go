@@ -28,7 +28,9 @@ func RegisterSweepers() {
 		"aws_resiliencehubv2_service_function",
 	)
 	awsv2.Register("aws_resiliencehubv2_service_function", sweepServiceFunctions)
-	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
+	awsv2.Register("aws_resiliencehubv2_system", sweepSystems,
+		"aws_resiliencehubv2_service",
+	)
 }
 
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
