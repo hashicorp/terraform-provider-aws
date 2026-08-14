@@ -89,6 +89,11 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:            testAccEnabledStandardsDataSource_basic,
 			"StandardsSubscriptionARN": testAccEnabledStandardsDataSource_standardsSubscriptionARN,
 		},
+		"FeatureV2": {
+			acctest.CtBasic:      testAccFeatureV2_basic,
+			acctest.CtDisappears: testAccFeatureV2_disappears,
+			"Identity":           testAccSecurityHubFeatureV2_identitySerial,
+		},
 		"FindingAggregator": {
 			acctest.CtBasic:      testAccFindingAggregator_basic,
 			acctest.CtDisappears: testAccFindingAggregator_disappears,
