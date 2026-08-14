@@ -866,7 +866,7 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 		return diags
 	}
 
-	diags.Append(r.flattenEnvironment(ctx, data, populateEnvironment)...)
+	r.flattenEnvironment(ctx, data, populateEnvironment)
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
@@ -874,9 +874,7 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 	return diags
 }
 
-func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) {
 	// Always populate environment_actual from the current environment state.
 	data.EnvironmentActual = data.Environment
 
@@ -884,8 +882,6 @@ func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessR
 	if !populateEnvironment {
 		data.Environment = fwtypes.NewListNestedObjectValueOfNull[harnessEnvironmentProviderModel](ctx)
 	}
-
-	return diags
 }
 
 func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
