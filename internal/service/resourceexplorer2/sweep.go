@@ -16,17 +16,17 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_resourceexplorer2_index", sweepIndexes)
+	awsv2.Register("aws_resourceexplorer2_index", sweepIndexes, "aws_resourceexplorer2_view")
+	awsv2.Register("aws_resourceexplorer2_view", sweepViews)
 }
 
 func sweepIndexes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.ResourceExplorer2Client(ctx)
-
-	var sweepResources []sweep.Sweepable
-
 	input := resourceexplorer2.ListIndexesInput{
 		Regions: []string{client.Region(ctx)},
 	}
+	var sweepResources []sweep.Sweepable
+
 	pages := resourceexplorer2.NewListIndexesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -37,6 +37,28 @@ func sweepIndexes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		for _, v := range page.Indexes {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newIndexResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepViews(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResourceExplorer2Client(ctx)
+	var input resourceexplorer2.ListViewsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := resourceexplorer2.NewListViewsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Views {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newViewResource, client,
+				framework.NewAttribute(names.AttrARN, v),
 			))
 		}
 	}
