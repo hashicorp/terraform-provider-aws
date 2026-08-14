@@ -369,7 +369,13 @@ func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionNa
 
 func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EndpointStateActive, awstypes.EndpointStateDeleting),
+		// Every state an endpoint can hold on the way out, because the target is
+		// "gone" and anything unlisted aborts the destroy. A MultiRegion endpoint
+		// sits Pending for minutes while it replicates and settles in Failed when
+		// a region cannot take the revision, and both accept a delete: observing
+		// either one is a matter of when the first refresh lands.
+		Pending: enum.Slice(awstypes.EndpointStatePending, awstypes.EndpointStateActive,
+			awstypes.EndpointStateFailed, awstypes.EndpointStateDeleting),
 		Target:  []string{},
 		Refresh: statusEndpoint(conn, functionName, endpointName),
 		Timeout: timeout,
