@@ -36,6 +36,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newApplicationCapabilityResource,
+			TypeName: "aws_opensearch_application_capability",
+			Name:     "Application Capability",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newAuthorizeVPCEndpointAccessResource,
 			TypeName: "aws_opensearch_authorize_vpc_endpoint_access",
 			Name:     "Authorize VPC Endpoint Access",
