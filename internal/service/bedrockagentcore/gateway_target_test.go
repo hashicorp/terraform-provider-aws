@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -26,6 +27,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const testAccGatewayTargetPolicySessionIDHeader = "x-amzn-bedrock-agentcore-policy-session-id"
 
 func testAccGatewayTargetImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id")
@@ -873,6 +876,78 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_policySessionHeader(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	metadataConfiguration := `
+  metadata_configuration {
+    allowed_request_headers = ["x-correlation-id", "x-tenant-id"]
+  }
+`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetHasRequestHeader(&gatewayTarget, testAccGatewayTargetPolicySessionIDHeader),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, metadataConfiguration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetHasRequestHeader(&gatewayTarget, testAccGatewayTargetPolicySessionIDHeader),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-correlation-id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-tenant-id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeaderDetached(rName, rNamePolicyEngine, metadataConfiguration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-correlation-id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-tenant-id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -917,6 +992,110 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t
 			},
 		},
 	})
+}
+
+func TestNormalizeGatewayTargetOutputForState(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		metadataConfiguration         *awstypes.MetadataConfiguration
+		preserveEmptyMetadata         bool
+		expectedMetadataConfiguration *awstypes.MetadataConfiguration
+	}{
+		"no implicit header": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{"x-correlation-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{"x-correlation-id"},
+			},
+		},
+		"implicit header removed": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedQueryParameters: []string{names.AttrVersion},
+				AllowedRequestHeaders:  []string{"x-correlation-id", testAccGatewayTargetPolicySessionIDHeader},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedQueryParameters: []string{names.AttrVersion},
+				AllowedRequestHeaders:  []string{"x-correlation-id"},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+		},
+		"all case-insensitive occurrences removed": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{
+					"X-Amzn-Bedrock-AgentCore-Policy-Session-Id",
+					testAccGatewayTargetPolicySessionIDHeader,
+				},
+			},
+			preserveEmptyMetadata: true,
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{},
+			},
+		},
+		"service-created metadata removed when empty": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{testAccGatewayTargetPolicySessionIDHeader},
+			},
+			expectedMetadataConfiguration: nil,
+		},
+		"configured empty metadata preserved": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{testAccGatewayTargetPolicySessionIDHeader},
+			},
+			preserveEmptyMetadata: true,
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{},
+			},
+		},
+		"other metadata preserves service-created object": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders:  []string{testAccGatewayTargetPolicySessionIDHeader},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders:  []string{},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+		},
+	}
+
+	if got := tfbedrockagentcore.NormalizeGatewayTargetOutputForState(nil, false); got != nil {
+		t.Fatalf("expected nil output, got %#v", got)
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			originalRequestHeaders := append([]string(nil), testCase.metadataConfiguration.AllowedRequestHeaders...)
+			input := &bedrockagentcorecontrol.GetGatewayTargetOutput{
+				MetadataConfiguration: testCase.metadataConfiguration,
+			}
+
+			got := tfbedrockagentcore.NormalizeGatewayTargetOutputForState(input, testCase.preserveEmptyMetadata)
+
+			if diff := cmp.Diff(originalRequestHeaders, input.MetadataConfiguration.AllowedRequestHeaders); diff != "" {
+				t.Errorf("input mutated (-before, +after):\n%s", diff)
+			}
+			if (got.MetadataConfiguration == nil) != (testCase.expectedMetadataConfiguration == nil) {
+				t.Fatalf("unexpected metadata configuration: got %#v, expected %#v", got.MetadataConfiguration, testCase.expectedMetadataConfiguration)
+			}
+			if got.MetadataConfiguration == nil {
+				return
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedQueryParameters, got.MetadataConfiguration.AllowedQueryParameters); diff != "" {
+				t.Errorf("unexpected allowed query parameters (-want, +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedRequestHeaders, got.MetadataConfiguration.AllowedRequestHeaders); diff != "" {
+				t.Errorf("unexpected allowed request headers (-want, +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedResponseHeaders, got.MetadataConfiguration.AllowedResponseHeaders); diff != "" {
+				t.Errorf("unexpected allowed response headers (-want, +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T) {
@@ -1286,7 +1465,26 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
+func testAccCheckGatewayTargetHasRequestHeader(v *bedrockagentcorecontrol.GetGatewayTargetOutput, expected string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if v.MetadataConfiguration == nil {
+			return fmt.Errorf("expected metadata configuration")
+		}
+		for _, header := range v.MetadataConfiguration.AllowedRequestHeaders {
+			if strings.EqualFold(header, expected) {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("expected request header %q, got %v", expected, v.MetadataConfiguration.AllowedRequestHeaders)
+	}
+}
+
 func testAccGatewayTargetConfig_base(rName string) string {
+	return testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, "")
+}
+
+func testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, gatewayConfiguration string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -1368,8 +1566,48 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 
   protocol_type = "MCP"
+%[2]s
 }
-`, rName)
+`, rName, gatewayConfiguration)
+}
+
+func testAccGatewayTargetConfig_baseWithPolicyEngine(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, `
+  policy_engine_configuration {
+    arn  = aws_bedrockagentcore_policy_engine.test.policy_engine_arn
+    mode = "LOG_ONLY"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.policy_engine]
+`),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "policy_engine" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
+}
+`, rNamePolicyEngine),
+	)
+}
+
+func testAccGatewayTargetConfig_baseWithDetachedPolicyEngine(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "policy_engine" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
+}
+`, rNamePolicyEngine),
+	)
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
@@ -1944,6 +2182,38 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, metadataConfiguration string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithPolicyEngine(rName, rNamePolicyEngine),
+		testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration),
+	)
+}
+
+func testAccGatewayTargetConfig_policySessionHeaderDetached(rName, rNamePolicyEngine, metadataConfiguration string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithDetachedPolicyEngine(rName, rNamePolicyEngine),
+		testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration),
+	)
+}
+
+func testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+%[2]s
+}
+`, rName, metadataConfiguration)
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {

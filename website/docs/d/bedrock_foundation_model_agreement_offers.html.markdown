@@ -37,24 +37,24 @@ This data source exports the following attributes in addition to the arguments a
 
 * `offers` - List of the offers associated with the specified model. See [`offers`](#offers).
 
-### `offers`
+### `offers` Block
 
 * `offer_id` - Offer ID for a model offer.
 * `offer_token` - Offer token.
 * `term_details` - Details about the terms of the offer. See [`term_details`](#term_details).
 
-#### `term_details`
+#### `term_details` Block
 
 * `legal_term` - Details about the legal terms. See [`legal_term`](#legal_term).
 * `support_term` - Details about the support terms. See [`support_term`](#support_term).
 * `usage_based_pricing_term` - Details about the pricing terms. See [`usage_based_pricing_term`](#usage_based_pricing_term).
 * `validity_term` - Details about the validity terms. See [`validity_term`](#validity_term).
 
-##### `legal_term`
+##### `legal_term` Block
 
 * `url` - URL to the legal term document.
 
-##### `support_term`
+##### `support_term` Block
 
 * `refund_policy_description` - Refund policy description.
 
@@ -62,13 +62,13 @@ This data source exports the following attributes in addition to the arguments a
 
 * `rate_card` - Details about a usage price for each dimension. See [`rate_card`](#rate_card).
 
-###### `rate_card`
+###### `rate_card` Block
 
 * `description` - Description of the price rate.
 * `dimension` - Dimension for the price rate.
 * `price` - Single-dimensional rate information.
 * `unit` - Unit associated with the price.
 
-##### `validity_term`
+##### `validity_term` Block
 
 * `agreement_duration` - Duration of the agreement.

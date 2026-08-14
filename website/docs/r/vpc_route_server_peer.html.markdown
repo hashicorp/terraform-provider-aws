@@ -38,7 +38,7 @@ resource "aws_vpc_route_server" "test" {
   }
 }
 
-resource "aws_vpc_route_server_association" "test" {
+resource "aws_vpc_route_server_vpc_association" "test" {
   route_server_id = aws_vpc_route_server.test.route_server_id
   vpc_id          = aws_vpc.test.id
 }
@@ -51,14 +51,14 @@ resource "aws_vpc_route_server_endpoint" "test" {
     Name = "Test Endpoint"
   }
 
-  depends_on = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_vpc_association.test]
 }
 
 resource "aws_vpc_route_server_propagation" "test" {
   route_server_id = aws_vpc_route_server.test.route_server_id
   route_table_id  = aws_route_table.test.id
 
-  depends_on = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_vpc_association.test]
 }
 
 resource "aws_vpc_route_server_peer" "test" {
