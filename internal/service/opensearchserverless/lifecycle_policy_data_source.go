@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,10 +27,6 @@ import (
 func newLifecyclePolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDataSource{}, nil
 }
-
-const (
-	DSNameLifecyclePolicy = "Lifecycle Policy Data Source"
-)
 
 type lifecyclePolicyDataSource struct {
 	framework.DataSourceWithModel[lifecyclePolicyDataSourceModel]
@@ -82,21 +78,18 @@ func (d *lifecyclePolicyDataSource) Read(ctx context.Context, req datasource.Rea
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
 	var data lifecyclePolicyDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findLifecyclePolicyByNameAndType(ctx, conn, data.Name.ValueString(), data.Type.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -108,7 +101,7 @@ func (d *lifecyclePolicyDataSource) Read(ctx context.Context, req datasource.Rea
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
 	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type lifecyclePolicyDataSourceModel struct {

@@ -48,7 +48,7 @@ func testAccClusterAuthEphemeralResourceConfig_basic(clusterName string) string 
 		acctest.ConfigWithEchoProvider("ephemeral.aws_eks_cluster_auth.test"),
 		fmt.Sprintf(`
 ephemeral "aws_eks_cluster_auth" "test" {
-  name =  %[1]q
+  name = %[1]q
 }
 `, clusterName))
 }

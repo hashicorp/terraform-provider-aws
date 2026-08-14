@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_pinpoint_email_channel: When specifying the `configuration_set` parameter, use the name of the set instead of the ARN.
-```

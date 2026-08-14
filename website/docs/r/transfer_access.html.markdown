@@ -44,32 +44,32 @@ resource "aws_transfer_access" "test" {
 
 This resource supports the following arguments:
 
+* `external_id` - (Required) SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
+* `home_directory` - (Optional) Landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
+* `home_directory_mappings` - (Optional) Logical directory mappings that specify what S3 paths and keys should be visible to your user and how you want to make them visible. See [`home_directory_mappings` Block](#home_directory_mappings-block) below.
+* `home_directory_type` - (Optional) Type of landing directory (folder) you mapped for your users' home directory. Valid values are `PATH` and `LOGICAL`.
+* `policy` - (Optional) IAM JSON policy document that scopes down user access to portions of their Amazon S3 bucket. IAM variables you can use inside this policy include `${Transfer:UserName}`, `${Transfer:HomeDirectory}`, and `${Transfer:HomeBucket}`. Since the IAM variable syntax matches Terraform's interpolation syntax, they must be escaped inside Terraform configuration strings (`$${Transfer:UserName}`).  These are evaluated on-the-fly when navigating the bucket.
+* `posix_profile` - (Optional) Full POSIX identity, including user ID (Uid), group ID (Gid), and any secondary groups IDs (SecondaryGids), that controls your users' access to your Amazon EFS file systems. See [`posix_profile` Block](#posix_profile-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `external_id` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
-* `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
-* `home_directory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
-* `home_directory_mappings` - (Optional) Logical directory mappings that specify what S3 paths and keys should be visible to your user and how you want to make them visible. See [Home Directory Mappings](#home-directory-mappings) below.
-* `home_directory_type` - (Optional) The type of landing directory (folder) you mapped for your users' home directory. Valid values are `PATH` and `LOGICAL`.
-* `policy` - (Optional) An IAM JSON policy document that scopes down user access to portions of their Amazon S3 bucket. IAM variables you can use inside this policy include `${Transfer:UserName}`, `${Transfer:HomeDirectory}`, and `${Transfer:HomeBucket}`. Since the IAM variable syntax matches Terraform's interpolation syntax, they must be escaped inside Terraform configuration strings (`$${Transfer:UserName}`).  These are evaluated on-the-fly when navigating the bucket.
-* `posix_profile` - (Optional) Specifies the full POSIX identity, including user ID (Uid), group ID (Gid), and any secondary groups IDs (SecondaryGids), that controls your users' access to your Amazon EFS file systems. See [Posix Profile](#posix-profile) below.
 * `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
+* `server_id` - (Required) Server ID of the Transfer Server (e.g., `s-12345678`)
 
-### Home Directory Mappings
+### `home_directory_mappings` Block
 
-* `entry` - (Required) Represents an entry and a target.
-* `target` - (Required) Represents the map target.
+* `entry` - (Required) Logical directory entry that appears to your user.
+* `target` - (Required) Map target that maps the entry to an actual S3 path.
 
-### Posix Profile
+### `posix_profile` Block
 
-* `gid` - (Required) The POSIX group ID used for all EFS operations by this user.
-* `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
-* `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
+* `gid` - (Required) POSIX group ID used for all EFS operations by this user.
+* `secondary_gids` - (Optional) Secondary POSIX group IDs used for all EFS operations by this user.
+* `uid` - (Required) POSIX user ID used for all EFS operations by this user.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id`  - The ID of the resource
+* `id`  - ID of the resource
 
 ## Import
 

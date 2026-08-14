@@ -13,6 +13,7 @@ var (
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
+	ResourceGatewayRule              = newGatewayRuleResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
 	ResourceResourcePolicy           = newResourcePolicyResource
@@ -35,6 +36,7 @@ var (
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
+	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
@@ -46,11 +48,17 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
+	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
 )
 
 type (
-	CustomJWTAuthorizerConfigurationModel = customJWTAuthorizerConfigurationModel
-	ManagedVPCResourceModel               = managedVPCResourceModel
-	PrivateEndpointModel                  = privateEndpointModel
-	SelfManagedLatticeResourceModel       = selfManagedLatticeResourceModel
+	CustomConfigurationModel               = customConfigurationModel
+	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
+	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
+	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
+	ManagedVPCResourceModel                = managedVPCResourceModel
+	MemoryStrategyResourceModel            = memoryStrategyResourceModel
+	OverrideDetailsModel                   = overrideDetailsModel
+	PrivateEndpointModel                   = privateEndpointModel
+	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
 )

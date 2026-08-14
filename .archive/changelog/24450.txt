@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_kms_key: Add support for HMAC_256 customer master key spec
-```

@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_redshift_cluster: The `publicly_accessible` attribute now defaults to `false`
-```
