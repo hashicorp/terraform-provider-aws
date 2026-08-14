@@ -16,7 +16,7 @@ A service function represents a technical subset of the service topology that re
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_service_function" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
   name        = "example-function"
@@ -26,7 +26,7 @@ resource "aws_resiliencehubv2_service_function" "example" {
 
 ### With Description
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_service_function" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
   name        = "payment-processing"
