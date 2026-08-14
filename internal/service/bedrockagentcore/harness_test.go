@@ -2074,6 +2074,138 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple
 	})
 }
 
+func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_addFilesystem(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environment_FilesystemConfiguration_vpcNoFilesystem(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environment_FilesystemConfiguration_sessionStorage(rName, "/mnt/storage"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_files_access_point": knownvalue.ListSizeExact(0),
+							"session_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"mount_path": knownvalue.StringExact("/mnt/storage"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_removeFilesystem(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHarnessConfig_environment_FilesystemConfiguration_sessionStorage(rName, "/mnt/storage"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_files_access_point": knownvalue.ListSizeExact(0),
+							"session_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"mount_path": knownvalue.StringExact("/mnt/storage"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccHarnessConfig_environment_FilesystemConfiguration_vpcNoFilesystem(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{"memory"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreHarness_Environment_Network_updatePublicToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var harness awstypes.Harness
@@ -3437,6 +3569,44 @@ resource "aws_s3files_mount_target" "test" {
   security_groups = [aws_security_group.test.id]
 }
 `, rName, mountPath, bucketName))
+}
+
+func testAccHarnessConfig_environment_FilesystemConfiguration_vpcNoFilesystem(rName string) string {
+	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  environment {
+    agentcore_runtime_environment {
+      network_configuration {
+        network_mode = "VPC"
+        network_mode_config {
+          security_groups = [aws_security_group.test.id]
+          subnets         = aws_subnet.test[*].id
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+}
+`, rName))
 }
 
 func testAccHarnessConfig_environment_FilesystemConfiguration_efsAccessPoint(rName, mountPath string) string {
