@@ -42,6 +42,7 @@ import (
 	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -309,7 +310,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
-									"trigger_conditions": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute(ctx, framework.WithValidatorsAppend[triggerConditionsModel](triggerConditionsValidator{})),
+									"trigger_conditions_actual": framework.ResourceComputedListOfObjectsAttribute[triggerConditionsModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions"))),
 								},
 								Blocks: map[string]schema.Block{
 									"invocation_configuration": schema.ListNestedBlock{
@@ -330,6 +331,80 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 												"topic_arn": schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
+												},
+											},
+										},
+									},
+									"trigger_conditions": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.AtLeastOneOfChildren(
+													path.MatchRelative().AtName("message_based_trigger"),
+													path.MatchRelative().AtName("time_based_trigger"),
+													path.MatchRelative().AtName("token_based_trigger"),
+												),
+											},
+											Blocks: map[string]schema.Block{
+												"message_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[messageBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"message_count": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, 50),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
+												},
+												"time_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[timeBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"idle_session_timeout": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(10, 3000),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
+												},
+												"token_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[tokenBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"token_count": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(100, 500000),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -675,6 +750,7 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 		msgMemoryTransitionalState         = "Memory is in transitional state"
 		msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
 		msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
+		msgRoleValidTrustPolicy            = "Please provide a role with a valid trust policy"
 		msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
 	)
 	return func(err error) (bool, error) {
@@ -687,6 +763,7 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 
 		case errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategiesBeingModified),
 			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategyTransitionalState),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgRoleValidTrustPolicy),
 			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryTransitionalState):
 			return true, smarterr.NewError(err)
 		}
@@ -1376,7 +1453,8 @@ func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v 
 type selfManagedConfigurationModel struct {
 	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
 	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
-	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions" autoflex:"-"`
+	TriggerConditionsActual     fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions_actual" autoflex:"-"`
 }
 
 var (
@@ -1391,12 +1469,13 @@ func (m *selfManagedConfigurationModel) Flatten(ctx context.Context, v any) diag
 	alias := modelAlias(m)
 	switch t := v.(type) {
 	case awstypes.SelfManagedConfiguration:
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
 		if diags.HasError() {
 			return diags
 		}
 
 		m.TriggerConditions = fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
+		m.TriggerConditionsActual = fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
 		if t.TriggerConditions != nil {
 			var model triggerConditionsModel
 			smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.TriggerConditions))
@@ -1404,7 +1483,7 @@ func (m *selfManagedConfigurationModel) Flatten(ctx context.Context, v any) diag
 				return diags
 			}
 			var d diag.Diagnostics
-			m.TriggerConditions, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			m.TriggerConditionsActual, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 			smerr.AddEnrich(ctx, &diags, d)
 		}
 
@@ -1443,7 +1522,7 @@ func (m selfManagedConfigurationModel) expandToSelfManagedConfigurationInput(ctx
 	// To prevent infinite recursion...
 	type modelAlias selfManagedConfigurationModel
 	alias := modelAlias(m)
-	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -1465,7 +1544,7 @@ func (m selfManagedConfigurationModel) expandToModifySelfManagedConfiguration(ct
 	// To prevent infinite recursion...
 	type modelAlias selfManagedConfigurationModel
 	alias := modelAlias(m)
-	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r, fwflex.WithIgnoredFieldNames([]string{"TriggerConditions"})))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
 	if diags.HasError() {
 		return nil, diags
 	}

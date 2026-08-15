@@ -337,7 +337,8 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
-						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -387,6 +388,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 								TokenCount: types.Int32Value(100),
 							}),
 						}),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -857,7 +859,8 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
-						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -904,6 +907,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 							}),
 							TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
 						}),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -1359,7 +1363,8 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
-						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
 					}),
 					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
 				}),
@@ -1419,7 +1424,8 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 							PayloadDeliveryBucketName: types.StringValue("bucket001"),
 							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
 						}),
-						TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
 							MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
 								MessageCount: types.Int32Value(5),
 							}),
@@ -2462,7 +2468,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
 								"topic_arn":                    knownvalue.NotNull(),
 							})}),
-							"trigger_conditions": knownvalue.ListSizeExact(1),
+							"trigger_conditions":        knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListSizeExact(1),
 						})}),
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
 					})})),
@@ -2512,7 +2519,8 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
 								"topic_arn":                    knownvalue.NotNull(),
 							})}),
-							"trigger_conditions": knownvalue.ListSizeExact(1),
+							"trigger_conditions":        knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListSizeExact(1),
 						})}),
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
 					})})),
