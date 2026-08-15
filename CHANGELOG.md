@@ -1,4 +1,27 @@
-## 6.60.0 (Unreleased)
+## 6.61.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+* **New Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+
+ENHANCEMENTS:
+
+* data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` argument ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+
+BUG FIXES:
+
+* list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
+* list-resource/aws_bedrockagentcore_policy_engine: Prevents error when remote resource disappears during List ([#49478](https://github.com/hashicorp/terraform-provider-aws/issues/49478))
+* resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+
+## 6.60.0 (August 13, 2026)
 
 FEATURES:
 
@@ -9,6 +32,11 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_db_parameter_group: Add Resource Identity support ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+
+BUG FIXES:
+
+* resource/aws_bedrockagentcore_gateway_target: Prevent state inconsistencies caused by the service-managed policy session header ([#49447](https://github.com/hashicorp/terraform-provider-aws/issues/49447))
+* resource/aws_network_acl_rule: Fix `Missing Resource Identity After Read` errors. This fixes a regression introduced in [v6.59.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6590-august-12-2026) ([#49470](https://github.com/hashicorp/terraform-provider-aws/issues/49470))
 
 ## 6.59.0 (August 12, 2026)
 

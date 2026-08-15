@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.26.5
+go 1.26.6
 
 // Disable post-quantum X25519MLKEM768 key exchange mechanism
 // This causes errors with AWS Network Firewall
@@ -20,6 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.50.1
+	github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.42.5
@@ -100,6 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.5
+	github.com/aws/aws-sdk-go-v2/service/directoryservicedata v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.51.5
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.23.5
@@ -328,9 +330,9 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.70.0
 	go.opentelemetry.io/otel v1.45.0
-	golang.org/x/crypto v0.54.0
-	golang.org/x/text v0.40.0
-	golang.org/x/tools v0.48.0
+	golang.org/x/crypto v0.55.0
+	golang.org/x/text v0.41.0
+	golang.org/x/tools v0.49.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.7
 )
 
@@ -392,8 +394,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
-	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

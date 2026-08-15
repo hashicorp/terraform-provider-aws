@@ -17,7 +17,7 @@ Terraform resource for managing an AWS VPC Lattice Service Network or Service Ac
 ```terraform
 resource "aws_vpclattice_access_log_subscription" "example" {
   resource_identifier = aws_vpclattice_service_network.example.id
-  destination_arn     = aws_s3.bucket.arn
+  destination_arn     = aws_s3_bucket.bucket.arn
 }
 ```
 

@@ -197,7 +197,7 @@ EOT
 
 ### Use default EKS scraper configuration
 
-You can use the data source `aws_prometheus_scraper_configuration` to use a
+You can use the data source `aws_prometheus_default_scraper_configuration` to use a
 service managed scrape configuration.
 
 ```terraform
@@ -211,7 +211,7 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-  scrape_configuration = data.aws_prometheus_scraper_configuration.example.configuration
+  scrape_configuration = data.aws_prometheus_default_scraper_configuration.example.configuration
 
   source {
     eks {

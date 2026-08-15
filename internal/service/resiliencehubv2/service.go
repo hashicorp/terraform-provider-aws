@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -144,6 +145,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateServiceInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -158,7 +160,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 		return conn.CreateService(ctx, &input)
 	}, "Ensure the role exists and its trust policy allows access")
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -183,6 +185,7 @@ func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, re
 	arn := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	svc, err := findServiceByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -91,6 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -288,6 +290,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		account.ServicePackage(ctx),
 		acm.ServicePackage(ctx),
 		acmpca.ServicePackage(ctx),
+		agentregistry.ServicePackage(ctx),
 		amp.ServicePackage(ctx),
 		amplify.ServicePackage(ctx),
 		apigateway.ServicePackage(ctx),
@@ -365,6 +368,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		devopsagent.ServicePackage(ctx),
 		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
+		directoryservicedata.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),
 		dms.ServicePackage(ctx),
 		docdb.ServicePackage(ctx),

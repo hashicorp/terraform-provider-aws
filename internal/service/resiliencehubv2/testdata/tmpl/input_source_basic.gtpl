@@ -31,8 +31,6 @@ resource "aws_resiliencehubv2_service" "test" {
     invoker_role_name = aws_iam_role.test.name
   }
 
-{{- template "tags" . }}
-
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
 }
 
