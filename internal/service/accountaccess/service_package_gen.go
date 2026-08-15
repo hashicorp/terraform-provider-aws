@@ -41,6 +41,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newEntitlementResource,
+			TypeName: "aws_accountaccess_entitlement",
+			Name:     "Entitlement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_arn", true),
+				inttypes.StringIdentityAttribute("entitlement_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      entitlementImportID{},
+			},
+		},
 	}
 }
 
@@ -55,6 +69,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+		{
+			Factory:  newEntitlementResourceAsListResource,
+			TypeName: "aws_accountaccess_entitlement",
+			Name:     "Entitlement",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_arn", true),
+				inttypes.StringIdentityAttribute("entitlement_id", true),
+			}),
 		},
 	})
 }

@@ -3,5 +3,8 @@
 
 package accountaccess
 
-// ResourceApplication is exported for use in tests only.
-var ResourceApplication = newApplicationResource
+// Exports for use in tests only.
+var (
+	ResourceApplication = newApplicationResource
+	ResourceEntitlement = newEntitlementResource
+)
