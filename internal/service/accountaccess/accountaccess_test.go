@@ -40,6 +40,11 @@ func TestAccAccountAccess_serial(t *testing.T) {
 			"List_basic":           testAccAccountAccessEntitlement_List_basic,
 			"List_includeResource": testAccAccountAccessEntitlement_List_includeResource,
 		},
+		"EntitlementsDataSource": {
+			"byPrincipal": testAccAccountAccessEntitlementsDataSource_byPrincipal,
+			"byRole":      testAccAccountAccessEntitlementsDataSource_byRole,
+			"byAccount":   testAccAccountAccessEntitlementsDataSource_byAccount,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
