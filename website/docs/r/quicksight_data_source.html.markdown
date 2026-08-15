@@ -266,7 +266,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### rds Argument Reference
 
 * `database` - (Required) The database to which to connect.
-* `instance_id` - (Optional) The instance ID to which to connect.
+* `instance_id` - (Optional) Identifier of the Amazon RDS DB instance (the DB instance identifier, e.g. `my-database`) that QuickSight connects to.
 
 ### redshift Argument Reference
 

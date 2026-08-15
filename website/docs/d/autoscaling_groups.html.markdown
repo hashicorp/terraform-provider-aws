@@ -60,5 +60,5 @@ The `filter` block supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - List of the Autoscaling Groups Arns in the current region.
-* `id` - AWS Region.
+* `id` - AWS Region. This data source has no single underlying resource, so its ID is a synthetic value set to the current AWS Region.
 * `names` - List of the Autoscaling Groups in the current region.

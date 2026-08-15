@@ -307,7 +307,7 @@ Each of the `*_block_device` attributes control a portion of the EC2 Instance's 
 
 The `root_block_device` block supports the following:
 
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`. This default applies to the volume created and managed by this resource; changing it does not retroactively alter the deletion behavior of volumes that already exist or were attached outside of this configuration.
 * `encrypted` - (Optional) Whether to enable volume encryption. Defaults to `false`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
@@ -320,7 +320,7 @@ Modifying the `encrypted` or `kms_key_id` settings of the `root_block_device` re
 
 Each `ebs_block_device` block supports the following:
 
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`. This default applies to the volume created and managed by this resource; changing it does not retroactively alter the deletion behavior of volumes that already exist or were attached outside of this configuration.
 * `device_name` - (Required) Name of the device to mount.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume. Defaults to `false`. Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.

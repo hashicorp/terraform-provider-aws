@@ -330,7 +330,10 @@ storage_type of "io1" or "io2". Can only be set when `storage_type` is `"io1"`, 
 Cannot be specified for gp3 storage if the `allocated_storage` value is below a per-`engine` threshold.
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
-encrypted replica, set this to the destination KMS ARN.
+encrypted replica, set this to the destination KMS ARN. Specify the key ARN or
+key ID; passing a KMS **alias** (for example `alias/my-key`) may appear to apply
+successfully but will show a permanent diff and force replacement on subsequent
+plans because AWS resolves and returns the underlying key ARN.
 * `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
     * RDS for MariaDB: `general-public-license`
     * RDS for Microsoft SQL Server: `license-included`
