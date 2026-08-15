@@ -37,6 +37,10 @@ func TestAccAccountAccess_serial(t *testing.T) {
 			"List_basic":           testAccAccountAccessApplication_List_basic,
 			"List_includeResource": testAccAccountAccessApplication_List_includeResource,
 		},
+		"ApplicationDataSource": {
+			"byInstance": testAccAccountAccessApplicationDataSource_byInstance,
+			"byARN":      testAccAccountAccessApplicationDataSource_byARN,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
