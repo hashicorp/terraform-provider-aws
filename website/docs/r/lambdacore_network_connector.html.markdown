@@ -19,9 +19,11 @@ resource "aws_lambdacore_network_connector" "example" {
   name          = "example"
   operator_role = aws_iam_role.example.arn
 
-  vpc_egress_configuration {
-    subnet_ids         = aws_subnet.example[*].id
-    security_group_ids = [aws_security_group.example.id]
+  configuration {
+    vpc_egress_configuration {
+      subnet_ids         = aws_subnet.example[*].id
+      security_group_ids = [aws_security_group.example.id]
+    }
   }
 }
 
@@ -78,27 +80,33 @@ resource "aws_iam_role_policy" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the network connector, unique within the account and Region. Changing this forces a new resource.
-* `vpc_egress_configuration` - (Required) Configuration for routing egress traffic through a VPC. [See below](#vpc_egress_configuration).
+* `configuration` - (Required) Network configuration of the connector. See [`configuration` Block](#configuration-block) below.
 
 The following arguments are optional:
 
 * `operator_role` - (Optional) ARN of the IAM role that the network connector service assumes to manage elastic network interfaces in your VPC. The role must trust `network-connectors.lambda.amazonaws.com` and allow `ec2:CreateNetworkInterface`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
 
-### vpc_egress_configuration
+### `configuration` Block
 
-* `subnet_ids` - (Required) Set of subnet IDs where the connector provisions its ENIs.
-* `security_group_ids` - (Required) Set of security group IDs applied to the connector's ENIs.
-* `network_protocol` - (Optional) Network protocol. Valid values: `IPv4`, `DualStack`.
+The `configuration` block supports the following:
+
+* `vpc_egress_configuration` - (Required) Configuration for routing egress traffic through a VPC. See [`vpc_egress_configuration` Block](#vpc_egress_configuration-block) below.
+
+### `vpc_egress_configuration` Block
+
+The `vpc_egress_configuration` block supports the following:
+
 * `associated_compute_resource_types` - (Optional) Compute resource types that may use this connector. Valid values: `MicroVm`.
+* `network_protocol` - (Optional) Network protocol. Valid values: `IPv4`, `DualStack`.
+* `security_group_ids` - (Required) Set of security group IDs applied to the connector's ENIs.
+* `subnet_ids` - (Required) Set of subnet IDs where the connector provisions its ENIs.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network connector.
-* `state` - Current state of the network connector (for example, `PENDING`, `ACTIVE`, `FAILED`).
-* `state_reason` - Human-readable explanation of the current state, when available.
 
 ## Timeouts
 
@@ -110,6 +118,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambdacore_network_connector.example
+  identity = {
+    "arn" = "arn:aws:lambda:us-east-1:123456789012:network-connector:example"
+  }
+}
+
+resource "aws_lambdacore_network_connector" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the network connector.
+
 In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
 
 ```terraform
@@ -119,6 +148,15 @@ import {
   identity = {
     arn = "arn:aws:lambda:us-east-1:123456789012:network-connector:example"
   }
+}
+```
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Network Connectors using the `arn`. For example:
+
+```terraform
+import {
+  to = aws_lambdacore_network_connector.example
+  id = "arn:aws:lambda:us-east-1:123456789012:network-connector:example"
 }
 ```
 

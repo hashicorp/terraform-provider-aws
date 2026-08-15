@@ -5,7 +5,7 @@ package lambdacore
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -14,30 +14,29 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdacore/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_lambdacore_network_connector", name="Network Connector")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdacore;lambdacore.GetNetworkConnectorOutput")
@@ -52,10 +51,6 @@ func newNetworkConnectorResource(_ context.Context) (resource.ResourceWithConfig
 	return r, nil
 }
 
-const (
-	ResNameNetworkConnector = "Network Connector"
-)
-
 type networkConnectorResource struct {
 	framework.ResourceWithModel[networkConnectorResourceModel]
 	framework.WithTimeouts
@@ -68,6 +63,9 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 140),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -76,43 +74,52 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			names.AttrState: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.NetworkConnectorState](),
-				Computed:   true,
-			},
-			"state_reason": schema.StringAttribute{
-				Computed: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
-			"vpc_egress_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcEgressConfigurationModel](ctx),
+			"configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConnectorConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"associated_compute_resource_types": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringEnumType[awstypes.ComputeResourceType](),
-							Optional:    true,
-							Computed:    true,
-							ElementType: types.StringType,
-						},
-						"network_protocol": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.NetworkProtocol](),
-							Optional:   true,
-							Computed:   true,
-						},
-						names.AttrSecurityGroupIDs: schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
-						},
-						names.AttrSubnetIDs: schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("vpc_egress_configuration"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"vpc_egress_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[networkConnectorVPCEgressConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"associated_compute_resource_types": schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.ComputeResourceType](),
+										Optional:    true,
+										Computed:    true,
+										ElementType: types.StringType,
+									},
+									"network_protocol": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.NetworkProtocol](),
+										Optional:   true,
+										Computed:   true,
+									},
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										Required:    true,
+										ElementType: types.StringType,
+									},
+									names.AttrSubnetIDs: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										Required:    true,
+										ElementType: types.StringType,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -135,38 +142,30 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input lambdacore.CreateNetworkConnectorInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	input.ClientToken = aws.String(create.UniqueId(ctx))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	out, err := conn.CreateNetworkConnector(ctx, &input)
 	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
+		return
+	}
+
+	// Set values for unknowns.
+	arn := aws.ToString(out.Arn)
+	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
+
+	if _, err := waitNetworkConnectorCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
-	outWait, err := waitNetworkConnectorCreated(ctx, conn, plan.Arn.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -182,18 +181,19 @@ func (r *networkConnectorResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findNetworkConnectorByARN(ctx, conn, state.Arn.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	out, err := findNetworkConnectorByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Arn.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -211,43 +211,36 @@ func (r *networkConnectorResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
+		arn := fwflex.StringValueFromFramework(ctx, plan.ARN)
 		var input lambdacore.UpdateNetworkConnectorInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		input.Identifier = plan.Arn.ValueStringPointer()
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		input.Identifier = aws.String(arn)
 
-		out, err := conn.UpdateNetworkConnector(ctx, &input)
+		_, err := conn.UpdateNetworkConnector(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Arn.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Arn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		outWait, err := waitNetworkConnectorUpdated(ctx, conn, plan.Arn.ValueString(), updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Arn.String())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
-		if resp.Diagnostics.HasError() {
+		if _, err := waitNetworkConnectorUpdated(ctx, conn, arn, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
@@ -260,26 +253,35 @@ func (r *networkConnectorResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 	input := lambdacore.DeleteNetworkConnectorInput{
-		Identifier: state.Arn.ValueStringPointer(),
+		Identifier: aws.String(arn),
 	}
 
 	_, err := conn.DeleteNetworkConnector(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Arn.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNetworkConnectorDeleted(ctx, conn, state.Arn.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Arn.ValueString())
+	if _, err := waitNetworkConnectorDeleted(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
+}
+
+func (r *networkConnectorResource) flatten(ctx context.Context, connector *lambdacore.GetNetworkConnectorOutput, data *networkConnectorResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, connector, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
 }
 
 func waitNetworkConnectorCreated(ctx context.Context, conn *lambdacore.Client, arn string, timeout time.Duration) (*lambdacore.GetNetworkConnectorOutput, error) {
@@ -288,12 +290,12 @@ func waitNetworkConnectorCreated(ctx context.Context, conn *lambdacore.Client, a
 		Target:                    enum.Slice(awstypes.NetworkConnectorStateActive),
 		Refresh:                   statusNetworkConnector(conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
+		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -306,12 +308,12 @@ func waitNetworkConnectorUpdated(ctx context.Context, conn *lambdacore.Client, a
 		Target:                    enum.Slice(awstypes.NetworkConnectorStateActive),
 		Refresh:                   statusNetworkConnector(conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
+		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -328,6 +330,7 @@ func waitNetworkConnectorDeleted(ctx context.Context, conn *lambdacore.Client, a
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
+		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -354,14 +357,19 @@ func findNetworkConnectorByARN(ctx context.Context, conn *lambdacore.Client, arn
 		Identifier: aws.String(arn),
 	}
 
-	out, err := conn.GetNetworkConnector(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
+	return findNetworkConnector(ctx, conn, &input)
+}
 
+func findNetworkConnector(ctx context.Context, conn *lambdacore.Client, input *lambdacore.GetNetworkConnectorInput) (*lambdacore.GetNetworkConnectorOutput, error) {
+	out, err := conn.GetNetworkConnector(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
@@ -374,72 +382,57 @@ func findNetworkConnectorByARN(ctx context.Context, conn *lambdacore.Client, arn
 
 type networkConnectorResourceModel struct {
 	framework.WithRegionModel
-	Arn           types.String                                                 `tfsdk:"arn"`
-	Configuration fwtypes.ListNestedObjectValueOf[vpcEgressConfigurationModel] `tfsdk:"vpc_egress_configuration"`
-	Name          types.String                                                 `tfsdk:"name"`
-	OperatorRole  fwtypes.ARN                                                  `tfsdk:"operator_role"`
-	State         fwtypes.StringEnum[awstypes.NetworkConnectorState]           `tfsdk:"state"`
-	StateReason   types.String                                                 `tfsdk:"state_reason"`
-	Timeouts      timeouts.Value                                               `tfsdk:"timeouts"`
+	ARN           types.String                                                        `tfsdk:"arn"`
+	Configuration fwtypes.ListNestedObjectValueOf[networkConnectorConfigurationModel] `tfsdk:"configuration"`
+	Name          types.String                                                        `tfsdk:"name"`
+	OperatorRole  fwtypes.ARN                                                         `tfsdk:"operator_role"`
+	Timeouts      timeouts.Value                                                      `tfsdk:"timeouts"`
 }
 
-type vpcEgressConfigurationModel struct {
+type networkConnectorConfigurationModel struct {
+	VPCEgressConfiguration fwtypes.ListNestedObjectValueOf[networkConnectorVPCEgressConfigurationModel] `tfsdk:"vpc_egress_configuration"`
+}
+
+var (
+	_ fwflex.Expander  = networkConnectorConfigurationModel{}
+	_ fwflex.Flattener = &networkConnectorConfigurationModel{}
+)
+
+func (m *networkConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.NetworkConnectorConfigurationMemberVpcEgressConfiguration:
+		var data networkConnectorVPCEgressConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.VPCEgressConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("networkConnectorConfigurationModel.Flatten: %T", v))
+	}
+	return diags
+}
+
+func (m networkConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.VPCEgressConfiguration.IsNull():
+		data, d := m.VPCEgressConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.NetworkConnectorConfigurationMemberVpcEgressConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type networkConnectorVPCEgressConfigurationModel struct {
 	AssociatedComputeResourceTypes fwtypes.ListOfStringEnum[awstypes.ComputeResourceType] `tfsdk:"associated_compute_resource_types"`
 	NetworkProtocol                fwtypes.StringEnum[awstypes.NetworkProtocol]           `tfsdk:"network_protocol"`
 	SecurityGroupIDs               fwtypes.SetOfString                                    `tfsdk:"security_group_ids"`
 	SubnetIDs                      fwtypes.SetOfString                                    `tfsdk:"subnet_ids"`
-}
-
-var _ flex.Expander = vpcEgressConfigurationModel{}
-
-// Configuration is a tagged union in the service API; VpcEgressConfiguration is
-// its only member today, so the resource models it as a flat block and this
-// expander wraps it back into the union member.
-func (m vpcEgressConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	var value awstypes.NetworkConnectorVpcEgressConfiguration
-	diags.Append(flex.Expand(ctx, m, &value)...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return &awstypes.NetworkConnectorConfigurationMemberVpcEgressConfiguration{
-		Value: value,
-	}, diags
-}
-
-var _ flex.Flattener = &vpcEgressConfigurationModel{}
-
-func (m *vpcEgressConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch t := v.(type) {
-	case awstypes.NetworkConnectorConfigurationMemberVpcEgressConfiguration:
-		diags.Append(flex.Flatten(ctx, t.Value, m)...)
-	}
-
-	return diags
-}
-
-func sweepNetworkConnectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdacore.ListNetworkConnectorsInput{}
-	conn := client.LambdaCoreClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := lambdacore.NewListNetworkConnectorsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.NetworkConnectors {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newNetworkConnectorResource, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

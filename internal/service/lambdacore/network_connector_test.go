@@ -5,7 +5,6 @@ package lambdacore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdacore "github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,11 +45,17 @@ func TestAccLambdaCoreNetworkConnector_basic(t *testing.T) {
 					testAccCheckNetworkConnectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.NetworkConnectorStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "vpc_egress_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_egress_configuration.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_egress_configuration.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.vpc_egress_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.vpc_egress_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.vpc_egress_configuration.0.security_group_ids.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`network-connector:.+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -113,39 +117,37 @@ func testAccCheckNetworkConnectorDestroy(ctx context.Context, t *testing.T) reso
 			}
 
 			_, err := tflambdacore.FindNetworkConnectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.LambdaCore, create.ErrActionCheckingDestroyed, tflambdacore.ResNameNetworkConnector, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.LambdaCore, create.ErrActionCheckingDestroyed, tflambdacore.ResNameNetworkConnector, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Lambda Core Network Connector %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckNetworkConnectorExists(ctx context.Context, t *testing.T, name string, v *lambdacore.GetNetworkConnectorOutput) resource.TestCheckFunc {
+func testAccCheckNetworkConnectorExists(ctx context.Context, t *testing.T, n string, v *lambdacore.GetNetworkConnectorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.LambdaCore, create.ErrActionCheckingExistence, tflambdacore.ResNameNetworkConnector, name, errors.New("not found"))
-		}
-
-		arn := rs.Primary.Attributes[names.AttrARN]
-		if arn == "" {
-			return create.Error(names.LambdaCore, create.ErrActionCheckingExistence, tflambdacore.ResNameNetworkConnector, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaCoreClient(ctx)
 
-		out, err := tflambdacore.FindNetworkConnectorByARN(ctx, conn, arn)
+		output, err := tflambdacore.FindNetworkConnectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
-			return create.Error(names.LambdaCore, create.ErrActionCheckingExistence, tflambdacore.ResNameNetworkConnector, rs.Primary.ID, err)
+			return err
 		}
-		*v = *out
+
+		*v = *output
 
 		return nil
 	}
@@ -243,9 +245,11 @@ resource "aws_lambdacore_network_connector" "test" {
   name          = %[1]q
   operator_role = aws_iam_role.test.arn
 
-  vpc_egress_configuration {
-    subnet_ids         = aws_subnet.test[*].id
-    security_group_ids = [aws_security_group.test.id]
+  configuration {
+    vpc_egress_configuration {
+      subnet_ids         = aws_subnet.test[*].id
+      security_group_ids = [aws_security_group.test.id]
+    }
   }
 
   depends_on = [aws_iam_role_policy.test]
