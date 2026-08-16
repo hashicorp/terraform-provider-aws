@@ -256,6 +256,7 @@ func RegisterSweepers() {
 		"aws_grafana_workspace",
 		"aws_iot_topic_rule_destination",
 		"aws_lambda_function",
+		"aws_lambdacore_network_connector",
 		"aws_lb",
 		"aws_memorydb_subnet_group",
 		"aws_mq_broker",

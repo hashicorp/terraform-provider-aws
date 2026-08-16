@@ -298,7 +298,9 @@ func waitNetworkConnectorCreated(ctx context.Context, conn *lambdacore.Client, a
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
-		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
+		if stateReason := aws.ToString(out.StateReason); stateReason != "" {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, stateReason))
+		}
 		return out, smarterr.NewError(err)
 	}
 
@@ -307,16 +309,18 @@ func waitNetworkConnectorCreated(ctx context.Context, conn *lambdacore.Client, a
 
 func waitNetworkConnectorUpdated(ctx context.Context, conn *lambdacore.Client, arn string, timeout time.Duration) (*lambdacore.GetNetworkConnectorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.NetworkConnectorStatePending),
-		Target:                    enum.Slice(awstypes.NetworkConnectorStateActive),
-		Refresh:                   statusNetworkConnector(conn, arn),
+		Pending:                   enum.Slice(awstypes.NetworkConnectorLastUpdateStatusInProgress),
+		Target:                    enum.Slice(awstypes.NetworkConnectorLastUpdateStatusSuccessful),
+		Refresh:                   lastUpdateStatusNetworkConnector(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
-		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
+		if stateReason := aws.ToString(out.LastUpdateStatusReason); stateReason != "" {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", out.LastUpdateStatusReasonCode, stateReason))
+		}
 		return out, smarterr.NewError(err)
 	}
 
@@ -333,11 +337,28 @@ func waitNetworkConnectorDeleted(ctx context.Context, conn *lambdacore.Client, a
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdacore.GetNetworkConnectorOutput); ok {
-		retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, aws.ToString(out.StateReason)))
+		if stateReason := aws.ToString(out.StateReason); stateReason != "" {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", out.StateReasonCode, stateReason))
+		}
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
+}
+
+func lastUpdateStatusNetworkConnector(conn *lambdacore.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findNetworkConnectorByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.LastUpdateStatus), nil
+	}
 }
 
 func statusNetworkConnector(conn *lambdacore.Client, arn string) retry.StateRefreshFunc {
