@@ -107,9 +107,6 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 func policyStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[policyStatementModel](ctx),
-		Validators: []validator.List{
-			listvalidator.SizeAtLeast(1),
-		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrAction: schema.StringAttribute{
@@ -408,6 +405,10 @@ func (r *trafficPolicyResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
+	if shouldSendEmptyPolicyStatements(data.PolicyStatements) {
+		input.PolicyStatements = []awstypes.PolicyStatement{}
+	}
+
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
@@ -429,6 +430,8 @@ func (r *trafficPolicyResource) Create(ctx context.Context, req resource.CreateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	normalizePolicyStatements(ctx, &data, trafficPolicyOut.PolicyStatements)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -460,6 +463,8 @@ func (r *trafficPolicyResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
+	normalizePolicyStatements(ctx, &state, out.PolicyStatements)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -485,6 +490,11 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		if shouldSendEmptyPolicyStatements(plan.PolicyStatements) {
+			input.PolicyStatements = []awstypes.PolicyStatement{}
+		}
+
 		_, err := conn.UpdateTrafficPolicy(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
@@ -503,7 +513,19 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	normalizePolicyStatements(ctx, &plan, out.PolicyStatements)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func shouldSendEmptyPolicyStatements(v fwtypes.ListNestedObjectValueOf[policyStatementModel]) bool {
+	return v.IsNull() || v.IsUnknown() || len(v.Elements()) == 0
+}
+
+func normalizePolicyStatements(ctx context.Context, data *trafficPolicyResourceModel, policyStatements []awstypes.PolicyStatement) {
+	if len(policyStatements) == 0 {
+		data.PolicyStatements = fwtypes.NewListNestedObjectValueOfEmpty[policyStatementModel](ctx)
+	}
 }
 
 func (r *trafficPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
