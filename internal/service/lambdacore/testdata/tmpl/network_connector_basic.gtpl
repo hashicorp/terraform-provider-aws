@@ -11,6 +11,8 @@ resource "aws_lambdacore_network_connector" "test" {
       security_group_ids                = [aws_security_group.test.id]
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 {{ template "acctest.ConfigVPCWithSubnets" 2 }}

@@ -13,6 +13,8 @@ resource "aws_lambdacore_network_connector" "test" {
       security_group_ids                = slice(aws_security_group.test[*].id, 0, var.sg_count)
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 # acctest.ConfigVPCWithSubnets(rName, 2)
