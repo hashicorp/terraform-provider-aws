@@ -151,9 +151,20 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambdacore.CreateNetworkConnectorOutput, *awstypes.InvalidParameterValueException](ctx, propagationTimeout, func(ctx context.Context) (*lambdacore.CreateNetworkConnectorOutput, error) {
-		return conn.CreateNetworkConnector(ctx, &input)
-	}, "The service is unable to assume")
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*lambdacore.CreateNetworkConnectorOutput, error) {
+			return conn.CreateNetworkConnector(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "The service is unable to assume the provided NetworkConnectorOperatorRole") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Encountered unauthorized operation while calling EC2 due to invalid ConnectorOperatorRole permissions") {
+				return true, err
+			}
+			return false, err
+		},
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
@@ -230,9 +241,20 @@ func (r *networkConnectorResource) Update(ctx context.Context, req resource.Upda
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.Identifier = aws.String(arn)
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*lambdacore.UpdateNetworkConnectorOutput, *awstypes.InvalidParameterValueException](ctx, propagationTimeout, func(ctx context.Context) (*lambdacore.UpdateNetworkConnectorOutput, error) {
-			return conn.UpdateNetworkConnector(ctx, &input)
-		}, "The service is unable to assume")
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (*lambdacore.UpdateNetworkConnectorOutput, error) {
+				return conn.UpdateNetworkConnector(ctx, &input)
+			},
+			func(err error) (bool, error) {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "The service is unable to assume the provided NetworkConnectorOperatorRole") {
+					return true, err
+				}
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Encountered unauthorized operation while calling EC2 due to invalid ConnectorOperatorRole permissions") {
+					return true, err
+				}
+				return false, err
+			},
+		)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
