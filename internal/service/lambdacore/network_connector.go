@@ -76,7 +76,7 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConnectorConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
