@@ -208,8 +208,12 @@ func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
-				PlanOnly: true,
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -232,7 +236,7 @@ func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
 				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -241,8 +245,12 @@ func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
-				PlanOnly: true,
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

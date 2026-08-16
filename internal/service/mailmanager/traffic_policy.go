@@ -519,7 +519,7 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 }
 
 func shouldSendEmptyPolicyStatements(v fwtypes.ListNestedObjectValueOf[policyStatementModel]) bool {
-	return v.IsNull() || v.IsUnknown() || len(v.Elements()) == 0
+	return v.IsNull() || v.IsUnknown() || v.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0
 }
 
 func normalizePolicyStatements(ctx context.Context, data *trafficPolicyResourceModel, policyStatements []awstypes.PolicyStatement) {
