@@ -85,6 +85,7 @@ The following arguments are optional:
 * `disk_iops_configuration` - (Optional) SSD IOPS configuration for the Amazon FSx for Windows File Server file system. See [`disk_iops_configuration` Block](#disk_iops_configuration-block) for details.
 * `final_backup_tags` - (Optional) Map of tags to apply to the file system's final backup.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest. Defaults to an AWS managed KMS Key.
+* `network_type` - (Optional) Network type. Valid values are `IPV4` and `DUAL`. Default value is `IPV4`.
 * `preferred_subnet_id` - (Optional) Subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_ids` - (Optional) List of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
