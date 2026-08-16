@@ -5,12 +5,14 @@ resource "aws_lambdacore_network_connector" "test" {
   name          = var.rName
   operator_role = aws_iam_role.test.arn
 
-  vpc_egress_configuration {
-    subnet_ids         = aws_subnet.test[*].id
-    security_group_ids = [aws_security_group.test.id]
+  configuration {
+    vpc_egress_configuration {
+      associated_compute_resource_types = ["MicroVm"]
+      network_protocol                  = "IPv4"
+      subnet_ids                        = aws_subnet.test[*].id
+      security_group_ids                = [aws_security_group.test.id]
+    }
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 
 # acctest.ConfigVPCWithSubnets(rName, 2)

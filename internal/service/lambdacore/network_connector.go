@@ -72,7 +72,7 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"operator_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -99,8 +99,7 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 								Attributes: map[string]schema.Attribute{
 									"associated_compute_resource_types": schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringEnumType[awstypes.ComputeResourceType](),
-										Optional:    true,
-										Computed:    true,
+										Required:    true,
 										ElementType: types.StringType,
 									},
 									"network_protocol": schema.StringAttribute{
@@ -152,7 +151,9 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	out, err := conn.CreateNetworkConnector(ctx, &input)
+	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambdacore.CreateNetworkConnectorOutput, *awstypes.InvalidParameterValueException](ctx, propagationTimeout, func(ctx context.Context) (*lambdacore.CreateNetworkConnectorOutput, error) {
+		return conn.CreateNetworkConnector(ctx, &input)
+	}, "The service is unable to assume")
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
@@ -229,7 +230,9 @@ func (r *networkConnectorResource) Update(ctx context.Context, req resource.Upda
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.Identifier = aws.String(arn)
 
-		_, err := conn.UpdateNetworkConnector(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*lambdacore.UpdateNetworkConnectorOutput, *awstypes.InvalidParameterValueException](ctx, propagationTimeout, func(ctx context.Context) (*lambdacore.UpdateNetworkConnectorOutput, error) {
+			return conn.UpdateNetworkConnector(ctx, &input)
+		}, "The service is unable to assume")
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return

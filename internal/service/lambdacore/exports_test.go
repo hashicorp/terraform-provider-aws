@@ -5,6 +5,7 @@ package lambdacore
 
 // Exports for use in tests only.
 var (
-	ResourceNetworkConnector  = newNetworkConnectorResource
+	ResourceNetworkConnector = newNetworkConnectorResource
+
 	FindNetworkConnectorByARN = findNetworkConnectorByARN
 )
