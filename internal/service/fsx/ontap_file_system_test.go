@@ -1439,7 +1439,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test[0].id
 
-  network_type = %[1]q 
+  network_type = "%[1]s"
 }
 `, networkType))
 }
