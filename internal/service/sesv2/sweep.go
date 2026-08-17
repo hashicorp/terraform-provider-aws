@@ -17,6 +17,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_sesv2_configuration_set", sweepConfigurationSets)
 	awsv2.Register("aws_sesv2_contact_list", sweepContactLists)
+	awsv2.Register("aws_sesv2_multi_region_endpoint", sweepMultiRegionEndpoints)
 	awsv2.Register("aws_sesv2_tenant", sweepTenants)
 }
 
