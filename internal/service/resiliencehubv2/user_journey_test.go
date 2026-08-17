@@ -115,6 +115,61 @@ func TestAccResilienceHubV2UserJourney_disappears(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubV2UserJourney_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var uj awstypes.UserJourney
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_user_journey.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserJourneyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/UserJourney/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("desc1"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserJourneyExists(ctx, t, resourceName, &uj),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/UserJourney/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("desc2"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserJourneyExists(ctx, t, resourceName, &uj),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserJourneyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
