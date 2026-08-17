@@ -255,7 +255,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 			_, err = emptyDirectoryBucket(ctx, conn, bucket)
 
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", bucket), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", data.Bucket.String()), err.Error())
 
 				return
 			}
@@ -269,7 +269,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Directory Bucket (%s)", bucket), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Directory Bucket (%s)", data.Bucket.String()), err.Error())
 
 		return
 	}
