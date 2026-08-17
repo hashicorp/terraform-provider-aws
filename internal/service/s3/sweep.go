@@ -242,7 +242,7 @@ func sweepDirectoryBuckets(ctx context.Context, client *conns.AWSClient) ([]swee
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(bucket.Name)),
+				framework.NewAttribute(names.AttrBucket, aws.ToString(bucket.Name)),
 			))
 		}
 	}
