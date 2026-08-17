@@ -23,7 +23,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	engine := "mysql"
 	licenseModel := "general-public-license"
-	storageType := "standard"
+	storageType := "gp2"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
@@ -529,7 +529,7 @@ data "aws_rds_engine_version" "default" {
 data "aws_rds_orderable_db_instance" "test" {
   engine        = data.aws_rds_engine_version.default.engine
   license_model = "general-public-license"
-  storage_type  = "standard"
+  storage_type  = "gp2"
 
   preferred_engine_versions = [
     "18.42.32",
@@ -579,7 +579,7 @@ data "aws_rds_engine_version" "default" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                       = data.aws_rds_engine_version.default.engine
   license_model                = "general-public-license"
-  storage_type                 = "standard"
+  storage_type                 = "gp2"
   supports_enhanced_monitoring = true
 
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
@@ -678,7 +678,7 @@ data "aws_rds_engine_version" "default" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                               = data.aws_rds_engine_version.default.engine
   license_model                        = "general-public-license"
-  storage_type                         = "standard"
+  storage_type                         = "gp2"
   supports_iam_database_authentication = true
 
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
@@ -713,7 +713,7 @@ data "aws_rds_engine_version" "default" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                           = data.aws_rds_engine_version.default.engine
   license_model                    = "postgresql-license"
-  storage_type                     = "standard"
+  storage_type                     = "gp2"
   supports_kerberos_authentication = true
 
   preferred_engine_versions  = ["14.1", "13.5", data.aws_rds_engine_version.default.version]
@@ -765,7 +765,7 @@ data "aws_rds_engine_version" "default" {
 data "aws_rds_orderable_db_instance" "test" {
   engine                      = data.aws_rds_engine_version.default.engine
   license_model               = "general-public-license"
-  storage_type                = "standard"
+  storage_type                = "gp2"
   supports_storage_encryption = true
 
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]

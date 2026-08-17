@@ -36,7 +36,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
   preferred_instance_classes = ["db.t4g.micro"]
 }
