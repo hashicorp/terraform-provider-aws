@@ -34,7 +34,9 @@ func RegisterSweepers() {
 		"aws_s3files_file_system",
 	)
 
-	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)
+	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets,
+		"aws_s3_object_directory_bucket",
+	)
 
 	awsv2.Register("aws_s3_object", sweepObjects)
 
