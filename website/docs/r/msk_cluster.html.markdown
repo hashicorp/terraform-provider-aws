@@ -315,6 +315,7 @@ This resource supports the following arguments:
 ### `logging_info` Block
 
 * `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [`broker_logs` Block](#broker_logs-block) below.
+* `authorizer_logs` - (Optional) Configuration block for Authorizer Logs settings.
 
 ### `broker_logs` Block
 
@@ -337,6 +338,12 @@ This resource supports the following arguments:
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Whether to enable or disable streaming broker logs to S3.
 * `prefix` - (Optional) Prefix to append to the folder name.
+
+### `authorizer_logs` Block
+
+* `cloudwatch_logs` - (Optional) Configuration block for CloudWatch Logs settings.
+* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings.
+* `s3` - (Optional) Configuration block for S3 settings.
 
 ### `rebalancing` Block
 
