@@ -514,9 +514,8 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					privateIPsToUnassign := secondaryPrivateIPs[:removeCount]
 
 					input := &ec2.UnassignPrivateNatGatewayAddressInput{
-						NatGatewayId:            aws.String(d.Id()),
-						PrivateIpAddresses:      flex.ExpandStringValueList(privateIPsToUnassign),
-						MaxDrainDurationSeconds: aws.Int32(50),
+						NatGatewayId:       aws.String(d.Id()),
+						PrivateIpAddresses: flex.ExpandStringValueList(privateIPsToUnassign),
 					}
 
 					_, err := conn.UnassignPrivateNatGatewayAddress(ctx, input)
