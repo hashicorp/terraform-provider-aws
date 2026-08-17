@@ -34,6 +34,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// planTierFree is the only plan tier whose service-side ApprovalMode default
+// is IMMEDIATE (all paid tiers default to MANUAL). The API models PlanTier as
+// a plain string, not an enum.
+const planTierFree = "FREE"
+
 // @FrameworkResource("aws_pricingplanmanager_subscription", name="Subscription")
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
@@ -152,7 +157,10 @@ func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	manualApproval := plan.ApprovalMode.ValueEnum() == awstypes.ApprovalModeManual
+	// The service-side default for ApprovalMode is MANUAL, except for FREE
+	// tier subscriptions where it is IMMEDIATE.
+	manualApproval := plan.ApprovalMode.ValueEnum() == awstypes.ApprovalModeManual ||
+		(plan.ApprovalMode.IsNull() && plan.PlanTier.ValueString() != planTierFree)
 	output, err := waitSubscriptionCreated(ctx, conn, arn, manualApproval, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
@@ -450,10 +458,10 @@ func statusSubscription(conn *pricingplanmanager.Client, arn string) retry.State
 }
 
 // waitSubscriptionCreated waits for a new subscription to become usable. A
-// paid subscription created with MANUAL approval mode parks in
-// PENDING_APPROVAL until ApprovePaidSubscription is called, so that status is
-// terminal; with IMMEDIATE approval, paid subscriptions pass through
-// PENDING_APPROVAL before being auto-approved.
+// paid subscription created with MANUAL approval mode (the service default
+// for paid tiers) parks in PENDING_APPROVAL until ApprovePaidSubscription is
+// called, so that status is terminal; with IMMEDIATE approval, paid
+// subscriptions pass through PENDING_APPROVAL before being auto-approved.
 func waitSubscriptionCreated(ctx context.Context, conn *pricingplanmanager.Client, arn string, manualApproval bool, timeout time.Duration) (*pricingplanmanager.GetSubscriptionOutput, error) {
 	pending := enum.Slice(awstypes.StatusSyncInProgress)
 	target := enum.Slice(awstypes.StatusActive)
