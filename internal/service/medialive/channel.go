@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_medialive_channel", name="Channel")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("id")
+// @IdentityAttribute("channel_id", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
 // @Testing(importIgnore="start_channel")
 // @Testing(preIdentityVersion="v6.60.0")

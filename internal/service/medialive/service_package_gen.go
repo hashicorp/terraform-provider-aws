@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("channel_id", true), inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
