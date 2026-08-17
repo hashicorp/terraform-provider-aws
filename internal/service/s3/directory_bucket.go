@@ -243,16 +243,15 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	input := s3.DeleteBucketInput{
-		Bucket: aws.String(bucket),
+		Bucket: data.Bucket.ValueStringPointer(),
 	}
 	_, err := conn.DeleteBucket(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if data.ForceDestroy.ValueBool() {
 			// Empty the bucket and try again.
-			_, err = emptyDirectoryBucket(ctx, conn, bucket)
+			_, err = emptyDirectoryBucket(ctx, conn, data.Bucket.ValueString())
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", data.Bucket.String()), err.Error())
