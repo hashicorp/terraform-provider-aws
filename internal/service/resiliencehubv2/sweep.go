@@ -17,11 +17,18 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_resiliencehubv2_assertion", sweepAssertions)
 	awsv2.Register("aws_resiliencehubv2_input_source", sweepInputSources)
+	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies,
+		"aws_resiliencehubv2_service",
+	)
+	awsv2.Register("aws_resiliencehubv2_service", sweepServices,
+		"aws_resiliencehubv2_assertion",
+		"aws_resiliencehubv2_input_source",
+		"aws_resiliencehubv2_service_function",
+	)
 	awsv2.Register("aws_resiliencehubv2_service_function", sweepServiceFunctions)
-	awsv2.Register("aws_resiliencehubv2_policy", sweepPolicies, "aws_resiliencehubv2_service")
 	awsv2.Register("aws_resiliencehubv2_system", sweepSystems)
-	awsv2.Register("aws_resiliencehubv2_service", sweepServices, "aws_resiliencehubv2_input_source", "aws_resiliencehubv2_service_function")
 }
 
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -157,6 +164,44 @@ func sweepServiceFunctions(ctx context.Context, client *conns.AWSClient) ([]swee
 					sweepResources = append(sweepResources, framework.NewSweepResource(newServiceFunctionResource, client,
 						framework.NewAttribute("service_arn", serviceARN),
 						framework.NewAttribute("service_function_id", aws.ToString(v.ServiceFunctionId)),
+					))
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAssertions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ResilienceHubV2Client(ctx)
+	var input resiliencehubv2.ListServicesInput
+	var sweepResources []sweep.Sweepable
+
+	pages := resiliencehubv2.NewListServicesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.ServiceSummaries {
+			serviceARN := aws.ToString(v.ServiceArn)
+			input := resiliencehubv2.ListAssertionsInput{
+				ServiceArn: aws.String(serviceARN),
+			}
+
+			pages := resiliencehubv2.NewListAssertionsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.Assertions {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newAssertionResource, client,
+						framework.NewAttribute("service_arn", serviceARN),
+						framework.NewAttribute("assertion_id", aws.ToString(v.AssertionId)),
 					))
 				}
 			}

@@ -57,6 +57,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAssertionResource,
+			TypeName: "aws_resiliencehubv2_assertion",
+			Name:     "Assertion",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("assertion_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assertionImportID{},
+			},
+		},
+		{
 			Factory:  newInputSourceResource,
 			TypeName: "aws_resiliencehubv2_input_source",
 			Name:     "Input Source",
@@ -129,6 +143,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAssertionResourceAsListResource,
+			TypeName: "aws_resiliencehubv2_assertion",
+			Name:     "Assertion",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_arn", true),
+				inttypes.StringIdentityAttribute("assertion_id", true),
+			}),
+		},
+		{
 			Factory:  newInputSourceResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_input_source",
 			Name:     "Input Source",
@@ -159,7 +183,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
-			Factory:  newResourceServiceFunctionAsListResource,
+			Factory:  newServiceFunctionResourceAsListResource,
 			TypeName: "aws_resiliencehubv2_service_function",
 			Name:     "Service Function",
 			Region:   inttypes.ResourceRegionDefault(),

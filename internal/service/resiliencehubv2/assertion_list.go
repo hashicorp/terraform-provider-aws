@@ -22,34 +22,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
-// @FrameworkListResource("aws_resiliencehubv2_service_function")
-func newServiceFunctionResourceAsListResource() list.ListResourceWithConfigure {
-	return &serviceFunctionListResource{}
+// @FrameworkListResource("aws_resiliencehubv2_assertion")
+func newAssertionResourceAsListResource() list.ListResourceWithConfigure {
+	return &assertionListResource{}
 }
 
-var _ list.ListResource = &serviceFunctionListResource{}
+var _ list.ListResource = &assertionListResource{}
 
-type serviceFunctionListResource struct {
-	serviceFunctionResource
+type assertionListResource struct {
+	assertionResource
 	framework.WithList
 }
 
-func (l *serviceFunctionListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (l *assertionListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"service_arn": listschema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
-				Description: "ARN of the service to list service functions from.",
+				Description: "ARN of the service to list assertions from.",
 			},
 		},
 	}
 }
 
-func (l *serviceFunctionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *assertionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listServiceFunctionModel
+	var query listAssertionModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -61,10 +61,10 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceARN)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		input := resiliencehubv2.ListServiceFunctionsInput{
+		input := resiliencehubv2.ListAssertionsInput{
 			ServiceArn: aws.String(serviceARN),
 		}
-		for item, err := range listServiceFunctions(ctx, conn, &input) {
+		for item, err := range listAssertions(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -73,7 +73,7 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 
 			result := request.NewListResult(ctx)
 
-			var data serviceFunctionResourceModel
+			var data assertionResourceModel
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
@@ -81,7 +81,7 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 					return
 				}
 
-				result.DisplayName = aws.ToString(item.Name)
+				result.DisplayName = aws.ToString(item.AssertionId)
 			})
 
 			if !yield(result) {
@@ -91,11 +91,11 @@ func (l *serviceFunctionListResource) List(ctx context.Context, request list.Lis
 	}
 }
 
-type listServiceFunctionModel struct {
+type listAssertionModel struct {
 	framework.WithRegionModel
 	ServiceARN fwtypes.ARN `tfsdk:"service_arn"`
 }
 
-func listServiceFunctions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServiceFunctionsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.ServiceFunction, error] {
-	return tfiter.ConcatValuesWithError(listServiceFunctionPages(ctx, conn, input, optFns...))
+func listAssertions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListAssertionsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.Assertion, error] {
+	return tfiter.ConcatValuesWithError(listAssertionPages(ctx, conn, input, optFns...))
 }
