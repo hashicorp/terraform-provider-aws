@@ -47,10 +47,6 @@ func newRelayResource(_ context.Context) (resource.ResourceWithConfigure, error)
 	return &relayResource{}, nil
 }
 
-const (
-	ResNameRelay = "Relay"
-)
-
 type relayResource struct {
 	framework.ResourceWithModel[relayResourceModel]
 	framework.WithImportByIdentity

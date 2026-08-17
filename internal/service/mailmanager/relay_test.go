@@ -11,12 +11,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmailmanager "github.com/hashicorp/terraform-provider-aws/internal/service/mailmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -208,9 +208,9 @@ func testAccCheckRelayDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 			if err != nil {
-				return create.Error(names.MailManager, create.ErrActionCheckingDestroyed, tfmailmanager.ResNameRelay, rs.Primary.ID, err)
+				return smarterr.NewError(err)
 			}
-			return create.Error(names.MailManager, create.ErrActionCheckingDestroyed, tfmailmanager.ResNameRelay, rs.Primary.ID, errors.New("not destroyed"))
+			return smarterr.NewError(errors.New("not destroyed"))
 		}
 		return nil
 	}
@@ -220,18 +220,17 @@ func testAccCheckRelayExists(ctx context.Context, t *testing.T, name string) res
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRelay, name, errors.New("not found"))
+			return smarterr.NewError(errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
-			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRelay, name, errors.New("not set"))
+			return smarterr.NewError(errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
 
 		_, err := tfmailmanager.FindRelayByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.MailManager, create.ErrActionCheckingExistence, tfmailmanager.ResNameRelay, rs.Primary.ID, err)
+			return smarterr.NewError(err)
 		}
 		return nil
 	}
