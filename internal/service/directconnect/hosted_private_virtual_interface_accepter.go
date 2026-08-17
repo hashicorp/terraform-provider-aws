@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,6 +39,8 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 			StateContext: resourceHostedPrivateVirtualInterfaceAccepterImport,
 		},
 
+		CustomizeDiff: resourceHostedPrivateVirtualInterfaceAccepterCustomizeDiff,
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -49,6 +52,11 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ExactlyOneOf: []string{"dx_gateway_id", "vpn_gateway_id"},
+				},
+				"sitelink_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -68,6 +76,7 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
@@ -76,6 +85,10 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+
+	if err := validateHostedPrivateVirtualInterfaceAccepterSiteLink(cty.BoolVal(d.Get("sitelink_enabled").(bool)), cty.StringVal(d.Get("vpn_gateway_id").(string))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "validating Direct Connect Hosted Private Virtual Interface Accepter SiteLink configuration: %s", err)
+	}
 
 	vifID := d.Get("virtual_interface_id").(string)
 	input := &directconnect.ConfirmPrivateVirtualInterfaceInput{
@@ -140,6 +153,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 	}
 
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
+	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 
@@ -148,13 +162,47 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 
 func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	siteLinkChanged := d.HasChange("sitelink_enabled")
+
+	if siteLinkChanged {
+		if err := validateHostedPrivateVirtualInterfaceAccepterSiteLink(cty.BoolVal(d.Get("sitelink_enabled").(bool)), cty.StringVal(d.Get("vpn_gateway_id").(string))); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating Direct Connect Hosted Private Virtual Interface Accepter SiteLink configuration: %s", err)
+		}
+	}
 
 	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
 	if diags.HasError() {
 		return diags
 	}
 
+	if siteLinkChanged {
+		if _, err := waitHostedPrivateVirtualInterfaceAccepterAvailable(ctx, meta.(*conns.AWSClient).DirectConnectClient(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Private Virtual Interface Accepter (%s) update: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterRead(ctx, d, meta)...)
+}
+
+func resourceHostedPrivateVirtualInterfaceAccepterCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	config := diff.GetRawConfig()
+	if !config.IsKnown() || config.IsNull() {
+		return nil
+	}
+
+	return validateHostedPrivateVirtualInterfaceAccepterSiteLink(config.GetAttr("sitelink_enabled"), config.GetAttr("vpn_gateway_id"))
+}
+
+func validateHostedPrivateVirtualInterfaceAccepterSiteLink(siteLinkEnabled, vpnGatewayID cty.Value) error {
+	if !siteLinkEnabled.IsKnown() || siteLinkEnabled.IsNull() || !siteLinkEnabled.True() {
+		return nil
+	}
+
+	if !vpnGatewayID.IsKnown() || (!vpnGatewayID.IsNull() && vpnGatewayID.AsString() != "") {
+		return fmt.Errorf(`"sitelink_enabled" cannot be enabled with "vpn_gateway_id"; use "dx_gateway_id" instead`)
+	}
+
+	return nil
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
