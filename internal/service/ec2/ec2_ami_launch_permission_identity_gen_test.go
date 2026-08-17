@@ -204,7 +204,7 @@ func TestAccEC2AMILaunchPermission_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.59.0
+// Resource Identity was added after v6.60.0
 func TestAccEC2AMILaunchPermission_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -221,7 +221,7 @@ func TestAccEC2AMILaunchPermission_Identity_ExistingResource_basic(t *testing.T)
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AMILaunchPermission/basic_v6.59.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AMILaunchPermission/basic_v6.60.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -266,7 +266,7 @@ func TestAccEC2AMILaunchPermission_Identity_ExistingResource_basic(t *testing.T)
 	})
 }
 
-// Resource Identity was added after v6.59.0
+// Resource Identity was added after v6.60.0
 func TestAccEC2AMILaunchPermission_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -288,7 +288,7 @@ func TestAccEC2AMILaunchPermission_Identity_ExistingResource_noRefreshNoChange(t
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AMILaunchPermission/basic_v6.59.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AMILaunchPermission/basic_v6.60.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
