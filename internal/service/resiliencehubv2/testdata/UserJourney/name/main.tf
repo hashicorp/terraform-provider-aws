@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_resiliencehubv2_user_journey" "test" {
-  name        = var.rName
-  system_arn  = aws_resiliencehubv2_system.test.arn
-  description = var.description
+  name       = var.name
+  system_arn = aws_resiliencehubv2_system.test.arn
 }
 
 resource "aws_resiliencehubv2_system" "test" {
@@ -17,7 +16,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "description" {
+variable "name" {
   type     = string
   nullable = false
 }
