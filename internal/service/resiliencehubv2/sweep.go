@@ -240,7 +240,7 @@ func sweepUserJourneys(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 				}
 
 				for _, v := range page.UserJourneySummaries {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceUserJourney, client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newUserJourneyResource, client,
 						framework.NewAttribute("system_arn", systemARN),
 						framework.NewAttribute("user_journey_id", aws.ToString(v.UserJourneyId)),
 					))
