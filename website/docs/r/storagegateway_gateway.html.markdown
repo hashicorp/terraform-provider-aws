@@ -24,7 +24,7 @@ resource "aws_volume_attachment" "test" {
 }
 
 data "aws_storagegateway_local_disk" "test" {
-  disk_node   = data.aws_volume_attachment.test.device_name
+  disk_node   = aws_volume_attachment.test.device_name
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
 

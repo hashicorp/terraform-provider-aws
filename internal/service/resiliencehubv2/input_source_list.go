@@ -5,7 +5,6 @@ package resiliencehubv2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,22 +12,26 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_resiliencehubv2_input_source")
-func newResourceInputSourceAsListResource() list.ListResourceWithConfigure {
+func newInputSourceResourceAsListResource() list.ListResourceWithConfigure {
 	return &inputSourceListResource{}
 }
 
 var _ list.ListResource = &inputSourceListResource{}
 
 type inputSourceListResource struct {
-	resourceInputSource
+	inputSourceResource
 	framework.WithList
 }
 
@@ -36,8 +39,14 @@ func (l *inputSourceListResource) ListResourceConfigSchema(_ context.Context, _ 
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"service_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Required:    true,
 				Description: "ARN of the service to list input sources from.",
+			},
+			names.AttrType: listschema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.InputSourceType](),
+				Optional:    true,
+				Description: "Filter input sources by type.",
 			},
 		},
 	}
@@ -54,13 +63,17 @@ func (l *inputSourceListResource) List(ctx context.Context, request list.ListReq
 		}
 	}
 
-	serviceArn := query.ServiceArn.ValueString()
-	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, query.ServiceARN)
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceARN)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := resiliencehubv2.ListInputSourcesInput{
-			ServiceArn: aws.String(serviceArn),
+			ServiceArn: aws.String(serviceARN),
 		}
+		if !query.Type.IsNull() {
+			input.Type = query.Type.ValueEnum()
+		}
+
 		for item, err := range listInputSources(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -70,13 +83,17 @@ func (l *inputSourceListResource) List(ctx context.Context, request list.ListReq
 
 			result := request.NewListResult(ctx)
 
-			var data resourceInputSourceModel
-			data.ServiceArn = types.StringValue(serviceArn)
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				l.flatten(&item, &data)
+			var data inputSourceResourceModel
 
-				data.ID = types.StringValue(serviceArn + "," + data.InputSourceId.ValueString())
-				result.DisplayName = data.InputSourceId.ValueString()
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.ServiceARN = fwtypes.ARNValue(serviceARN)
+
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
+				if result.Diagnostics.HasError() {
+					return
+				}
+
+				result.DisplayName = aws.ToString(item.InputSourceId)
 			})
 
 			if !yield(result) {
@@ -88,24 +105,10 @@ func (l *inputSourceListResource) List(ctx context.Context, request list.ListReq
 
 type listInputSourceModel struct {
 	framework.WithRegionModel
-	ServiceArn types.String `tfsdk:"service_arn"`
+	ServiceARN fwtypes.ARN                                  `tfsdk:"service_arn"`
+	Type       fwtypes.StringEnum[awstypes.InputSourceType] `tfsdk:"type"`
 }
 
-func listInputSources(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListInputSourcesInput) iter.Seq2[awstypes.InputSourceSummary, error] {
-	return func(yield func(awstypes.InputSourceSummary, error) bool) {
-		pages := resiliencehubv2.NewListInputSourcesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.InputSourceSummary{}, fmt.Errorf("listing Resilience Hub V2 Input Source resources: %w", err))
-				return
-			}
-
-			for _, item := range page.InputSourceSummaries {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listInputSources(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListInputSourcesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.InputSourceSummary, error] {
+	return tfiter.ConcatValuesWithError(listInputSourcePages(ctx, conn, input, optFns...))
 }

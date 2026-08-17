@@ -10,11 +10,9 @@ description: |-
 
 Terraform resource for managing an AWS Resilience Hub V2 Input Source.
 
-An input source defines where Resilience Hub discovers AWS resources for a service. Supported source types include CloudFormation stacks, Terraform state files (stored in S3), and EKS clusters. Exactly one of `cfn_stack_arn`, `tf_state_file_url`, or `eks_cluster_arn` must be specified.
+An input source defines where Resilience Hub discovers AWS resources for a service. Supported source types include CloudFormation stacks, Terraform state files (stored in S3), and EKS clusters.
 
 ~> **Note:** This resource does not support in-place updates. Any change to the resource configuration will destroy and recreate the input source.
-
-~> **Note:** The referenced resources (CloudFormation stacks, S3 state files, EKS clusters) must exist before creating the input source. Use `depends_on` to ensure proper ordering.
 
 ## Example Usage
 
@@ -22,8 +20,11 @@ An input source defines where Resilience Hub discovers AWS resources for a servi
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn   = aws_resiliencehubv2_service.example.arn
-  cfn_stack_arn = "arn:aws:cloudformation:us-west-2:123456789012:stack/my-stack/abc123"
+  service_arn = aws_resiliencehubv2_service.example.arn
+
+  resource_configuration {
+    cfn_stack_arn = "arn:aws:cloudformation:us-west-2:123456789012:stack/my-stack/abc123"
+  }
 }
 ```
 
@@ -31,8 +32,11 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn       = aws_resiliencehubv2_service.example.arn
-  tf_state_file_url = "s3://my-bucket/terraform.tfstate"
+  service_arn = aws_resiliencehubv2_service.example.arn
+
+  resource_configuration {
+    tf_state_file_url = "s3://my-bucket/terraform.tfstate"
+  }
 }
 ```
 
@@ -40,9 +44,14 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ```hcl
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn     = aws_resiliencehubv2_service.example.arn
-  eks_cluster_arn = "arn:aws:eks:us-west-2:123456789012:cluster/my-cluster"
-  eks_namespaces  = ["default", "production"]
+  service_arn = aws_resiliencehubv2_service.example.arn
+
+  resource_configuration {
+    eks {
+      cluster_arn = "arn:aws:eks:us-west-2:123456789012:cluster/my-cluster"
+      namespaces  = ["default", "production"]
+    }
+  }
 }
 ```
 
@@ -50,21 +59,43 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 The following arguments are required:
 
-* `service_arn` - (Required) ARN of the service this input source belongs to. Changing this value requires creating a new resource.
+* `resource_configuration` - (Required) Resource configuration for an input source. See [`resource_configuration` Block](#resource_configuration-block) below.
+* `service_arn` - (Required) ARN of the service this input source belongs to.
 
 The following arguments are optional:
 
-* `cfn_stack_arn` - (Optional) ARN of a CloudFormation stack to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
-* `eks_cluster_arn` - (Optional) ARN of an EKS cluster to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
-* `eks_namespaces` - (Optional) List of Kubernetes namespaces to include when using an EKS cluster input source. Changing this value requires creating a new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tf_state_file_url` - (Optional) S3 URL of a Terraform state file to use as an input source. Exactly one of `cfn_stack_arn`, `eks_cluster_arn`, or `tf_state_file_url` must be specified. Changing this value requires creating a new resource.
+
+### `resource_configuration` Block
+
+The `resource_configuration` block supports:
+
+* `cfn_stack_arn` - (Optional) CloudFormation stack ARN.
+* `design_file_s3_url` - (Optional) S3 URL.
+* `eks` - (Optional) EKS configuration. See [`eks` Block](#eks-block) below.
+* `resource_tag` - (Optional) Resource tags used for discovery. See [`resource_tag` Block](#resource_tag-block) below.
+* `tf_state_file_url` - (Optional) S3 URL.
+
+Exactly one attribute must be configured.
+
+### `eks` Block
+
+The `eks` block supports:
+
+* `cluster_arn` - (Required) Cluster ARN.
+* `namespaces` - (Required) List of Kubernetes namespaces within the EKS cluster.
+
+### `resource_tag` Block
+
+The `resource_tag` block supports:
+
+* `key` - (Required) Tag key.
+* `values` - (Required) List of tag values.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Composite identifier in the format `service_arn,input_source_id`.
 * `input_source_id` - Unique identifier of the input source.
 
 ## Import

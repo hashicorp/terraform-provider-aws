@@ -69,19 +69,23 @@ resource "aws_s3_bucket" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
+* `filter` - (Optional) Bucket filter. The configuration only includes objects that meet the filter's criteria. See [`filter` Block](#filter-block) below.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
-* `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.
-* `filter` - (Optional) Bucket filter. The configuration only includes objects that meet the filter's criteria (documented below).
-* `tiering` - (Required) S3 Intelligent-Tiering storage class tiers of the configuration (documented below).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `status` - (Optional) Status of the configuration. Valid values: `Enabled`, `Disabled`.
+* `tiering` - (Required) S3 Intelligent-Tiering storage class tiers of the configuration. See [`tiering` Block](#tiering-block) below.
 
-The `filter` configuration supports the following:
+### `filter` Block
+
+The `filter` configuration block supports the following arguments:
 
 * `prefix` - (Optional) Object key name prefix that identifies the subset of objects to which the configuration applies.
 * `tags` - (Optional) All of these tags must exist in the object's tag set in order for the configuration to apply.
 
-The `tiering` configuration supports the following:
+### `tiering` Block
+
+The `tiering` configuration block supports the following arguments:
 
 * `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_ACCESS`, `DEEP_ARCHIVE_ACCESS`.
 * `days` - (Required) Number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.

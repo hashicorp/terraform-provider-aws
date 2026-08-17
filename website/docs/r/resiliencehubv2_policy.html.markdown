@@ -82,6 +82,7 @@ The following arguments are optional:
 * `availability_slo` - (Optional) Availability SLO configuration. See [`availability_slo` Block](#availability_slo-block) below.
 * `data_recovery` - (Optional) Data recovery configuration. See [`data_recovery` Block](#data_recovery-block) below.
 * `description` - (Optional) Description of the policy.
+* `kms_key_id` - (Optional) KMS key ARN.
 * `multi_az` - (Optional) Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - (Optional) Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -130,7 +131,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_resiliencehubv2_policy.example
   identity = {
-    "arn" = "arn:aws:resiliencehub:us-west-2:123456789012:policy/example-policy:abc123"
+    arn = "arn:aws:resiliencehub:us-west-2:123456789012:policy/example-policy:abc123"
   }
 }
 

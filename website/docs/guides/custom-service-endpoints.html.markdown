@@ -89,6 +89,7 @@ provider "aws" {
 |Account Management|`account`|`AWS_ENDPOINT_URL_ACCOUNT`|`account`|
 |ACM (Certificate Manager)|`acm`|`AWS_ENDPOINT_URL_ACM`|`acm`|
 |ACM PCA (Certificate Manager Private Certificate Authority)|`acmpca`|`AWS_ENDPOINT_URL_ACM_PCA`|`acm_pca`|
+|Agent Registry|`agentregistry`|`AWS_ENDPOINT_URL_AGENT_REGISTRY_CONTROL`|`agent_registry_control`|
 |AMP (Managed Prometheus)|`amp`(or `prometheus` or `prometheusservice`)|`AWS_ENDPOINT_URL_AMP`|`amp`|
 |Amplify|`amplify`|`AWS_ENDPOINT_URL_AMPLIFY`|`amplify`|
 |API Gateway|`apigateway`|`AWS_ENDPOINT_URL_API_GATEWAY`|`api_gateway`|
@@ -166,6 +167,7 @@ provider "aws" {
 |DevOps Agent|`devopsagent`|`AWS_ENDPOINT_URL_DEVOPS_AGENT`|`devops_agent`|
 |DevOps Guru|`devopsguru`|`AWS_ENDPOINT_URL_DEVOPS_GURU`|`devops_guru`|
 |Direct Connect|`directconnect`|`AWS_ENDPOINT_URL_DIRECT_CONNECT`|`direct_connect`|
+|Directory Service Data|`directoryservicedata`|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE_DATA`|`directory_service_data`|
 |DLM (Data Lifecycle Manager)|`dlm`|`AWS_ENDPOINT_URL_DLM`|`dlm`|
 |DMS (Database Migration)|`dms`(or `databasemigration` or `databasemigrationservice`)|`AWS_ENDPOINT_URL_DATABASE_MIGRATION_SERVICE`|`database_migration_service`|
 |DocumentDB|`docdb`|`AWS_ENDPOINT_URL_DOCDB`|`docdb`|
@@ -228,6 +230,8 @@ provider "aws" {
 |KMS (Key Management)|`kms`|`AWS_ENDPOINT_URL_KMS`|`kms`|
 |Lake Formation|`lakeformation`|`AWS_ENDPOINT_URL_LAKEFORMATION`|`lakeformation`|
 |Lambda|`lambda`|`AWS_ENDPOINT_URL_LAMBDA`|`lambda`|
+|Lambda Core|`lambdacore`|`AWS_ENDPOINT_URL_LAMBDA_CORE`|`lambda_core`|
+|Lambda MicroVMs|`lambdamicrovms`|`AWS_ENDPOINT_URL_LAMBDA_MICROVMS`|`lambda_microvms`|
 |Launch Wizard|`launchwizard`|`AWS_ENDPOINT_URL_LAUNCH_WIZARD`|`launch_wizard`|
 |Lex Model Building|`lexmodels`(or `lexmodelbuilding` or `lexmodelbuildingservice` or `lex`)|`AWS_ENDPOINT_URL_LEX_MODEL_BUILDING_SERVICE`|`lex_model_building_service`|
 |Lex V2 Models|`lexv2models`(or `lexmodelsv2`)|`AWS_ENDPOINT_URL_LEX_MODELS_V2`|`lex_models_v2`|
@@ -237,6 +241,7 @@ provider "aws" {
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
+|SES Mail Manager|`mailmanager`|`AWS_ENDPOINT_URL_MAILMANAGER`|`mailmanager`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
 |Elemental MediaConvert|`mediaconvert`|`AWS_ENDPOINT_URL_MEDIACONVERT`|`mediaconvert`|
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
@@ -264,7 +269,7 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|

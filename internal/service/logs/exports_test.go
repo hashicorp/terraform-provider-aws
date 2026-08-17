@@ -22,6 +22,7 @@ var (
 	ResourceStream                           = resourceStream
 	ResourceSubscriptionFilter               = resourceSubscriptionFilter
 	ResourceS3TableIntegrationSourceResource = newS3TableIntegrationSourceResource
+	ResourceStorageTierPolicy                = newStorageTierPolicyResource
 	ResourceTransformer                      = newTransformerResource
 
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
@@ -41,6 +42,7 @@ var (
 	FindResourcePolicyByName                               = findResourcePolicyByName
 	FindResourcePolicyByResourceARN                        = findResourcePolicyByResourceARN
 	FindS3TableIntegrationSourceByTwoPartKey               = findS3TableIntegrationSourceByTwoPartKey
+	FindStorageTierPolicy                                  = findStorageTierPolicy
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
 	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 

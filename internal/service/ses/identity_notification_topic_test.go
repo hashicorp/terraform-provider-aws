@@ -82,10 +82,10 @@ func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T)
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_ses_identity_notification_topic.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_ses_identity_notification_topic.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},

@@ -34,6 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `availability_slo` - Availability SLO configuration. See [`availability_slo` Block](#availability_slo-block) below.
 * `data_recovery` - Data recovery configuration. See [`data_recovery` Block](#data_recovery-block) below.
 * `description` - Description of the policy.
+* `kms_key_id` - KMS key ARN.
 * `multi_az` - Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
 * `name` - Name of the policy.

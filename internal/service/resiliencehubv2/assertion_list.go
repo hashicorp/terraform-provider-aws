@@ -5,7 +5,6 @@ package resiliencehubv2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,23 +12,25 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
 // @FrameworkListResource("aws_resiliencehubv2_assertion")
-func newResourceAssertionAsListResource() list.ListResourceWithConfigure {
+func newAssertionResourceAsListResource() list.ListResourceWithConfigure {
 	return &assertionListResource{}
 }
 
 var _ list.ListResource = &assertionListResource{}
 
 type assertionListResource struct {
-	resourceAssertion
+	assertionResource
 	framework.WithList
 }
 
@@ -37,6 +38,7 @@ func (l *assertionListResource) ListResourceConfigSchema(_ context.Context, _ li
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"service_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Required:    true,
 				Description: "ARN of the service to list assertions from.",
 			},
@@ -55,12 +57,12 @@ func (l *assertionListResource) List(ctx context.Context, request list.ListReque
 		}
 	}
 
-	serviceArn := query.ServiceArn.ValueString()
-	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, query.ServiceARN)
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("service_arn"), serviceARN)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := resiliencehubv2.ListAssertionsInput{
-			ServiceArn: aws.String(serviceArn),
+			ServiceArn: aws.String(serviceARN),
 		}
 		for item, err := range listAssertions(ctx, conn, &input) {
 			if err != nil {
@@ -71,7 +73,8 @@ func (l *assertionListResource) List(ctx context.Context, request list.ListReque
 
 			result := request.NewListResult(ctx)
 
-			var data resourceAssertionModel
+			var data assertionResourceModel
+
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 				if result.Diagnostics.HasError() {
@@ -90,24 +93,9 @@ func (l *assertionListResource) List(ctx context.Context, request list.ListReque
 
 type listAssertionModel struct {
 	framework.WithRegionModel
-	ServiceArn types.String `tfsdk:"service_arn"`
+	ServiceARN fwtypes.ARN `tfsdk:"service_arn"`
 }
 
-func listAssertions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListAssertionsInput) iter.Seq2[awstypes.Assertion, error] {
-	return func(yield func(awstypes.Assertion, error) bool) {
-		pages := resiliencehubv2.NewListAssertionsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Assertion{}, fmt.Errorf("listing Resilience Hub V2 Assertion resources: %w", err))
-				return
-			}
-
-			for _, item := range page.Assertions {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listAssertions(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListAssertionsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.Assertion, error] {
+	return tfiter.ConcatValuesWithError(listAssertionPages(ctx, conn, input, optFns...))
 }

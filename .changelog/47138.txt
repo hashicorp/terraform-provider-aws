@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_sagemaker_hyper_parameter_tuning_job
-```
-
-```release-note:new-list-resource
-aws_sagemaker_hyper_parameter_tuning_job
-```

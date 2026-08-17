@@ -61,16 +61,24 @@ func (l *queueListResource) List(ctx context.Context, request list.ListRequest, 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(queueUrl)
+			rd.Set(names.AttrURL, queueUrl)
 
-			diags := resourceQueueRead(ctx, rd, awsClient)
-			if diags.HasError() || rd.Id() == "" {
-				// Resource can't be read or is logically deleted.
-				// Log and continue.
-				tflog.Error(ctx, "Reading SQS queue", map[string]any{
-					names.AttrID: queueUrl,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
+			if request.IncludeResource {
+				output, err := findQueueAttributesByURL(ctx, conn, queueUrl)
+				if err != nil {
+					tflog.Error(ctx, "Reading SQS queue", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				diags := resourceQueueFlatten(rd, output)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading SQS queue", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = queueUrl

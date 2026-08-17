@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ram_resource_share_accepter: Fix handling of out-of-band resource share deletion
-```

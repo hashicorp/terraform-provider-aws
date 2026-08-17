@@ -3,7 +3,20 @@
 
 provider "null" {}
 
+resource "aws_workspacesweb_trust_store" "test" {
+  certificate {
+    body = aws_acmpca_certificate.test.certificate
+  }
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
+}
+
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   type = "ROOT"
 
   certificate_authority_configuration {
@@ -26,17 +39,6 @@ resource "aws_acmpca_certificate" "test" {
   validity {
     type  = "YEARS"
     value = 1
-  }
-}
-
-resource "aws_workspacesweb_trust_store" "test" {
-  certificate {
-    body = aws_acmpca_certificate.test.certificate
-  }
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
   }
 }
 

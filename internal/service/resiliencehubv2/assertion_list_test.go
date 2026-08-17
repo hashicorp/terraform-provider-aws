@@ -22,11 +22,9 @@ import (
 
 func TestAccResilienceHubV2Assertion_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_assertion.test[0]"
 	resourceName2 := "aws_resiliencehubv2_assertion.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -49,7 +47,12 @@ func TestAccResilienceHubV2Assertion_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -73,10 +76,8 @@ func TestAccResilienceHubV2Assertion_List_basic(t *testing.T) {
 
 func TestAccResilienceHubV2Assertion_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_assertion.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,6 +99,8 @@ func TestAccResilienceHubV2Assertion_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -110,10 +113,9 @@ func TestAccResilienceHubV2Assertion_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_resiliencehubv2_assertion.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_resiliencehubv2_assertion.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("service_arn"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("text"), knownvalue.StringExact(rName+" assertion 0")),
 					}),
 				},
@@ -124,11 +126,9 @@ func TestAccResilienceHubV2Assertion_List_includeResource(t *testing.T) {
 
 func TestAccResilienceHubV2Assertion_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_assertion.test[0]"
 	resourceName2 := "aws_resiliencehubv2_assertion.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -153,7 +153,12 @@ func TestAccResilienceHubV2Assertion_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_arn"), checkServiceARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("assertion_id"), knownvalue.NotNull()),
 				},
 			},
 			{
