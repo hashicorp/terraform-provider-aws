@@ -254,7 +254,7 @@ The `configuration` block supports the following arguments:
 * `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Cannot be used with `type` set to `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
 * `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE` or `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
 * `reflection` - (Optional) Reflection configuration for the memory strategy. See [`reflection` Block](#reflection-block) below. Can only be used, and is required, with `type` set to `EPISODIC_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
-* `self_managed` - (Optional) Self-managed processing configuration. Required when `type` is `SELF_MANAGED` and only valid for that type. See [`self_managed` Block](#self_managed-block) below.
+* `self_managed_configuration` - (Optional) Self-managed processing configuration. Required when `type` is `SELF_MANAGED` and only valid for that type. See [`self_managed_configuration` Block](#self_managed_configuration-block) below.
 * `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`, `SELF_MANAGED`. Changing this forces a new resource.
 
 ### `consolidation` Block
@@ -285,14 +285,13 @@ The `reflection_configuration` block supports the following arguments:
 
 * `namespace_templates` - (Required) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
 
-### `self_managed` Block
+### `self_managed_configuration` Block
 
-The `self_managed` block supports the following arguments:
+The `self_managed_configuration` block supports the following arguments. See [`self_managed_configuration` Attribute Reference](#self_managed_configuration-attribute-reference) below for additional read-only attributes.
 
-* `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
 * `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
+* `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
 * `trigger_conditions` - (Optional) Conditions that trigger memory processing. See [`trigger_conditions` Block](#trigger_conditions-block) below. When omitted, the service supplies the documented defaults for all three trigger types.
-* `trigger_conditions_actual` - (Computed) Actual deployed trigger conditions. See [`trigger_conditions` Block](#trigger_conditions-block) below.
 
 ### `invocation_configuration` Block
 
@@ -333,6 +332,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
 
+### `self_managed_configuration` Attribute Reference
+
+The `self_managed_configuration` block exports the following attributes in addition to the arguments above:
+
+* `trigger_conditions_actual` - Actual deployed trigger conditions.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -343,17 +348,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Memory Strategy using the `memory_id,strategy_id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_memory_strategy.example
-  id = "MEMORY1234567890,STRATEGY0987654321"
+  identity = {
+    memory_id          = "example_memory-5JcvKJ4GP0"
+    memory_strategy_id = "example_memory_strategy-pblFzi8VyW"
+  }
+}
+
+resource "aws_bedrockagentcore_memory_strategy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Memory Strategy using the `memory_id,strategy_id`. For example:
+### Identity Schema
+
+#### Required
+
+* `memory_id` (String) Memory ID.
+* `memory_strategy_id` (String) Memory strategy ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import memory strategies using `memory_id` and `memory_strategy_id` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_memory_strategy.example
+  id = "example_memory-5JcvKJ4GP0,example_memory_strategy-pblFzi8VyW"
+}
+```
+
+Using `terraform import`, import memory strategies using `memory_id` and `memory_strategy_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_bedrockagentcore_memory_strategy.example MEMORY1234567890,STRATEGY0987654321
+% terraform import aws_bedrockagentcore_memory_strategy.example example_memory-5JcvKJ4GP0,example_memory_strategy-pblFzi8VyW
 ```
