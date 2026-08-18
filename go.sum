@@ -43,8 +43,8 @@ github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.38 h1:A3UAuCmx7LyUcrixBTzKJYYIUZ2
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.38/go.mod h1:1PDUYG9Z+JrbbsobsAZHjWOm9QBT/djiK3QbykTL5Z4=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.51.6 h1:FNe6xWJsJ1Va0246uB071P5su59pZqDCzmeVjM8ZlgQ=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.51.6/go.mod h1:YLrog7EXIISoQ5L3VL3T5Hzigd9tmFMLVfmKzRlefvU=
-github.com/aws/aws-sdk-go-v2/service/account v1.35.5 h1:KmJV9hZ939ZuivF/GxlYlbuVplzxchH/SK3MCXKvyJ8=
-github.com/aws/aws-sdk-go-v2/service/account v1.35.5/go.mod h1:gaMjjLHAUup28fTGR5K6awK9X9IiXdcM22QNwYKozj0=
+github.com/aws/aws-sdk-go-v2/service/account v1.35.6 h1:mObt+amlHneRU0jyyCIRb6vyV3kjLqhUMKbFveX365g=
+github.com/aws/aws-sdk-go-v2/service/account v1.35.6/go.mod h1:N2v9jPq9iN8zqp2/IzP44Y6hShrwn8Q7IJGiBHCc184=
 github.com/aws/aws-sdk-go-v2/service/acm v1.44.0 h1:xZ/H19H4RpfjOJpJBXSaOYgRy0DEBh5S+5u3sZAHpks=
 github.com/aws/aws-sdk-go-v2/service/acm v1.44.0/go.mod h1:qbTn8jAJRPdsLH8KaFFKwH59Xhiy5qkkc/tMD7eCCWo=
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.50.1 h1:Si6LJG3Hr5jDDv/opoitI0r6IXxpj+MvDyIdG6klt+A=
