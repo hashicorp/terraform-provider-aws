@@ -343,8 +343,8 @@ github.com/aws/aws-sdk-go-v2/service/lakeformation v1.50.6 h1:uCJApN0Q15AovsNS2d
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.50.6/go.mod h1:YtMrqWyOAacIcjUjq7RxHni8fhSH3axQRQY1PHQqwgw=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.101.4 h1:KUMJh+XB81gVYZqpA3X8Qvtsqdj+fcHXHBzPUUlwzWs=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.101.4/go.mod h1:l14OFgqRNLROixq2fOM7w+lNSfFDse+Qi2WgXyRqhEA=
-github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.5 h1:aXRQqV7Gh2yVMJxzSJrEaWhSJwhZv4LYMSz3TyDjsJI=
-github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.5/go.mod h1:aPNREqPeDOWzV+fmU3u7Uktq3F0ryfKlPRD4tB+76CM=
+github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.6 h1:Ley2tEyNKmZs7jjGUvk2SmUEXuRWarDjiZYP0pgLL0U=
+github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.6/go.mod h1:n9CXLuc4stVPrtMqkYvZySscvjb5bOm90uqW9XGfNfI=
 github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.5 h1:p9nw/hXe7Q/89Q6q96gzhV9V02wO/w02VtS54/y9uGA=
 github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.5/go.mod h1:vAuBcAkrPH1XicBB5cpsijcRma9waOnrrKh93Bhknio=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.17.5 h1:PaFuWYbtXKjglVDYDtNREFPfHFhYu7TNnZrscy4dHNk=
