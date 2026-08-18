@@ -91,6 +91,7 @@ This data source exports the following attributes in addition to the arguments a
 * `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
 * `usage_operation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
 * `virtualization_type` - Type of virtualization of the AMI (ie: `hvm` or `paravirtual`).
+* `watermarks` - List of watermarks attached to the AMI. See [`watermarks`](#watermarks) below.
 
 ~> **NOTE:** Some values are not always set and may not be available for interpolation.
 
@@ -126,6 +127,14 @@ This data source exports the following attributes in addition to the arguments a
 
 * `code` - The reason code for the state change.
 * `message` - The message for the state change.
+
+### `watermarks`
+
+* `source_image_creation_time` - Creation date of the source AMI to which the watermark was originally attached, in ISO 8601 format.
+* `source_image_id` - ID of the AMI to which the watermark was originally attached.
+* `source_image_region` - Region where the watermark was originally attached.
+* `watermark_creation_time` - Timestamp when the watermark was applied to the AMI, in ISO 8601 format.
+* `watermark_key` - Watermark identifier in `accountId:watermarkName` format (for example, `123456789012:prod-baseline`).
 
 ## Timeouts
 

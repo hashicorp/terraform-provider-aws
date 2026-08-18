@@ -4,6 +4,7 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -322,6 +323,33 @@ func TestAccEC2AMIDataSource_productCode(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMIDataSource_watermarks(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	datasourceName := "data.aws_ami.test"
+	watermarkResourceName := "aws_ami_watermark.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIWatermarkDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIDataSourceConfig_watermarks(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "watermarks.#", "1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "watermarks.0.watermark_key", watermarkResourceName, "watermark_key"),
+					resource.TestCheckResourceAttrSet(datasourceName, "watermarks.0.watermark_creation_time"),
+					resource.TestCheckResourceAttrSet(datasourceName, "watermarks.0.source_image_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "watermarks.0.source_image_region"),
+					resource.TestCheckResourceAttrSet(datasourceName, "watermarks.0.source_image_creation_time"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2AMIDataSource_unsafeFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -465,6 +493,26 @@ data "aws_ami" "test" {
   }
 }
 `
+
+func testAccAMIDataSourceConfig_watermarks(rName string) string {
+	return acctest.ConfigCompose(testAccAMIWatermarkConfig_base(rName), fmt.Sprintf(`
+resource "aws_ami_watermark" "test" {
+  image_id       = aws_ami_copy.test.id
+  watermark_name = %[1]q
+}
+
+data "aws_ami" "test" {
+  filter {
+    name   = "image-id"
+    values = [aws_ami_copy.test.id]
+  }
+
+  owners = ["self"]
+
+  depends_on = [aws_ami_watermark.test]
+}
+`, rName))
+}
 
 // Most recent AMI with no filter on owner or image ID
 const testAccAMIDataSourceConfig_unsafeFilter = `

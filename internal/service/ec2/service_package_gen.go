@@ -117,6 +117,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAMIWatermarkResource,
+			TypeName: "aws_ami_watermark",
+			Name:     "AMI Watermark",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("image_id", true),
+				inttypes.StringIdentityAttribute("watermark_key", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      amiWatermarkImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
 			Factory:  newEBSFastSnapshotRestoreResource,
 			TypeName: "aws_ebs_fast_snapshot_restore",
 			Name:     "EBS Fast Snapshot Restore",
