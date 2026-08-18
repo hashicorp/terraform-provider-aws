@@ -8,12 +8,14 @@ package verifiedpermissions
 import (
 	"context"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	"github.com/cedar-policy/cedar-go"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -61,6 +63,18 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"policy_id":  framework.IDAttribute(),
+			"policy_name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 150),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9-/_]*$`), "must match [a-zA-Z0-9-/_]*"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^$|^name/`), "must be empty or begin with 'name/'"),
+				},
+			},
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -228,6 +242,9 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	in := &verifiedpermissions.CreatePolicyInput{}
 
 	in.ClientToken = aws.String(create.UniqueId(ctx))
+	if !plan.PolicyName.IsNull() && !plan.PolicyName.IsUnknown() && plan.PolicyName.ValueString() != "" {
+		in.Name = fwflex.StringFromFramework(ctx, plan.PolicyName)
+	}
 	in.PolicyStoreId = plan.PolicyStoreID.ValueStringPointer()
 
 	def, diags := plan.Definition.ToPtr(ctx)
@@ -320,6 +337,17 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	plan.CreatedDate = timetypes.NewRFC3339TimePointerValue(out.CreatedDate)
 	plan.PolicyID = fwflex.StringToFramework(ctx, out.PolicyId)
 
+	// CreatePolicy output currently does not include Name, so read it back.
+	policy, err := findPolicyByID(ctx, conn, aws.ToString(out.PolicyId), aws.ToString(out.PolicyStoreId))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicy, plan.PolicyStoreID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.PolicyName = fwflex.StringToFramework(ctx, policy.Name)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -356,6 +384,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	state.PolicyID = fwflex.StringToFramework(ctx, out.PolicyId)
+	state.PolicyName = fwflex.StringToFramework(ctx, out.Name)
 	state.PolicyStoreID = fwflex.StringToFramework(ctx, out.PolicyStoreId)
 	state.CreatedDate = timetypes.NewRFC3339TimePointerValue(out.CreatedDate)
 
@@ -415,8 +444,9 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	if !plan.Definition.Equal(state.Definition) {
+	if !plan.Definition.Equal(state.Definition) || !plan.PolicyName.Equal(state.PolicyName) {
 		in := &verifiedpermissions.UpdatePolicyInput{}
+		in.Name = fwflex.StringFromFramework(ctx, plan.PolicyName)
 		in.PolicyId = fwflex.StringFromFramework(ctx, state.PolicyID)
 		in.PolicyStoreId = fwflex.StringFromFramework(ctx, state.PolicyStoreID)
 
@@ -550,6 +580,7 @@ type policyResourceModel struct {
 	Definition    fwtypes.ListNestedObjectValueOf[policyDefinition] `tfsdk:"definition"`
 	ID            types.String                                      `tfsdk:"id"`
 	PolicyID      types.String                                      `tfsdk:"policy_id"`
+	PolicyName    types.String                                      `tfsdk:"policy_name"`
 	PolicyStoreID types.String                                      `tfsdk:"policy_store_id"`
 }
 
