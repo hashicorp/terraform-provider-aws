@@ -8,8 +8,8 @@ version=$(curl -fsSL \
   | grep -oP '"tag_name":\s*"v\K[^"]+')
 
 if [[ -z "${version}" ]]; then
-  echo "ERROR: failed to resolve gh CLI version from GitHub API" >&2
-  exit 1
+  version="2.97.0"
+  echo "WARN: failed to resolve gh CLI version from GitHub API, falling back to ${version}" >&2
 fi
 
 mkdir -p tools \
