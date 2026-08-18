@@ -66,8 +66,8 @@ func (v atLeastOneOfWhenValidator) eval(_ context.Context, requestPath path.Path
 		description string
 	)
 
-	switch when := v.when.String(); {
-	case count == 0:
+	switch when := v.when.String(); count {
+	case 0:
 		if when == "" {
 			description = fmt.Sprintf("At least one of %[1]s must be configured. No attribute configured.", expressions)
 		} else {
