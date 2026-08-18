@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * data-source/aws_fsx_ontap_file_system: Add `network_type` attribute ([#49512](https://github.com/hashicorp/terraform-provider-aws/issues/49512))
 * data-source/aws_fsx_windows_file_system: Add `network_type` attribute ([#49514](https://github.com/hashicorp/terraform-provider-aws/issues/49514))
 * data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* data-source/aws_resiliencehubv2_service: Add `associated_system` attribute ([#49498](https://github.com/hashicorp/terraform-provider-aws/issues/49498))
 * data-source/aws_vpclattice_service: Add `idle_timeout_seconds` attribute ([#49540](https://github.com/hashicorp/terraform-provider-aws/issues/49540))
 * resource/aws_bedrockagentcore_harness: Adds attribute `environment_actual` ([#48815](https://github.com/hashicorp/terraform-provider-aws/issues/48815))
 * resource/aws_ec2_ami_launch_permission: Add resource identity support ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
@@ -32,6 +33,7 @@ ENHANCEMENTS:
 * resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+* resource/aws_resiliencehubv2_service: Add `associated_system` configuration block ([#49498](https://github.com/hashicorp/terraform-provider-aws/issues/49498))
 * resource/aws_vpclattice_service: Add `idle_timeout_seconds` argument ([#49540](https://github.com/hashicorp/terraform-provider-aws/issues/49540))
 
 BUG FIXES:
