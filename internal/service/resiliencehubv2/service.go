@@ -243,7 +243,7 @@ func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest
 		// UpdateService treats an omitted AssociatedSystems as "no change", leaving the
 		// existing associations in place. Removing the last associated_system block
 		// therefore requires sending an explicitly empty list.
-		if input.AssociatedSystems == nil && len(state.AssociatedSystems.Elements()) > 0 {
+		if input.AssociatedSystems == nil && state.AssociatedSystems.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 			input.AssociatedSystems = []awstypes.AssociatedSystem{}
 		}
 
