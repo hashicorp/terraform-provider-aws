@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Authenticated relays require a MailManager ingress point with SMTP credentials.
 #
 # The configuration below is a port of this guide to Terraform.
