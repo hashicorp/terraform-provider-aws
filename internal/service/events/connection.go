@@ -317,6 +317,10 @@ func resourceConnection() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 			}
 		},
 	}
@@ -394,6 +398,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
+	d.Set(names.AttrState, output.ConnectionState)
 
 	return diags
 }
