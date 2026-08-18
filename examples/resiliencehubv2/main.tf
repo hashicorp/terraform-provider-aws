@@ -74,6 +74,9 @@ resource "aws_cloudformation_stack" "example" {
 
 # An input source that discovers resources from the CloudFormation stack.
 resource "aws_resiliencehubv2_input_source" "example" {
-  service_arn   = aws_resiliencehubv2_service.example.arn
-  cfn_stack_arn = aws_cloudformation_stack.example.id
+  service_arn = aws_resiliencehubv2_service.example.arn
+
+  resource_configuration {
+    cfn_stack_arn = aws_cloudformation_stack.example.id
+  }
 }
