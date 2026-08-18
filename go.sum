@@ -175,8 +175,8 @@ github.com/aws/aws-sdk-go-v2/service/connect v1.189.0 h1:mVRv5stFyXj5rFhsXR0bCII
 github.com/aws/aws-sdk-go-v2/service/connect v1.189.0/go.mod h1:bMdHPiwl0i0BZVO/5YE53nzNd4YMB9m4deKwAnrJuV8=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.45.1 h1:9S/h2W4HavbevUdJH2stKpXnoDVnLPRPeQdjaU6O6pU=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.45.1/go.mod h1:u2ZpueOhgPIRIMoNDMmZ1kIj4FUO2kcU5+UcPeUZ+2I=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.32.0 h1:QAd7PcD8LOrlQmmYL6D16QSaGfePN7s9Qn8NuiVgBec=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.32.0/go.mod h1:93BvI4ntWtzha9OFyYT3UDZSMzQBvAF9hBf0O4VAlgE=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.32.1 h1:QudFW5WVjAja0wZb2YDYOiCcT7cWKvE+Gt4fdgl0Dkw=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.32.1/go.mod h1:Wcb/7IKTAxYWxHL8lBF3n2wZpjCp2r0BUbOu/+bYWLU=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.37.5 h1:T/VKt2i0Ksbi172E6uEN8JkDGotjLu5+WYJUM+mUCUA=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.37.5/go.mod h1:xHMrDMHpdJh1x5rivw9XFp5ovId0qWmn4QP6Cfx1a7A=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.5 h1:hiJJTfio1+i/xnfLwu6RsDjDzkGSiLux54LTzDK4MyA=
