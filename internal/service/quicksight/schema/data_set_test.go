@@ -6,6 +6,7 @@ package schema
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
@@ -111,5 +112,43 @@ func TestDataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema(t *test
 
 	if diff := cmp.Diff(dataSourceSchema, expectedDataSourceSchema); diff != "" {
 		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
+func TestExpandColumnTag(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		tfMap    map[string]any
+		expected awstypes.GeoSpatialDataRole
+	}{
+		"column_geographic_role omitted": {
+			tfMap:    map[string]any{},
+			expected: "",
+		},
+		"column_geographic_role empty string": {
+			tfMap:    map[string]any{"column_geographic_role": ""},
+			expected: "",
+		},
+		"column_geographic_role set": {
+			tfMap:    map[string]any{"column_geographic_role": string(awstypes.GeoSpatialDataRoleState)},
+			expected: awstypes.GeoSpatialDataRoleState,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := expandColumnTag(testCase.tfMap)
+
+			if got == nil {
+				t.Fatal("expandColumnTag() returned nil")
+			}
+
+			if got.ColumnGeographicRole != testCase.expected {
+				t.Errorf("ColumnGeographicRole = %q, want %q", got.ColumnGeographicRole, testCase.expected)
+			}
+		})
 	}
 }
