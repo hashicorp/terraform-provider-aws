@@ -2154,6 +2154,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			"blue_green_update",
 			"delete_automated_backups",
 			names.AttrFinalSnapshotIdentifier,
+			"maintenance_window",
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
