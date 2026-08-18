@@ -789,6 +789,10 @@ func resourceEndpoint() *schema.Resource {
 								Default:      encryptionModeSseS3,
 								ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 							},
+							"map_boolean_as_boolean": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 							"server_side_encryption_kms_key_id": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -1047,6 +1051,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 			if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
 				settings.ServiceAccessRoleArn = aws.String(v)
+			}
+
+			if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
+				settings.MapBooleanAsBoolean = aws.Bool(v)
 			}
 		}
 
@@ -1403,6 +1411,10 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 						if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
 							settings.ServiceAccessRoleArn = aws.String(v)
+						}
+
+						if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
+							settings.MapBooleanAsBoolean = aws.Bool(v)
 						}
 
 						input.RedshiftSettings = settings
@@ -2225,6 +2237,7 @@ func flattenRedshiftSettings(apiObject *awstypes.RedshiftSettings) []any {
 		"bucket_folder":                     aws.ToString(apiObject.BucketFolder),
 		names.AttrBucketName:                aws.ToString(apiObject.BucketName),
 		"encryption_mode":                   apiObject.EncryptionMode,
+		"map_boolean_as_boolean":            aws.ToBool(apiObject.MapBooleanAsBoolean),
 		"server_side_encryption_kms_key_id": aws.ToString(apiObject.ServerSideEncryptionKmsKeyId),
 		"service_access_role_arn":           aws.ToString(apiObject.ServiceAccessRoleArn),
 	}
