@@ -310,7 +310,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 											int32planmodifier.UseStateForUnknown(),
 										},
 									},
-									"trigger_conditions_actual": framework.ResourceComputedListOfObjectsAttribute[triggerConditionsModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions"))),
+									"trigger_conditions_actual": framework.ResourceComputedListOfObjectsAttribute[triggerConditionsModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(r.triggerConditionsPath())),
 								},
 								Blocks: map[string]schema.Block{
 									"invocation_configuration": schema.ListNestedBlock{
@@ -470,6 +470,13 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
 	}
 
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var plannedTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, r.triggerConditionsPath(), &plannedTriggerConditionsList))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 		out, err := retryUpdateMemoryStrategy(ctx, conn, &input, createTimeout)
@@ -519,6 +526,14 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured trigger_conditions.
+	if !plannedTriggerConditionsList.IsNull() {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), plannedTriggerConditionsList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -543,6 +558,15 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
+	importing := state.Name.IsNull()
+
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var configuredTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, r.triggerConditionsPath(), &configuredTriggerConditionsList))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	nullReflectionConfiguration := state.ReflectionConfiguration.IsNull()
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &state))
@@ -556,6 +580,53 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var newTriggerConditionsActualList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.GetAttribute(ctx, r.triggerConditionsActualPath(), &newTriggerConditionsActualList))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	switch {
+	case importing && !newTriggerConditionsActualList.IsNull():
+		// Set trigger_conditions to trigger_conditions_actual.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), newTriggerConditionsActualList))
+	case !configuredTriggerConditionsList.IsNull() && !newTriggerConditionsActualList.IsNull():
+		// Case of configured trigger_conditions but null trigger_conditions_actual is taken care of in flatten.
+		configuredTriggerConditions, diags := configuredTriggerConditionsList.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		newTriggerConditionsActual, diags := newTriggerConditionsActualList.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Use the fact that each tigger conditions contains a single required attribute to just check for nullness of the block.
+		if configuredTriggerConditions.MessageBasedTrigger.IsNull() {
+			newTriggerConditionsActual.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+		}
+		if configuredTriggerConditions.TimeBasedTrigger.IsNull() {
+			newTriggerConditionsActual.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
+		}
+		if configuredTriggerConditions.TokenBasedTrigger.IsNull() {
+			newTriggerConditionsActual.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+		}
+
+		newTriggerConditionsActualList, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, newTriggerConditionsActual)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), newTriggerConditionsActualList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -571,6 +642,13 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var plannedTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, r.triggerConditionsPath(), &plannedTriggerConditionsList))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -632,6 +710,14 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured trigger_conditions.
+	if !plannedTriggerConditionsList.IsNull() {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), plannedTriggerConditionsList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -682,6 +768,14 @@ func (r *resourceMemoryStrategy) flatten(ctx context.Context, memoryStrategy *aw
 	diags.Append(fwflex.Flatten(ctx, memoryStrategy, data)...)
 
 	return diags
+}
+
+func (r *resourceMemoryStrategy) triggerConditionsPath() path.Path {
+	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions")
+}
+
+func (r *resourceMemoryStrategy) triggerConditionsActualPath() path.Path {
+	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions_actual")
 }
 
 const memoryStrategyImportIDSeparator = intflex.ResourceIdSeparator
