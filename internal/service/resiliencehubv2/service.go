@@ -100,6 +100,9 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 		Blocks: map[string]fwschema.Block{
 			"associated_system": fwschema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedSystemModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(0, 20),
+				},
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
 						"system_arn": fwschema.StringAttribute{
