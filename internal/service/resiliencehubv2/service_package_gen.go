@@ -137,6 +137,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newUserJourneyResource,
+			TypeName: "aws_resiliencehubv2_user_journey",
+			Name:     "User Journey",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("system_arn", true),
+				inttypes.StringIdentityAttribute("user_journey_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      userJourneyImportID{},
+			},
+		},
 	}
 }
 
@@ -201,6 +215,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newUserJourneyResourceAsListResource,
+			TypeName: "aws_resiliencehubv2_user_journey",
+			Name:     "User Journey",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("system_arn", true),
+				inttypes.StringIdentityAttribute("user_journey_id", true),
+			}),
 		},
 	})
 }

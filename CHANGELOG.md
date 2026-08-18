@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_ec2_ami_launch_permission` ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
 * **New List Resource:** `aws_lambdacore_network_connector` ([#49387](https://github.com/hashicorp/terraform-provider-aws/issues/49387))
 * **New List Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
 * **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
@@ -16,6 +17,7 @@ ENHANCEMENTS:
 * data-source/aws_fsx_windows_file_system: Add `network_type` attribute ([#49514](https://github.com/hashicorp/terraform-provider-aws/issues/49514))
 * data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
 * resource/aws_bedrockagentcore_harness: Adds attribute `environment_actual` ([#48815](https://github.com/hashicorp/terraform-provider-aws/issues/48815))
+* resource/aws_ec2_ami_launch_permission: Add resource identity support ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
 * resource/aws_fsx_ontap_file_system: Add `network_type` argument ([#49512](https://github.com/hashicorp/terraform-provider-aws/issues/49512))
 * resource/aws_fsx_openzfs_file_system: Add `network_type` argument ([#49513](https://github.com/hashicorp/terraform-provider-aws/issues/49513))
 * resource/aws_fsx_windows_file_system: Add `network_type` argument ([#49514](https://github.com/hashicorp/terraform-provider-aws/issues/49514))

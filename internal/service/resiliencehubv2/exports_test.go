@@ -11,6 +11,7 @@ var (
 	ResourceService         = newServiceResource
 	ResourceServiceFunction = newServiceFunctionResource
 	ResourceSystem          = newSystemResource
+	ResourceUserJourney     = newUserJourneyResource
 
 	FindAssertionByTwoPartKey       = findAssertionByTwoPartKey
 	FindInputSourceByTwoPartKey     = findInputSourceByTwoPartKey
@@ -18,4 +19,5 @@ var (
 	FindServiceByARN                = findServiceByARN
 	FindServiceFunctionByTwoPartKey = findServiceFunctionByTwoPartKey
 	FindSystemByARN                 = findSystemByARN
+	FindUserJourneyByTwoPartKey     = findUserJourneyByTwoPartKey
 )
