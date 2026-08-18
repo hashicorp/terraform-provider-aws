@@ -39,6 +39,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_medialive_multiplex_program",
 			Name:     "Multiplex Program",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("program_name", true),
+				inttypes.StringIdentityAttribute("multiplex_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      multiplexProgramImportID{},
+				SetIDAttr:     true,
+			},
 		},
 	}
 }

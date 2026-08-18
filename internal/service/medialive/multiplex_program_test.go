@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -249,6 +250,10 @@ func testAccCheckMultiplexProgramExists(ctx context.Context, t *testing.T, name 
 
 		return nil
 	}
+}
+
+func randomMultiplexProgramName(t *testing.T) string {
+	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
 
 func testAccMultiplexProgramBaseConfig(rName string) string {
