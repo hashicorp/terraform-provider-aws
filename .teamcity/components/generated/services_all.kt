@@ -6,8 +6,10 @@
 val services = mapOf(
     "accessanalyzer" to ServiceSpec("IAM Access Analyzer"),
     "account" to ServiceSpec("Account Management"),
+    "accountaccess" to ServiceSpec("Account Access"),
     "acm" to ServiceSpec("ACM (Certificate Manager)"),
     "acmpca" to ServiceSpec("ACM PCA (Certificate Manager Private Certificate Authority)"),
+    "agentregistry" to ServiceSpec("Agent Registry"),
     "amp" to ServiceSpec("AMP (Managed Prometheus)", parallelismOverride = 10),
     "amplify" to ServiceSpec("Amplify"),
     "apigateway" to ServiceSpec("API Gateway", vpcLock = true),
@@ -127,7 +129,6 @@ val services = mapOf(
     "iam" to ServiceSpec("IAM (Identity & Access Management)"),
     "identitystore" to ServiceSpec("SSO Identity Store"),
     "imagebuilder" to ServiceSpec("EC2 Image Builder", vpcLock = true),
-    "inspector" to ServiceSpec("Inspector Classic"),
     "inspector2" to ServiceSpec("Inspector"),
     "interconnect" to ServiceSpec("Interconnect"),
     "internetmonitor" to ServiceSpec("CloudWatch Internet Monitor"),

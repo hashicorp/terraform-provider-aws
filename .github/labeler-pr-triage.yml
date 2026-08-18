@@ -135,6 +135,12 @@ service/account:
           - any-glob-to-any-file:
               - 'internal/service/account/**/*'
               - 'website/**/account_*'
+service/accountaccess:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/accountaccess/**/*'
+              - 'website/**/accountaccess_*'
 service/acm:
   - any:
       - changed-files:
@@ -147,6 +153,12 @@ service/acmpca:
           - any-glob-to-any-file:
               - 'internal/service/acmpca/**/*'
               - 'website/**/acmpca_*'
+service/agentregistry:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/agentregistry/**/*'
+              - 'website/**/agentregistry_*'
 service/alexaforbusiness:
   - any:
       - changed-files:

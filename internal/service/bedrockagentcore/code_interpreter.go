@@ -42,7 +42,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_code_interpreter", name="Code Interpreter")
 // @Tags(identifierAttribute="code_interpreter_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetCodeInterpreterOutput")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(importStateIdAttribute="code_interpreter_id")
+// @Testing(preCheck="testAccPreCheckCodeInterpreters")
 func newCodeInterpreterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &codeInterpreterResource{}
 

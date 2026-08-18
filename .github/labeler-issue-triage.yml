@@ -34,10 +34,14 @@ service/accessanalyzer:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accessanalyzer_'
 service/account:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_account_'
+service/accountaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accountaccess_'
 service/acm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acm_'
 service/acmpca:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acmpca_'
+service/agentregistry:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_agentregistry_'
 service/alexaforbusiness:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_alexaforbusiness_'
 service/amp:

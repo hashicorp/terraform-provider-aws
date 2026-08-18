@@ -51,6 +51,35 @@ service "account" {
   is_global = true
 }
 
+service "accountaccess" {
+  cli_v2_command {
+    aws_cli_v2_command           = "account-access"
+    aws_cli_v2_command_no_dashes = "accountaccess"
+  }
+
+  sdk {
+    id            = "Account Access"
+    arn_namespace = "account-access"
+  }
+
+  names {
+    provider_name_upper = "AccountAccess"
+    human_friendly      = "Account Access"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
+  }
+
+  resource_prefix {
+    correct = "aws_accountaccess_"
+  }
+
+  provider_package_correct = "accountaccess"
+  doc_prefix               = ["accountaccess_"]
+  brand                    = "AWS"
+}
+
 service "acm" {
   sdk {
     id            = "ACM"
@@ -102,6 +131,40 @@ service "acmpca" {
 
   provider_package_correct = "acmpca"
   doc_prefix               = ["acmpca_"]
+  brand                    = "AWS"
+}
+
+service "agentregistry" {
+  cli_v2_command {
+    aws_cli_v2_command           = "agent-registry-control"
+    aws_cli_v2_command_no_dashes = "agentregistrycontrol"
+  }
+
+  go_packages {
+    v2_package = "agentregistrycontrol"
+  }
+
+  sdk {
+    id            = "Agent Registry Control"
+    arn_namespace = "agent-registry"
+  }
+
+  names {
+    provider_name_upper = "AgentRegistry"
+    human_friendly      = "Agent Registry"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListRegistries"
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_agentregistry_"
+  }
+
+  provider_package_correct = "agentregistry"
+  doc_prefix               = ["agentregistry_"]
   brand                    = "AWS"
 }
 
@@ -5153,7 +5216,7 @@ service "lambdamicrovms" {
   }
 
   names {
-    provider_name_upper = "LambdaMicrovms"
+    provider_name_upper = "LambdaMicroVMs"
     human_friendly      = "Lambda MicroVMs"
   }
 

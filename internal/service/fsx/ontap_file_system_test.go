@@ -52,6 +52,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
@@ -840,6 +841,35 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 	})
 }
 
+func TestAccFSxONTAPFileSystem_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_networkType(rName, string(awstypes.NetworkTypeDual)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDual)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+		},
+	})
+}
+
 func testAccCheckONTAPFileSystemExists(ctx context.Context, t *testing.T, n string, v *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -909,6 +939,10 @@ func testAccCheckONTAPFileSystemRecreated(i, j *awstypes.FileSystem) resource.Te
 
 func testAccONTAPFileSystemConfig_base(rName string) string {
 	return acctest.ConfigVPCWithSubnets(rName, 2)
+}
+
+func testAccONTAPFileSystemConfig_baseIPv6(rName string) string {
+	return acctest.ConfigVPCWithSubnetsIPv6(rName, 2)
 }
 
 func testAccONTAPFileSystemConfig_basic(rName string) string {
@@ -1394,4 +1428,18 @@ resource "aws_fsx_ontap_file_system" "test" {
   }
 }
 `, rName))
+}
+
+func testAccONTAPFileSystemConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_baseIPv6(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 128
+  preferred_subnet_id = aws_subnet.test[0].id
+
+  network_type = "%[1]s"
+}
+`, networkType))
 }

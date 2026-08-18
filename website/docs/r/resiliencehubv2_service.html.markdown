@@ -54,6 +54,27 @@ resource "aws_resiliencehubv2_service" "example" {
 }
 ```
 
+### With Associated Systems
+
+```hcl
+resource "aws_resiliencehubv2_system" "example" {
+  name = "example-system"
+}
+
+resource "aws_resiliencehubv2_service" "example" {
+  name    = "example-service"
+  regions = ["us-west-2"]
+
+  permission_model {
+    invoker_role_name = "AWSResilienceHubAssessmentRole"
+  }
+
+  associated_system {
+    system_arn = aws_resiliencehubv2_system.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -64,12 +85,19 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `associated_system` - (Optional) Systems to associate with the service. See [`associated_system` Block](#associated_system-block) below.
 * `dependency_discovery` - (Optional) Dependency discovery. Valid values: `ENABLED`, `DISABLED`.
 * `description` - (Optional) Description of the service.
 * `kms_key_id` - (Optional) KMS key ARN.
 * `policy_arn` - (Optional) ARN of the resilience policy to associate with this service.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `associated_system` Block
+
+The `associated_system` block supports:
+
+* `system_arn` - (Required) ARN of the system to associate with the service.
 
 ### `permission_model` Block
 

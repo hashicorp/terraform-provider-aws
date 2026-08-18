@@ -50,7 +50,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime", name="Agent Runtime")
 // @Tags(identifierAttribute="agent_runtime_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttribute="agent_runtime_id")
+// @Testing(preCheck="testAccPreCheckAgentRuntimes")
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 

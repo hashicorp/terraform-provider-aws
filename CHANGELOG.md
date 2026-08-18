@@ -1,11 +1,60 @@
 ## 6.61.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_odb_iam_role_association` ([#46794](https://github.com/hashicorp/terraform-provider-aws/issues/46794))
+* **New List Resource:** `aws_ec2_ami_launch_permission` ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
+* **New List Resource:** `aws_lambdacore_network_connector` ([#49387](https://github.com/hashicorp/terraform-provider-aws/issues/49387))
+* **New List Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
+* **New List Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
+* **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+* **New List Resource:** `aws_resiliencehubv2_user_journey` ([#48330](https://github.com/hashicorp/terraform-provider-aws/issues/48330))
+* **New Resource:** `aws_lambdacore_network_connector` ([#49387](https://github.com/hashicorp/terraform-provider-aws/issues/49387))
+* **New Resource:** `aws_lambdamicrovms_image` ([#48950](https://github.com/hashicorp/terraform-provider-aws/issues/48950))
+* **New Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
+* **New Resource:** `aws_odb_iam_role_association` ([#46794](https://github.com/hashicorp/terraform-provider-aws/issues/46794))
+* **New Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
+* **New Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
+* **New Resource:** `aws_resiliencehubv2_user_journey` ([#48330](https://github.com/hashicorp/terraform-provider-aws/issues/48330))
+
+ENHANCEMENTS:
+
+* data-source/aws_fsx_ontap_file_system: Add `network_type` attribute ([#49512](https://github.com/hashicorp/terraform-provider-aws/issues/49512))
+* data-source/aws_fsx_windows_file_system: Add `network_type` attribute ([#49514](https://github.com/hashicorp/terraform-provider-aws/issues/49514))
+* data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* data-source/aws_vpclattice_service: Add `idle_timeout_seconds` attribute ([#49540](https://github.com/hashicorp/terraform-provider-aws/issues/49540))
+* resource/aws_bedrockagentcore_harness: Adds attribute `environment_actual` ([#48815](https://github.com/hashicorp/terraform-provider-aws/issues/48815))
+* resource/aws_ec2_ami_launch_permission: Add resource identity support ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
+* resource/aws_fsx_ontap_file_system: Add `network_type` argument ([#49512](https://github.com/hashicorp/terraform-provider-aws/issues/49512))
+* resource/aws_fsx_openzfs_file_system: Add `network_type` argument ([#49513](https://github.com/hashicorp/terraform-provider-aws/issues/49513))
+* resource/aws_fsx_windows_file_system: Add `network_type` argument ([#49514](https://github.com/hashicorp/terraform-provider-aws/issues/49514))
+* resource/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` argument ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
+* resource/aws_vpclattice_service: Add `idle_timeout_seconds` argument ([#49540](https://github.com/hashicorp/terraform-provider-aws/issues/49540))
+
+BUG FIXES:
+
+* list-resource/aws_bedrockagentcore_harness: Prevents error when remote resource disappears during List ([#49446](https://github.com/hashicorp/terraform-provider-aws/issues/49446))
+* list-resource/aws_bedrockagentcore_online_evaluation_config: Prevents error when remote resource disappears during List ([#49479](https://github.com/hashicorp/terraform-provider-aws/issues/49479))
+* list-resource/aws_bedrockagentcore_policy_engine: Prevents error when remote resource disappears during List ([#49478](https://github.com/hashicorp/terraform-provider-aws/issues/49478))
+* list-resource/aws_bedrockagentcore_registry: Prevents error when remote resource disappears during List ([#49480](https://github.com/hashicorp/terraform-provider-aws/issues/49480))
+* list-resource/aws_bedrockagentcore_resource_policy: Prevents error when remote resource disappears during List ([#49481](https://github.com/hashicorp/terraform-provider-aws/issues/49481))
+* resource/aws_bedrockagentcore_harness: Fix `Provider produced inconsistent result after apply` error for `environment` ([#48815](https://github.com/hashicorp/terraform-provider-aws/issues/48815))
+* resource/aws_bedrockagentcore_online_evaluation_config: Retries additional IAM propagation errors on creation ([#49479](https://github.com/hashicorp/terraform-provider-aws/issues/49479))
+* resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+
 ## 6.60.0 (August 13, 2026)
 
 FEATURES:
 
 * **New List Resource:** `aws_db_parameter_group` ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+* **New List Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
 * **New List Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+* **New Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
 * **New Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
 
 ENHANCEMENTS:

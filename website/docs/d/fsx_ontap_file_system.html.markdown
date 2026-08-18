@@ -45,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
 * `network_interface_ids` - IDs of the elastic network interfaces from which a specific file system is accessible.
+* `network_type` - Network type (`IPV4` or `DUAL`).
 * `owner_id` - AWS account identifier that created the file system.
 * `preferred_subnet_id` - Subnet in which you want the preferred file server to be located.
 * `route_table_ids` - (Multi-AZ only) VPC route tables in which your file system's endpoints exist.

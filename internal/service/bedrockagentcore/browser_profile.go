@@ -41,7 +41,6 @@ import (
 // @IdentityAttribute("profile_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetBrowserProfileOutput")
 // @Testing(generator="testAccRandomBrowserProfileName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="profile_id")
 func newBrowserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {

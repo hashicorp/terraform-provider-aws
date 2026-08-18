@@ -6,8 +6,10 @@ variable "service_labels" {
   default = [
     "accessanalyzer",
     "account",
+    "accountaccess",
     "acm",
     "acmpca",
+    "agentregistry",
     "alexaforbusiness",
     "amp",
     "amplify",

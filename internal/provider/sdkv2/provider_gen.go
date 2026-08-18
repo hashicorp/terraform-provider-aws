@@ -38,6 +38,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// accountaccess
+
+				"accountaccess": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// acm
 
 				"acm": {
@@ -49,6 +57,14 @@ func endpointsSchema() *schema.Schema {
 				// acmpca
 
 				"acmpca": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// agentregistry
+
+				"agentregistry": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

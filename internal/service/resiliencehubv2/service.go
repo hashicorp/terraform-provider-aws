@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -97,6 +98,20 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]fwschema.Block{
+			"associated_system": fwschema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedSystemModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(0, 20),
+				},
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						"system_arn": fwschema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+						},
+					},
+				},
+			},
 			"permission_model": fwschema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -144,6 +159,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreateServiceInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -158,7 +174,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 		return conn.CreateService(ctx, &input)
 	}, "Ensure the role exists and its trust policy allows access")
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -183,6 +199,7 @@ func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, re
 	arn := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	svc, err := findServiceByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -221,6 +238,13 @@ func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		// UpdateService treats an omitted AssociatedSystems as "no change", leaving the
+		// existing associations in place. Removing the last associated_system block
+		// therefore requires sending an explicitly empty list.
+		if input.AssociatedSystems == nil && state.AssociatedSystems.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.AssociatedSystems = []awstypes.AssociatedSystem{}
 		}
 
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -310,6 +334,7 @@ func findService(ctx context.Context, conn *resiliencehubv2.Client, input *resil
 
 type serviceResourceModel struct {
 	framework.WithRegionModel
+	AssociatedSystems   fwtypes.SetNestedObjectValueOf[associatedSystemModel] `tfsdk:"associated_system"`
 	DependencyDiscovery fwtypes.StringEnum[awstypes.DependencyDiscoveryInput] `tfsdk:"dependency_discovery" autoflex:",noflatten"`
 	Description         types.String                                          `tfsdk:"description"`
 	KMSKeyID            fwtypes.ARN                                           `tfsdk:"kms_key_id"`
@@ -320,6 +345,10 @@ type serviceResourceModel struct {
 	ServiceARN          types.String                                          `tfsdk:"arn"`
 	Tags                tftags.Map                                            `tfsdk:"tags"`
 	TagsAll             tftags.Map                                            `tfsdk:"tags_all"`
+}
+
+type associatedSystemModel struct {
+	SystemARN fwtypes.ARN `tfsdk:"system_arn"`
 }
 
 type permissionModelModel struct {
