@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Add plan-time validation that `engine_version` is available for the configured `engine` in the current Region and is compatible with the family of `parameter_group_name`
+```
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add plan-time validation that `engine_version` is available for the configured `engine` in the current Region and is compatible with the family of `parameter_group_name`
+```
