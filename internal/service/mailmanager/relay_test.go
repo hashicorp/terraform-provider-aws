@@ -140,14 +140,15 @@ func TestAccMailManagerRelay_update(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerRelay_Authentication_secretARN(t *testing.T) {
+func testAccMailManagerRelay_Authentication_secretARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_relay.test"
 	password := "Abcd1234!"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	// Serialized due to the aws_mailmanager_ingress_point dependency
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccRelayPreCheck(ctx, t)
