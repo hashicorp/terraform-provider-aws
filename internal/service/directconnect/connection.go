@@ -407,7 +407,19 @@ func findConnection(ctx context.Context, conn *directconnect.Client, input *dire
 }
 
 func findConnections(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeConnectionsInput, filter tfslices.Predicate[*awstypes.Connection]) ([]awstypes.Connection, error) {
-	output, err := conn.DescribeConnections(ctx, input)
+	var output []awstypes.Connection
+	var pageSeen bool
+
+	err := describeConnectionsPages(ctx, conn, input, func(page *directconnect.DescribeConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		pageSeen = true
+
+		output = append(output, tfslices.Filter(page.Connections, tfslices.PredicateValue(filter))...)
+
+		return !lastPage
+	})
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil, &retry.NotFoundError{
@@ -419,11 +431,11 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 		return nil, err
 	}
 
-	if output == nil {
+	if !pageSeen {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
+	return output, nil
 }
 
 func statusConnection(conn *directconnect.Client, id string) retry.StateRefreshFunc {

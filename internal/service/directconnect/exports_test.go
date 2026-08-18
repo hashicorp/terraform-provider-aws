@@ -37,4 +37,7 @@ var (
 	FindVirtualInterfaceByID           = findVirtualInterfaceByID
 	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
 	GatewayAssociationStateUpgradeV1   = gatewayAssociationStateUpgradeV1
+
+	FlattenConnections       = flattenConnections
+	NewConnectionsDataSource = newConnectionsDataSource
 )
