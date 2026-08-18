@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -346,6 +347,26 @@ func resourceRecord() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
+				recordType := diff.Get(names.AttrType).(string)
+				if recordType != string(awstypes.RRTypeTxt) && recordType != string(awstypes.RRTypeSpf) {
+					return nil
+				}
+				if v, ok := diff.GetOk("records"); ok {
+					for _, record := range v.(*schema.Set).List() {
+						value := record.(string)
+						for seg := range strings.SplitSeq(value, "\" \"") {
+							if len(seg) > 255 {
+								return fmt.Errorf("individual TXT/SPF quoted string segment must be 255 characters or fewer, got %d characters", len(seg))
+							}
+						}
+					}
+				}
+				return nil
+			},
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
