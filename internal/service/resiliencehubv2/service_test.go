@@ -59,6 +59,7 @@ func TestAccResilienceHubV2Service_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dependency_discovery"), tfknownvalue.StringExact(awstypes.DependencyDiscoveryInputDisabled)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
