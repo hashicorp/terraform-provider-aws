@@ -451,6 +451,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       sampling_percentage = 10.0
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, executionStatus))
 }
@@ -491,6 +493,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       session_timeout_minutes = 20
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }

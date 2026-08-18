@@ -87,6 +87,7 @@ provider "aws" {
 |-------|------------------|-------------------------------|------------------------------------|
 |IAM Access Analyzer|`accessanalyzer`|`AWS_ENDPOINT_URL_ACCESSANALYZER`|`accessanalyzer`|
 |Account Management|`account`|`AWS_ENDPOINT_URL_ACCOUNT`|`account`|
+|Account Access|`accountaccess`|`AWS_ENDPOINT_URL_ACCOUNT_ACCESS`|`account_access`|
 |ACM (Certificate Manager)|`acm`|`AWS_ENDPOINT_URL_ACM`|`acm`|
 |ACM PCA (Certificate Manager Private Certificate Authority)|`acmpca`|`AWS_ENDPOINT_URL_ACM_PCA`|`acm_pca`|
 |Agent Registry|`agentregistry`|`AWS_ENDPOINT_URL_AGENT_REGISTRY_CONTROL`|`agent_registry_control`|

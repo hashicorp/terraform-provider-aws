@@ -42,6 +42,7 @@ The following arguments are optional:
 * `endpoint_ip_address_range` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
 * `final_backup_tags` - (Optional) Map of tags to apply to the file system's final backup.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
+* `network_type` - (Optional) Network type. Valid values are `IPV4` and `DUAL`. Default value is `IPV4`.
 * `preferred_subnet_id` - (Optional) (Multi-AZ only) Required when `deployment_type` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
 * `read_cache_configuration` - (Optional) Configuration block for optional provisioned SSD read cache on file systems that use the Intelligent-Tiering storage class. Required when `storage_type` is set to `INTELLIGENT_TIERING`. See [`read_cache_configuration` Block](#read_cache_configuration-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

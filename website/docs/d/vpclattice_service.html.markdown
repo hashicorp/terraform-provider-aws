@@ -40,5 +40,6 @@ This data source exports the following attributes in addition to the arguments a
     * `domain_name` - DNS name for the service.
     * `hosted_zone_id` - Hosted zone ID where the DNS name is registered.
 * `id` - Unique identifier for the service.
+* `idle_timeout_seconds` - Amount of time, in seconds, that a connection can remain idle (no data sent) before VPC Lattice closes it.
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.

@@ -33,6 +33,7 @@ The following arguments are optional:
 * `auth_type` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - (Optional) Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - (Optional) Custom domain name of the service.
+* `idle_timeout_seconds` - (Optional) Amount of time, in seconds, that a connection can remain idle (no data sent) before VPC Lattice closes it. The valid range is 60 to 600 seconds. Default is 60 seconds.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

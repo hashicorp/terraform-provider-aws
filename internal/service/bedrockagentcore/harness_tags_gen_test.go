@@ -81,7 +81,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -135,7 +135,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -219,7 +219,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -288,7 +288,7 @@ func TestAccBedrockAgentCoreHarness_Tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -345,7 +345,7 @@ func TestAccBedrockAgentCoreHarness_Tags_emptyMap(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -434,7 +434,7 @@ func TestAccBedrockAgentCoreHarness_Tags_addOnUpdate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -502,7 +502,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -538,7 +538,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -643,7 +643,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -691,7 +691,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -790,7 +790,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -857,7 +857,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -909,7 +909,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -957,7 +957,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -995,7 +995,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1072,7 +1072,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1136,7 +1136,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1174,7 +1174,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1249,7 +1249,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1313,7 +1313,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1369,7 +1369,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1468,7 +1468,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToProviderOnly(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1566,7 +1566,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToResourceOnly(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1641,7 +1641,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyResourceTag(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1708,7 +1708,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1784,7 +1784,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullOverlappingResourceTag(
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1862,7 +1862,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullNonOverlappingResourceT
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1926,7 +1926,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -2032,7 +2032,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -2128,7 +2128,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_replace(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},

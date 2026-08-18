@@ -17,6 +17,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_mailmanager_relay", sweepRelays)
 	awsv2.Register("aws_mailmanager_ingress_point", sweepIngressPoints)
 	awsv2.Register("aws_mailmanager_rule_set", sweepRuleSets)
 	awsv2.Register("aws_mailmanager_traffic_policy", sweepTrafficPolicies)
@@ -59,6 +60,28 @@ func sweepRuleSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 			sweepResources = append(sweepResources, framework.NewSweepResource(newRuleSetResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.RuleSetId)),
 			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRelays(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := mailmanager.ListRelaysInput{}
+	conn := client.MailManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListRelaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Relays {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRelayResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.RelayId))),
+			)
 		}
 	}
 
