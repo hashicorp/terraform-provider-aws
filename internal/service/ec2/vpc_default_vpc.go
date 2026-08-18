@@ -64,7 +64,7 @@ func resourceDefaultVPC() *schema.Resource {
 				"assign_generated_ipv6_cidr_block": {
 					Type:          schema.TypeBool,
 					Optional:      true,
-					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+					ConflictsWith: []string{"ipv6_ipam_pool_id", "ipv6_pool"},
 				},
 				names.AttrCIDRBlock: {
 					Type:     schema.TypeString,
@@ -123,7 +123,6 @@ func resourceDefaultVPC() *schema.Resource {
 					Optional:      true,
 					Computed:      true,
 					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-					RequiredWith:  []string{"ipv6_ipam_pool_id"},
 					ValidateFunc:  validVPCIPv6CIDRBlock,
 				},
 				"ipv6_cidr_block_network_border_group": {
@@ -135,7 +134,7 @@ func resourceDefaultVPC() *schema.Resource {
 				"ipv6_ipam_pool_id": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_pool"},
 				},
 				"ipv6_netmask_length": {
 					Type:          schema.TypeInt,
@@ -143,6 +142,13 @@ func resourceDefaultVPC() *schema.Resource {
 					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
 					ConflictsWith: []string{"ipv6_cidr_block"},
 					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"ipv6_pool": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
+					RequiredWith:  []string{"ipv6_cidr_block"},
 				},
 				"main_route_table_id": {
 					Type:     schema.TypeString,
@@ -250,7 +256,8 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 			"",
 			"",
 			0,
-			newIPv6CIDRBlockNetworkBorderGroup)
+			newIPv6CIDRBlockNetworkBorderGroup,
+			"")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
@@ -259,14 +266,22 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlock, newIPv6PoolID := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); !newAssignGeneratedIPv6CIDRBlock && (oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID) {
+	// newIPv6Pool is a non-IPAM BYOIP pool ("ipv6pool-ec2-*"); newIPv6PoolID is an IPAM pool. They
+	// are mutually exclusive, so the requested pool is whichever one is set.
+	newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlock, newIPv6PoolID, newIPv6Pool := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string), d.Get("ipv6_pool").(string)
+	newPool := newIPv6PoolID
+	if newIPv6Pool != "" {
+		newPool = newIPv6Pool
+	}
+	if !newAssignGeneratedIPv6CIDRBlock && (oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newPool) {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			associationID,
 			false,
 			newIPv6CIDRBlock,
 			newIPv6PoolID,
 			d.Get("ipv6_netmask_length").(int),
-			"")
+			"",
+			newIPv6Pool)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
