@@ -6830,6 +6830,68 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_updateStorageTypeAndInstanceClass(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_storageTypeAndInstanceClass(rName, false, "gp2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+				),
+			},
+			{
+				// Changing both the instance class and the storage type (gp2 -> gp3) in
+				// the same Blue/Green update leaves the green instance in
+				// "storage-optimization" for an extended period. The switchover must wait
+				// for it to reach "available" first. See GitHub issue #47493.
+				Config: testAccInstanceConfig_BlueGreenDeployment_storageTypeAndInstanceClass(rName, true, "gp3"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+					"latest_restorable_time",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -14351,6 +14413,59 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_storageTypeAndInstanceClass(rName string, oddClasses bool, storageType string) string {
+	var halfClasses []string
+	start := 0
+	if oddClasses {
+		start = 1
+	}
+	for i := start; i < len(instanceClassesSlice); i += 2 {
+		halfClasses = append(halfClasses, instanceClassesSlice[i])
+	}
+	halfMainInstClass := strings.Join(halfClasses, ", ")
+
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = [%[4]s]
+}
+
+data "aws_db_parameter_group" "test" {
+  name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+}
+
+resource "aws_db_instance" "test" {
+  identifier              = %[5]q
+  allocated_storage       = 20
+  storage_type            = %[6]q
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = data.aws_db_parameter_group.test.name
+  skip_final_snapshot     = true
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled = true
+  }
+}
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp3", halfMainInstClass, rName, storageType))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_updateableInstanceClass(rName string, oddClasses bool) string {
