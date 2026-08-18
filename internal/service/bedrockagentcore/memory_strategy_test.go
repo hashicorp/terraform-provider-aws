@@ -2466,7 +2466,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 							"historical_context_window_size": knownvalue.NotNull(),
 							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
-								"topic_arn":                    knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
 							})}),
 							"trigger_conditions": knownvalue.ListSizeExact(0),
 							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2521,7 +2521,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 							"historical_context_window_size": knownvalue.Int32Exact(25),
 							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
-								"topic_arn":                    knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
 							})}),
 							"trigger_conditions": knownvalue.ListSizeExact(0),
 							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2582,7 +2582,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManagedTriggerConditions(t *testi
 							"historical_context_window_size": knownvalue.NotNull(),
 							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
-								"topic_arn":                    knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
 							})}),
 							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2623,7 +2623,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManagedTriggerConditions(t *testi
 							"historical_context_window_size": knownvalue.NotNull(),
 							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
-								"topic_arn":                    knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
 							})}),
 							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"message_based_trigger": knownvalue.ListSizeExact(0),

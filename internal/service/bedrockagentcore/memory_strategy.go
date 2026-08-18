@@ -328,7 +328,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 														fwvalidators.S3BucketName,
 													},
 												},
-												"topic_arn": schema.StringAttribute{
+												names.AttrTopicARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
 												},
