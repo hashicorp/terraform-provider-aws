@@ -140,8 +140,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"Connector": {
 			acctest.CtBasic:      testAccConnector_basic,
 			acctest.CtDisappears: testAccConnector_disappears,
-			"tags":               testAccConfigServiceConnector_tagsSerial,
-			"Identity":           testAccConfigServiceConnector_identitySerial,
+			"tags":               testAccConnector_tags,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,

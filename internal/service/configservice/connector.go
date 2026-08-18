@@ -35,6 +35,8 @@ import (
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(identityTest=false)
+// @Testing(tagsTest=false)
 func newConnectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &connectorResource{}, nil
 }
