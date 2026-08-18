@@ -10,11 +10,35 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
     type = "SELF_MANAGED"
 
     self_managed_configuration {
-      historical_context_window_size = var.historical_context_window_size
-
       invocation_configuration {
         payload_delivery_bucket_name = aws_s3_bucket.test.bucket
         topic_arn                    = aws_sns_topic.test.arn
+      }
+
+      trigger_conditions {
+        dynamic "message_based_trigger" {
+          for_each = var.message_count != null ? [var.message_count] : []
+
+          content {
+            message_count = message_based_trigger.value
+          }
+        }
+
+        dynamic "time_based_trigger" {
+          for_each = var.idle_session_timeout != null ? [var.idle_session_timeout] : []
+
+          content {
+            idle_session_timeout = time_based_trigger.value
+          }
+        }
+
+        dynamic "token_based_trigger" {
+          for_each = var.token_count != null ? [var.token_count] : []
+
+          content {
+            token_count = token_based_trigger.value
+          }
+        }
       }
     }
   }
@@ -106,7 +130,19 @@ variable "rName" {
   nullable    = false
 }
 
-variable "historical_context_window_size" {
+variable "message_count" {
+  type     = number
+  nullable = true
+  default  = null
+}
+
+variable "idle_session_timeout" {
+  type     = number
+  nullable = true
+  default  = null
+}
+
+variable "token_count" {
   type     = number
   nullable = true
   default  = null

@@ -2463,13 +2463,17 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 						"extraction":    knownvalue.ListSizeExact(0),
 						"reflection":    knownvalue.ListSizeExact(0),
 						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"historical_context_window_size": knownvalue.Int32Exact(4),
+							"historical_context_window_size": knownvalue.NotNull(),
 							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
 								"topic_arn":                    knownvalue.NotNull(),
 							})}),
-							"trigger_conditions":        knownvalue.ListSizeExact(0),
-							"trigger_conditions_actual": knownvalue.ListSizeExact(1),
+							"trigger_conditions": knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(1),
+								"time_based_trigger":    knownvalue.ListSizeExact(1),
+								"token_based_trigger":   knownvalue.ListSizeExact(1),
+							})}),
 						})}),
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
 					})})),
@@ -2519,8 +2523,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 								"payload_delivery_bucket_name": knownvalue.NotNull(),
 								"topic_arn":                    knownvalue.NotNull(),
 							})}),
-							"trigger_conditions":        knownvalue.ListSizeExact(0),
-							"trigger_conditions_actual": knownvalue.ListSizeExact(1),
+							"trigger_conditions": knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(1),
+								"time_based_trigger":    knownvalue.ListSizeExact(1),
+								"token_based_trigger":   knownvalue.ListSizeExact(1),
+							})}),
 						})}),
 						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
 					})})),
@@ -2532,6 +2540,110 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManagedTriggerConditions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed_tigger_conditions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"message_count": config.IntegerVariable(35),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.NotNull(),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								"topic_arn":                    knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35),
+								})}),
+								"time_based_trigger":  knownvalue.ListSizeExact(0),
+								"token_based_trigger": knownvalue.ListSizeExact(0),
+							})}),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35),
+								})}),
+								"time_based_trigger":  knownvalue.ListSizeExact(1),
+								"token_based_trigger": knownvalue.ListSizeExact(1),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed_tigger_conditions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"token_count":   config.IntegerVariable(1750),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.NotNull(),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								"topic_arn":                    knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(0),
+								"time_based_trigger":    knownvalue.ListSizeExact(0),
+								"token_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"token_count": knownvalue.Int32Exact(1750),
+								})}),
+							})}),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35), // Retains previous configured value.
+								})}),
+								"time_based_trigger": knownvalue.ListSizeExact(1),
+								"token_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"token_count": knownvalue.Int32Exact(1750),
+								})}),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
 				},
 			},
 		},
