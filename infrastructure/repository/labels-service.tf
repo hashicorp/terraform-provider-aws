@@ -280,6 +280,7 @@ variable "service_labels" {
     "pipes",
     "polly",
     "pricing",
+    "pricingplanmanager",
     "proton",
     "qbusiness",
     "qldb",
