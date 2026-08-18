@@ -125,6 +125,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Account"
     severity: WARNING
+  - id: accountaccess-in-func-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in func name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+      exclude:
+        - "/internal/service/accountaccess/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: accountaccess-in-test-name
+    languages:
+      - go
+    message: Include "AccountAccess" in test name
+    paths:
+      include:
+        - "/internal/service/accountaccess/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAccountAccess"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: accountaccess-in-const-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in const name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+    severity: WARNING
+  - id: accountaccess-in-var-name
+    languages:
+      - go
+    message: Do not use "AccountAccess" in var name inside accountaccess package
+    paths:
+      include:
+        - "/internal/service/accountaccess"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AccountAccess"
+    severity: WARNING
   - id: acm-in-func-name
     languages:
       - go
@@ -4667,51 +4728,4 @@ rules:
           patterns:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connectcases-in-func-name
-    languages:
-      - go
-    message: Do not use "ConnectCases" in func name inside connectcases package
-    paths:
-      include:
-        - "/internal/service/connectcases"
-      exclude:
-        - "/internal/service/connectcases/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConnectCases"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: connectcases-in-test-name
-    languages:
-      - go
-    message: Include "ConnectCases" in test name
-    paths:
-      include:
-        - "/internal/service/connectcases/*_test.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnectCases"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connectcases-in-const-name
-    languages:
-      - go
-    message: Do not use "ConnectCases" in const name inside connectcases package
-    paths:
-      include:
-        - "/internal/service/connectcases"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConnectCases"
     severity: WARNING

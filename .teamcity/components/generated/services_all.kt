@@ -6,6 +6,7 @@
 val services = mapOf(
     "accessanalyzer" to ServiceSpec("IAM Access Analyzer"),
     "account" to ServiceSpec("Account Management"),
+    "accountaccess" to ServiceSpec("Account Access"),
     "acm" to ServiceSpec("ACM (Certificate Manager)"),
     "acmpca" to ServiceSpec("ACM PCA (Certificate Manager Private Certificate Authority)"),
     "agentregistry" to ServiceSpec("Agent Registry"),

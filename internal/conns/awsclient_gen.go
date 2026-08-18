@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
@@ -316,6 +317,10 @@ func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Cl
 
 func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
 	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
+}
+
+func (c *AWSClient) AccountAccessClient(ctx context.Context) *accountaccess.Client {
+	return errs.Must(client[*accountaccess.Client](ctx, c, names.AccountAccess, make(map[string]any)))
 }
 
 func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {

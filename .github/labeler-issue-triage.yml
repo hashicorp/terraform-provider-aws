@@ -34,6 +34,8 @@ service/accessanalyzer:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accessanalyzer_'
 service/account:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_account_'
+service/accountaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accountaccess_'
 service/acm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acm_'
 service/acmpca:
