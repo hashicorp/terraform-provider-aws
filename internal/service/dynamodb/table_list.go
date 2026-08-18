@@ -75,10 +75,8 @@ func (l *tableListResource) List(ctx context.Context, request list.ListRequest, 
 				}
 
 				diags := resourceTableFlatten(ctx, awsClient, rd, table)
-				if diags.HasError() || rd.Id() == "" {
-					tflog.Error(ctx, "Flattening DynamoDB table", map[string]any{
-						names.AttrName: tableName,
-					})
+				if diags.HasError() {
+					tflog.Error(ctx, "Error reading DynamoDB table")
 					continue
 				}
 			}

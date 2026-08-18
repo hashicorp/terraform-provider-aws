@@ -67,7 +67,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Composite identifier in the format `system_arn,user_journey_id`.
 * `user_journey_id` - Unique identifier of the user journey.
 
 ## Import

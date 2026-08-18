@@ -162,7 +162,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			d.identityAttributeName = args.Positional[0]
 		}
 
-		parseIdentityDuplicateAttrNames(args, implementation, d)
+		if err := parseIdentityDuplicateAttrNames(args, implementation, d); err != nil {
+			return errors.Join(errs, err)
+		}
 
 		for k := range args.Keyword {
 			errs = errors.Join(errs, fmt.Errorf("annotation \"@ArnIdentity\": unexpected keyword parameter %q", k))
@@ -177,7 +179,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		d.identityAttributeName = args.Positional[0]
 
-		parseIdentityDuplicateAttrNames(args, implementation, d)
+		if err := parseIdentityDuplicateAttrNames(args, implementation, d); err != nil {
+			return errors.Join(errs, err)
+		}
 
 		for k := range args.Keyword {
 			errs = errors.Join(errs, fmt.Errorf("annotation \"@CustomInherentRegionIdentity\": unexpected keyword parameter %q", k))
@@ -304,7 +308,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		// FIXME: Not actually for Global, but the value is never used
 		d.identityAttributeName = "region"
 
-		parseIdentityDuplicateAttrNames(args, implementation, d)
+		if err := parseIdentityDuplicateAttrNames(args, implementation, d); err != nil {
+			return errors.Join(errs, err)
+		}
 
 		for k := range args.Keyword {
 			switch k {
@@ -371,13 +377,23 @@ func ParseBoolAttr(name, value string) (bool, error) {
 	}
 }
 
-func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d *ResourceIdentity) {
+func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d *ResourceIdentity) error {
 	var attrs []string
 	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 		attrs = strings.Split(attr, ";")
 	}
 	if implementation == ImplementationSDK {
-		attrs = append(attrs, "id")
+		duplicatesIDAttr := true
+		if attr, ok := args.Keyword["duplicatesIdAttr"]; ok {
+			if b, err := ParseBoolAttr("duplicatesIdAttr", attr); err != nil {
+				return err
+			} else {
+				duplicatesIDAttr = b
+			}
+		}
+		if duplicatesIDAttr {
+			attrs = append(attrs, "id")
+		}
 	}
 
 	// Sort `id` to first position, the rest alphabetically
@@ -393,4 +409,7 @@ func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d
 	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
 
 	delete(args.Keyword, "identityDuplicateAttributes")
+	delete(args.Keyword, "duplicatesIdAttr")
+
+	return nil
 }

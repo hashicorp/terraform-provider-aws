@@ -6,6 +6,7 @@ package resiliencehubv2_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -22,11 +24,9 @@ import (
 
 func TestAccResilienceHubV2ServiceFunction_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_service_function.test[0]"
 	resourceName2 := "aws_resiliencehubv2_service_function.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -49,7 +49,12 @@ func TestAccResilienceHubV2ServiceFunction_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -75,10 +80,8 @@ func TestAccResilienceHubV2ServiceFunction_List_basic(t *testing.T) {
 
 func TestAccResilienceHubV2ServiceFunction_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_service_function.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -100,6 +103,8 @@ func TestAccResilienceHubV2ServiceFunction_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -113,9 +118,10 @@ func TestAccResilienceHubV2ServiceFunction_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_resiliencehubv2_service_function.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_resiliencehubv2_service_function.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_resiliencehubv2_service_function.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("criticality"), tfknownvalue.StringExact(awstypes.ServiceFunctionCriticalityPrimary)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("service_arn"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 					}),
@@ -127,11 +133,9 @@ func TestAccResilienceHubV2ServiceFunction_List_includeResource(t *testing.T) {
 
 func TestAccResilienceHubV2ServiceFunction_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_resiliencehubv2_service_function.test[0]"
 	resourceName2 := "aws_resiliencehubv2_service_function.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -156,7 +160,12 @@ func TestAccResilienceHubV2ServiceFunction_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_arn"), checkServiceARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
+
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_arn"), checkServiceARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("service_function_id"), knownvalue.NotNull()),
 				},
 			},
 			{

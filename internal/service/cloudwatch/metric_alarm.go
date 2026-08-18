@@ -503,22 +503,38 @@ func resourceMetricAlarmCustomizeDiff(ctx context.Context, diff *schema.Resource
 }
 
 func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*awstypes.MetricAlarm, error) {
-	input := &cloudwatch.DescribeAlarmsInput{
+	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []string{name},
 		AlarmTypes: []awstypes.AlarmType{awstypes.AlarmTypeMetricAlarm},
 	}
 
-	output, err := conn.DescribeAlarms(ctx, input)
+	return findMetricAlarm(ctx, conn, &input)
+}
 
+func findMetricAlarm(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) (*awstypes.MetricAlarm, error) {
+	output, err := findMetricAlarms(ctx, conn, input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
-	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
+}
+
+func findMetricAlarms(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) ([]awstypes.MetricAlarm, error) {
+	var output []awstypes.MetricAlarm
+
+	pages := cloudwatch.NewDescribeAlarmsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		output = append(output, page.MetricAlarms...)
 	}
 
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))
+	return output, nil
 }
 
 func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {

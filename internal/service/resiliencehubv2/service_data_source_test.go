@@ -4,17 +4,20 @@
 package resiliencehubv2_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccResilienceHubV2ServiceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehubv2_service.test"
 	dataSourceName := "data.aws_resiliencehubv2_service.test"
 
@@ -27,42 +30,19 @@ func TestAccResilienceHubV2ServiceDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "permission_model.0.invoker_role_name", "AWSResilienceHubAssessmentRole"),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/Service/data.basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDescription), resourceName, tfjsonpath.New(names.AttrDescription), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrKMSKeyID), resourceName, tfjsonpath.New(names.AttrKMSKeyID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("policy_arn"), resourceName, tfjsonpath.New("policy_arn"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("regions"), resourceName, tfjsonpath.New("regions"), compare.ValuesSame()),
+				},
 			},
 		},
 	})
-}
-
-func testAccServiceDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_resiliencehubv2_policy" "test" {
-  name = "%[1]s-policy"
-
-  availability_slo {
-    target = 99.9
-  }
-}
-
-resource "aws_resiliencehubv2_service" "test" {
-  name    = %[1]q
-  regions = [data.aws_region.current.name]
-
-  policy_arn = aws_resiliencehubv2_policy.test.arn
-
-  permission_model {
-    invoker_role_name = "AWSResilienceHubAssessmentRole"
-  }
-}
-
-data "aws_resiliencehubv2_service" "test" {
-  arn = aws_resiliencehubv2_service.test.arn
-}
-`, rName)
 }

@@ -14,8 +14,6 @@ Multi-tenant distributions are a specialized type of CloudFront distribution des
 
 For information about CloudFront multi-tenant distributions, see the [Amazon CloudFront Developer Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/).
 
-~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed state after creation or modification. During this time, deletes to resources will be blocked. If you need to delete a distribution that is enabled and you do not want to wait, you need to use the `retain_on_delete` flag.
-
 ## Example Usage
 
 ### Multi-tenant Distribution Limitations
@@ -179,9 +177,14 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `https_port` - (Required) HTTPS port the custom origin listens on.
 * `ip_address_type` - (Optional) Type of IP addresses used by your origins. Valid values are `ipv4` and `dualstack`.
 * `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. Default: 5.
+* `origin_mtls_config` - (Optional) Origin mTLS configuration for mutual TLS authentication between CloudFront and your origin. See [Origin mTLS Config](#origin-mtls-config) below.
 * `origin_read_timeout` - (Optional) Custom read timeout, in seconds. Default: 30.
 * `origin_protocol_policy` - (Required) Origin protocol policy to apply to your origin. Valid values are `http-only`, `https-only`, and `match-viewer`.
 * `origin_ssl_protocols` - (Required) List of SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS.
+
+### Origin mTLS Config
+
+* `client_certificate_arn` - (Required) ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Client Authentication.
 
 ### Origin Shield
 

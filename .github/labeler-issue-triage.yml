@@ -38,6 +38,8 @@ service/acm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acm_'
 service/acmpca:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acmpca_'
+service/agentregistry:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_agentregistry_'
 service/alexaforbusiness:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_alexaforbusiness_'
 service/amp:
@@ -230,6 +232,8 @@ service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dx_'
+service/directoryservicedata:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directoryservicedata_'
 service/discovery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_discovery_'
 service/dlm:
@@ -418,6 +422,10 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/lambdacore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdacore_'
+service/lambdamicrovms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
 service/launchwizard:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
@@ -450,6 +458,8 @@ service/macie:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_macie_'
 service/macie2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_macie2_'
+service/mailmanager:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mailmanager_'
 service/managedblockchain:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_managedblockchain_'
 service/marketplacecatalog:

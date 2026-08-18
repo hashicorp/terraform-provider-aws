@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_api_gateway_domain_name: Fixed error when adding policy to existing private domain name
-```
