@@ -91,6 +91,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"FeatureV2": {
 			acctest.CtBasic: testAccFeatureV2_basic,
+			"update":        testAccFeatureV2_update,
 			"Identity":      testAccSecurityHubFeatureV2_identitySerial,
 		},
 		"FindingAggregator": {

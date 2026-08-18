@@ -61,6 +61,55 @@ func testAccFeatureV2_basic(t *testing.T) {
 	})
 }
 
+func testAccFeatureV2_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var feature awstypes.FeatureDetail
+	resourceName := "aws_securityhub_feature_v2.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FeatureV2/feature_status/"),
+				ConfigVariables: config.Variables{
+					"feature_status": config.StringVariable("DISABLED"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureV2Exists(ctx, t, resourceName, &feature),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("feature_status"), tfknownvalue.StringExact(awstypes.FeatureStatusDisabled)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FeatureV2/feature_status/"),
+				ConfigVariables: config.Variables{
+					"feature_status": config.StringVariable("ENABLED"),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureV2Exists(ctx, t, resourceName, &feature),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("feature_status"), tfknownvalue.StringExact(awstypes.FeatureStatusEnabled)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckFeatureV2Exists(ctx context.Context, t *testing.T, n string, v *awstypes.FeatureDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
