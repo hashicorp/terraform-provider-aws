@@ -1903,6 +1903,51 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 	})
 }
 
+// Regression test: updating only non-VPC attributes must keep `vpc_config`
+// populated in the UpdateProject request so SCPs that require `vpcConfig` on
+// every call do not deny the update.
+func TestAccCodeBuildProject_vpcUpdateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_vpcWithDescription(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
+				),
+			},
+			{
+				Config: testAccProjectConfig_vpcWithDescription(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 	ctx := acctest.Context(t)
 	var project types.Project
@@ -4864,6 +4909,40 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName))
+}
+
+func testAccProjectConfig_vpcWithDescription(rName, description string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_baseServiceRole(rName),
+		testAccProjectConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  description  = %[2]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test[0].id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`, rName, description))
 }
 
 func testAccProjectConfig_vpc2(rName string) string {
