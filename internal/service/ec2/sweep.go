@@ -229,6 +229,8 @@ func RegisterSweepers() {
 		"aws_appstream_image_builder",
 		"aws_autoscaling_group",
 		"aws_batch_compute_environment",
+		"aws_bedrockagentcore_agent_runtime",
+		"aws_bedrockagentcore_harness",
 		"aws_elastic_beanstalk_environment",
 		"aws_cloud9_environment_ec2",
 		"aws_cloudhsm_v2_cluster",

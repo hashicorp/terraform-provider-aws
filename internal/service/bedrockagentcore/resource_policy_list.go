@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -63,6 +64,9 @@ func (l *resourcePolicyListResource) List(ctx context.Context, request list.List
 			}
 			for endpoint, err := range listAgentRuntimeEndpointsForPolicies(ctx, conn, &endpointsInput) {
 				if err != nil {
+					if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+						break
+					}
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
 					return
 				}

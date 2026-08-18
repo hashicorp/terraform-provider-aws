@@ -5,7 +5,9 @@ provider_source = "registry.terraform.io/hashicorp/aws"
 provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
 
-file_aliases = {}
+file_aliases = {
+  "list_resource/aws_ami_launch_permission" = "aws_ec2_ami_launch_permission"
+}
 
 ignore_contents_check = [
   "data_source/aws_kms_secret",
