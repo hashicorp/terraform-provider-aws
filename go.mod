@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/devopsagent v1.10.6
-	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.43.5
+	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/directoryservicedata v1.10.5
