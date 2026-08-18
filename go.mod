@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/mailmanager v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.54.1
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.97.2
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.97.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.102.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.44.1
