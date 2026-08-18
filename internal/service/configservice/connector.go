@@ -6,6 +6,7 @@ package configservice
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -40,6 +41,8 @@ import (
 func newConnectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &connectorResource{}, nil
 }
+
+const connectorDeleteTimeout = 20 * time.Minute
 
 type connectorResource struct {
 	framework.ResourceWithModel[connectorResourceModel]
@@ -191,7 +194,12 @@ func (r *connectorResource) Delete(ctx context.Context, request resource.DeleteR
 	input := configservice.DeleteConnectorInput{
 		Arn: aws.String(arn),
 	}
-	_, err := conn.DeleteConnector(ctx, &input)
+	// A connector cannot be deleted while service-linked configuration recorders
+	// (created by a linked service such as Security Hub) still reference it. Those
+	// recorders are removed asynchronously, so retry until the connector is deletable.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, connectorDeleteTimeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteConnector(ctx, &input)
+	}, "still in use")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
