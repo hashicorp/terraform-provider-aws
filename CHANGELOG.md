@@ -44,7 +44,9 @@ BUG FIXES:
 FEATURES:
 
 * **New List Resource:** `aws_db_parameter_group` ([#49418](https://github.com/hashicorp/terraform-provider-aws/issues/49418))
+* **New List Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
 * **New List Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
+* **New Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
 * **New Resource:** `aws_resiliencehubv2_input_source` ([#48327](https://github.com/hashicorp/terraform-provider-aws/issues/48327))
 
 ENHANCEMENTS:
