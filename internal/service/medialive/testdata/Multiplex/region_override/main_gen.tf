@@ -1,5 +1,9 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_medialive_multiplex" "test" {
-{{- template "region" }}
+  region = var.region
+
   name               = var.rName
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
@@ -9,13 +13,13 @@ resource "aws_medialive_multiplex" "test" {
     transport_stream_reserved_bitrate       = 1
     maximum_video_buffer_delay_milliseconds = 1000
   }
-{{- template "tags" . }}
 }
 
 # acctest.ConfigAvailableAZsNoOptInExclude
 
 data "aws_availability_zones" "available" {
-{{- template "region" }}
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -27,4 +31,16 @@ data "aws_availability_zones" "available" {
 
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

@@ -16,6 +16,7 @@ func TestAccMediaLive_serial(t *testing.T) {
 		"Multiplex": {
 			acctest.CtBasic:      testAccMultiplex_basic,
 			acctest.CtDisappears: testAccMultiplex_disappears,
+			"identity":           testAccMediaLiveMultiplex_identitySerial,
 			"update":             testAccMultiplex_update,
 			"tags":               testAccMediaLiveMultiplex_tagsSerial,
 			"start":              testAccMultiplex_start,
