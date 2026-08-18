@@ -127,7 +127,7 @@ jobs:
             tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
           else
             tctest pr "${PR_NUMBER}" --properties "${properties}" --comment --reappend-split-character
-          fix
+          fi
 
       - name: Comment on Test Start
         if: steps.run_tests.outcome == 'success'
