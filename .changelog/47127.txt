@@ -1,0 +1,39 @@
+```release-note:enhancement
+resource/aws_organizations_account: Add `paths` attribute
+```
+
+```release-note:enhancement
+resource/aws_organizations_organization: Add `accounts.paths` and `non_master_accounts.paths` attributes
+```
+
+```release-note:enhancement
+resource/aws_organizations_organizational_unit: Add `path` attribute
+```
+
+```release-note:enhancement
+data-source/aws_organizations_account: Add `paths` attribute
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organization: Add `accounts.paths` and `non_master_accounts.paths` attributes
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organizational_unit: Add `path` attribute
+```
+
+```release-note:enhancement
+data-source/organizations_organizational_unit_child_accounts: Add `accounts.paths` attribute
+```
+
+```release-note:enhancement
+data-source/organizations_organizational_unit_descendant_accounts: Add `accounts.paths` attribute
+```
+
+```release-note:enhancement
+data-source/organizations_organizational_unit_descendant_organizational_units: Add `children.path` attribute
+```
+
+```release-note:enhancement
+data-source/organizations_organizational_units: Add `children.path` attribute
+```
