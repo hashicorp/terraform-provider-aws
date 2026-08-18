@@ -4,8 +4,11 @@
 package ec2_test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/sha1"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"reflect"
@@ -617,6 +620,63 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+// TestAccEC2Instance_userDataBinaryOutOfBand exercises importing/refreshing
+// an instance whose live UserData is binary (e.g. gzip-compressed) and was
+// never set through user_data/user_data_base64 in this config. Read used to
+// cast the decoded bytes straight into the user_data TypeString field, which
+// isn't valid UTF-8, producing a "Provider produced inconsistent final plan"
+// error. The fix falls back to user_data_base64 (always valid UTF-8) when
+// the decoded UserData isn't valid UTF-8.
+func TestAccEC2Instance_userDataBinaryOutOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	if _, err := gz.Write([]byte("hello world")); err != nil {
+		t.Fatalf("writing gzip payload: %s", err)
+	}
+	if err := gz.Close(); err != nil {
+		t.Fatalf("closing gzip writer: %s", err)
+	}
+	gzipUserData := buf.Bytes()
+	wantUserDataBase64 := base64.StdEncoding.EncodeToString(gzipUserData)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Mirrors real-world modules that never set user_data or
+				// user_data_base64 and manage the instance entirely
+				// out-of-band (e.g. via SSM).
+				Config: testAccInstanceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data", ""),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", ""),
+				),
+			},
+			{
+				PreConfig: func() {
+					if err := overrideInstanceUserData(ctx, t, &v, gzipUserData); err != nil {
+						t.Fatalf("setting external user data: %s", err)
+					}
+				},
+				Config: testAccInstanceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data", ""),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", wantUserDataBase64),
+				),
 			},
 		},
 	})
@@ -7309,6 +7369,26 @@ func overrideInstanceTag(ctx context.Context, t *testing.T, instance *awstypes.I
 			Value: aws.String(value),
 		},
 	})
+}
+
+// overrideInstanceUserData sets an EC2 instance's UserData directly via the
+// AWS API, bypassing Terraform, to simulate data set out-of-band.
+func overrideInstanceUserData(ctx context.Context, t *testing.T, instance *awstypes.Instance, userData []byte) error {
+	t.Helper()
+
+	if instance == nil || instance.InstanceId == nil {
+		return fmt.Errorf("instance is nil or has no ID")
+	}
+
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+	input := ec2.ModifyInstanceAttributeInput{
+		InstanceId: instance.InstanceId,
+		UserData: &awstypes.BlobAttributeValue{
+			Value: userData,
+		},
+	}
+	_, err := conn.ModifyInstanceAttribute(ctx, &input)
+	return err
 }
 
 // testAccCheckInstanceAPITagValue verifies that an EC2 instance has the
