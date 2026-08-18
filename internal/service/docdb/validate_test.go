@@ -44,3 +44,33 @@ func TestValidIdentifier(t *testing.T) {
 		}
 	}
 }
+
+func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"valid-name",
+		"valid02-name",
+		strings.Repeat("w", 229),
+	}
+	for _, v := range validNames {
+		_, errors := validParamGroupNamePrefix(v, names.AttrNamePrefix)
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid DocumentDB parameter group name prefix: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid_name",
+		"-invalid-name",
+		"0invalid-name",
+		"invalid--name",
+		strings.Repeat("w", 230),
+	}
+	for _, v := range invalidNames {
+		_, errors := validParamGroupNamePrefix(v, names.AttrNamePrefix)
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid DocumentDB parameter group name prefix", v)
+		}
+	}
+}
