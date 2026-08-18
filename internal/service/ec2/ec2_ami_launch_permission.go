@@ -43,10 +43,6 @@ func resourceAMILaunchPermission() *schema.Resource {
 		ReadWithoutTimeout:   resourceAMILaunchPermissionRead,
 		DeleteWithoutTimeout: resourceAMILaunchPermissionDelete,
 
-		// Importer: &schema.ResourceImporter{
-		// 	StateContext: resourceAMILaunchPermissionImport,
-		// },
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrAccountID: {
@@ -180,46 +176,6 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 
 	return diags
 }
-
-// func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-// 	const importIDSeparator = "/"
-// 	parts := strings.Split(d.Id(), importIDSeparator)
-
-// 	// Heuristic to identify the permission type.
-// 	var ok bool
-// 	if n := len(parts); n >= 2 {
-// 		if permissionID, imageID := strings.Join(parts[:n-1], importIDSeparator), parts[n-1]; permissionID != "" && imageID != "" {
-// 			if regexache.MustCompile(`^\d{12}$`).MatchString(permissionID) {
-// 				// AWS account ID.
-// 				d.SetId(amiLaunchPermissionCreateResourceID(imageID, permissionID, "", "", ""))
-// 				ok = true
-// 			} else if arn.IsARN(permissionID) {
-// 				if v, _ := arn.Parse(permissionID); v.Service == "organizations" {
-// 					// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsorganizations.html#awsorganizations-resources-for-iam-policies.
-// 					if strings.HasPrefix(v.Resource, "organization/") {
-// 						// Organization ARN.
-// 						d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", "", permissionID, ""))
-// 						ok = true
-// 					} else if strings.HasPrefix(v.Resource, "ou/") {
-// 						// Organizational unit ARN.
-// 						d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", "", "", permissionID))
-// 						ok = true
-// 					}
-// 				}
-// 			} else {
-// 				// Group name.
-// 				d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", permissionID, "", ""))
-// 				ok = true
-// 			}
-// 		}
-// 	}
-
-// 	if !ok {
-// 		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected [ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]%[2]sIMAGE-ID", d.Id(), importIDSeparator)
-// 	}
-
-// 	return []*schema.ResourceData{d}, nil
-// }
 
 const (
 	amiLaunchPermissionIDSeparator                   = "-"
