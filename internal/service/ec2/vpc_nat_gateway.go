@@ -492,9 +492,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 						PrivateIpAddressCount: aws.Int32(int32(delta)),
 					}
 
-					_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
-
-					if err != nil {
+					if _, err := conn.AssignPrivateNatGatewayAddress(ctx, input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP address count: %s", d.Id(), err)
 					}
 
@@ -516,9 +514,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 						PrivateIpAddresses: flex.ExpandStringValueList(privateIPsToUnassign),
 					}
 
-					_, err := conn.UnassignPrivateNatGatewayAddress(ctx, input)
-
-					if err != nil {
+					if _, err := conn.UnassignPrivateNatGatewayAddress(ctx, input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 					}
 
