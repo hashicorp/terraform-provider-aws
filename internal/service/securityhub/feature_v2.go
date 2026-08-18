@@ -13,19 +13,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkResource("aws_securityhub_feature_v2", name="Feature V2")
 // @IdentityAttribute("feature_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.FeatureDetail")
+// @Testing(checkDestroyNoop=true)
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
@@ -36,6 +34,7 @@ func newFeatureV2Resource(_ context.Context) (resource.ResourceWithConfigure, er
 
 type featureV2Resource struct {
 	framework.ResourceWithModel[featureV2ResourceModel]
+	framework.WithNoOpDelete
 	framework.WithImportByIdentity
 }
 
@@ -43,21 +42,17 @@ func (r *featureV2Resource) Schema(ctx context.Context, request resource.SchemaR
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"feature_name": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.FeatureName](),
 				Required:    true,
 				Description: "The name of the opt-in feature to enable. Valid values: NETWORK_SCANNING.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.FeatureName](),
-				},
 			},
 			"feature_status": schema.StringAttribute{
-				Computed:    true,
+				CustomType:  fwtypes.StringEnumType[awstypes.FeatureStatus](),
+				Required:    true,
 				Description: "The current enablement status of the feature. Valid values: ENABLED, DISABLED.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
@@ -72,26 +67,17 @@ func (r *featureV2Resource) Create(ctx context.Context, request resource.CreateR
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	featureName := awstypes.FeatureName(fwflex.StringValueFromFramework(ctx, data.FeatureName))
-	input := securityhub.EnableSecurityHubFeatureV2Input{
-		FeatureName: featureName,
+	var err error
+	name := data.FeatureName.ValueEnum()
+	switch data.FeatureStatus.ValueEnum() {
+	case awstypes.FeatureStatusEnabled:
+		err = enableFeatureV2(ctx, conn, name)
+	case awstypes.FeatureStatusDisabled:
+		err = disableFeatureV2(ctx, conn, name)
 	}
-	_, err := conn.EnableSecurityHubFeatureV2(ctx, &input)
-
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("enabling Security Hub V2 Feature (%s)", featureName), err.Error())
-		return
+		response.Diagnostics.AddError("", err.Error())
 	}
-
-	// Read back the current status of the feature.
-	feature, err := findFeatureV2ByName(ctx, conn, featureName)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Security Hub V2 Feature (%s)", featureName), err.Error())
-		return
-	}
-
-	data.FeatureStatus = fwflex.StringValueToFramework(ctx, feature.FeatureStatus)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -105,72 +91,84 @@ func (r *featureV2Resource) Read(ctx context.Context, request resource.ReadReque
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	featureName := awstypes.FeatureName(fwflex.StringValueFromFramework(ctx, data.FeatureName))
-	feature, err := findFeatureV2ByName(ctx, conn, featureName)
-
+	name := data.FeatureName.ValueEnum()
+	feature, err := findFeatureV2ByName(ctx, conn, name)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Security Hub V2 Feature (%s)", featureName), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Security Hub V2 Feature (%s)", name), err.Error())
 		return
 	}
 
-	data.FeatureStatus = fwflex.StringValueToFramework(ctx, feature.FeatureStatus)
+	data.FeatureStatus = fwtypes.StringEnumValue(feature.FeatureStatus)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *featureV2Resource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *featureV2Resource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var data featureV2ResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().SecurityHubClient(ctx)
 
-	featureName := awstypes.FeatureName(fwflex.StringValueFromFramework(ctx, data.FeatureName))
-	input := securityhub.DisableSecurityHubFeatureV2Input{
-		FeatureName: featureName,
+	var err error
+	name := data.FeatureName.ValueEnum()
+	switch data.FeatureStatus.ValueEnum() {
+	case awstypes.FeatureStatusEnabled:
+		err = enableFeatureV2(ctx, conn, name)
+	case awstypes.FeatureStatusDisabled:
+		err = disableFeatureV2(ctx, conn, name)
 	}
-	_, err := conn.DisableSecurityHubFeatureV2(ctx, &input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("disabling Security Hub V2 Feature (%s)", featureName), err.Error())
-		return
+		response.Diagnostics.AddError("", err.Error())
 	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func findFeatureV2ByName(ctx context.Context, conn *securityhub.Client, featureName awstypes.FeatureName) (*awstypes.FeatureDetail, error) {
+func findFeatureV2ByName(ctx context.Context, conn *securityhub.Client, name awstypes.FeatureName) (*awstypes.FeatureDetail, error) {
 	output, err := findAccountV2(ctx, conn)
-
 	if err != nil {
 		return nil, err
 	}
 
-	feature, ok := output.Features[string(featureName)]
+	return tfresource.AssertSingleValueResultMap(output.Features, string(name))
+}
 
-	// The feature is only considered to exist when it is present and enabled.
-	// A missing entry or a DISABLED status means the resource no longer exists.
-	if !ok || feature.FeatureStatus == awstypes.FeatureStatusDisabled {
-		return nil, &retry.NotFoundError{
-			Message: fmt.Sprintf("Security Hub V2 feature %s not enabled", featureName),
-		}
+func enableFeatureV2(ctx context.Context, conn *securityhub.Client, name awstypes.FeatureName) error {
+	input := securityhub.EnableSecurityHubFeatureV2Input{
+		FeatureName: name,
+	}
+	_, err := conn.EnableSecurityHubFeatureV2(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("enabling Security Hub V2 Feature (%s): %w", name, err)
 	}
 
-	return &feature, nil
+	return nil
+}
+
+func disableFeatureV2(ctx context.Context, conn *securityhub.Client, name awstypes.FeatureName) error {
+	input := securityhub.DisableSecurityHubFeatureV2Input{
+		FeatureName: name,
+	}
+	_, err := conn.DisableSecurityHubFeatureV2(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("disabling Security Hub V2 Feature (%s): %w", name, err)
+	}
+
+	return nil
 }
 
 type featureV2ResourceModel struct {
 	framework.WithRegionModel
-	FeatureName   types.String `tfsdk:"feature_name"`
-	FeatureStatus types.String `tfsdk:"feature_status"`
+	FeatureName   fwtypes.StringEnum[awstypes.FeatureName]   `tfsdk:"feature_name"`
+	FeatureStatus fwtypes.StringEnum[awstypes.FeatureStatus] `tfsdk:"feature_status"`
 }

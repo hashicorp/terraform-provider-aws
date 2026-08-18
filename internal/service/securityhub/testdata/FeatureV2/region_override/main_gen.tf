@@ -4,7 +4,8 @@
 resource "aws_securityhub_feature_v2" "test" {
   region = var.region
 
-  feature_name = "NETWORK_SCANNING"
+  feature_name   = "NETWORK_SCANNING"
+  feature_status = "ENABLED"
 
   depends_on = [aws_securityhub_account_v2.test]
 }

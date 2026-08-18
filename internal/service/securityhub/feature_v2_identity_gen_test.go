@@ -44,7 +44,7 @@ func testAccSecurityHubFeatureV2_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		CheckDestroy:             testAccCheckFeatureV2Destroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup

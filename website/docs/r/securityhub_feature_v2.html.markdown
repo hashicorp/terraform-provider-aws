@@ -3,16 +3,16 @@ subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_feature_v2"
 description: |-
-  Enables an opt-in Security Hub V2 feature for this AWS account.
+  Manages an opt-in Security Hub V2 feature for this AWS account.
 ---
 
 # Resource: aws_securityhub_feature_v2
 
-Enables an opt-in [Security Hub V2](https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html) feature, such as network scanning (NetScan), for the calling account in the current AWS Region.
+Manages an opt-in [Security Hub V2](https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html) feature, such as network scanning (NetScan), for the calling account in the current AWS Region.
 
 ~> **NOTE:** Security Hub V2 must be enabled (see `aws_securityhub_account_v2`) before you can enable a feature. Use `depends_on` to ensure the correct ordering.
 
-~> **NOTE:** Destroying this resource disables the feature for this AWS account in the current Region.
+~> **NOTE:** Deleting this resource does not disable the feature, the resource in simply removed from state instead.
 
 ~> **NOTE:** You cannot enable a feature that is managed by an organization policy.
 
@@ -24,7 +24,8 @@ Enables an opt-in [Security Hub V2](https://docs.aws.amazon.com/securityhub/late
 resource "aws_securityhub_account_v2" "example" {}
 
 resource "aws_securityhub_feature_v2" "example" {
-  feature_name = "NETWORK_SCANNING"
+  feature_name   = "NETWORK_SCANNING"
+  feature_status = "ENABLED"
 
   depends_on = [aws_securityhub_account_v2.example]
 }
@@ -35,13 +36,12 @@ resource "aws_securityhub_feature_v2" "example" {
 This resource supports the following arguments:
 
 * `feature_name` - (Required) Name of the opt-in feature to enable. Valid values: `NETWORK_SCANNING`. Changing this forces a new resource to be created.
+* `feature_status` - (Required) Current enablement status of the feature. Valid values: `ENABLED`, `DISABLED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `feature_status` - Current enablement status of the feature. Valid values: `ENABLED`, `DISABLED`.
+This resource exports no additional attributes.
 
 ## Import
 
