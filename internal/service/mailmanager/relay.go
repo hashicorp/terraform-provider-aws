@@ -6,6 +6,7 @@ package mailmanager
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -133,6 +134,10 @@ func (r *relayResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
+const (
+	propagationTimeout = 1 * time.Minute
+)
+
 func (r *relayResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().MailManagerClient(ctx)
 	var plan relayResourceModel
@@ -150,7 +155,12 @@ func (r *relayResource) Create(ctx context.Context, req resource.CreateRequest, 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateRelay(ctx, &input)
+	// Allow for propagation of secretsmanager credentials
+	// ValidationException: Unable to connect to the relay server, or invalid server name and port, or invalid credentials
+	out, err := tfresource.RetryWhenIsAErrorMessageContains[*mailmanager.CreateRelayOutput, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (*mailmanager.CreateRelayOutput, error) {
+		return conn.CreateRelay(ctx, &input)
+	}, "invalid server name and port, or invalid credentials")
+
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
