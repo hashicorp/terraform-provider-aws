@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_gateway_response: Fix persistent diff on `status_code` when the argument is omitted and API Gateway assigns the default for the `response_type`
+```
