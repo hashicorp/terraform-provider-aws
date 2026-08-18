@@ -7,12 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -140,24 +140,12 @@ func TestAccMailManagerRelay_update(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerRelay_authenticationTypes(t *testing.T) {
+func TestAccMailManagerRelay_Authentication_secretARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_relay.test"
-
-	serverName := os.Getenv("TF_ACC_MAILMANAGER_RELAY_SERVER_NAME")
-	if serverName == "" {
-		t.Skipf("Environment variable %s is not set", "TF_ACC_MAILMANAGER_RELAY_SERVER_NAME")
-	}
-	username := os.Getenv("TF_ACC_MAILMANAGER_RELAY_USERNAME")
-	if username == "" {
-		t.Skipf("Environment variable %s is not set", "TF_ACC_MAILMANAGER_RELAY_USERNAME")
-	}
-	password := os.Getenv("TF_ACC_MAILMANAGER_RELAY_PASSWORD")
-	if password == "" {
-		t.Skipf("Environment variable %s is not set", "TF_ACC_MAILMANAGER_RELAY_PASSWORD")
-	}
+	password := "Abcd1234!"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -169,19 +157,14 @@ func TestAccMailManagerRelay_authenticationTypes(t *testing.T) {
 		CheckDestroy:             testAccCheckRelayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRelayConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRelayExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication.0.no_authentication.#", "1"),
-					resource.TestCheckNoResourceAttr(resourceName, "authentication.0.secret_arn"),
-				),
-			},
-			{
-				Config: testAccRelayConfig_secretARN(rName, serverName, username, password),
+				ConfigDirectory: config.StaticDirectory("testdata/Relay/authentication/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"password":      config.StringVariable(password),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -276,27 +259,4 @@ resource "aws_mailmanager_relay" "test" {
   }
 }
 `, rName, serverName, serverPort)
-}
-
-func testAccRelayConfig_secretARN(rName, serverName, username, password string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username = %[3]q, password = %[4]q })
-}
-
-resource "aws_mailmanager_relay" "test" {
-  name        = %[1]q
-  server_name = %[2]q
-  server_port = 587
-
-  authentication {
-    secret_arn = aws_secretsmanager_secret_version.test.arn
-  }
-}
-`, rName, serverName, username, password)
 }
