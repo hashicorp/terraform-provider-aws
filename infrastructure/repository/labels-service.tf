@@ -323,6 +323,7 @@ variable "service_labels" {
     "scheduler",
     "schemas",
     "secretsmanager",
+    "securityagent",
     "securityhub",
     "securitylake",
     "serverlessrepo",

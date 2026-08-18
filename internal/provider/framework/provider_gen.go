@@ -1831,6 +1831,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// securityagent
+
+				"securityagent": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// securityhub
 
 				"securityhub": schema.StringAttribute{
