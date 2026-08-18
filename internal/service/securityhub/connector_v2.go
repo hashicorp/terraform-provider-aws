@@ -46,6 +46,8 @@ func newConnectorV2Resource(_ context.Context) (resource.ResourceWithConfigure, 
 	return &connectorV2Resource{}, nil
 }
 
+const connectorV2DeleteTimeout = 15 * time.Minute
+
 type connectorV2Resource struct {
 	framework.ResourceWithModel[connectorV2ResourceModel]
 	framework.WithImportByIdentity
@@ -331,7 +333,7 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 	}
 	// Azure connectors are enabled asynchronously and cannot be deleted while in
 	// the PENDING_ENABLEMENT state, so retry until the connector is deletable.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, 15*time.Minute, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, connectorV2DeleteTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteConnectorV2(ctx, &input)
 	}, "cannot be deleted")
 
@@ -347,7 +349,7 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 	// Wait for the connector to be fully deleted so that any service-linked
 	// configuration recorders it created are removed before dependent resources
 	// (such as aws_config_connector) are deleted.
-	_, err = tfresource.RetryUntilNotFound(ctx, 15*time.Minute, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, connectorV2DeleteTimeout, func(ctx context.Context) (any, error) {
 		return findConnectorV2ByID(ctx, conn, connectorID)
 	})
 
