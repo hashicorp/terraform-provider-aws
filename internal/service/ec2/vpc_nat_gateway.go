@@ -449,9 +449,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 						PrivateIpAddresses: flex.ExpandStringValueSet(add),
 					}
 
-					_, err := conn.AssignPrivateNatGatewayAddress(ctx, input)
-
-					if err != nil {
+					if _, err := conn.AssignPrivateNatGatewayAddress(ctx, input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 					}
 
