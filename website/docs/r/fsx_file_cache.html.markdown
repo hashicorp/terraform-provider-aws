@@ -116,8 +116,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `lustre_configuration` Block
 
-* `log_configuration` - Configuration for Lustre logging used to write the enabled logging events for the cache.
+* `log_configuration` - Configuration for Lustre logging used to write the enabled logging events for the cache. See [`log_configuration` Block](#lustre_configurationlog_configuration-block) below.
 * `mount_name` - Mount name of the cache.
+
+### `lustre_configuration.log_configuration` Block
+
+* `destination` - Amazon Resource Name (ARN) of the destination that receives the logs.
+* `level` - Level of logging that Lustre logs write to the destination.
 
 ## Timeouts
 

@@ -18,7 +18,7 @@ data "aws_outposts_outpost_instance_type" "example" {
   preferred_instance_types = ["m5.large", "m5.4xlarge"]
 }
 
-resource "aws_ec2_instance" "example" {
+resource "aws_instance" "example" {
   # ... other configuration ...
 
   instance_type = data.aws_outposts_outpost_instance_type.example.instance_type

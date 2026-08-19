@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
@@ -54,6 +54,19 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 
 			trainingJobName := aws.ToString(item.TrainingJobName)
 
+			var trainingJob *sagemaker.DescribeTrainingJobOutput
+			if request.IncludeResource {
+				var err error
+				trainingJob, err = findTrainingJobByName(ctx, conn, trainingJobName)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data resourceTrainingJobModel
@@ -61,12 +74,6 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
-					trainingJob, err := findTrainingJobByName(ctx, conn, trainingJobName)
-					if err != nil {
-						result.Diagnostics.Append(diag.NewErrorDiagnostic("Reading SageMaker Training Job", err.Error()))
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, trainingJob, &data)...)
 					if result.Diagnostics.HasError() {
 						return

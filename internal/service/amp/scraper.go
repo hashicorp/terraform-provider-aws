@@ -44,6 +44,8 @@ import (
 
 // @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.57.1")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
@@ -57,7 +59,7 @@ func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 type scraperResource struct {
 	framework.ResourceWithModel[scraperResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -121,6 +123,32 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"dataset_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"exporter": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[exporterConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"opensearch": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchExporterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -297,13 +325,14 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
-	data.ID = fwflex.StringToFramework(ctx, output.ScraperId)
+	scraperID := aws.ToString(output.ScraperId)
+	data.ID = fwflex.StringValueToFramework(ctx, scraperID)
 
-	scraper, err := waitScraperCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	scraper, err := waitScraperCreated(ctx, conn, scraperID, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) create", data.ID.ValueString()), err.Error())
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), scraperID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) create", scraperID), err.Error())
 
 		return
 	}
@@ -327,7 +356,8 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 
 	conn := r.Meta().AMPClient(ctx)
 
-	scraper, err := findScraperByID(ctx, conn, data.ID.ValueString())
+	scraperID := fwflex.StringValueFromFramework(ctx, data.ID)
+	scraper, err := findScraperByID(ctx, conn, scraperID)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -337,23 +367,16 @@ func (r *scraperResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Scraper (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Scraper (%s)", scraperID), err.Error())
 
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, scraper, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, scraper, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Additional fields.
-	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, v.Value)
-	}
-
-	setTagsOut(ctx, scraper.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -373,6 +396,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 
 	if !new.Alias.Equal(old.Alias) ||
 		!new.Destination.Equal(old.Destination) ||
+		!new.Exporters.Equal(old.Exporters) ||
 		!new.RoleConfiguration.Equal(old.RoleConfiguration) ||
 		!new.ScrapeConfiguration.Equal(old.ScrapeConfiguration) {
 		var input amp.UpdateScraperInput
@@ -382,22 +406,23 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
+		scraperID := fwflex.StringValueFromFramework(ctx, new.ID)
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 			Value: []byte(fwflex.StringValueFromFramework(ctx, new.ScrapeConfiguration)),
 		}
-		input.ScraperId = fwflex.StringFromFramework(ctx, new.ID)
+		input.ScraperId = aws.String(scraperID)
 
 		_, err := conn.UpdateScraper(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Scraper (%s)", scraperID), err.Error())
 
 			return
 		}
 
-		if _, err := waitScraperUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", new.ID.ValueString()), err.Error())
+		if _, err := waitScraperUpdated(ctx, conn, scraperID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) update", scraperID), err.Error())
 
 			return
 		}
@@ -415,9 +440,10 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().AMPClient(ctx)
 
+	scraperID := fwflex.StringValueFromFramework(ctx, data.ID)
 	input := amp.DeleteScraperInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
-		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
+		ScraperId:   aws.String(scraperID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)
 
@@ -426,31 +452,49 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Scraper (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Scraper (%s)", scraperID), err.Error())
 
 		return
 	}
 
-	if _, err := waitScraperDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitScraperDeleted(ctx, conn, scraperID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Scraper (%s) delete", scraperID), err.Error())
 
 		return
 	}
 }
 
+func (r *scraperResource) flatten(ctx context.Context, scraper *awstypes.ScraperDescription, data *scraperResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, scraper, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Additional fields.
+	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
+		data.ScrapeConfiguration = fwflex.StringValueToFramework(ctx, string(v.Value))
+	}
+
+	setTagsOut(ctx, scraper.Tags)
+
+	return diags
+}
+
 type scraperResourceModel struct {
 	framework.WithRegionModel
-	Alias               types.String                                            `tfsdk:"alias"`
-	ARN                 types.String                                            `tfsdk:"arn"`
-	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]       `tfsdk:"destination"`
-	ID                  types.String                                            `tfsdk:"id"`
-	RoleARN             types.String                                            `tfsdk:"role_arn"`
-	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel] `tfsdk:"role_configuration"`
-	ScrapeConfiguration types.String                                            `tfsdk:"scrape_configuration" autoflex:"-"`
-	Source              fwtypes.ListNestedObjectValueOf[sourceModel]            `tfsdk:"source"`
-	Tags                tftags.Map                                              `tfsdk:"tags"`
-	TagsAll             tftags.Map                                              `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                          `tfsdk:"timeouts"`
+	Alias               types.String                                                `tfsdk:"alias"`
+	ARN                 types.String                                                `tfsdk:"arn"`
+	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]           `tfsdk:"destination"`
+	Exporters           fwtypes.ListNestedObjectValueOf[exporterConfigurationModel] `tfsdk:"exporter"`
+	ID                  types.String                                                `tfsdk:"id"`
+	RoleARN             types.String                                                `tfsdk:"role_arn"`
+	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel]     `tfsdk:"role_configuration"`
+	ScrapeConfiguration types.String                                                `tfsdk:"scrape_configuration" autoflex:"-"`
+	Source              fwtypes.ListNestedObjectValueOf[sourceModel]                `tfsdk:"source"`
+	Tags                tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                  `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type destinationModel struct {
@@ -526,6 +570,57 @@ type ampConfigurationModel struct {
 
 type cloudWatchConfigurationModel struct {
 	DatasetARN fwtypes.ARN `tfsdk:"dataset_arn"`
+}
+
+type exporterConfigurationModel struct {
+	OpenSearch fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
+}
+
+var (
+	_ fwflex.Expander  = exporterConfigurationModel{}
+	_ fwflex.Flattener = &exporterConfigurationModel{}
+)
+
+func (m exporterConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var v awstypes.ExporterConfiguration
+
+	switch {
+	case !m.OpenSearch.IsNull():
+		data, d := m.OpenSearch.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.ExporterConfigurationMemberOpenSearchConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
+	}
+
+	return v, diags
+}
+
+func (m *exporterConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.ExporterConfigurationMemberOpenSearchConfiguration:
+		var data openSearchExporterConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.OpenSearch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	}
+
+	return diags
+}
+
+type openSearchExporterConfigurationModel struct {
+	DomainARN fwtypes.ARN `tfsdk:"domain_arn"`
 }
 
 type sourceModel struct {

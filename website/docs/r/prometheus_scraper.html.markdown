@@ -158,9 +158,46 @@ EOT
 }
 ```
 
+### OpenSearch Exporter
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.example.id]
+      subnet_ids         = [aws_subnet.example1.id, aws_subnet.example2.id]
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  exporter {
+    opensearch {
+      domain_arn = aws_opensearch_domain.example.arn
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: 'my-service'
+    dns_sd_configs:
+      - names: ['my-service.my-namespace']
+        type: A
+        port: 8080
+    metrics_path: '/metrics'
+EOT
+}
+```
+
 ### Use default EKS scraper configuration
 
-You can use the data source `aws_prometheus_scraper_configuration` to use a
+You can use the data source `aws_prometheus_default_scraper_configuration` to use a
 service managed scrape configuration.
 
 ```terraform
@@ -174,7 +211,7 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-  scrape_configuration = data.aws_prometheus_scraper_configuration.example.configuration
+  scrape_configuration = data.aws_prometheus_default_scraper_configuration.example.configuration
 
   source {
     eks {
@@ -262,65 +299,91 @@ resource "aws_prometheus_scraper" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination`](#destination).
-* `scrape_configuration` - (Required) The configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
-* `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source`](#source).
+* `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination` Block](#destination-block) for details.
+* `scrape_configuration` - (Required) Configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
+* `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source` Block](#source-block) for details.
 
 The following arguments are optional:
 
-* `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
+* `alias` - (Optional) Name to associate with the managed scraper. This is for your use, and does not need to be unique.
+* `exporter` - (Optional) Configuration block for additional exporters. See [`exporter` Block](#exporter-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration` Block](#role_configuration-block) for details.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
+### `destination` Block
 
-### `destination`
+The `destination` configuration block supports the following arguments:
 
-* `amp` - (Optional) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp`](#amp).
-* `cloudwatch` - (Optional) Configuration block for a CloudWatch Metrics destination. See [`cloudwatch`](#cloudwatch).
+* `amp` - (Optional) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp` Block](#amp-block) for details.
+* `cloudwatch` - (Optional) Configuration block for a CloudWatch Metrics destination. See [`cloudwatch` Block](#cloudwatch-block) for details.
 
 ~> **NOTE:** Either `amp` or `cloudwatch` must be specified, but not both.
 
-### `amp`
+### `amp` Block
 
-* `workspace_arn` - (Required) The Amazon Resource Name (ARN) of the prometheus workspace.
+The `amp` configuration block supports the following arguments:
 
-### `cloudwatch`
+* `workspace_arn` - (Required) ARN of the prometheus workspace.
 
-* `dataset_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch dataset. Use `arn:aws:cloudwatch:{region}:{account}:dataset/default` for the default dataset.
+### `cloudwatch` Block
 
-### `source`
+The `cloudwatch` configuration block supports the following arguments:
 
-* `eks` - (Optional) Configuration block for an EKS cluster source. See [`eks`](#eks).
-* `vpc` - (Optional) Configuration block for a VPC source. See [`vpc`](#vpc).
+* `dataset_arn` - (Required) ARN of the CloudWatch dataset. Use `arn:aws:cloudwatch:{region}:{account}:dataset/default` for the default dataset.
+
+### `source` Block
+
+The `source` configuration block supports the following arguments:
+
+* `eks` - (Optional) Configuration block for an EKS cluster source. See [`eks` Block](#eks-block) for details.
+* `vpc` - (Optional) Configuration block for a VPC source. See [`vpc` Block](#vpc-block) for details.
 
 ~> **NOTE:** Either `eks` or `vpc` must be specified, but not both.
 
-#### `eks`
+#### `eks` Block
 
-* `cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
-* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
+The `eks` configuration block supports the following arguments:
+
+* `cluster_arn` - (Required) ARN of the source EKS cluster.
 * `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
+* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 
-#### `vpc`
+#### `vpc` Block
+
+The `vpc` configuration block supports the following arguments:
 
 * `security_group_ids` - (Required) List of security group IDs for the VPC configuration.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 
-### `role_configuration`
+### `exporter` Block
 
-* `source_role_arn` - (Required) The Amazon Resource Name (ARN) of the source role configuration. Must be an IAM role ARN.
-* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the target role configuration. Must be an IAM role ARN.
+The `exporter` configuration block supports the following arguments:
+
+* `opensearch` - (Required) Configuration block for an OpenSearch exporter. See [`opensearch` Block](#opensearch-block) for details.
+
+### `opensearch` Block
+
+The `opensearch` configuration block supports the following arguments:
+
+* `domain_arn` - (Required) ARN of the OpenSearch domain.
+
+### `role_configuration` Block
+
+The `role_configuration` configuration block supports the following arguments:
+
+* `source_role_arn` - (Required) ARN of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Required) ARN of the target role configuration. Must be an IAM role ARN.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the new scraper.
-* `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the scraper to discover, collect, and produce metrics
-* `status` - Status of the scraper. One of ACTIVE, CREATING, DELETING, CREATION_FAILED, DELETION_FAILED
+* `arn` - ARN of the scraper.
+* `role_arn` - ARN of the IAM role that provides permissions for the scraper to discover, collect, and produce metrics
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -332,19 +395,44 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Managed Scraper using the scraper
-identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_prometheus_scraper.example
-  id = "s-0123abc-0000-0123-a000-000000000000"
+  identity = {
+    id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+  }
+}
+
+resource "aws_prometheus_scraper" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import the Managed Scraper using its identifier.
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the scraper.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import scrapers using `id`. For example:
+
+```terraform
+import {
+  to = aws_prometheus_scraper.example
+  id = "s-b6f487db-4761-4930-9215-e9d588a7efe2"
+}
+```
+
+Using `terraform import`, import scrapers using `id`.
 For example:
 
 ```console
-% terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
+% terraform import aws_prometheus_scraper.example s-b6f487db-4761-4930-9215-e9d588a7efe2
 ```
