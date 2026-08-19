@@ -280,6 +280,8 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	filterBillingViewArn(ctx, outputRaw.Export, &plan)
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, outputRaw, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -312,6 +314,8 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	state.ID = flex.StringToFramework(ctx, out.Export.ExportArn)
+
+	filterBillingViewArn(ctx, out.Export, &state)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
@@ -530,3 +534,45 @@ type destinationConfigurationsData struct {
 type refreshCadenceData struct {
 	Frequency fwtypes.StringEnum[awstypes.FrequencyOption] `tfsdk:"frequency"`
 }
+
+func filterBillingViewArn(ctx context.Context, export *awstypes.Export, model *exportResourceModel) {
+	if export == nil || export.DataQuery == nil || export.DataQuery.TableConfigurations == nil {
+		return
+	}
+
+	cur, ok := export.DataQuery.TableConfigurations["COST_AND_USAGE_REPORT"]
+	if !ok || cur == nil {
+		return
+	}
+
+	if _, ok := cur["BILLING_VIEW_ARN"]; !ok {
+		return
+	}
+
+	shouldKeep := false
+	if model != nil && !model.Export.IsNull() && !model.Export.IsUnknown() {
+		exportSlice, _ := model.Export.ToSlice(ctx)
+		for _, exp := range exportSlice {
+			if exp != nil && !exp.DataQuery.IsNull() && !exp.DataQuery.IsUnknown() {
+				dqSlice, _ := exp.DataQuery.ToSlice(ctx)
+				for _, dq := range dqSlice {
+					if dq != nil && !dq.TableConfigurations.IsNull() && !dq.TableConfigurations.IsUnknown() {
+						tc := dq.TableConfigurations.Elements()
+						if curVal, curOk := tc["COST_AND_USAGE_REPORT"]; curOk {
+							if curMap, curMapOk := curVal.(fwtypes.MapOfString); curMapOk && !curMap.IsNull() && !curMap.IsUnknown() {
+								if _, bvaOk := curMap.Elements()["BILLING_VIEW_ARN"]; bvaOk {
+									shouldKeep = true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !shouldKeep {
+		delete(cur, "BILLING_VIEW_ARN")
+	}
+}
+
