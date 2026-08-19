@@ -562,6 +562,24 @@ func (m *webAppEndpointDetailsModel) Flatten(ctx context.Context, v any) diag.Di
 	return diags
 }
 
+// The DescribeWebApp API does not return ipAddressType.
+// Instead, retrieve it from the DescribeVpcEndpoints API using the vpcEndpointId returned by DescribeWebApp.
+func webAppVPCEndpointIPAddressType(ctx context.Context, conn *ec2.Client, vpcEndpointID string) (fwtypes.StringEnum[awstypes.IpAddressType], error) {
+	vpcEndpoint, err := tfec2.FindVPCEndpointByID(ctx, conn, vpcEndpointID)
+	if err != nil {
+		return fwtypes.StringEnumNull[awstypes.IpAddressType](), err
+	}
+
+	switch vpcEndpoint.IpAddressType {
+	case ec2types.IpAddressTypeIpv4:
+		return fwtypes.StringEnumValue(awstypes.IpAddressTypeIpv4), nil
+	case ec2types.IpAddressTypeDualstack:
+		return fwtypes.StringEnumValue(awstypes.IpAddressTypeDualstack), nil
+	default:
+		return fwtypes.StringEnumNull[awstypes.IpAddressType](), fmt.Errorf("unsupported IP address type: %s", vpcEndpoint.IpAddressType)
+	}
+}
+
 func setIPAddressTypeInWebAppEndpointDetailsVPC(ctx context.Context, ipAddressType fwtypes.StringEnum[awstypes.IpAddressType], data *webAppResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -582,24 +600,6 @@ func setIPAddressTypeInWebAppEndpointDetailsVPC(ctx context.Context, ipAddressTy
 	data.EndpointDetails = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, endpointDetailsData)
 
 	return diags
-}
-
-// The DescribeWebApp API does not return ipAddressType.
-// Instead, retrieve it from the DescribeVpcEndpoints API using the vpcEndpointId returned by DescribeWebApp.
-func webAppVPCEndpointIPAddressType(ctx context.Context, conn *ec2.Client, vpcEndpointID string) (fwtypes.StringEnum[awstypes.IpAddressType], error) {
-	vpcEndpoint, err := tfec2.FindVPCEndpointByID(ctx, conn, vpcEndpointID)
-	if err != nil {
-		return fwtypes.StringEnumNull[awstypes.IpAddressType](), err
-	}
-
-	switch vpcEndpoint.IpAddressType {
-	case ec2types.IpAddressTypeIpv4:
-		return fwtypes.StringEnumValue(awstypes.IpAddressTypeIpv4), nil
-	case ec2types.IpAddressTypeDualstack:
-		return fwtypes.StringEnumValue(awstypes.IpAddressTypeDualstack), nil
-	default:
-		return fwtypes.StringEnumNull[awstypes.IpAddressType](), fmt.Errorf("unsupported IP address type: %s", vpcEndpoint.IpAddressType)
-	}
 }
 
 func setSecurityGroupIDsFromVPCEndpointID(ctx context.Context, conn *ec2.Client, vpcConfig awstypes.DescribedWebAppVpcConfig, new *webAppResourceModel) diag.Diagnostics {
