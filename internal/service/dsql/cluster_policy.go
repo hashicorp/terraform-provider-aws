@@ -61,7 +61,6 @@ func (r *clusterPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -137,31 +136,29 @@ func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadR
 	if response.Diagnostics.HasError() {
 		return
 	}
+	id := data.Identifier.ValueString()
 
 	conn := r.Meta().DSQLClient(ctx)
-	output, err := findClusterPolicyByID(ctx, conn, data.ID.ValueString())
+	output, err := findClusterPolicyByID(ctx, conn, id)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster Policy (%s)", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster Policy (%s)", id), err.Error())
 		return
 	}
 
 	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(output.Policy))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("setting Aurora DSQL Cluster Policy (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("setting Aurora DSQL Cluster Policy (%s)", id), err.Error())
 
 		return
 	}
 
-	data.Identifier = data.ID
 	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
 	data.PolicyVersion = types.StringPointerValue(output.PolicyVersion)
 
@@ -220,34 +217,31 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 	if response.Diagnostics.HasError() {
 		return
 	}
+	id := data.Identifier.ValueString()
 
 	conn := r.Meta().DSQLClient(ctx)
 	input := &dsql.DeleteClusterPolicyInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
-		Identifier:  data.ID.ValueStringPointer(),
+		Identifier:  aws.String(id),
 	}
 
 	_, err := conn.DeleteClusterPolicy(ctx, input)
-
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Aurora DSQL Cluster Policy (%s)", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Aurora DSQL Cluster Policy (%s)", id), err.Error())
 		return
 	}
 
-	if err := waitClusterPolicyDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster Policy (%s) delete", data.ID.ValueString()), err.Error())
-
+	if err := waitClusterPolicyDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster Policy (%s) delete", id), err.Error())
 		return
 	}
 }
 
 func (r *clusterPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrIdentifier), request.ID)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("bypass_policy_lockout_safety_check"), false)...)
 }
@@ -261,19 +255,18 @@ func putClusterPolicyVersion(output *dsql.PutClusterPolicyOutput) (string, error
 }
 
 func syncClusterPolicyAfterPut(ctx context.Context, conn *dsql.Client, data *clusterPolicyResourceModel, policyVersion, operationName string, timeout time.Duration) error {
-	identifier := data.Identifier.ValueString()
+	id := data.Identifier.ValueString()
 
-	data.ID = data.Identifier
 	data.PolicyVersion = types.StringValue(policyVersion)
 
-	clusterPolicy, err := waitClusterPolicyUpdated(ctx, conn, identifier, policyVersion, data.Policy.ValueString(), timeout)
+	clusterPolicy, err := waitClusterPolicyUpdated(ctx, conn, id, policyVersion, data.Policy.ValueString(), timeout)
 	if err != nil {
-		return fmt.Errorf("waiting for Aurora DSQL Cluster Policy (%s) %s: %w", identifier, operationName, err)
+		return fmt.Errorf("waiting for Aurora DSQL Cluster Policy (%s) %s: %w", id, operationName, err)
 	}
 
 	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(clusterPolicy.Policy))
 	if err != nil {
-		return fmt.Errorf("setting Aurora DSQL Cluster Policy (%s): %w", identifier, err)
+		return fmt.Errorf("setting Aurora DSQL Cluster Policy (%s): %w", id, err)
 	}
 
 	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
@@ -305,12 +298,12 @@ func findClusterPolicyByID(ctx context.Context, conn *dsql.Client, id string) (*
 	return output, nil
 }
 
-func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, identifier, expectedPolicyVersion, expectedPolicy string, timeout time.Duration) (*dsql.GetClusterPolicyOutput, error) {
+func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, id, expectedPolicyVersion, expectedPolicy string, timeout time.Duration) (*dsql.GetClusterPolicyOutput, error) {
 	var policyOutput *dsql.GetClusterPolicyOutput
 
 	err := tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
 		var err error
-		policyOutput, err = findClusterPolicyByID(ctx, conn, identifier)
+		policyOutput, err = findClusterPolicyByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
 			return false, nil
@@ -340,9 +333,9 @@ func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, identifier
 	return policyOutput, nil
 }
 
-func waitClusterPolicyDeleted(ctx context.Context, conn *dsql.Client, identifier string, timeout time.Duration) error {
+func waitClusterPolicyDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) error {
 	return tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
-		_, err := findClusterPolicyByID(ctx, conn, identifier)
+		_, err := findClusterPolicyByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
 			return true, nil
@@ -361,7 +354,6 @@ func waitClusterPolicyDeleted(ctx context.Context, conn *dsql.Client, identifier
 type clusterPolicyResourceModel struct {
 	framework.WithRegionModel
 	BypassPolicyLockoutSafetyCheck types.Bool        `tfsdk:"bypass_policy_lockout_safety_check"`
-	ID                             types.String      `tfsdk:"id"`
 	Identifier                     types.String      `tfsdk:"identifier"`
 	Policy                         fwtypes.IAMPolicy `tfsdk:"policy"`
 	PolicyVersion                  types.String      `tfsdk:"policy_version"`

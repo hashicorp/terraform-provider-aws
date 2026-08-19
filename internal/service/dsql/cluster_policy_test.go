@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -42,7 +43,6 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", true),
 					testAccCheckClusterPolicyVersionSet(t, resourceName, &initialPolicyVersion),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, clusterResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIdentifier, clusterResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_version"),
@@ -50,10 +50,12 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check", names.AttrPolicy},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "identifier",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "identifier"),
+				ImportStateVerifyIgnore:              []string{"bypass_policy_lockout_safety_check", names.AttrPolicy},
 			},
 			{
 				Config: testAccClusterPolicyConfig_updated(),
@@ -90,6 +92,14 @@ func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdsql.ResourceClusterPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -137,8 +147,9 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resourc
 			if rs.Type != "aws_dsql_cluster_policy" {
 				continue
 			}
+			id := rs.Primary.Attributes["identifier"]
 
-			_, err := tfdsql.FindClusterPolicyByID(ctx, conn, rs.Primary.ID)
+			_, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
 
 			if retry.NotFound(err) {
 				continue
@@ -148,7 +159,7 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resourc
 				return err
 			}
 
-			return fmt.Errorf("Aurora DSQL Cluster Policy %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Aurora DSQL Cluster Policy %s still exists", id)
 		}
 
 		return nil
@@ -163,9 +174,10 @@ func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+		id := rs.Primary.Attributes["identifier"]
 
 		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
-		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, rs.Primary.ID)
+		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
 		if err != nil {
 			return err
 		}
@@ -184,9 +196,10 @@ func testAccCheckClusterPolicyRemoteAction(ctx context.Context, t *testing.T, n,
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+		id := rs.Primary.Attributes["identifier"]
 
 		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
-		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, rs.Primary.ID)
+		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
 		if err != nil {
 			return err
 		}

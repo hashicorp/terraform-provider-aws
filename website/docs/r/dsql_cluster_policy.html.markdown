@@ -134,7 +134,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the Aurora DSQL Cluster.
 * `policy_version` - Version of the policy document.
 
 ## Timeouts
