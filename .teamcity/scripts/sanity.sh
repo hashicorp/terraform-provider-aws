@@ -57,7 +57,27 @@ function tester {
 }
 
 if [[ ! -f "iamsanity.test" ]]; then
-    tester "iam" 'TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags'
+    SMOKE_TESTS_IAM=(
+        TestAccIAMRole_basic
+        TestAccIAMRole_namePrefix
+        TestAccIAMRole_disappears
+        TestAccIAMRole_InlinePolicy_basic
+        TestAccIAMPolicyDocumentDataSource_basic
+        TestAccIAMPolicyDocumentDataSource_sourceConflicting
+        TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON
+        TestAccIAMRolePolicyAttachment_basic
+        TestAccIAMRolePolicyAttachment_disappears
+        TestAccIAMRolePolicyAttachment_Disappears_role
+        TestAccIAMPolicy_basic
+        TestAccIAMPolicy_policy
+        TestAccIAMPolicy_tags
+        TestAccIAMRolePolicy_basic
+        TestAccIAMRolePolicy_unknownsInPolicy
+        TestAccIAMInstanceProfile_basic
+        TestAccIAMInstanceProfile_tags
+    )
+    printf -v iam_tests '^%s$|' "${SMOKE_TESTS_IAM[@]}"
+    tester "iam" "${iam_tests%|}"
     touch iamsanity.test
     exit 0
 fi

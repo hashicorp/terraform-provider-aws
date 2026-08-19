@@ -576,6 +576,27 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 # The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
 # The tests must pass on the earliest supported Terraform version (0.12.31).
 
+SMOKE_TESTS_IAM = \
+	TestAccIAMRole_basic \
+	TestAccIAMRole_namePrefix \
+	TestAccIAMRole_disappears \
+	TestAccIAMRole_InlinePolicy_basic \
+	TestAccIAMPolicyDocumentDataSource_basic \
+	TestAccIAMPolicyDocumentDataSource_sourceConflicting \
+	TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON \
+	TestAccIAMRolePolicyAttachment_basic \
+	TestAccIAMRolePolicyAttachment_disappears \
+	TestAccIAMRolePolicyAttachment_Disappears_role \
+	TestAccIAMPolicy_basic \
+	TestAccIAMPolicy_policy \
+	TestAccIAMPolicy_tags \
+	TestAccIAMRolePolicy_basic \
+	TestAccIAMRolePolicy_unknownsInPolicy \
+	TestAccIAMInstanceProfile_basic \
+	TestAccIAMInstanceProfile_tags \
+	TestAccIAMPolicy_List_Basic \
+	TestAccIAMRole_Identity_Basic
+
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
 	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
@@ -583,7 +604,7 @@ sane: prereq-go ## Run sane check
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -612,7 +633,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$' || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 18-$$fails1 )) ; \
 	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
