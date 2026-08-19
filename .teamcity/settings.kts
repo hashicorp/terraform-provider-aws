@@ -555,6 +555,7 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        // IAM is foundational to most other services, so run its tests first
         script {
             name = "IAM"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -581,10 +582,6 @@ object Sanity : BuildType({
         }
         script {
             name = "KMS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "IAM"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
