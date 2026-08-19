@@ -1965,7 +1965,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			// Step 1: CUSTOM type with missing configuration block → ValidateConfig error
 			{
 				Config:      testAccMemoryStrategyConfig_customInvalid(rName),
-				ExpectError: regexache.MustCompile(`Attribute "configuration" must be configured`),
+				ExpectError: regexache.MustCompile(`Attribute configuration must be configured`),
 			},
 			// Step 2: Create CUSTOM strategy with consolidation block
 			{
@@ -2076,7 +2076,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
 				Config:      testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeSummaryOverride, "Summary consolidation", "amazon.nova-lite-v1:0", "Summary extraction", "us.amazon.nova-2-lite-v1:0"),
-				ExpectError: regexache.MustCompile(`Attribute "configuration\[0\].extraction" must not be configured`),
+				ExpectError: regexache.MustCompile(`Attribute configuration\[0\].extraction must not be configured`),
 			},
 			//// Step 7: SUMMARY_OVERRIDE with no extraction block → should succeed
 			{
