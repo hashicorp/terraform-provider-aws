@@ -126,7 +126,11 @@ if [[ ! -f "ecssanity.test" ]]; then
 fi
 
 if [[ ! -f "elbv2sanity.test" ]]; then
-    tester "elbv2" 'TestAccELBV2TargetGroup_basic'
+    SMOKE_TESTS_ELBV2=(
+        TestAccELBV2TargetGroup_basic
+    )
+    printf -v elbv2_tests '^%s$|' "${SMOKE_TESTS_ELBV2[@]}"
+    tester "elbv2" "${elbv2_tests%|}"
     touch elbv2sanity.test
     exit 0
 fi
