@@ -215,7 +215,6 @@ func (r *webAppResource) Create(ctx context.Context, request resource.CreateRequ
 			ipAddressType, err := webAppVPCEndpointIPAddressType(ctx, r.Meta().EC2Client(ctx), vpcEndpointID)
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPC Endpoint (%s)", vpcEndpointID), err.Error())
-
 				return
 			}
 
@@ -267,7 +266,6 @@ func (r *webAppResource) Read(ctx context.Context, request resource.ReadRequest,
 			ipAddressType, err := webAppVPCEndpointIPAddressType(ctx, r.Meta().EC2Client(ctx), vpcEndpointID)
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPC Endpoint (%s)", vpcEndpointID), err.Error())
-
 				return
 			}
 
