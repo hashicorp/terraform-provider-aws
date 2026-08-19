@@ -583,7 +583,7 @@ SMOKE_TESTS_IAM = \
 	TestAccIAMRole_InlinePolicy_basic \
 	TestAccIAMPolicyDocumentDataSource_basic \
 	TestAccIAMPolicyDocumentDataSource_sourceConflicting \
-	TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON \
+	TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON \
 	TestAccIAMRolePolicyAttachment_basic \
 	TestAccIAMRolePolicyAttachment_disappears \
 	TestAccIAMRolePolicyAttachment_Disappears_role \
