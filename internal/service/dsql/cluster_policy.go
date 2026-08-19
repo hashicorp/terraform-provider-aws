@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -42,10 +41,15 @@ var clusterPolicyIdentifierRegex = regexache.MustCompile(`^[a-z0-9]{26}$`)
 type clusterPolicyResource struct {
 	framework.ResourceWithModel[clusterPolicyResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 // @FrameworkResource("aws_dsql_cluster_policy", name="Cluster Policy")
+// @IdentityAttribute("identifier")
 // @Testing(importIgnore="bypass_policy_lockout_safety_check;policy")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="identifier")
 func newClusterPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterPolicyResource{}
 	r.SetDefaultCreateTimeout(1 * time.Minute)
@@ -227,11 +231,6 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
-}
-
-func (r *clusterPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrIdentifier), request.ID)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("bypass_policy_lockout_safety_check"), false)...)
 }
 
 func syncClusterPolicyAfterPut(ctx context.Context, conn *dsql.Client, data *clusterPolicyResourceModel, policyVersion, operationName string, timeout time.Duration) error {

@@ -10,9 +10,9 @@ description: |-
 
 Terraform resource for managing an Amazon Aurora DSQL Cluster resource-based policy.
 
-~> **NOTE:** Aurora DSQL resource-based policies can grant access to principals within the same AWS account as the cluster. Cross-account access is not currently supported by Aurora DSQL resource-based policies.
+~> Aurora DSQL resource-based policies can grant access to principals within the same AWS account as the cluster. Cross-account access is not currently supported by Aurora DSQL resource-based policies.
 
-~> **NOTE:** Aurora DSQL resource-based policy changes are eventually consistent and typically take effect within one minute.
+~> Aurora DSQL resource-based policy changes are eventually consistent and typically take effect within one minute.
 
 ## Example Usage
 
@@ -145,6 +145,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `1m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dsql_cluster_policy.example
+  identity = {
+    identifier = "abcde1f234ghijklmnop5qr6st"
+  }
+}
+
+resource "aws_dsql_cluster_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `identifier` (String) Identifier of the Aurora DSQL Cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Aurora DSQL Cluster Policies using the cluster `identifier`. For example:
 
