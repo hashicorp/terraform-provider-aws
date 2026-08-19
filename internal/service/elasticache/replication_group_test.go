@@ -7016,9 +7016,9 @@ func testAccCreateServerlessCacheSnapshot(ctx context.Context, t *testing.T, cac
 	}
 
 	t.Cleanup(func() {
-		// Use a fresh context: the test's context is already canceled by the time
-		// t.Cleanup runs, which would otherwise cancel the delete and leak the snapshot.
-		_, err := conn.DeleteServerlessCacheSnapshot(context.Background(), &elasticache.DeleteServerlessCacheSnapshotInput{
+		// Detach from the test's context, which is canceled by the time t.Cleanup runs;
+		// otherwise the delete is canceled and the snapshot leaks.
+		_, err := conn.DeleteServerlessCacheSnapshot(context.WithoutCancel(ctx), &elasticache.DeleteServerlessCacheSnapshotInput{
 			ServerlessCacheSnapshotName: aws.String(snapshotName),
 		})
 		if err != nil {

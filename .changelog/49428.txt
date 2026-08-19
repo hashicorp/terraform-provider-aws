@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `serverless_cache_snapshot_name` argument
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Send `multi_az_enabled` in the `CreateReplicationGroup` request even when `false`, fixing restore of a Multi-AZ enabled replication group snapshot or a serverless cache snapshot into a new Multi-AZ disabled replication group
+```
