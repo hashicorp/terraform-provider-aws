@@ -36,6 +36,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newBotAliasResource,
+			TypeName: "aws_lexv2models_bot_alias",
+			Name:     "Bot Alias",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newBotLocaleResource,
 			TypeName: "aws_lexv2models_bot_locale",
 			Name:     "Bot Locale",
