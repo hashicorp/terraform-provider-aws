@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_odb_iam_role_association` ([#46794](https://github.com/hashicorp/terraform-provider-aws/issues/46794))
 * **New List Resource:** `aws_ec2_ami_launch_permission` ([#49461](https://github.com/hashicorp/terraform-provider-aws/issues/49461))
+* **New List Resource:** `aws_iam_instance_profile` ([#49576](https://github.com/hashicorp/terraform-provider-aws/issues/49576))
 * **New List Resource:** `aws_lambdacore_network_connector` ([#49387](https://github.com/hashicorp/terraform-provider-aws/issues/49387))
 * **New List Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
 * **New List Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
@@ -34,6 +35,7 @@ ENHANCEMENTS:
 * resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional ([#49476](https://github.com/hashicorp/terraform-provider-aws/issues/49476))
 * resource/aws_medialive_channel: Add resource identity ([#49532](https://github.com/hashicorp/terraform-provider-aws/issues/49532))
 * resource/aws_medialive_input: Add resource identity support ([#49534](https://github.com/hashicorp/terraform-provider-aws/issues/49534))
+* resource/aws_medialive_input_security_group: Add resource identity support ([#49537](https://github.com/hashicorp/terraform-provider-aws/issues/49537))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_resiliencehubv2_service: Add `associated_system` configuration block ([#49498](https://github.com/hashicorp/terraform-provider-aws/issues/49498))
