@@ -75,6 +75,8 @@ if [[ ! -f "iamsanity.test" ]]; then
         TestAccIAMRolePolicy_unknownsInPolicy
         TestAccIAMInstanceProfile_basic
         TestAccIAMInstanceProfile_tags
+        TestAccIAMPolicy_List_basic
+        TestAccIAMRole_Identity_basic
     )
     printf -v iam_tests '^%s$|' "${SMOKE_TESTS_IAM[@]}"
     tester "iam" "${iam_tests%|}"
