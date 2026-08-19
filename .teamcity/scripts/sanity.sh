@@ -159,6 +159,7 @@ if [[ ! -f "lambdasanity.test" ]]; then
     SMOKE_TESTS_LAMBDA=(
         TestAccLambdaFunction_basic
         TestAccLambdaPermission_basic
+        TestAccLambdaCapacityProvider_List_basic
     )
     printf -v lambda_tests '^%s$|' "${SMOKE_TESTS_LAMBDA[@]}"
     tester "lambda" "${lambda_tests%|}"
