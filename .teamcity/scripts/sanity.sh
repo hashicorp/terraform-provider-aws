@@ -193,7 +193,15 @@ if [[ ! -f "route53sanity.test" ]]; then
 fi
 
 if [[ ! -f "s3sanity.test" ]]; then
-    tester "s3" 'TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL'
+    SMOKE_TESTS_S3=(
+        TestAccS3Bucket_Basic_basic
+        TestAccS3Bucket_Security_corsUpdate
+        TestAccS3BucketPublicAccessBlock_basic
+        TestAccS3BucketPolicy_basic
+        TestAccS3BucketACL_updateACL
+    )
+    printf -v s3_tests '^%s$|' "${SMOKE_TESTS_S3[@]}"
+    tester "s3" "${s3_tests%|}"
     touch s3sanity.test
     exit 0
 fi
