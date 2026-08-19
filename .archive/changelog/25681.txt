@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Ensure that the configured `assume_role_with_web_identity` value is used
-```

@@ -39,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -49,7 +50,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime", name="Agent Runtime")
 // @Tags(identifierAttribute="agent_runtime_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttribute="agent_runtime_id")
+// @Testing(preCheck="testAccPreCheckAgentRuntimes")
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeResource{}
 
@@ -93,7 +98,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
-			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"lifecycle_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[lifecycleConfigurationModel](ctx),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -182,7 +187,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 															names.AttrBucket: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+																	fwvalidators.S3BucketName,
 																},
 															},
 															names.AttrPrefix: schema.StringAttribute{
@@ -380,7 +385,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 											Required: true,
 											Validators: []validator.String{
 												stringvalidator.LengthBetween(1, 255),
-												stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-:]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+												stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 											},
 										},
 										"inbound_token_claim_value_type": schema.StringAttribute{
@@ -421,7 +426,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 																	Optional: true,
 																	Validators: []validator.String{
 																		stringvalidator.LengthBetween(1, 255),
-																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																	},
 																},
 																"match_value_string_list": schema.SetAttribute{
@@ -430,7 +435,7 @@ func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 																	Validators: []validator.Set{
 																		setvalidator.ValueStringsAre(
 																			stringvalidator.LengthBetween(1, 255),
-																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																		),
 																	},
 																},

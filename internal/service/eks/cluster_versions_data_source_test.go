@@ -123,3 +123,36 @@ data "aws_eks_cluster_versions" "test" {
 }
 `
 }
+
+func TestAccEKSClusterVersionsDataSource_controlPlaneComponentConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	dataSourceName := "data.aws_eks_cluster_versions.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterVersionsDataSourceConfig_controlPlaneComponentConfig(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.#", 0),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_api_server_config.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_scheduler_config.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_controller_manager_config.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.0.control_plane_scaling_tiers.#", 0),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterVersionsDataSourceConfig_controlPlaneComponentConfig() string {
+	return `
+data "aws_eks_cluster_versions" "test" {
+  cluster_versions_only = ["1.32"]
+}
+`
+}

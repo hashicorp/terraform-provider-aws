@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_log_group: Add plan time validation for `retention_in_days` argument
-```

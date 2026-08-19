@@ -293,12 +293,13 @@ func DataSourcePermissions() *schema.Resource {
 
 func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.LakeFormationClient(ctx)
 
 	var input lakeformation.ListPermissionsInput
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if includePrincipalIdentifierInList(principalIdentifier) {
+	if includePrincipalIdentifierInList(principalIdentifier, awsClient.AccountID(ctx)) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}

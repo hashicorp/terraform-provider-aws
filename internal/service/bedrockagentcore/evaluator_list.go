@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -66,17 +67,24 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 			arn := aws.ToString(item.EvaluatorArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			var output *bedrockagentcorecontrol.GetEvaluatorOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findEvaluatorByID(ctx, conn, evaluatorID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data evaluatorResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
-					output, err := findEvaluatorByID(ctx, conn, evaluatorID)
-					if err != nil {
-						smerr.AddError(ctx, &result.Diagnostics, err, smerr.ID, evaluatorID)
-						return
-					}
-
 					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
 				} else {
 					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data))

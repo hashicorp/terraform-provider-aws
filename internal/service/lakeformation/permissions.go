@@ -519,12 +519,13 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.LakeFormationClient(ctx)
 
 	var input lakeformation.ListPermissionsInput
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if includePrincipalIdentifierInList(principalIdentifier) {
+	if includePrincipalIdentifierInList(principalIdentifier, awsClient.AccountID(ctx)) {
 		principal := awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
 		}
@@ -1377,10 +1378,24 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 	return tfList
 }
 
-func includePrincipalIdentifierInList(principalIdentifier string) bool {
-	arn, err := arn.Parse(principalIdentifier)
+// includePrincipalIdentifierInList determines whether a principal should
+// be included in the ListPermissions input.
+//
+// The following principals are excluded:
+// - Identitystore groups
+// - Cross account IAM principals
+func includePrincipalIdentifierInList(principalIdentifier string, currentAccountID string) bool {
+	p, err := arn.Parse(principalIdentifier)
 	if err != nil {
 		return true
 	}
-	return !(arn.Service == "identitystore" && strings.HasPrefix(arn.Resource, "group/"))
+
+	if p.Service == "identitystore" && strings.HasPrefix(p.Resource, "group/") {
+		return false
+	}
+	if p.Service == "iam" && p.AccountID != "" && p.AccountID != currentAccountID {
+		return false
+	}
+
+	return true
 }

@@ -12,9 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,6 +24,14 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(names.EKSServiceID, testAccErrorCheckSkip)
+}
+
+func checkNodeGroupARN(clusterName, nodeGroupName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("eks", regexache.MustCompile(`nodegroup/`+clusterName+`/`+nodeGroupName+`/.+`))
+}
+
+func checkNodeGroupARNAlternateRegion(clusterName, nodeGroupName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("eks", regexache.MustCompile(`nodegroup/`+clusterName+`/`+nodeGroupName+`/.+`))
 }
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {

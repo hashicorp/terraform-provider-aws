@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cognito_user_pool: Fix continual diff on `email_configuration.configuration_set`
-```

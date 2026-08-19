@@ -174,7 +174,7 @@ func Strings[S ~[]E, E Stringable](s S) []string {
 // If seq is empty, the result is nil.
 func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFunc[E]) ([]E, error) {
 	var s []E
-	opts := NewFinderOptions(optFns...)
+	opts := newFinderOptions(optFns...)
 
 	for v, err := range seq {
 		if err != nil {
@@ -197,7 +197,7 @@ func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFun
 // If seq is empty, the result is nil.
 func CollectAndConcatWithError[S ~[]E, E any](seq iter.Seq2[S, error], optFns ...FinderOptionsFunc[E]) (S, error) {
 	var s S
-	opts := NewFinderOptions(optFns...)
+	opts := newFinderOptions(optFns...)
 
 	for page, err := range seq {
 		if err != nil {

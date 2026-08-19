@@ -315,37 +315,35 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role in the destination account used for cross-account delivery of flow logs.
-* `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
+* `destination_options` - (Optional) Destination options for a flow log. More details below.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.
 * `iam_role_arn` - (Optional) ARN of the IAM role used to post flow logs. Corresponds to `DeliverLogsPermissionArn` in the [AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateFlowLogs.html).
-* `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_destination` - (Optional) ARN of the logging destination.
-* `log_format` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
-* `max_aggregation_interval` - (Optional) The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record.
-  Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`.
-  When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
+* `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
+* `log_format` - (Optional) Fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
+* `max_aggregation_interval` - (Optional) Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
 * `subnet_id` - (Optional) Subnet ID to attach to.
 * `tag_field_specification` - (Optional) Tag configuration for the Flow Logs Amazon EC2 Tags feature fields (e.g., `$${instance-tag}`) used in `log_format`. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `traffic_type` - (Optional) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
-* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
+* `traffic_type` - (Optional) Type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to.
+* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
 * `vpc_id` - (Optional) VPC ID to attach to.
 
 ~> **NOTE:** One of `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
-### destination_options
+### `destination_options` Block
 
-Describes the destination options for a flow log.
+Destination options for a flow log.
 
 * `file_format` - (Optional) File format for the flow log. Default value: `plain-text`. Valid values: `plain-text`, `parquet`.
-* `hive_compatible_partitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
-* `per_hour_partition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
+* `hive_compatible_partitions` - (Optional) Whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
+* `per_hour_partition` - (Optional) Whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
-### tag_field_specification
+### `tag_field_specification` Block
 
 Maps a taggable resource type to the tag keys, on resources of that type, to display in Flow Log records via the Amazon EC2 Tags feature fields (e.g., `$${instance-tag}`) in `log_format`. Multiple blocks may be specified to configure tag keys for different resource types.
 
@@ -356,11 +354,37 @@ Maps a taggable resource type to the tag keys, on resources of that type, to dis
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Flow Log ID.
 * `arn` - ARN of the Flow Log.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Flow Log ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_flow_log.example
+  identity = {
+    id = "fl-1a2b3c4d"
+  }
+}
+
+resource "aws_flow_log" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Flow Log ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Flow Logs using the `id`. For example:
 

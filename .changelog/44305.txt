@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_bedrockagentcore_gateway
-```
-
-```release-note:new-resource
-aws_bedrockagentcore_gateway_target
-```

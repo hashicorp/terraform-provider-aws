@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_task_definition: Prevent panic when supplying a `null` value in `container_definitions`
-```
