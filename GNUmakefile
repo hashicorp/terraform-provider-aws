@@ -601,6 +601,22 @@ SMOKE_TESTS_LOGS = \
 	TestAccLogsLogGroup_basic \
 	TestAccLogsLogGroup_multiple
 
+SMOKE_TESTS_EC2 = \
+	TestAccVPCSecurityGroup_basic \
+	TestAccVPCSecurityGroup_egressMode \
+	TestAccVPCSecurityGroup_vpcAllEgress \
+	TestAccVPCSecurityGroupRule_race \
+	TestAccVPCSecurityGroupRule_protocolChange \
+	TestAccVPCDataSource_basic \
+	TestAccVPCSubnet_basic \
+	TestAccVPC_tenancy \
+	TestAccVPCRouteTableAssociation_Subnet_basic \
+	TestAccVPCRouteTable_basic
+
+SMOKE_TESTS_STAGE_2 = \
+	$(SMOKE_TESTS_EC2) \
+	$(SMOKE_TESTS_LOGS)
+
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
 	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
@@ -617,7 +633,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_LOGS)))$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -649,7 +665,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_LOGS)))$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \

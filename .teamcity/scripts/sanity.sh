@@ -96,7 +96,20 @@ if [[ ! -f "logssanity.test" ]]; then
 fi
 
 if [[ ! -f "ec2sanity.test" ]]; then
-    tester "ec2" 'TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_egressMode|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic'
+    SMOKE_TESTS_EC2=(
+        TestAccVPCSecurityGroup_basic
+        TestAccVPCSecurityGroup_egressMode
+        TestAccVPCSecurityGroup_vpcAllEgress
+        TestAccVPCSecurityGroupRule_race
+        TestAccVPCSecurityGroupRule_protocolChange
+        TestAccVPCDataSource_basic
+        TestAccVPCSubnet_basic
+        TestAccVPC_tenancy
+        TestAccVPCRouteTableAssociation_Subnet_basic
+        TestAccVPCRouteTable_basic
+    )
+    printf -v ec2_tests '^%s$|' "${SMOKE_TESTS_EC2[@]}"
+    tester "ec2" "${ec2_tests%|}"
     touch ec2sanity.test
     exit 0
 fi
