@@ -1,0 +1,11 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+external-sources=true
+
+disable=SC2034
+disable=SC2046
+disable=SC2207
+disable=SC3030
+disable=SC3044
+disable=SC3054
