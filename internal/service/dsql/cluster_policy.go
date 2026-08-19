@@ -7,6 +7,7 @@ package dsql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -93,36 +95,33 @@ func (r *clusterPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 
 func (r *clusterPolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data clusterPolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+	id := data.Identifier.ValueString()
 
 	conn := r.Meta().DSQLClient(ctx)
-	identifier := data.Identifier.ValueString()
-	input := &dsql.PutClusterPolicyInput{
+	input := dsql.PutClusterPolicyInput{
 		BypassPolicyLockoutSafetyCheck: data.BypassPolicyLockoutSafetyCheck.ValueBool(),
 		ClientToken:                    aws.String(create.UniqueId(ctx)),
-		Identifier:                     aws.String(identifier),
+		Identifier:                     aws.String(id),
 		Policy:                         data.Policy.ValueStringPointer(),
 	}
 
-	output, err := conn.PutClusterPolicy(ctx, input)
+	output, err := conn.PutClusterPolicy(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
-
-	policyVersion, err := putClusterPolicyVersion(output)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
-
+	if output == nil || output.PolicyVersion == nil {
+		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, data.Identifier.String())
 		return
 	}
+	policyVersion := aws.ToString(output.PolicyVersion)
 
 	if err := syncClusterPolicyAfterPut(ctx, conn, &data, policyVersion, "create", r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 
@@ -131,8 +130,7 @@ func (r *clusterPolicyResource) Create(ctx context.Context, request resource.Cre
 
 func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data clusterPolicyResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -148,14 +146,13 @@ func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadR
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster Policy (%s)", id), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 
 	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(output.Policy))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("setting Aurora DSQL Cluster Policy (%s)", id), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 
@@ -166,77 +163,68 @@ func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadR
 }
 
 func (r *clusterPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new clusterPolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	var state, plan clusterPolicyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().DSQLClient(ctx)
-	identifier := new.Identifier.ValueString()
-	input := &dsql.PutClusterPolicyInput{
-		BypassPolicyLockoutSafetyCheck: new.BypassPolicyLockoutSafetyCheck.ValueBool(),
+	id := plan.Identifier.ValueString()
+	input := dsql.PutClusterPolicyInput{
+		BypassPolicyLockoutSafetyCheck: plan.BypassPolicyLockoutSafetyCheck.ValueBool(),
 		ClientToken:                    aws.String(create.UniqueId(ctx)),
-		ExpectedPolicyVersion:          old.PolicyVersion.ValueStringPointer(),
-		Identifier:                     aws.String(identifier),
-		Policy:                         new.Policy.ValueStringPointer(),
+		ExpectedPolicyVersion:          state.PolicyVersion.ValueStringPointer(),
+		Identifier:                     aws.String(id),
+		Policy:                         plan.Policy.ValueStringPointer(),
 	}
 
-	output, err := conn.PutClusterPolicy(ctx, input)
+	output, err := conn.PutClusterPolicy(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Identifier.String())
+		return
+	}
+	if output == nil || output.PolicyVersion == nil {
+		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Identifier.String())
+		return
+	}
+	policyVersion := aws.ToString(output.PolicyVersion)
 
+	if err := syncClusterPolicyAfterPut(ctx, conn, &plan, policyVersion, "update", r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Identifier.String())
 		return
 	}
 
-	policyVersion, err := putClusterPolicyVersion(output)
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
-
-		return
-	}
-
-	if err := syncClusterPolicyAfterPut(ctx, conn, &new, policyVersion, "update", r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Aurora DSQL Cluster Policy (%s)", identifier), err.Error())
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data clusterPolicyResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 	id := data.Identifier.ValueString()
 
 	conn := r.Meta().DSQLClient(ctx)
-	input := &dsql.DeleteClusterPolicyInput{
+	input := dsql.DeleteClusterPolicyInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		Identifier:  aws.String(id),
 	}
 
-	_, err := conn.DeleteClusterPolicy(ctx, input)
+	_, err := conn.DeleteClusterPolicy(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Aurora DSQL Cluster Policy (%s)", id), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 
 	if err := waitClusterPolicyDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Aurora DSQL Cluster Policy (%s) delete", id), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
 		return
 	}
 }
@@ -244,14 +232,6 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 func (r *clusterPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrIdentifier), request.ID)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("bypass_policy_lockout_safety_check"), false)...)
-}
-
-func putClusterPolicyVersion(output *dsql.PutClusterPolicyOutput) (string, error) {
-	if output == nil || output.PolicyVersion == nil {
-		return "", tfresource.NewEmptyResultError()
-	}
-
-	return aws.ToString(output.PolicyVersion), nil
 }
 
 func syncClusterPolicyAfterPut(ctx context.Context, conn *dsql.Client, data *clusterPolicyResourceModel, policyVersion, operationName string, timeout time.Duration) error {
@@ -276,11 +256,11 @@ func syncClusterPolicyAfterPut(ctx context.Context, conn *dsql.Client, data *clu
 }
 
 func findClusterPolicyByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.GetClusterPolicyOutput, error) {
-	input := &dsql.GetClusterPolicyInput{
+	input := dsql.GetClusterPolicyInput{
 		Identifier: aws.String(id),
 	}
 
-	output, err := conn.GetClusterPolicy(ctx, input)
+	output, err := conn.GetClusterPolicy(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
