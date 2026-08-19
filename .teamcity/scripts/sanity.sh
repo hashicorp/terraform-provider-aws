@@ -85,7 +85,12 @@ if [[ ! -f "iamsanity.test" ]]; then
 fi
 
 if [[ ! -f "logssanity.test" ]]; then
-    tester "logs" 'TestAccLogsGroup_basic|TestAccLogsGroup_multiple'
+    SMOKE_TESTS_LOGS=(
+        TestAccLogsGroup_basic
+        TestAccLogsGroup_multiple
+    )
+    printf -v logs_tests '^%s$|' "${SMOKE_TESTS_LOGS[@]}"
+    tester "logs" "${logs_tests%|}"
     touch logssanity.test
     exit 0
 fi
