@@ -36,6 +36,7 @@ ENHANCEMENTS:
 * resource/aws_medialive_channel: Add resource identity ([#49532](https://github.com/hashicorp/terraform-provider-aws/issues/49532))
 * resource/aws_medialive_input: Add resource identity support ([#49534](https://github.com/hashicorp/terraform-provider-aws/issues/49534))
 * resource/aws_medialive_input_security_group: Add resource identity support ([#49537](https://github.com/hashicorp/terraform-provider-aws/issues/49537))
+* resource/aws_medialive_multiplex: Add resource identity support ([#49557](https://github.com/hashicorp/terraform-provider-aws/issues/49557))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_resiliencehubv2_service: Add `associated_system` configuration block ([#49498](https://github.com/hashicorp/terraform-provider-aws/issues/49498))
