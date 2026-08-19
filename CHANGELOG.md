@@ -10,6 +10,7 @@ FEATURES:
 * **New List Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
 * **New List Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
 * **New List Resource:** `aws_resiliencehubv2_user_journey` ([#48330](https://github.com/hashicorp/terraform-provider-aws/issues/48330))
+* **New Resource:** `aws_dsql_cluster_policy` ([#47748](https://github.com/hashicorp/terraform-provider-aws/issues/47748))
 * **New Resource:** `aws_lambdacore_network_connector` ([#49387](https://github.com/hashicorp/terraform-provider-aws/issues/49387))
 * **New Resource:** `aws_lambdamicrovms_image` ([#48950](https://github.com/hashicorp/terraform-provider-aws/issues/48950))
 * **New Resource:** `aws_mailmanager_relay` ([#49394](https://github.com/hashicorp/terraform-provider-aws/issues/49394))
@@ -38,6 +39,7 @@ ENHANCEMENTS:
 * resource/aws_medialive_input_security_group: Add resource identity support ([#49537](https://github.com/hashicorp/terraform-provider-aws/issues/49537))
 * resource/aws_medialive_multiplex: Add resource identity support ([#49557](https://github.com/hashicorp/terraform-provider-aws/issues/49557))
 * resource/aws_medialive_multiplex_program: Add resource identity ([#49561](https://github.com/hashicorp/terraform-provider-aws/issues/49561))
+* resource/aws_observabilityadmin_centralization_rule_for_organization: Add `encryption_scope` argument to the `logs_encryption_configuration` configuration block ([#49563](https://github.com/hashicorp/terraform-provider-aws/issues/49563))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out ([#49485](https://github.com/hashicorp/terraform-provider-aws/issues/49485))
 * resource/aws_resiliencehubv2_service: Add `associated_system` configuration block ([#49498](https://github.com/hashicorp/terraform-provider-aws/issues/49498))
@@ -53,6 +55,7 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_harness: Fix `Provider produced inconsistent result after apply` error for `environment` ([#48815](https://github.com/hashicorp/terraform-provider-aws/issues/48815))
 * resource/aws_bedrockagentcore_online_evaluation_config: Retries additional IAM propagation errors on creation ([#49479](https://github.com/hashicorp/terraform-provider-aws/issues/49479))
 * resource/aws_mailmanager_ingress_point: Include `FAILED` as a pending state while an ingress point is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
+* resource/aws_nat_gateway: Allow updating `secondary_private_ip_address_count` in-place for private NAT gateways ([#47477](https://github.com/hashicorp/terraform-provider-aws/issues/47477))
 * resource/aws_observabilityadmin_telemetry_enrichment: Prevent `couldn't find resource (21 retries)` errors on delete if enrichment has never been started in the Region ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
 * resource/aws_observabilityadmin_telemetry_evaluation: Include `NOT_STARTED` as a target state while the resource is deleting ([#49502](https://github.com/hashicorp/terraform-provider-aws/issues/49502))
 
