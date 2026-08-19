@@ -146,7 +146,11 @@ if [[ ! -f "eventssanity.test" ]]; then
 fi
 
 if [[ ! -f "kmssanity.test" ]]; then
-    tester "kms" 'TestAccKMSKey_basic'
+    SMOKE_TESTS_KMS=(
+        TestAccKMSKey_basic
+    )
+    printf -v kms_tests '^%s$|' "${SMOKE_TESTS_KMS[@]}"
+    tester "kms" "${kms_tests%|}"
     touch kmssanity.test
     exit 0
 fi

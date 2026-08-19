@@ -623,12 +623,16 @@ SMOKE_TESTS_ELBV2 = \
 SMOKE_TESTS_EVENTS = \
 	TestAccEventsPutEventsAction_basic
 
+SMOKE_TESTS_KMS = \
+	TestAccKMSKey_basic
+
 SMOKE_TESTS_STAGE_2 = \
 	$(SMOKE_TESTS_EC2) \
 	$(SMOKE_TESTS_LOGS) \
 	$(SMOKE_TESTS_ECS) \
 	$(SMOKE_TESTS_ELBV2) \
-	$(SMOKE_TESTS_EVENTS)
+	$(SMOKE_TESTS_EVENTS) \
+	$(SMOKE_TESTS_KMS)
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
@@ -646,7 +650,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$|^TestAccKMSKey_basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -678,7 +682,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$|^TestAccKMSKey_basic$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \
