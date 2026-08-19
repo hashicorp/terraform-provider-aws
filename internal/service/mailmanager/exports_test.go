@@ -13,8 +13,8 @@ var (
 	FindRuleSetByID = findRuleSetByID
 	ResourceRuleSet = newRuleSetResource
 
-	ResourceRelay        = newRelayResource
-	FindRelayByID        = findRelayByID
+	ResourceRelay = newRelayResource
+	FindRelayByID = findRelayByID
 
 	FindIngressPointByID = findIngressPointByID
 	ResourceIngressPoint = newIngressPointResource
