@@ -16,6 +16,7 @@ FEATURES:
 * **New Resource:** `aws_resiliencehubv2_assertion` ([#48329](https://github.com/hashicorp/terraform-provider-aws/issues/48329))
 * **New Resource:** `aws_resiliencehubv2_service_function` ([#48328](https://github.com/hashicorp/terraform-provider-aws/issues/48328))
 * **New Resource:** `aws_resiliencehubv2_user_journey` ([#48330](https://github.com/hashicorp/terraform-provider-aws/issues/48330))
+* **New Resource:** `aws_securityhub_feature_v2` ([#49503](https://github.com/hashicorp/terraform-provider-aws/issues/49503))
 
 ENHANCEMENTS:
 
