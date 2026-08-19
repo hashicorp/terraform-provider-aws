@@ -337,6 +337,11 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 						tfjsonpath.New(names.AttrID),
 						compare.ValuesSame(),
 					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrIPAddressType),
+						knownvalue.StringExact(string(awstypes.IpAddressTypeDualstack)),
+					),
 				},
 			},
 			{
@@ -363,6 +368,74 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 						"aws_vpc.test",
 						tfjsonpath.New(names.AttrID),
 						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrIPAddressType),
+						knownvalue.StringExact(string(awstypes.IpAddressTypeDualstack)),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccTransferWebApp_VPCIPAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebApp
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppConfig_VPCIPAddressType(rName, string(awstypes.IpAddressTypeIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrIPAddressType),
+						knownvalue.StringExact(string(awstypes.IpAddressTypeIpv4)),
+					),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
+			},
+			{
+				Config: testAccWebAppConfig_VPCIPAddressType(rName, string(awstypes.IpAddressTypeDualstack)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrIPAddressType),
+						knownvalue.StringExact(string(awstypes.IpAddressTypeDualstack)),
 					),
 				},
 			},
@@ -552,6 +625,35 @@ resource "aws_transfer_web_app" "test" {
   }
 }
 `, rName, subnetIndex))
+}
+
+func testAccWebAppConfig_VPCIPAddressType(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		testAccWebAppConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_transfer_web_app" "test" {
+  identity_provider_details {
+    identity_center_config {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      role         = aws_iam_role.test.arn
+    }
+  }
+  endpoint_details {
+    vpc {
+      vpc_id             = aws_vpc.test.id
+      subnet_ids         = aws_subnet.test[*].id
+      security_group_ids = [aws_security_group.test.id]
+      ip_address_type    = "%[2]s"
+    }
+  }
+}
+`, rName, ipAddressType))
 }
 
 func testAccWebAppConfig_tags1(rName, tag1Key, tag1Value string) string {
