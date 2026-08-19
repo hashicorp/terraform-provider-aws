@@ -51,8 +51,8 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "identifier",
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "identifier"),
+				ImportStateVerifyIdentifierAttribute: names.AttrIdentifier,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrIdentifier),
 				ImportStateVerifyIgnore:              []string{"bypass_policy_lockout_safety_check", names.AttrPolicy},
 			},
 		},
@@ -185,7 +185,7 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resourc
 			if rs.Type != "aws_dsql_cluster_policy" {
 				continue
 			}
-			id := rs.Primary.Attributes["identifier"]
+			id := rs.Primary.Attributes[names.AttrIdentifier]
 
 			_, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
 			if retry.NotFound(err) {
@@ -211,7 +211,7 @@ func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		id := rs.Primary.Attributes["identifier"]
+		id := rs.Primary.Attributes[names.AttrIdentifier]
 
 		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
 		_, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
@@ -227,7 +227,7 @@ func testAccCheckClusterPolicyRemoteAction(ctx context.Context, t *testing.T, n,
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		id := rs.Primary.Attributes["identifier"]
+		id := rs.Primary.Attributes[names.AttrIdentifier]
 
 		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
 		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
