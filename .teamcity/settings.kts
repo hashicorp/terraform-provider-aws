@@ -604,6 +604,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
+            name = "SSM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "Secrets Manager"
             scriptContent = File("./scripts/sanity.sh").readText()
         }

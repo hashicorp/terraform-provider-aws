@@ -207,6 +207,16 @@ if [[ ! -f "s3sanity.test" ]]; then
     exit 0
 fi
 
+if [[ ! -f "ssmsanity.test" ]]; then
+    SMOKE_TESTS_SSM=(
+        TestAccSSMParameterEphemeral_basic
+    )
+    printf -v ssm_tests '^%s$|' "${SMOKE_TESTS_SSM[@]}"
+    tester "ssm" "${ssm_tests%|}"
+    touch ssmsanity.test
+    exit 0
+fi
+
 if [[ ! -f "secretsmanagersanity.test" ]]; then
     tester "secretsmanager" 'TestAccSecretsManagerSecret_basic'
     touch secretsmanagersanity.test
