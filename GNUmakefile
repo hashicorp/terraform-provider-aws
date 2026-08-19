@@ -594,8 +594,8 @@ SMOKE_TESTS_IAM = \
 	TestAccIAMRolePolicy_unknownsInPolicy \
 	TestAccIAMInstanceProfile_basic \
 	TestAccIAMInstanceProfile_tags \
-	TestAccIAMPolicy_List_Basic \
-	TestAccIAMRole_Identity_Basic
+	TestAccIAMPolicy_List_basic \
+	TestAccIAMRole_Identity_basic
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
