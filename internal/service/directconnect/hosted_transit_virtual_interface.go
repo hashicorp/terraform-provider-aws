@@ -97,6 +97,12 @@ func resourceHostedTransitVirtualInterface() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -152,6 +158,10 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 		input.NewTransitVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewTransitVirtualInterfaceAllocation.RateLimit = aws.String(v.(string))
+	}
+
 	output, err := conn.AllocateTransitVirtualInterface(ctx, input)
 
 	if err != nil {
@@ -203,6 +213,7 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

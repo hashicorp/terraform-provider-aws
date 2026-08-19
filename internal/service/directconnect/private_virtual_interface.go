@@ -113,6 +113,11 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"vlan": {
@@ -175,6 +180,10 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		input.NewPrivateVirtualInterface.VirtualGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewPrivateVirtualInterface.RateLimit = aws.String(v.(string))
+	}
+
 	output, err := conn.CreatePrivateVirtualInterface(ctx, input)
 
 	if err != nil {
@@ -227,6 +236,7 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 

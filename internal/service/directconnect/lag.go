@@ -90,8 +90,9 @@ func resourceLag() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
-				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"rate_limiter_status": rateLimiterStatusSchema(),
+				names.AttrTags:        tftags.TagsSchema(),
+				names.AttrTagsAll:     tftags.TagsSchemaComputed(),
 			}
 		},
 	}
@@ -171,6 +172,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set(names.AttrName, lag.LagName)
 	d.Set(names.AttrOwnerAccountID, lag.OwnerAccount)
 	d.Set(names.AttrProviderName, lag.ProviderName)
+	d.Set("rate_limiter_status", flattenRateLimiterStatus(lag.RateLimiterStatus))
 
 	return diags
 }
