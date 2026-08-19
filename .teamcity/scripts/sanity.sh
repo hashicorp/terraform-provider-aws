@@ -115,7 +115,12 @@ if [[ ! -f "ec2sanity.test" ]]; then
 fi
 
 if [[ ! -f "ecssanity.test" ]]; then
-    tester "ecs" 'TestAccECSTaskDefinition_basic|TestAccECSService_basic'
+    SMOKE_TESTS_ECS=(
+        TestAccECSTaskDefinition_basic
+        TestAccECSService_basic
+    )
+    printf -v ecs_tests '^%s$|' "${SMOKE_TESTS_ECS[@]}"
+    tester "ecs" "${ecs_tests%|}"
     touch ecssanity.test
     exit 0
 fi
