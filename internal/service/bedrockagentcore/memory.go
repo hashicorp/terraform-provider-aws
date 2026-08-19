@@ -51,7 +51,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes.Memory")
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
-// @Testing(preIdentityVersion="v6.59.0")
+// @Testing(preIdentityVersion="v6.60.0")
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
 

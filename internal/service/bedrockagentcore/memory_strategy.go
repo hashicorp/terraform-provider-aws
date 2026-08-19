@@ -62,7 +62,7 @@ var validResourceName validator.String = stringvalidator.RegexMatches(
 // @IdentityAttribute("memory_id")
 // @IdentityAttribute("memory_strategy_id")
 // @ImportIDHandler("memoryStrategyImportID")
-// @Testing(preIdentityVersion="v6.59.0")
+// @Testing(preIdentityVersion="v6.60.0")
 // @Testing(importStateIdFunc=testAccMemoryStrategyImportStateIDFunc)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.MemoryStrategy")
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")

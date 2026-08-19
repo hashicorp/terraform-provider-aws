@@ -206,7 +206,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_Identity_regionOverride(t *testing.T)
 	})
 }
 
-// Resource Identity was added after v6.59.0
+// Resource Identity was added after v6.60.0
 func TestAccBedrockAgentCoreMemoryStrategy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -224,7 +224,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_Identity_ExistingResource_basic(t *te
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic_v6.59.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic_v6.60.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -266,7 +266,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_Identity_ExistingResource_basic(t *te
 	})
 }
 
-// Resource Identity was added after v6.59.0
+// Resource Identity was added after v6.60.0
 func TestAccBedrockAgentCoreMemoryStrategy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -289,7 +289,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_Identity_ExistingResource_noRefreshNo
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic_v6.59.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic_v6.60.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
