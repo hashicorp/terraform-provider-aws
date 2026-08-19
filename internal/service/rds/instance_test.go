@@ -1304,6 +1304,42 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_dedicatedLogVolume(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_dedicatedLogVolume(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "dedicated_log_volume", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_promoteNull(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -10503,6 +10539,43 @@ resource "aws_db_instance" "source" {
   password_wo_version     = 1
   username                = "tfacctest"
   skip_final_snapshot     = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_dedicatedLogVolume(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  # Dedicated log volumes do not support PG 16 instances.
+  engine              = "postgres"
+  engine_version      = "15.12"
+  identifier          = "%[1]s-source"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  username            = "tfacctest"
+  skip_final_snapshot = true
+  apply_immediately   = true
+
+  # Minimum amounts required to qualify for IOPS / DedicatedLogVolume
+  allocated_storage = 100
+  storage_type      = "io1"
+  iops              = 1000
+
+  backup_retention_period = 1
+  dedicated_log_volume    = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  replicate_source_db  = aws_db_instance.source.identifier
+  skip_final_snapshot  = true
+  storage_type         = "gp3"
+  dedicated_log_volume = false
 }
 `, rName))
 }
