@@ -629,7 +629,7 @@ SMOKE_TESTS_KMS = \
 SMOKE_TESTS_LAMBDA = \
 	TestAccLambdaFunction_basic \
 	TestAccLambdaPermission_basic \
-	TestAccLambdaCapacityProvider_List_Basic
+	TestAccLambdaCapacityProvider_List_basic
 
 SMOKE_TESTS_STAGE_2 = \
 	$(SMOKE_TESTS_EC2) \
