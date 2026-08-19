@@ -661,12 +661,16 @@ SMOKE_TESTS_S3 = \
 SMOKE_TESTS_SSM = \
 	TestAccSSMParameterEphemeral_basic
 
+SMOKE_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecret_basic
+
 SMOKE_TESTS_STAGE_3 = \
 	$(SMOKE_TESTS_LAMBDA) \
 	$(SMOKE_TESTS_META) \
 	$(SMOKE_TESTS_ROUTE53) \
 	$(SMOKE_TESTS_S3) \
-	$(SMOKE_TESTS_SSM)
+	$(SMOKE_TESTS_SSM) \
+	$(SMOKE_TESTS_SECRETSMANAGER)
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
@@ -695,7 +699,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/sts/... \
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$|^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestARNParseFunction_known$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$|^TestAccSTSCallerIdentityDataSource_basic$$|^TestARNParseFunction_known$$'
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -730,7 +734,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/sts/... \
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$|^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestARNParseFunction_known$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$|^TestAccSTSCallerIdentityDataSource_basic$$|^TestARNParseFunction_known$$' || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
 	passes=$$(( 54-$$tot_fails )) ; \

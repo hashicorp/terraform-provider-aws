@@ -218,7 +218,11 @@ if [[ ! -f "ssmsanity.test" ]]; then
 fi
 
 if [[ ! -f "secretsmanagersanity.test" ]]; then
-    tester "secretsmanager" 'TestAccSecretsManagerSecret_basic'
+    SMOKE_TESTS_SECRETSMANAGER=(
+        TestAccSecretsManagerSecret_basic
+    )
+    printf -v secretsmanager_tests '^%s$|' "${SMOKE_TESTS_SECRETSMANAGER[@]}"
+    tester "secretsmanager" "${secretsmanager_tests%|}"
     touch secretsmanagersanity.test
     exit 0
 fi
