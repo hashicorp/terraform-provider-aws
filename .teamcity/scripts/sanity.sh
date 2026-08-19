@@ -38,7 +38,7 @@ function tester {
     local service=$1
     local tests=$2
 
-    local results=$(TF_ACC=1 go test ./internal/service/"${service}"/... -v -parallel 4 -run="${tests}" -timeout 60m 2>&1)
+    local results=$(TF_ACC=1 go test ./internal/service/"${service}"/... -v -parallel 4 -run="${tests}" -timeout 60m -count 1 -vet=off -buildvcs=false  2>&1)
     local exit_code=$?
 
     echo "${results}"
