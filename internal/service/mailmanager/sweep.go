@@ -17,10 +17,33 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_mailmanager_archive", sweepArchives)
 	awsv2.Register("aws_mailmanager_relay", sweepRelays)
 	awsv2.Register("aws_mailmanager_ingress_point", sweepIngressPoints)
 	awsv2.Register("aws_mailmanager_rule_set", sweepRuleSets)
 	awsv2.Register("aws_mailmanager_traffic_policy", sweepTrafficPolicies)
+}
+
+func sweepArchives(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input mailmanager.ListArchivesInput
+	conn := client.MailManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListArchivesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Archives {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newArchiveResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ArchiveId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepIngressPoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -67,7 +90,7 @@ func sweepRuleSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 }
 
 func sweepRelays(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := mailmanager.ListRelaysInput{}
+	var input mailmanager.ListRelaysInput
 	conn := client.MailManagerClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -80,8 +103,8 @@ func sweepRelays(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 		for _, v := range page.Relays {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newRelayResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(v.RelayId))),
-			)
+				framework.NewAttribute(names.AttrID, aws.ToString(v.RelayId)),
+			))
 		}
 	}
 
