@@ -101,7 +101,7 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"retention_period": schema.StringAttribute{
+						names.AttrRetentionPeriod: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.RetentionPeriod](),
 							Required:   true,
 						},
