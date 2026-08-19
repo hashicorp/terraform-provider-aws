@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,6 @@ import (
 
 func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
 	var initialPolicyVersion string
 	resourceName := "aws_dsql_cluster_policy.test"
 	clusterResourceName := "aws_dsql_cluster.test"
@@ -39,7 +37,7 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", true),
 					testAccCheckClusterPolicyVersionSet(t, resourceName, &initialPolicyVersion),
@@ -63,7 +61,6 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 
 func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
 	resourceName := "aws_dsql_cluster_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,7 +75,7 @@ func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdsql.ResourceClusterPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,7 +94,6 @@ func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
 
 func TestAccDSQLClusterPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
 	var initialPolicyVersion string
 	resourceName := "aws_dsql_cluster_policy.test"
 	clusterResourceName := "aws_dsql_cluster.test"
@@ -114,7 +110,7 @@ func TestAccDSQLClusterPolicy_policy(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", true),
 					testAccCheckClusterPolicyVersionSet(t, resourceName, &initialPolicyVersion),
@@ -127,12 +123,17 @@ func TestAccDSQLClusterPolicy_policy(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", false),
 					testAccCheckClusterPolicyVersionChanged(t, resourceName, &initialPolicyVersion),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -140,7 +141,6 @@ func TestAccDSQLClusterPolicy_policy(t *testing.T) {
 
 func TestAccDSQLClusterPolicy_bypassPolicyLockoutSafetyCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
 	resourceName := "aws_dsql_cluster_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -155,16 +155,21 @@ func TestAccDSQLClusterPolicy_bypassPolicyLockoutSafetyCheck(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -198,7 +203,7 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
-func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string, v *dsql.GetClusterPolicyOutput) resource.TestCheckFunc {
+func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	t.Helper()
 
 	return func(s *terraform.State) error {
@@ -209,14 +214,8 @@ func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string
 		id := rs.Primary.Attributes["identifier"]
 
 		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
-		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		_, err := tfdsql.FindClusterPolicyByID(ctx, conn, id)
+		return err
 	}
 }
 
