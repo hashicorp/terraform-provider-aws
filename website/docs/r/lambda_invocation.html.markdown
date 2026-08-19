@@ -70,6 +70,23 @@ resource "aws_lambda_invocation" "example" {
 }
 ```
 
+### Invocation with Retry
+
+```terraform
+resource "aws_lambda_invocation" "example" {
+  function_name = aws_lambda_function.example.function_name
+
+  maximum_retry_attempts = 5
+
+  input = jsonencode({
+    operation = "initialize"
+    config = {
+      environment = "production"
+    }
+  })
+}
+```
+
 ### CRUD Lifecycle Management
 
 ```terraform
@@ -171,6 +188,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `lifecycle_scope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
+* `maximum_retry_attempts` - (Optional) Number of times to retry the Lambda invocation on temporary, self-correcting errors (`TooManyRequestsException`, `ServiceException`, `ResourceNotReadyException`). Uses exponential backoff between attempts (~500ms, ~1s, ~2s). Valid values are `0` to `20`. Defaults to `0`.
 * `qualifier` - (Optional) Qualifier (i.e., version) of the Lambda function. Defaults to `$LATEST`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tenant_id` - (Optional) Tenant Id to serve invocations from specified tenant.
