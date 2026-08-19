@@ -181,7 +181,8 @@ fi
 
 if [[ ! -f "route53sanity.test" ]]; then
     SMOKE_TESTS_ROUTE53=(
-        TestAccRoute53Record_basic
+        TestAccRoute53Record_basic_FullName
+        TestAccRoute53Record_basic_ShortName
         TestAccRoute53Record_Latency_basic
         TestAccRoute53ZoneDataSource_name
     )
