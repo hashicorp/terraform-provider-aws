@@ -19,11 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	clusterPolicyAttrBypassPolicyLockoutSafetyCheck = "bypass_policy_lockout_safety_check"
-	clusterPolicyAttrPolicyVersion                  = "policy_version"
-)
-
 func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var clusterPolicy dsql.GetClusterPolicyOutput
@@ -50,15 +45,15 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, clusterResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIdentifier, clusterResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttrSet(resourceName, clusterPolicyAttrPolicyVersion),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_version"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{clusterPolicyAttrBypassPolicyLockoutSafetyCheck, names.AttrPolicy},
+				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check", names.AttrPolicy},
 			},
 			{
 				Config: testAccClusterPolicyConfig_updated(),
@@ -67,7 +62,7 @@ func TestAccDSQLClusterPolicy_basic(t *testing.T) {
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
 					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", false),
 					testAccCheckClusterPolicyVersionChanged(t, resourceName, &initialPolicyVersion),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 		},
@@ -118,14 +113,14 @@ func TestAccDSQLClusterPolicy_bypassPolicyLockoutSafetyCheck(t *testing.T) {
 				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 		},
@@ -218,7 +213,7 @@ func testAccCheckClusterPolicyVersionSet(t *testing.T, n string, policyVersion *
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		v := rs.Primary.Attributes[clusterPolicyAttrPolicyVersion]
+		v := rs.Primary.Attributes["policy_version"]
 		if v == "" {
 			return fmt.Errorf("expected Aurora DSQL Cluster Policy %s policy version to be set", n)
 		}
@@ -238,7 +233,7 @@ func testAccCheckClusterPolicyVersionChanged(t *testing.T, n string, previousPol
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		v := rs.Primary.Attributes[clusterPolicyAttrPolicyVersion]
+		v := rs.Primary.Attributes["policy_version"]
 		if v == "" {
 			return fmt.Errorf("expected Aurora DSQL Cluster Policy %s policy version to be set", n)
 		}
