@@ -156,7 +156,12 @@ if [[ ! -f "kmssanity.test" ]]; then
 fi
 
 if [[ ! -f "lambdasanity.test" ]]; then
-    tester "lambda" 'TestAccLambdaFunction_basic|TestAccLambdaPermission_basic'
+    SMOKE_TESTS_LAMBDA=(
+        TestAccLambdaFunction_basic
+        TestAccLambdaPermission_basic
+    )
+    printf -v lambda_tests '^%s$|' "${SMOKE_TESTS_LAMBDA[@]}"
+    tester "lambda" "${lambda_tests%|}"
     touch lambdasanity.test
     exit 0
 fi
