@@ -1131,29 +1131,55 @@ func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 	case awstypes.StrategyConfiguration:
 		m.Type = fwtypes.StringEnumValue(t.Type)
 
-		if t.Consolidation != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &m.Consolidation))
+		if v := t.Consolidation; v != nil {
+			// Null out any phantom empty extraction.
+			consolidationList := fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &consolidationList))
+			if diags.HasError() {
+				return diags
+			}
+
+			consolidation, d := consolidationList.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return diags
+			}
+			if consolidation == nil || (consolidation.AppendToPrompt.IsNull() && consolidation.ModelID.IsNull()) {
+				m.Consolidation = fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			} else {
+				m.Consolidation = consolidationList
+			}
+		}
+
+		if v := t.Extraction; v != nil {
+			// Null out any phantom empty extraction.
+			extractionList := fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &extractionList))
+			if diags.HasError() {
+				return diags
+			}
+
+			extraction, d := extractionList.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return diags
+			}
+			if extraction == nil || (extraction.AppendToPrompt.IsNull() && extraction.ModelID.IsNull()) {
+				m.Extraction = fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			} else {
+				m.Extraction = extractionList
+			}
+		}
+
+		if v := t.Reflection; v != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.Reflection))
 			if diags.HasError() {
 				return diags
 			}
 		}
 
-		if t.Extraction != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &m.Extraction))
-			if diags.HasError() {
-				return diags
-			}
-		}
-
-		if t.Reflection != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Reflection, &m.Reflection))
-			if diags.HasError() {
-				return diags
-			}
-		}
-
-		if t.SelfManagedConfiguration != nil {
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.SelfManagedConfiguration, &m.SelfManagedConfiguration))
+		if v := t.SelfManagedConfiguration; v != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.SelfManagedConfiguration))
 			if diags.HasError() {
 				return diags
 			}
@@ -1825,113 +1851,4 @@ func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnosti
 	}
 
 	return r, diags
-}
-
-var _ validator.List = triggerConditionsValidator{}
-
-type triggerConditionsValidator struct{}
-
-func (triggerConditionsValidator) Description(context.Context) string {
-	return "validates self-managed memory trigger condition thresholds"
-}
-
-func (v triggerConditionsValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (triggerConditionsValidator) ValidateList(ctx context.Context, request validator.ListRequest, response *validator.ListResponse) {
-	const (
-		minimumMessageCount       int32 = 1
-		maximumMessageCount       int32 = 50
-		minimumTokenCount         int32 = 100
-		maximumTokenCount         int32 = 500_000
-		minimumIdleSessionTimeout int32 = 10
-		maximumIdleSessionTimeout int32 = 3_000
-	)
-
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		return
-	}
-
-	value, diags := fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx).ValueFromList(ctx, request.ConfigValue)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conditionsValue, ok := value.(fwtypes.ListNestedObjectValueOf[triggerConditionsModel])
-	if !ok {
-		response.Diagnostics.AddAttributeError(request.Path, "Invalid Attribute Value", fmt.Sprintf("unexpected trigger conditions value type: %T", value))
-		return
-	}
-	conditions, diags := conditionsValue.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-	if response.Diagnostics.HasError() || conditions == nil {
-		return
-	}
-
-	rootPath := request.Path.AtListIndex(0)
-	if !conditions.MessageBasedTrigger.IsNull() && !conditions.MessageBasedTrigger.IsUnknown() {
-		message, diags := conditions.MessageBasedTrigger.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if message != nil {
-			validateTriggerThreshold(
-				rootPath.AtName("message_based_trigger").AtListIndex(0).AtName("message_count"),
-				message.MessageCount,
-				minimumMessageCount,
-				maximumMessageCount,
-				response,
-			)
-		} else {
-			response.Diagnostics.AddAttributeError(rootPath.AtName("message_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
-		}
-	}
-
-	if !conditions.TokenBasedTrigger.IsNull() && !conditions.TokenBasedTrigger.IsUnknown() {
-		token, diags := conditions.TokenBasedTrigger.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if token != nil {
-			validateTriggerThreshold(
-				rootPath.AtName("token_based_trigger").AtListIndex(0).AtName("token_count"),
-				token.TokenCount,
-				minimumTokenCount,
-				maximumTokenCount,
-				response,
-			)
-		} else {
-			response.Diagnostics.AddAttributeError(rootPath.AtName("token_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
-		}
-	}
-
-	if !conditions.TimeBasedTrigger.IsNull() && !conditions.TimeBasedTrigger.IsUnknown() {
-		timeBased, diags := conditions.TimeBasedTrigger.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if timeBased != nil {
-			validateTriggerThreshold(
-				rootPath.AtName("time_based_trigger").AtListIndex(0).AtName("idle_session_timeout"),
-				timeBased.IdleSessionTimeout,
-				minimumIdleSessionTimeout,
-				maximumIdleSessionTimeout,
-				response,
-			)
-		} else {
-			response.Diagnostics.AddAttributeError(rootPath.AtName("time_based_trigger"), "Invalid Attribute Value", "list must contain exactly one element")
-		}
-	}
-}
-
-func validateTriggerThreshold(attributePath path.Path, value types.Int32, min, max int32, response *validator.ListResponse) {
-	if value.IsNull() || value.IsUnknown() || value.ValueInt32() >= min && value.ValueInt32() <= max {
-		return
-	}
-	response.Diagnostics.AddAttributeError(attributePath, "Invalid Attribute Value", fmt.Sprintf("value must be between %d and %d, got: %d", min, max, value.ValueInt32()))
 }

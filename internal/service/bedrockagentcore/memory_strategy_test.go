@@ -1219,6 +1219,176 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 			},
 		},
 		{
+			name: "semantic override with no consolidation",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{
+							Value: awstypes.SemanticExtractionOverride{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with empty consolidation",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{},
+					},
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{
+							Value: awstypes.SemanticExtractionOverride{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with no extraction",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{
+							Value: awstypes.SemanticConsolidationOverride{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with empty extraction",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{
+							Value: awstypes.SemanticConsolidationOverride{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
 			name: "user preference override",
 			input: awstypes.MemoryStrategy{
 				Configuration: &awstypes.StrategyConfiguration{
