@@ -180,7 +180,13 @@ if [[ ! -f "metasanity.test" ]]; then
 fi
 
 if [[ ! -f "route53sanity.test" ]]; then
-    tester "route53" 'TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name'
+    SMOKE_TESTS_ROUTE53=(
+        TestAccRoute53Record_basic
+        TestAccRoute53Record_Latency_basic
+        TestAccRoute53ZoneDataSource_name
+    )
+    printf -v route53_tests '^%s$|' "${SMOKE_TESTS_ROUTE53[@]}"
+    tester "route53" "${route53_tests%|}"
     touch route53sanity.test
     exit 0
 fi
