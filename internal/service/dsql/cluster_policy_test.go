@@ -24,6 +24,114 @@ const (
 	clusterPolicyAttrPolicyVersion                  = "policy_version"
 )
 
+func TestAccDSQLClusterPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var clusterPolicy dsql.GetClusterPolicyOutput
+	var initialPolicyVersion string
+	resourceName := "aws_dsql_cluster_policy.test"
+	clusterResourceName := "aws_dsql_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterPolicyConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
+					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", true),
+					testAccCheckClusterPolicyVersionSet(t, resourceName, &initialPolicyVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, clusterResourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIdentifier, clusterResourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, clusterPolicyAttrPolicyVersion),
+					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{clusterPolicyAttrBypassPolicyLockoutSafetyCheck, names.AttrPolicy},
+			},
+			{
+				Config: testAccClusterPolicyConfig_updated(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
+					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", false),
+					testAccCheckClusterPolicyVersionChanged(t, resourceName, &initialPolicyVersion),
+					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var clusterPolicy dsql.GetClusterPolicyOutput
+	resourceName := "aws_dsql_cluster_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterPolicyConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdsql.ResourceClusterPolicy, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDSQLClusterPolicy_bypassPolicyLockoutSafetyCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var clusterPolicy dsql.GetClusterPolicyOutput
+	resourceName := "aws_dsql_cluster_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
+					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	t.Helper()
 
@@ -52,36 +160,6 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
-func testAccClusterPolicyConfig_basic() string {
-	return `
-data "aws_caller_identity" "current" {}
-
-resource "aws_dsql_cluster" "test" {}
-
-resource "aws_dsql_cluster_policy" "test" {
-  identifier = aws_dsql_cluster.test.identifier
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowCurrentAccountConnect"
-        Effect = "Allow"
-        Principal = {
-          AWS = data.aws_caller_identity.current.account_id
-        }
-        Action = [
-          "dsql:DbConnect",
-          "dsql:DbConnectAdmin",
-        ]
-        Resource = aws_dsql_cluster.test.arn
-      }
-    ]
-  })
-}
-`
-}
-
 func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string, v *dsql.GetClusterPolicyOutput) resource.TestCheckFunc {
 	t.Helper()
 
@@ -107,7 +185,13 @@ func testAccCheckClusterPolicyRemoteAction(ctx context.Context, t *testing.T, n,
 	t.Helper()
 
 	return func(s *terraform.State) error {
-		output, err := testAccFindClusterPolicyByResourceName(ctx, t, s, n)
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
+		output, err := tfdsql.FindClusterPolicyByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -167,19 +251,6 @@ func testAccCheckClusterPolicyVersionChanged(t *testing.T, n string, previousPol
 	}
 }
 
-func testAccFindClusterPolicyByResourceName(ctx context.Context, t *testing.T, s *terraform.State, n string) (*dsql.GetClusterPolicyOutput, error) {
-	t.Helper()
-
-	rs, ok := s.RootModule().Resources[n]
-	if !ok {
-		return nil, fmt.Errorf("Not found: %s", n)
-	}
-
-	conn := acctest.ProviderMeta(ctx, t).DSQLClient(ctx)
-
-	return tfdsql.FindClusterPolicyByID(ctx, conn, rs.Primary.ID)
-}
-
 func testAccClusterPolicyContainsAction(policy string, action string) (bool, error) {
 	var doc struct {
 		Statement []struct {
@@ -211,54 +282,34 @@ func testAccClusterPolicyContainsAction(policy string, action string) (bool, err
 	return false, nil
 }
 
-func TestAccDSQLClusterPolicy_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
-	var initialPolicyVersion string
-	resourceName := "aws_dsql_cluster_policy.test"
-	clusterResourceName := "aws_dsql_cluster.test"
+func testAccClusterPolicyConfig_basic() string {
+	return `
+data "aws_caller_identity" "current" {}
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterPolicyConfig_basic(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
-					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", true),
-					testAccCheckClusterPolicyVersionSet(t, resourceName, &initialPolicyVersion),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, clusterResourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrIdentifier, clusterResourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttrSet(resourceName, clusterPolicyAttrPolicyVersion),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{clusterPolicyAttrBypassPolicyLockoutSafetyCheck, names.AttrPolicy},
-			},
-			{
-				Config: testAccClusterPolicyConfig_updated(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnect", true),
-					testAccCheckClusterPolicyRemoteAction(ctx, t, resourceName, "dsql:DbConnectAdmin", false),
-					testAccCheckClusterPolicyVersionChanged(t, resourceName, &initialPolicyVersion),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
-				),
-			},
-		},
-	})
+resource "aws_dsql_cluster" "test" {}
+
+resource "aws_dsql_cluster_policy" "test" {
+  identifier = aws_dsql_cluster.test.identifier
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCurrentAccountConnect"
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.account_id
+        }
+        Action = [
+          "dsql:DbConnect",
+          "dsql:DbConnectAdmin",
+        ]
+        Resource = aws_dsql_cluster.test.arn
+      }
+    ]
+  })
+}
+`
 }
 
 func testAccClusterPolicyConfig_updated() string {
@@ -290,38 +341,6 @@ resource "aws_dsql_cluster_policy" "test" {
 `
 }
 
-func TestAccDSQLClusterPolicy_bypassPolicyLockoutSafetyCheck(t *testing.T) {
-	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
-	resourceName := "aws_dsql_cluster_policy.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtTrue),
-				),
-			},
-			{
-				Config: testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					resource.TestCheckResourceAttr(resourceName, clusterPolicyAttrBypassPolicyLockoutSafetyCheck, acctest.CtFalse),
-				),
-			},
-		},
-	})
-}
-
 func testAccClusterPolicyConfig_bypassPolicyLockoutSafetyCheck(bypass bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -350,30 +369,4 @@ resource "aws_dsql_cluster_policy" "test" {
   })
 }
 `, bypass)
-}
-
-func TestAccDSQLClusterPolicy_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var clusterPolicy dsql.GetClusterPolicyOutput
-	resourceName := "aws_dsql_cluster_policy.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DSQLServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterPolicyConfig_basic(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterPolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdsql.ResourceClusterPolicy, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
 }
