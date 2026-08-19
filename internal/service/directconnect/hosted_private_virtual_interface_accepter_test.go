@@ -37,6 +37,29 @@ func TestResourceHostedPrivateVirtualInterfaceAccepterSchema(t *testing.T) {
 	}
 }
 
+func TestIsConfiguredValue(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		value cty.Value
+		want  bool
+	}{
+		"configured true":  {value: cty.BoolVal(true), want: true},
+		"configured false": {value: cty.BoolVal(false), want: true},
+		"omitted":          {value: cty.NullVal(cty.Bool)},
+		"unknown":          {value: cty.UnknownVal(cty.Bool)},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if got := isConfiguredValue(testCase.value); got != testCase.want {
+				t.Errorf("isConfiguredValue() = %t, want %t", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestValidateHostedPrivateVirtualInterfaceAccepterSiteLink(t *testing.T) {
 	t.Parallel()
 

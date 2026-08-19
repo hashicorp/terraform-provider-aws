@@ -162,26 +162,30 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 
 func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	siteLinkChanged := d.HasChange("sitelink_enabled")
+	config := d.GetRawConfig()
+	siteLinkConfigured := config.IsKnown() && !config.IsNull() && isConfiguredValue(config.GetAttr("sitelink_enabled"))
+	siteLinkChanged := siteLinkConfigured && d.HasChange("sitelink_enabled")
 
 	if siteLinkChanged {
 		if err := validateHostedPrivateVirtualInterfaceAccepterSiteLink(cty.BoolVal(d.Get("sitelink_enabled").(bool)), cty.StringVal(d.Get("vpn_gateway_id").(string))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "validating Direct Connect Hosted Private Virtual Interface Accepter SiteLink configuration: %s", err)
 		}
-	}
 
-	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
-	if diags.HasError() {
-		return diags
-	}
+		diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
+		if diags.HasError() {
+			return diags
+		}
 
-	if siteLinkChanged {
 		if _, err := waitHostedPrivateVirtualInterfaceAccepterAvailable(ctx, meta.(*conns.AWSClient).DirectConnectClient(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Private Virtual Interface Accepter (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterRead(ctx, d, meta)...)
+}
+
+func isConfiguredValue(value cty.Value) bool {
+	return value.IsKnown() && !value.IsNull()
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
