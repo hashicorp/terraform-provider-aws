@@ -168,7 +168,13 @@ if [[ ! -f "lambdasanity.test" ]]; then
 fi
 
 if [[ ! -f "metasanity.test" ]]; then
-    tester "meta" 'TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic'
+    SMOKE_TESTS_META=(
+        TestAccMetaRegionDataSource_basic
+        TestAccMetaRegionDataSource_endpoint
+        TestAccMetaPartitionDataSource_basic
+    )
+    printf -v meta_tests '^%s$|' "${SMOKE_TESTS_META[@]}"
+    tester "meta" "${meta_tests%|}"
     touch metasanity.test
     exit 0
 fi
