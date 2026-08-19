@@ -319,6 +319,7 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	output, err := conn.GetBucketAcl(ctx, &input)
+	err = errBucketRegionMismatch(bucket, err)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &retry.NotFoundError{
