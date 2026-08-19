@@ -616,6 +616,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }  
         script {
+            name = "Function"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "Report Success"
             scriptContent = File("./scripts/sanity.sh").readText()
         }    
