@@ -576,6 +576,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
+            name = "Events"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "KMS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }

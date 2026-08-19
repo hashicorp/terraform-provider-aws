@@ -135,6 +135,16 @@ if [[ ! -f "elbv2sanity.test" ]]; then
     exit 0
 fi
 
+if [[ ! -f "eventssanity.test" ]]; then
+    SMOKE_TESTS_EVENTS=(
+        TestAccEventsPutEventsAction_basic
+    )
+    printf -v events_tests '^%s$|' "${SMOKE_TESTS_EVENTS[@]}"
+    tester "events" "${events_tests%|}"
+    touch eventssanity.test
+    exit 0
+fi
+
 if [[ ! -f "kmssanity.test" ]]; then
     tester "kms" 'TestAccKMSKey_basic'
     touch kmssanity.test
