@@ -4,6 +4,9 @@
 package mailmanager
 
 var (
+	ResourceArchive = newArchiveResource
+	FindArchiveByID = findArchiveByID
+
 	ResourceTrafficPolicy = newTrafficPolicyResource
 	FindTrafficPolicyByID = findTrafficPolicyByID
 
@@ -12,6 +15,7 @@ var (
 
 	ResourceRelay        = newRelayResource
 	FindRelayByID        = findRelayByID
+
 	FindIngressPointByID = findIngressPointByID
 	ResourceIngressPoint = newIngressPointResource
 )
