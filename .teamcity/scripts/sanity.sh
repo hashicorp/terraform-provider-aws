@@ -86,8 +86,8 @@ fi
 
 if [[ ! -f "logssanity.test" ]]; then
     SMOKE_TESTS_LOGS=(
-        TestAccLogsGroup_basic
-        TestAccLogsGroup_multiple
+        TestAccLogsLogGroup_basic
+        TestAccLogsLogGroup_multiple
     )
     printf -v logs_tests '^%s$|' "${SMOKE_TESTS_LOGS[@]}"
     tester "logs" "${logs_tests%|}"
