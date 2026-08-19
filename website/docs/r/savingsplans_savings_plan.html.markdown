@@ -10,9 +10,9 @@ description: |-
 
 Provides an AWS Savings Plan resource.
 
-~> **WARNING:** Savings Plans represent a financial commitment. Once a Savings Plan becomes active, it **cannot be cancelled or deleted**. Only Savings Plans in the `queued` state (scheduled for future purchase) can be deleted. Use this resource with caution.
+!> Savings Plans represent a financial commitment. Once a Savings Plan becomes active, it **cannot be cancelled or deleted**. Only Savings Plans in the `queued` state (scheduled for future purchase) can be deleted. Use this resource with caution.
 
-~> **Note:** Importing an active Savings Plan will add it to your Terraform state, but destroying it will only remove it from state - the actual Savings Plan will continue until its term ends.
+~> Importing an active Savings Plan will add it to your Terraform state, but destroying it will only remove it from state - the actual Savings Plan will continue until its term ends.
 
 ## Example Usage
 
@@ -52,9 +52,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `purchase_time` - (Optional) The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ). If not specified, the plan is purchased immediately. Plans with a future purchase time are placed in `queued` state and can be deleted before they become active.
+* `purchase_time` - (Optional) The time at which to purchase the Savings Plan, in UTC format (`YYYY-MM-DDTHH:MM:SSZ`). If not specified, the plan is purchased immediately. Plans with a future purchase time are placed in `queued` state and can be deleted before they become active.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `upfront_payment_amount` - (Optional) The up-front payment amount. Required for offerings with an `All Upfront` or `Partial Upfront` payment option. Must be omitted for `No Upfront` offerings, where AWS always sets it to `0`.
+* `upfront_payment_amount` - (Optional) The up-front payment amount. Required for offerings with an `All Upfront` or `Partial Upfront` payment option. Must be omitted for `No Upfront` offerings.
 
 ## Attribute Reference
 
