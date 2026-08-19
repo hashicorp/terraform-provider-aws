@@ -770,11 +770,11 @@ func (r *resourceMemoryStrategy) flatten(ctx context.Context, memoryStrategy *aw
 	return diags
 }
 
-func (r *resourceMemoryStrategy) triggerConditionsPath() path.Path {
+func (*resourceMemoryStrategy) triggerConditionsPath() path.Path {
 	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions")
 }
 
-func (r *resourceMemoryStrategy) triggerConditionsActualPath() path.Path {
+func (*resourceMemoryStrategy) triggerConditionsActualPath() path.Path {
 	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions_actual")
 }
 

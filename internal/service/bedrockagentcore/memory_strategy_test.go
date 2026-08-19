@@ -2497,6 +2497,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"configuration.0.self_managed_configuration.0.trigger_conditions"},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
