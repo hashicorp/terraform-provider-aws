@@ -199,6 +199,7 @@ if [[ ! -f "s3sanity.test" ]]; then
         TestAccS3BucketPublicAccessBlock_basic
         TestAccS3BucketPolicy_basic
         TestAccS3BucketACL_updateACL
+        TestAccS3Object_basic
     )
     printf -v s3_tests '^%s$|' "${SMOKE_TESTS_S3[@]}"
     tester "s3" "${s3_tests%|}"
