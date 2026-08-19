@@ -127,4 +127,4 @@ if [[ ! -f "stssanity.test" ]]; then
     exit 0
 fi
 
-echo "##teamcity[notification notifier='slack' message='*Sanity Tests Passed!*:white_check_mark:' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n"
+echo "##teamcity[notification notifier='slack' message='*Sanity Tests Passed!*:white_check_mark:' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']"
