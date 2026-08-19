@@ -128,9 +128,10 @@ The following arguments are optional:
 
 For details about prerequisites to host a web app endpoint within a VPC, see [the AWS documentation](https://docs.aws.amazon.com/transfer/latest/userguide/create-webapp-in-vpc.html).
 
+* `ip_address_type` - (Optional) IP address type for the web app's VPC endpoint. Valid values are: `IPV4` and `DUALSTACK` (default).
 * `security_group_ids` - (Optional) List of security group IDs that control access to the web app endpoint. If not specified, the VPC's default security group is used.
 * `subnet_ids` - (Required) List of subnet IDs within the VPC where the web app endpoint will be deployed. These subnets must be in the same VPC specified in the `vpc_id` parameter.
-* `vpc_id` - (Required) ID of the VPC where the web app endpoint will be hosted. The VPC must be dual-stack, meaning it supports both IPv4 and IPv6 addressing.
+- `vpc_id` - (Required) ID of the VPC where the web app endpoint will be hosted. When the VPC does not have an associated IPv6 CIDR block, `ip_address_type` must be specified as `IPV4`.
 
 ### `web_app_units` Block
 
