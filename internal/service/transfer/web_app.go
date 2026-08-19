@@ -9,6 +9,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -385,7 +386,9 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 			}
 		}
 
-		_, err := conn.UpdateWebApp(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
+			return conn.UpdateWebApp(ctx, &input)
+		}, "VpcEndpoint modify operation in progress")
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Transfer Web App (%s)", webAppID), err.Error())
 
