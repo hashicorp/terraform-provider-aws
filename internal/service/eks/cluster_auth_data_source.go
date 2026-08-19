@@ -21,17 +21,19 @@ func dataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterAuthRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

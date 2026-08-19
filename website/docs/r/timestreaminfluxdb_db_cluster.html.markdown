@@ -207,9 +207,9 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 }
 ```
 
-## Cluster Type Requirements
+### Cluster Type Requirements
 
-### InfluxDB V2 Clusters (default)
+#### InfluxDB V2 Clusters (default)
 
 The following arguments are **required** for InfluxDB V2 clusters:
 
@@ -222,7 +222,7 @@ The following arguments are **required** for InfluxDB V2 clusters:
 
 The `deployment_type` argument defaults to `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters when not specified.
 
-### InfluxDB V3 Clusters (when using V3 parameter groups)
+#### InfluxDB V3 Clusters (when using V3 parameter groups)
 
 The following arguments are **forbidden** for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group):
 
@@ -260,8 +260,6 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).
-
-### Nested Fields
 
 #### `log_delivery_configuration`
 
@@ -301,17 +299,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB cluster using its identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_timestreaminfluxdb_db_cluster.example
-  id = "12345abcde"
+  identity = {
+    id = "hzfuy146ke"
+  }
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Timestream for InfluxDB cluster using its identifier. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the Timestream for InfluxDB cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream for InfluxDB clusters using `id`. For example:
+
+```terraform
+import {
+  to = aws_timestreaminfluxdb_db_cluster.example
+  id = "hzfuy146ke"
+}
+```
+
+Using `terraform import`, import Timestream for InfluxDB clusters using `id`. For example:
 
 ```console
-% terraform import aws_timestreaminfluxdb_db_cluster.example 12345abcde
+% terraform import aws_timestreaminfluxdb_db_cluster.example hzfuy146ke
 ```

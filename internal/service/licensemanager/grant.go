@@ -38,62 +38,64 @@ func resourceGrant() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_operations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_operations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
+					},
+					Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 				},
-				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
-			},
-			names.AttrARN: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Amazon Resource Name (ARN) of the grant.",
-			},
-			"home_region": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Home Region of the grant.",
-			},
-			"license_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "License ARN.",
-			},
-			names.AttrName: {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the grant.",
-			},
-			"parent_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Parent ARN.",
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
-			},
-			names.AttrStatus: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Grant status.",
-			},
-			names.AttrVersion: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Grant version.",
-			},
+				names.AttrARN: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Amazon Resource Name (ARN) of the grant.",
+				},
+				"home_region": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Home Region of the grant.",
+				},
+				"license_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "License ARN.",
+				},
+				names.AttrName: {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Name of the grant.",
+				},
+				"parent_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Parent ARN.",
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
+				},
+				names.AttrStatus: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Grant status.",
+				},
+				names.AttrVersion: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Grant version.",
+				},
+			}
 		},
 	}
 }

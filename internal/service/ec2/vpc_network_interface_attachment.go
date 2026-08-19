@@ -30,36 +30,38 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"attachment_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_index": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"network_card_index": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"attachment_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"device_index": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"network_card_index": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

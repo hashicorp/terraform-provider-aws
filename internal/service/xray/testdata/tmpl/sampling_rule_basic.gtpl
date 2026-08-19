@@ -1,4 +1,5 @@
 resource "aws_xray_sampling_rule" "test" {
+{{- template "region" }}
   rule_name      = var.rName
   priority       = 5
   reservoir_size = 10
@@ -14,5 +15,6 @@ resource "aws_xray_sampling_rule" "test" {
   attributes = {
     Hello = "World"
   }
+
 {{- template "tags" . }}
 }

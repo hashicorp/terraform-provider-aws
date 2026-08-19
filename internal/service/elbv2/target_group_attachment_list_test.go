@@ -137,7 +137,7 @@ func TestAccELBV2TargetGroupAttachment_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_group_arn"), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(`targetgroup/.+/.+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_id"), knownvalue.StringRegexp(regexache.MustCompile(`^i-[a-f0-9]+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPort), knownvalue.Int64Exact(80)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAvailabilityZone), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAvailabilityZone), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("quic_server_id"), knownvalue.Null()),
 					}),
 				},

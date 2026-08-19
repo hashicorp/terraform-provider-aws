@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_cloudwatch_event_target: The `ecs_target.propagate_tags` attribute now has no default value
-```

@@ -51,14 +51,6 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Schema Registry Policy using the `registry_name`. For example:

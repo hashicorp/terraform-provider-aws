@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -39,6 +40,8 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 				Config: testAccSecretRotationConfig_basic(rName, days),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", acctest.CtTrue),
@@ -59,6 +62,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretRotation_upgradePreRotateImmediately(t *testing.T) {
+	acctest.Skip(t, "incompatible lambda runtimes")
 	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -155,9 +159,18 @@ func TestAccSecretsManagerSecretRotation_disappears(t *testing.T) {
 				Config: testAccSecretRotationConfig_basic(rName, days),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, t, resourceName, &secret),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretRotation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretRotation(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						// `rotation_enabled` is false, but Read returns the resource.
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -186,6 +199,14 @@ func TestAccSecretsManagerSecretRotation_Disappears_secret(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -380,6 +401,44 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", duration),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_externalRotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const (
+		resourceName = "aws_secretsmanager_secret_rotation.test"
+		days         = 30
+	)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_externalRotation(rName, days),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.0.key", "adminSecretArn"),
+					resource.TestCheckResourceAttrPair(resourceName, "external_secret_rotation_metadata.0.value", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.1.key", "apiVersion"),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.1.value", "v65.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "external_secret_rotation_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -607,4 +666,67 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   depends_on = [aws_lambda_permission.test]
 }
 `, rName, automaticallyAfterDays, duration))
+}
+
+func testAccSecretRotationConfig_externalRotation(rName string, automaticallyAfterDays int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "secretsmanager.${data.aws_partition.current.dns_suffix}"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "secretsmanager:*"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+  type = "SalesforceClientSecret"
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id                         = aws_secretsmanager_secret.test.id
+  external_secret_rotation_role_arn = aws_iam_role.test.arn
+
+  external_secret_rotation_metadata {
+    key   = "adminSecretArn"
+    value = aws_secretsmanager_secret.test.arn
+  }
+
+  external_secret_rotation_metadata {
+    key   = "apiVersion"
+    value = "v65.0"
+  }
+
+  rotation_rules {
+    automatically_after_days = %[2]d
+  }
+
+  depends_on = [aws_secretsmanager_secret.test]
+}
+`, rName, automaticallyAfterDays)
 }

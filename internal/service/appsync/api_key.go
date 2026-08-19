@@ -41,37 +41,39 @@ func resourceAPIKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"api_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			"expires": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Ignore unsetting value.
-					if old != "" && new == "" {
-						return true
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-			names.AttrKey: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
+				"api_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				"expires": {
+					Type:     schema.TypeString,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Ignore unsetting value.
+						if old != "" && new == "" {
+							return true
+						}
+						return false
+					},
+					ValidateFunc: validation.IsRFC3339Time,
+				},
+				names.AttrKey: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

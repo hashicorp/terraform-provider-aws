@@ -33,6 +33,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestFlattenServiceVolumeConfigurations(t *testing.T) {
+	t.Parallel()
+
+	configurations := []awstypes.ServiceVolumeConfiguration{
+		{
+			Name: aws.String("s3files-volume"),
+		},
+		{
+			Name: aws.String("ebs-volume"),
+			ManagedEBSVolume: &awstypes.ServiceManagedEBSVolumeConfiguration{
+				RoleArn: aws.String("arn:aws:iam::123456789012:role/ecs-volume-role"), // lintignore:AWSAT005
+			},
+		},
+	}
+
+	result := tfecs.FlattenServiceVolumeConfigurations(context.Background(), configurations)
+
+	if got, want := len(result), 1; got != want {
+		t.Fatalf("expected %d EBS volume configuration, got %d", want, got)
+	}
+
+	configuration := result[0].(map[string]any)
+	if got, want := configuration[names.AttrName], "ebs-volume"; got != want {
+		t.Errorf("expected volume name %q, got %q", want, got)
+	}
+	if _, ok := configuration["managed_ebs_volume"]; !ok {
+		t.Error("expected managed EBS volume configuration")
+	}
+}
+
 func Test_GetRoleNameFromARN(t *testing.T) {
 	t.Parallel()
 
@@ -296,6 +326,14 @@ func TestAccECSService_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1980,6 +2018,45 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 	})
 }
 
+// Verifies wait_for_steady_state with sigint_rollback enabled without sending SIGINT.
+// Step 2 must create a new ECS service deployment (task-def change), because
+// rollbackRoutine only starts on that path — a desired_count-only update does not.
+// Pre-fix providers treated per-refresh context cancel as SIGINT and rolled back
+// healthy deployments (AWS reason: "Service deployment rolled back by user").
+func TestAccECSService_LaunchTypeFargate_waitForSteadyState_sigintRollbackNoSignal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, "one"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sigint_rollback", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, "two"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sigint_rollback", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -3652,6 +3729,55 @@ resource "aws_ecs_service" "test" {
 }
 
 `, rName, desiredCount, waitForSteadyState))
+}
+
+func testAccServiceConfig_launchTypeFargateWaitAndSigintRollback(rName, deploymentTrigger string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "service" {
+  family                   = "%[1]s-service"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc",
+    "environment": [
+      {
+        "name": "DEPLOYMENT_TRIGGER",
+        "value": "%[2]s"
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name                 = %[1]q
+  cluster              = aws_ecs_cluster.test.id
+  task_definition      = aws_ecs_task_definition.service.arn
+  desired_count        = 1
+  launch_type          = "FARGATE"
+  force_new_deployment = true
+
+  network_configuration {
+    security_groups  = [aws_security_group.test[0].id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = true
+  sigint_rollback       = true
+}
+`, rName, deploymentTrigger))
 }
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {

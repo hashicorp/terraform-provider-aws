@@ -51,89 +51,91 @@ func resourceIdentityProviderConfig() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"identity_provider_config_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"oidc": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"groups_claim": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"groups_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"identity_provider_config_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"issuer_url": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"required_claims": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.MapKeyLenBetween(1, 63),
-								validation.MapValueLenBetween(1, 253),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-						"username_claim": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"username_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"identity_provider_config_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"oidc": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClientID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"groups_claim": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"groups_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"identity_provider_config_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"issuer_url": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"required_claims": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.MapKeyLenBetween(1, 63),
+									validation.MapValueLenBetween(1, 253),
+								),
+								Elem: &schema.Schema{Type: schema.TypeString},
+							},
+							"username_claim": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							"username_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

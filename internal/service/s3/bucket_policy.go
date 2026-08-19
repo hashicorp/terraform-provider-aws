@@ -35,13 +35,15 @@ func resourceBucketPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketPolicyPut,
 		DeleteWithoutTimeout: resourceBucketPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }

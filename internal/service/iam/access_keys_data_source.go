@@ -22,31 +22,33 @@ import (
 func dataSourceAccessKeys() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessKeysRead,
-		Schema: map[string]*schema.Schema{
-			"access_keys": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_key_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"create_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_keys": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_key_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"create_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

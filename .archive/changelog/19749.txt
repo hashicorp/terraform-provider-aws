@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_backup_vault_policy: Correctly handle reading policy of deleted vault
-```

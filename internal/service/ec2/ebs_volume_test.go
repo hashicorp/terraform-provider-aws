@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -41,7 +42,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
@@ -76,6 +77,14 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -506,7 +515,7 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 				Config: testAccEBSVolumeConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -540,7 +549,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -580,7 +589,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -604,7 +613,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "5000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -638,7 +647,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -662,7 +671,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -696,7 +705,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -720,7 +729,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -754,7 +763,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -778,7 +787,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -813,7 +822,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -854,7 +863,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "20"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -895,7 +904,7 @@ func TestAccEC2EBSVolume_snapshotIDAndVolumeInitializationRate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),

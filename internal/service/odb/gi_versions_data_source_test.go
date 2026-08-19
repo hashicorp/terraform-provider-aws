@@ -20,7 +20,7 @@ func TestAccODBGiVersionsListDataSource_basicX9M(t *testing.T) {
 	}
 	dataSourceName := "data.aws_odb_gi_versions.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -43,7 +43,7 @@ func TestAccODBGiVersionsListDataSource_basicX11M(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	dataSourceName := "data.aws_odb_gi_versions.test"
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

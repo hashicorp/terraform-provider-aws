@@ -132,6 +132,14 @@ func testAccARCZonalShiftAutoshiftObserverNotificationStatus_disappears(t *testi
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarczonalshift.NewAutoshiftObserverNotificationStatusResource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

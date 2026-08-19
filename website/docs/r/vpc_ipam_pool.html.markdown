@@ -60,7 +60,6 @@ resource "aws_vpc_ipam_pool" "child" {
   source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
 
-
 resource "aws_vpc_ipam_pool_cidr" "child_test" {
   ipam_pool_id = aws_vpc_ipam_pool.child.id
   cidr         = "172.20.0.0/24"

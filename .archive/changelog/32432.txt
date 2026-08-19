@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_pipes_pipe: Fix `Error: setting target_parameters: Invalid address to set` errors when creating pipes with ecs task targets
-```

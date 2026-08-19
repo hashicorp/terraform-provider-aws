@@ -218,11 +218,19 @@ func (r *synchronizationConfigurationResource) Delete(ctx context.Context, reque
 
 	conn := r.Meta().S3FilesClient(ctx)
 
+	fileSystem, err := findFileSystemByID(ctx, conn, data.FileSystemID.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.FileSystemID.ValueString())
+		return
+	}
+
+	prefix := aws.ToString(fileSystem.Prefix)
+
 	input := s3files.PutSynchronizationConfigurationInput{
 		FileSystemId: data.FileSystemID.ValueStringPointer(),
 		ImportDataRules: []awstypes.ImportDataRule{
 			{
-				Prefix:       aws.String(""),
+				Prefix:       aws.String(prefix),
 				Trigger:      awstypes.ImportTriggerOnDirectoryFirstAccess,
 				SizeLessThan: aws.Int64(131072),
 			},
@@ -235,7 +243,7 @@ func (r *synchronizationConfigurationResource) Delete(ctx context.Context, reque
 		LatestVersionNumber: data.LatestVersionNumber.ValueInt32Pointer(),
 	}
 
-	_, err := conn.PutSynchronizationConfiguration(ctx, &input)
+	_, err = conn.PutSynchronizationConfiguration(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.FileSystemID.ValueString())
 	}

@@ -34,6 +34,8 @@ import (
 // @IdentityAttribute("prefix_list_arn")
 // @ImportIDHandler("prefixListAssociationImportID")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc=testAccPrefixListAssociationImportStateIdFunc)
+// @Testing(importStateIdAttribute="prefix_list_arn")
 func newPrefixListAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &prefixListAssociationResource{}, nil
 }

@@ -10,9 +10,9 @@ description: |-
 
 Manages RDS Aurora Cluster Database Activity Streams.
 
-Database Activity Streams have some limits and requirements, refer to the [Monitoring Amazon Aurora using Database Activity Streams][1] documentation for detailed limitations and requirements.
+Database Activity Streams have some limits and requirements, refer to the [Monitoring Amazon Aurora using Database Activity Streams](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html) documentation for detailed limitations and requirements.
 
-~> **Note:** This resource always calls the RDS [`StartActivityStream`][2] API with the `ApplyImmediately` parameter set to `true`. This is because the Terraform needs the activity stream to be started in order for it to get the associated attributes.
+~> **Note:** This resource always calls the RDS [`StartActivityStream`](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartActivityStream.html) API with the `ApplyImmediately` parameter set to `true`. This is because the Terraform needs the activity stream to be started in order for it to get the associated attributes.
 
 ~> **Note:** This resource depends on having at least one `aws_rds_cluster_instance` created. To avoid race conditions when all resources are being created together, add an explicit resource reference using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
 
@@ -62,7 +62,7 @@ This resource supports the following arguments:
 * `engine_native_audit_fields_included` - (Optional, Forces new resources) Specifies whether the database activity stream includes engine-native audit fields. This option only applies to an Oracle DB instance. By default, no engine-native audit fields are included. Defaults `false`.
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation][3].
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html).
 
 ## Attribute Reference
 
@@ -87,7 +87,3 @@ Using `terraform import`, import RDS Aurora Cluster Database Activity Streams us
 ```console
 % terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
 ```
-
-[1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html
-[2]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartActivityStream.html
-[3]: https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html

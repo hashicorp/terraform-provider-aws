@@ -31,12 +31,14 @@ func resourceOrganizationsAccess() *schema.Resource {
 			Read: schema.DefaultTimeout(OrganizationsAccessStableTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

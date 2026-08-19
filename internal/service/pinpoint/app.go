@@ -39,107 +39,107 @@ func resourceApp() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"campaign_hook": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"lambda_function_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrMode: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Mode](),
-						},
-						"web_url": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"campaign_hook": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Deprecated:       "campaign_hook is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"lambda_function_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.Mode](),
+							},
+							"web_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			//"cloudwatch_metrics_enabled": {
-			//	Type:     schema.TypeBool,
-			//	Optional: true,
-			//	Default:  false,
-			//},
-			"limits": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"daily": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
-						},
-						"maximum_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(60),
-						},
-						"messages_per_second": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 20000),
-						},
-						"total": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
+				"limits": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Deprecated:       "limits is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"daily": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
+							"maximum_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(60),
+							},
+							"messages_per_second": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 20000),
+							},
+							"total": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-			},
-			"quiet_time": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"end": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"start": {
-							Type:     schema.TypeString,
-							Optional: true,
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+				},
+				"quiet_time": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Deprecated:       "quiet_time is deprecated. AWS End User Messaging engagement features are being discontinued on October 30, 2026. See the AWS End User Messaging migration guide for details.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"end": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"start": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -159,12 +159,54 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	output, err := conn.CreateApp(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Pinpoint App (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating End User Messaging App (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ApplicationResponse.Id))
 
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
+}
+
+// configHasSettings returns true if any of the deprecated settings attributes
+// are present in the user's raw config. Used to gate UpdateApplicationSettings
+// calls so they happen only when the user actively manages these blocks.
+func configHasSettings(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsKnown() || rawConfig.IsNull() {
+		return false
+	}
+	for _, attr := range []string{"campaign_hook", "limits", "quiet_time"} {
+		if v := rawConfig.GetAttr(attr); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldFetchSettings returns true if GetApplicationSettings should be called
+// during Read. Returns true when:
+//   - The raw config has settings blocks (normal CRUD case), OR
+//   - This is the first Read after an import.
+//
+// Import detection: ImportStatePassthroughContext sets only the ID, so during
+// the first Read after import, rawConfig is null and rawState has all computed
+// attributes (e.g., arn) as null. Any other Read with rawConfig=null (such as
+// internal SDK refreshes) has arn populated from the prior Read. This lets us
+// fetch settings on import — preserving the user's ability to import an app
+// that has settings configured in their HCL — without fetching during refresh
+// reads when the user has no settings in config.
+func shouldFetchSettings(d *schema.ResourceData) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsKnown() && !rawConfig.IsNull() {
+		return configHasSettings(d)
+	}
+
+	rawState := d.GetRawState()
+	if !rawState.IsKnown() || rawState.IsNull() {
+		return false
+	}
+	arn := rawState.GetAttr(names.AttrARN)
+	return arn.IsKnown() && arn.IsNull()
 }
 
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -174,33 +216,36 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	app, err := findAppByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] End User Messaging App (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s): %s", d.Id(), err)
-	}
-
-	settings, err := findAppSettingsByID(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrApplicationID, app.Id)
 	d.Set(names.AttrARN, app.Arn)
-	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
-	}
-	if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
-	}
 	d.Set(names.AttrName, app.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(app.Name)))
-	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
+
+	if shouldFetchSettings(d) {
+		settings, err := findAppSettingsByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
+		}
+
+		if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
+		}
+		if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
+		}
+		if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
+		}
 	}
 
 	return diags
@@ -210,7 +255,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) && configHasSettings(d) {
 		appSettings := &awstypes.WriteApplicationSettingsRequest{}
 
 		if d.HasChange("campaign_hook") {
@@ -235,9 +280,8 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 
 		_, err := conn.UpdateApplicationSettings(ctx, input)
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Pinpoint App (%s) settings: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating End User Messaging App (%s) settings: %s", d.Id(), err)
 		}
 	}
 
@@ -248,7 +292,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Pinpoint App: %s", d.Id())
+	log.Printf("[DEBUG] Deleting End User Messaging App: %s", d.Id())
 	_, err := conn.DeleteApp(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
@@ -258,7 +302,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint App (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting End User Messaging App (%s): %s", d.Id(), err)
 	}
 
 	return diags

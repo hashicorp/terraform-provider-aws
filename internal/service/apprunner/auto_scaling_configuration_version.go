@@ -37,59 +37,61 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 		UpdateWithoutTimeout: resourceAutoScalingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceAutoScalingConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_scaling_configuration_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"auto_scaling_configuration_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"has_associated_service": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"latest": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"max_concurrency": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      100,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 200),
-			},
-			"max_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      25,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"min_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_scaling_configuration_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"auto_scaling_configuration_revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"has_associated_service": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"is_default": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"latest": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"max_concurrency": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      100,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 200),
+				},
+				"max_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      25,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"min_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

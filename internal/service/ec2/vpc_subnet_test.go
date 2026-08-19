@@ -56,7 +56,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_native", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -364,6 +364,14 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -485,7 +493,7 @@ func TestAccVPCSubnet_outpost(t *testing.T) {
 				Config: testAccVPCSubnetConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -697,6 +705,10 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var subnet awstypes.Subnet
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
@@ -729,6 +741,10 @@ func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_ipv4AllocationExplicitCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var subnet awstypes.Subnet
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
@@ -762,6 +778,10 @@ func TestAccVPCSubnet_IPAM_ipv4AllocationExplicitCIDR(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var subnet awstypes.Subnet
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
@@ -794,6 +814,10 @@ func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var subnet awstypes.Subnet
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_bedrockagentcore_token_vault_cmk
-```

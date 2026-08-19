@@ -21,8 +21,8 @@ import (
 func TestAccRoute53RecordsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route53_records.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -49,8 +49,8 @@ func TestAccRoute53RecordsDataSource_basic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/46426.
 func TestAccRoute53RecordsDataSource_wildcardRegexInvalid(t *testing.T) {
 	ctx := acctest.Context(t)
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -68,8 +68,8 @@ func TestAccRoute53RecordsDataSource_wildcardRegexInvalid(t *testing.T) {
 func TestAccRoute53RecordsDataSource_wildcardRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route53_records.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
