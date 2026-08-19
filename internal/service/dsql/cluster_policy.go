@@ -223,12 +223,14 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	if err := waitClusterPolicyDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+	if _, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
+		return findClusterPolicyByID(ctx, conn, id)
+	}); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
@@ -284,19 +286,13 @@ func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, id, expect
 		var err error
 		policyOutput, err = findClusterPolicyByID(ctx, conn, id)
 
-		if retry.NotFound(err) {
-			return false, nil
-		}
-
 		if err != nil {
 			return false, err
 		}
 
-		if aws.ToString(policyOutput.PolicyVersion) != expectedPolicyVersion {
-			return false, nil
-		}
-
-		return verify.PolicyStringsEquivalent(expectedPolicy, aws.ToString(policyOutput.Policy)), nil
+		return policyOutput != nil &&
+			aws.ToString(policyOutput.PolicyVersion) == expectedPolicyVersion &&
+			verify.PolicyStringsEquivalent(expectedPolicy, aws.ToString(policyOutput.Policy)), nil
 	}, tfresource.WaitOpts{
 		MinTimeout: 5 * time.Second,
 	})
@@ -310,24 +306,6 @@ func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, id, expect
 	}
 
 	return policyOutput, nil
-}
-
-func waitClusterPolicyDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) error {
-	return tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
-		_, err := findClusterPolicyByID(ctx, conn, id)
-
-		if retry.NotFound(err) {
-			return true, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return false, nil
-	}, tfresource.WaitOpts{
-		MinTimeout: 5 * time.Second,
-	})
 }
 
 type clusterPolicyResourceModel struct {
