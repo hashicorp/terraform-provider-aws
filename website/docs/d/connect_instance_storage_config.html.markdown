@@ -50,13 +50,13 @@ The `storage_config` configuration block supports the following arguments:
 
 The `kinesis_firehose_config` configuration block supports the following arguments:
 
-* `firehose_arn` - The ARN of the delivery stream.
+* `firehose_arn` - ARN of the delivery stream.
 
 #### `kinesis_stream_config`
 
 The `kinesis_stream_config` configuration block supports the following arguments:
 
-* `stream_arn` - The ARN of the data stream.
+* `stream_arn` - ARN of the data stream.
 
 #### `kinesis_video_stream_config`
 
