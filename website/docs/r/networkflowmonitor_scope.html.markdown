@@ -69,7 +69,7 @@ The `target_id` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `scope_arn` - The ARN of the scope.
+* `scope_arn` - ARN of the scope.
 * `scope_id` - The identifier for the scope that includes the resources you want to get data results for.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
