@@ -170,6 +170,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep-service-naming`<sup>D</sup> | Semgrep Checks / Service Name Scan A-Z | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-test` | Test Semgrep configuration files |  |  |  |
 | `semgrep-validate` | Validate Semgrep configuration files |  |  |  |
+| `shellcheck` | Lint shell scripts with ShellCheck |  |  |  |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
 | `smoke` | Smoke tests (alias of `sane`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
