@@ -41,7 +41,7 @@ This resource supports the following arguments:
 * `record_identifier_feature_name` - (Required) The name of the Feature whose value uniquely identifies a Record defined in the Feature Store. Only the latest record per identifier value will be stored in the Online Store.
 * `event_time_feature_name` - (Required) The name of the feature that stores the EventTime of a Record in a Feature Group.
 * `description` (Optional) - A free-form description of a Feature Group.
-* `role_arn` (Required) - The Amazon Resource Name (ARN) of the IAM execution role used to persist data into the Offline Store if an `offline_store_config` is provided.
+* `role_arn` (Required) - The ARN of the IAM execution role used to persist data into the Offline Store if an `offline_store_config` is provided.
 * `feature_definition` (Optional) - A list of Feature names and types. See [Feature Definition](#feature-definition) Below.
 * `offline_store_config` (Optional) - The Offline Feature Store Configuration. See [Offline Store Config](#offline-store-config) Below.
 * `online_store_config` (Optional) - The Online Feature Store Configuration. See [Online Store Config](#online-store-config) Below.
@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 #### S3 Storage Config
 
-* `kms_key_id` - (Optional) The AWS Key Management Service (KMS) key ID of the key used to encrypt any objects written into the OfflineStore S3 location.
+* `kms_key_id` - (Optional) The KMS key ID of the key used to encrypt any objects written into the OfflineStore S3 location.
 * `s3_uri` - (Required) The S3 URI, or location in Amazon S3, of OfflineStore.
 * `resolved_output_s3_uri` - (Optional) The S3 path where offline records are written.
 
@@ -80,7 +80,7 @@ This resource supports the following arguments:
 
 #### Security Config
 
-* `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) The ID of the KMS key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
 
 #### TTl Duration
 
@@ -92,7 +92,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the Feature Group.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this feature_group.
+* `arn` - The ARN assigned by AWS to this feature_group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
