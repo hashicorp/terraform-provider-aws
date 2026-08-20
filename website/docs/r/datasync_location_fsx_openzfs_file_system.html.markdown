@@ -32,9 +32,9 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `fsx_filesystem_arn` - (Required) The ARN for the FSx for OpenZfs file system.
+* `fsx_filesystem_arn` - (Required) ARN for the FSx for OpenZfs file system.
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.
-* `security_group_arns` - (Optional) The ARNs of the security groups that are to use to configure the FSx for openzfs file system.
+* `security_group_arns` - (Optional) ARNs of the security groups that are to use to configure the FSx for openzfs file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
