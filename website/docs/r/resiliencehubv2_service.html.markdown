@@ -141,7 +141,7 @@ resource "aws_resiliencehubv2_service" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Resilience Hub V2 Service.
+- `arn` (String) ARN of the Resilience Hub V2 Service.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resilience Hub V2 Service using the `arn`. For example:
 
