@@ -93,7 +93,7 @@ A `outbound_caller_config` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Queue.
+* `arn` - ARN of the Queue.
 * `queue_id` - The identifier for the Queue.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
