@@ -79,6 +79,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newApplicationGrantResource,
+			TypeName: "aws_ssoadmin_application_grant",
+			Name:     "Application Grant",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newApplicationAssignmentResource,
 			TypeName: "aws_ssoadmin_application_assignment",
 			Name:     "Application Assignment",
