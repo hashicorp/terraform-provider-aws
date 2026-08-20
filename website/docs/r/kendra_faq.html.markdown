@@ -69,7 +69,7 @@ The following arguments are required:
 
 * `index_id`- (Required, Forces new resource) The identifier of the index for a FAQ.
 * `name` - (Required, Forces new resource) The name that should be associated with the FAQ.
-* `role_arn` - (Required, Forces new resource) The ARN of a role with permission to access the S3 bucket that contains the FAQs. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+* `role_arn` - (Required, Forces new resource) ARN of a role with permission to access the S3 bucket that contains the FAQs. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `s3_path` - (Required, Forces new resource) The S3 location of the FAQ input data. Detailed below.
 
 The `s3_path` configuration block supports the following arguments:
