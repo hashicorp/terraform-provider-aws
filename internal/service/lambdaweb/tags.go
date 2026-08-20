@@ -3,20 +3,19 @@
 
 package lambdaweb
 
-// Tagging for Lambda Web functions is not generated: the Lambda Web API has no
-// TagResource, UntagResource or ListTagsForResource operation, and
-// GetWebFunction does not return tags. Tags set through CreateWebFunction are
-// readable and writable through the classic Lambda tagging operations against
-// the web function ARN (arn:aws:lambda:<region>:<account>:web-function/<name>),
-// which share the "lambda" ARN namespace, so this file implements the tagging
-// interfaces with the Lambda client instead of the Lambda Web one.
+// Tagging for Lambda Web functions uses the service's own TagResource,
+// UntagResource and ListTags operations against the web function ARN
+// (arn:aws:lambda:<region>:<account>:web-function/<name>). Earlier revisions of
+// the API had no tagging operations, so this file routed tags through the
+// classic Lambda tagging API on the shared "lambda" ARN namespace; the Lambda
+// Web API now models them natively, so we call the Lambda Web client directly.
 
 import (
 	"context"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -25,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists Lambda Web function tags through the Lambda tagging API.
-func listTags(ctx context.Context, conn *lambda.Client, identifier string, optFns ...func(*lambda.Options)) (tftags.KeyValueTags, error) {
-	input := lambda.ListTagsInput{
+// listTags lists Lambda Web function tags through the Lambda Web tagging API.
+func listTags(ctx context.Context, conn *lambdaweb.Client, identifier string, optFns ...func(*lambdaweb.Options)) (tftags.KeyValueTags, error) {
+	input := lambdaweb.ListTagsInput{
 		Resource: aws.String(identifier),
 	}
 
@@ -43,7 +42,7 @@ func listTags(ctx context.Context, conn *lambda.Client, identifier string, optFn
 // ListTags lists Lambda Web function tags and sets them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaWebClient(ctx), identifier)
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -78,17 +77,17 @@ func getTagsIn(ctx context.Context) map[string]string {
 	return nil
 }
 
-// updateTags updates Lambda Web function tags through the Lambda tagging API.
-func updateTags(ctx context.Context, conn *lambda.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*lambda.Options)) error {
+// updateTags updates Lambda Web function tags through the Lambda Web tagging API.
+func updateTags(ctx context.Context, conn *lambdaweb.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*lambdaweb.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
-	removedTags = removedTags.IgnoreSystem(names.Lambda)
+	removedTags = removedTags.IgnoreSystem(names.LambdaWeb)
 	if len(removedTags) > 0 {
-		input := lambda.UntagResourceInput{
+		input := lambdaweb.UntagResourceInput{
 			Resource: aws.String(identifier),
 			TagKeys:  removedTags.Keys(),
 		}
@@ -101,9 +100,9 @@ func updateTags(ctx context.Context, conn *lambda.Client, identifier string, old
 	}
 
 	updatedTags := oldTags.Updated(newTags)
-	updatedTags = updatedTags.IgnoreSystem(names.Lambda)
+	updatedTags = updatedTags.IgnoreSystem(names.LambdaWeb)
 	if len(updatedTags) > 0 {
-		input := lambda.TagResourceInput{
+		input := lambdaweb.TagResourceInput{
 			Resource: aws.String(identifier),
 			Tags:     svcTags(updatedTags),
 		}
@@ -121,5 +120,5 @@ func updateTags(ctx context.Context, conn *lambda.Client, identifier string, old
 // UpdateTags updates Lambda Web function tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).LambdaClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).LambdaWebClient(ctx), identifier, oldTags, newTags)
 }
