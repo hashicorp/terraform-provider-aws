@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ func TestAccLogsResourcePolicy_basic_accountScope(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
-	var resourcePolicy types.ResourcePolicy
+	var resourcePolicy awstypes.ResourcePolicy
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -38,7 +38,7 @@ func TestAccLogsResourcePolicy_basic_accountScope(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "policy_name"),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
-					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeAccount)),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(awstypes.PolicyScopeAccount)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
 				),
@@ -55,7 +55,7 @@ func TestAccLogsResourcePolicy_basic_accountScope(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "policy_name"),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
-					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeAccount)),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(awstypes.PolicyScopeAccount)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
 				),
@@ -73,7 +73,7 @@ func TestAccLogsResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
-	var resourcePolicy types.ResourcePolicy
+	var resourcePolicy awstypes.ResourcePolicy
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -105,7 +105,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
-	var resourcePolicy types.ResourcePolicy
+	var resourcePolicy awstypes.ResourcePolicy
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -137,7 +137,7 @@ func TestAccLogsResourcePolicy_basic_resourceScope(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
-	var resourcePolicy types.ResourcePolicy
+	var resourcePolicy awstypes.ResourcePolicy
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -152,7 +152,7 @@ func TestAccLogsResourcePolicy_basic_resourceScope(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
 					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(awstypes.PolicyScopeResource)),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -174,7 +174,7 @@ func TestAccLogsResourcePolicy_basic_resourceScope(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
 					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(awstypes.PolicyScopeResource)),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", "2"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -191,7 +191,7 @@ func TestAccLogsResourcePolicy_basic_resourceScope(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
 					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test2", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(awstypes.PolicyScopeResource)),
 					resource.TestCheckResourceAttr(resourceName, "revision_id", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -213,7 +213,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n strin
 
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		var output *types.ResourcePolicy
+		var output *awstypes.ResourcePolicy
 		var err error
 		if arn.IsARN(rs.Primary.ID) {
 			output, err = tflogs.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
