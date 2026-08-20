@@ -18,7 +18,7 @@ import (
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
+		Pending:    []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
 		Refresh:    statusClusterAvailability(conn, id),
 		Timeout:    timeout,
