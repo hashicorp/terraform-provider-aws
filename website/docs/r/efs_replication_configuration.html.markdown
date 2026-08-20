@@ -81,8 +81,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `creation_time` - When the replication configuration was created.
 * `destination[0].file_system_id` - The fs ID of the replica.
 * `destination[0].status` - The status of the replication.
-* `original_source_file_system_arn` - The Amazon Resource Name (ARN) of the original source Amazon EFS file system in the replication configuration.
-* `source_file_system_arn` - The Amazon Resource Name (ARN) of the current source file system in the replication configuration.
+* `original_source_file_system_arn` - The ARN of the original source Amazon EFS file system in the replication configuration.
+* `source_file_system_arn` - The ARN of the current source file system in the replication configuration.
 * `source_file_system_region` - The AWS Region in which the source Amazon EFS file system is located.
 
 ## Timeouts
