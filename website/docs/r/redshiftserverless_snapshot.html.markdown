@@ -35,10 +35,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `accounts_with_provisioned_restore_access` - All of the Amazon Web Services accounts that have access to restore a snapshot to a provisioned cluster.
 * `accounts_with_restore_access` - All of the Amazon Web Services accounts that have access to restore a snapshot to a namespace.
 * `admin_username` - The username of the database within a snapshot.
-* `arn` - The Amazon Resource Name (ARN) of the snapshot.
+* `arn` - The ARN of the snapshot.
 * `id` - The name of the snapshot.
 * `kms_key_id` - The unique identifier of the KMS key used to encrypt the snapshot.
-* `namespace_arn` - The Amazon Resource Name (ARN) of the namespace the snapshot was created from.
+* `namespace_arn` - The ARN of the namespace the snapshot was created from.
 * `owner_account` - The owner Amazon Web Services; account of the snapshot.
 
 ## Import
