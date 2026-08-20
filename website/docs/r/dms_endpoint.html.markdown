@@ -225,7 +225,7 @@ The following arguments are optional:
 * `auth_user_name` - (Optional) The username provided with the `auth-role` option of the AuthType setting for a Redis target endpoint.
 * `server_name` - (Required) Fully qualified domain name of the endpoint.
 * `port` - (Required) TCP port for the endpoint.
-* `ssl_ca_certificate_arn` - (Optional) The ARN for the certificate authority (CA) that DMS uses to connect to your Redis target endpoint.
+* `ssl_ca_certificate_arn` - (Optional) ARN for the certificate authority (CA) that DMS uses to connect to your Redis target endpoint.
 * `ssl_security_protocol`- (Optional) The plaintext option doesn't provide TLS encryption for traffic between endpoint and database. Options include `plaintext`, `ssl-encryption`. The default is `ssl-encryption`.
 
 ### redshift_settings
