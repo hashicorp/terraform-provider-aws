@@ -176,7 +176,7 @@ The `network_configuration` block supports the following arguments:
 
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [`egress_configuration`](#egress_configuration) below.
 * `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [`ingress_configuration`](#ingress_configuration) below.
-* `ip_address_type` - (Optional) App Runner provides you with the option to choose between Internet Protocol version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
+* `ip_address_type` - (Optional) App Runner provides you with the option to choose between IP version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
 
 ### `egress_configuration` Block
 
