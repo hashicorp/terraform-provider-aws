@@ -63,7 +63,7 @@ The `certificate_settings` configuration block supports the following arguments:
 
 * `type` - (Required) The certificate type.
   Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
-* `custom_certificate_arn` - (Optional) The ARN for the custom certificate.
+* `custom_certificate_arn` - (Optional) ARN for the custom certificate.
   Required when `type` is `CUSTOM`.
 
 The `sub_domain` configuration block supports the following arguments:
