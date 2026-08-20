@@ -109,7 +109,7 @@ This resource supports the following arguments:
 * `gateway_ip_address` - (Optional) Gateway IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. Gateway must be accessible on port 80 from where Terraform is running. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
 * `gateway_type` - (Optional) Type of the gateway. The default value is `STORED`. Valid values: `CACHED`, `FILE_FSX_SMB`, `FILE_S3`, `STORED`, `VTL`.
 * `gateway_vpc_endpoint` - (Optional) VPC endpoint address to be used when activating your gateway. This should be used when your instance is in a private subnet. Requires HTTP access from client computer running terraform. More info on what ports are required by your VPC Endpoint Security group in [Activating a Gateway in a VPC](https://docs.aws.amazon.com/storagegateway/latest/userguide/gateway-private-link.html).
-* `cloudwatch_log_group_arn` - (Optional) The ARN of the Amazon CloudWatch log group to use to monitor and log events in the gateway.
+* `cloudwatch_log_group_arn` - (Optional) ARN of the Amazon CloudWatch log group to use to monitor and log events in the gateway.
 * `maintenance_start_time` - (Optional) The gateway's weekly maintenance start time information, including day and time of the week. The maintenance time is the time in your gateway's time zone. More details below.
 * `medium_changer_type` - (Optional) Type of medium changer to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `STK-L700`, `AWS-Gateway-VTL`, `IBM-03584L32-0402`.
 * `smb_active_directory_settings` - (Optional) Nested argument with Active Directory domain join information for Server Message Block (SMB) file shares. Only valid for `FILE_S3` and `FILE_FSX_SMB` gateway types. Must be set before creating `ActiveDirectory` authentication SMB file shares. More details below.
@@ -160,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### Gateway Network Interface
 
-* `ipv4_address` - The IP version 4 (IPv4) address of the interface.
+* `ipv4_address` - IP version 4 (IPv4) address of the interface.
 
 ## Timeouts
 
