@@ -46,7 +46,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name of this Device Pool
+* `arn` - The ARN of this Device Pool
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -70,7 +70,7 @@ resource "aws_devicefarm_device_pool" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Device Farm device pool.
+- `arn` (String) ARN of the Device Farm device pool.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Device Pools using their ARN. For example:
 
