@@ -28,7 +28,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the CIDR collection.
+* `arn` - ARN of the CIDR collection.
 * `id` - The CIDR collection ID.
 * `version` - The lastest version of the CIDR collection.
 
