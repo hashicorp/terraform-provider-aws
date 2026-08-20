@@ -167,7 +167,7 @@ This resource supports the following arguments:
 * `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `publish` - (Optional) Set to true to publish a version of the state machine during creation. Default: false.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
+* `role_arn` - (Required) The ARN of the IAM role to use for this state machine.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tracing_configuration` - (Optional) Selects whether AWS X-Ray tracing is enabled.
 * `type` - (Optional) Determines whether a Standard or Express state machine is created. The default is `STANDARD`. You cannot update the type of a state machine once it has been created. Valid values: `STANDARD`, `EXPRESS`.
@@ -182,7 +182,7 @@ This resource supports the following arguments:
 
 * `include_execution_data` - (Optional) Determines whether execution data is included in your log. When set to `false`, data is excluded.
 * `level` - (Optional) Defines which category of execution history events are logged. Valid values: `ALL`, `ERROR`, `FATAL`, `OFF`
-* `log_destination` - (Optional) Amazon Resource Name (ARN) of a CloudWatch log group. Make sure the State Machine has the correct IAM policies for logging. The ARN must end with `:*`
+* `log_destination` - (Optional) ARN of a CloudWatch log group. Make sure the State Machine has the correct IAM policies for logging. The ARN must end with `:*`
 
 ### `tracing_configuration` Configuration Block
 
