@@ -58,9 +58,9 @@ This resource supports the following arguments:
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
 * `private_link_endpoint` - (Optional) The IP address of the VPC endpoint the agent should connect to when retrieving an activation key during resource creation. Conflicts with `activation_key`.
 * `security_group_arns` - (Optional) The ARNs of the security groups used to protect your data transfer task subnets.
-* `subnet_arns` - (Optional) The ARNs of the subnets in which DataSync will create elastic network interfaces for each data transfer task.
+* `subnet_arns` - (Optional) ARNs of the subnets in which DataSync will create elastic network interfaces for each data transfer task.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_endpoint_id` - (Optional) The ID of the VPC endpoint that the agent has access to.
+* `vpc_endpoint_id` - (Optional) ID of the VPC endpoint that the agent has access to.
 
 ## Attribute Reference
 
