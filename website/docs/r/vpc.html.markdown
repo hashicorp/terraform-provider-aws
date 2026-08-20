@@ -89,7 +89,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of VPC.
+* `arn` - ARN of VPC.
 * `default_network_acl_id` - ID of the network ACL created by default on VPC creation.
 * `default_route_table_id` - ID of the route table created by default on VPC creation.
 * `default_security_group_id` - ID of the security group created by default on VPC creation.
