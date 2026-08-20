@@ -30,7 +30,7 @@ This resource supports the following arguments:
 * `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
 * `security_groups` - (Required) The security groups to attach to the ENIs for the broker nodes.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `target_cluster_arn` - (Required) The ARN of the cluster.
+* `target_cluster_arn` - (Required) ARN of the cluster.
 * `vpc_id` - (Required) The VPC ID of the remote client.
 
 ## Attribute Reference
