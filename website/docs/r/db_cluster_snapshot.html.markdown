@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
-* `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DB Cluster Snapshot.
+* `db_cluster_snapshot_arn` - The ARN for the DB Cluster Snapshot.
 * `engine` - Name of the database engine.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
