@@ -80,5 +80,5 @@ This data source exports the following attributes in addition to the arguments a
 The `master_user_secret` configuration block supports the following attributes:
 
 * `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - The ARN of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
