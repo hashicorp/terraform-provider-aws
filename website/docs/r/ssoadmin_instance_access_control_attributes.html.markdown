@@ -37,7 +37,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `instance_arn` - (Required, Forces new resource) The ARN of the SSO Instance.
+* `instance_arn` - (Required, Forces new resource) ARN of the SSO Instance.
 * `attribute` - (Required) See [AccessControlAttribute](#accesscontrolattribute) for more details.
 
 ### AccessControlAttribute
