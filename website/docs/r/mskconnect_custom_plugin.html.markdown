@@ -58,7 +58,7 @@ The `location` configuration block supports the following arguments:
 
 The `s3` configuration Block supports the following arguments:
 
-* `bucket_arn` - (Required, Forces new resource) The ARN of an S3 bucket.
+* `bucket_arn` - (Required, Forces new resource) ARN of an S3 bucket.
 * `file_key` - (Required, Forces new resource) The file key for an object in an S3 bucket.
 * `object_version` - (Optional, Forces new resource) The version of an object in an S3 bucket.
 
