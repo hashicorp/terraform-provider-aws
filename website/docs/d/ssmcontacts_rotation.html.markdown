@@ -25,13 +25,13 @@ data "aws_ssmcontacts_rotation" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - (Required) The ARN of the rotation.
+* `arn` - (Required) ARN of the rotation.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `contact_ids` - The ARNs of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
+* `contact_ids` - ARNs of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
 * `name` - The name for the rotation.
 * `time_zone_id` - The time zone to base the rotation’s activity on in Internet Assigned Numbers Authority (IANA) format.
 * `recurrence` - Information about when an on-call rotation is in effect and how long the rotation period lasts.
