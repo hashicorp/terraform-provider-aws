@@ -166,26 +166,26 @@ The `dimension_configuration` configuration block supports the following argumen
 
 The `event_bridge_destination` configuration block supports the following arguments:
 
-* `event_bus_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EventBridge bus to publish email events to. Only the default bus is supported.
+* `event_bus_arn` - (Required) The ARN of the Amazon EventBridge bus to publish email events to. Only the default bus is supported.
 
 ### `kinesis_firehose_destination` Block
 
 The `kinesis_firehose_destination` configuration block supports the following arguments:
 
-* `delivery_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis Data Firehose stream that the Amazon SES API v2 sends email events to.
-* `iam_role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that the Amazon SES API v2 uses to send email events to the Amazon Kinesis Data Firehose stream.
+* `delivery_stream_arn` - (Required) The ARN of the Amazon Kinesis Data Firehose stream that the Amazon SES API v2 sends email events to.
+* `iam_role_arn` - (Required) The ARN of the IAM role that the Amazon SES API v2 uses to send email events to the Amazon Kinesis Data Firehose stream.
 
 ### `pinpoint_destination` Block
 
 The `pinpoint_destination` configuration block supports the following arguments:
 
-* `pinpoint_application_arn` - (Required) The Amazon Resource Name (ARN) of the AWS End User Messaging project to send email events to.
+* `pinpoint_application_arn` - (Required) The ARN of the AWS End User Messaging project to send email events to.
 
 ### `sns_destination` Block
 
 The `sns_destination` configuration block supports the following arguments:
 
-* `topic_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon SNS topic to publish email events to.
+* `topic_arn` - (Required) The ARN of the Amazon SNS topic to publish email events to.
 
 ## Attribute Reference
 
