@@ -63,7 +63,7 @@ The following arguments are required:
 
 * `association_status` - (Required) The desired enablement status of the control in the standard. Valid values: `ENABLED`, `DISABLED`.
 * `security_control_id` - (Required) The unique identifier for the security control whose enablement status you want to update.
-* `standards_arn` - (Required) The Amazon Resource Name (ARN) of the standard in which you want to update the control's enablement status.
+* `standards_arn` - (Required) The ARN of the standard in which you want to update the control's enablement status.
 
 The following arguments are optional:
 
