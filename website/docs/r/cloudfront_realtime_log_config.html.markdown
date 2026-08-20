@@ -145,7 +145,7 @@ See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the CloudFront real-time log configuration.
-* `arn` - The ARN of the CloudFront real-time log configuration.
+* `arn` - ARN of the CloudFront real-time log configuration.
 
 ## Import
 
