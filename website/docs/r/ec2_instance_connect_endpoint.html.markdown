@@ -33,7 +33,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the EC2 Instance Connect Endpoint.
+* `arn` - The ARN of the EC2 Instance Connect Endpoint.
 * `availability_zone` - The Availability Zone of the EC2 Instance Connect Endpoint.
 * `dns_name` - The DNS name of the EC2 Instance Connect Endpoint.
 * `fips_dns_name` - The DNS name of the EC2 Instance Connect FIPS Endpoint.
