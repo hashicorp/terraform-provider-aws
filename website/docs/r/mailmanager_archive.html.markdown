@@ -43,8 +43,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the archive.
 * `archive_state` - Current state of the archive. Either `ACTIVE` or `PENDING_DELETION`.
+* `arn` - ARN of the archive.
 * `created_timestamp` - Timestamp of when the archive was created.
 * `id` - Identifier of the archive.
 * `last_updated_timestamp` - Timestamp of when the archive was updated.
