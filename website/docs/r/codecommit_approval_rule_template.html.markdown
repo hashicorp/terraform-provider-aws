@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `approval_rule_template_id` - The ID of the approval rule template
 * `creation_date` - The date the approval rule template was created, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `last_modified_date` - The date the approval rule template was most recently changed, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `last_modified_user` - The Amazon Resource Name (ARN) of the user who made the most recent changes to the approval rule template.
+* `last_modified_user` - The ARN of the user who made the most recent changes to the approval rule template.
 * `rule_content_sha256` - The SHA-256 hash signature for the content of the approval rule template.
 
 ## Import
