@@ -101,7 +101,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the analysis (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `theme_arn` - (Optional) The Amazon Resource Name (ARN) of the theme that is being used for this analysis. The theme ARN must exist in the same AWS account where you create the analysis.
+* `theme_arn` - (Optional) The ARN of the theme that is being used for this analysis. The theme ARN must exist in the same AWS account where you create the analysis.
 
 ### permissions
 
@@ -114,12 +114,12 @@ The following arguments are optional:
 
 ### source_template
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) The ARN of the resource.
 * `data_set_references` - (Required) List of dataset references. See [data_set_references](#data_set_references).
 
 ### data_set_references
 
-* `data_set_arn` - (Required) Dataset Amazon Resource Name (ARN).
+* `data_set_arn` - (Required) Dataset ARN.
 * `data_set_placeholder` - (Required) Dataset placeholder.
 
 ### parameters
@@ -131,7 +131,7 @@ The following arguments are optional:
 
 ### definition
 
-* `data_set_identifiers_declarations` - (Required) A list dataset identifier declarations. With this mapping,you can use dataset identifiers instead of dataset Amazon Resource Names (ARNs) throughout the analysis sub-structures. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html).
+* `data_set_identifiers_declarations` - (Required) A list dataset identifier declarations. With this mapping,you can use dataset identifiers instead of dataset ARNs throughout the analysis sub-structures. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html).
 * `analysis_defaults` - (Optional) The configuration for default analysis settings. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html).
 * `calculated_fields` - (Optional) A list of calculated field definitions for the analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html).
 * `column_configurations` - (Optional) A list of analysis-level column configurations. Column configurations are used to set default formatting for a column that's used throughout an analysis. See [AWS API Documentation for complete description](ttps://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
