@@ -233,7 +233,7 @@ The following arguments are optional:
 
 ### Encryption Configuration
 
-* `key_id` - (Optional) ARN of the Amazon Web Services Key Management Service (KMS) customer managed key.
+* `key_id` - (Optional) ARN of the Amazon Web Services KMS customer managed key.
 * `type` - (Optional) Type of KMS key to use for encryption of your Network Firewall resources. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_KMS`.
 
 ### TLS Inspection Configuration
@@ -358,7 +358,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Network Firewall TLS inspection configuration.
+- `arn` (String) ARN of the Network Firewall TLS inspection configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall TLS Inspection Configuration using the `arn`. For example:
 
