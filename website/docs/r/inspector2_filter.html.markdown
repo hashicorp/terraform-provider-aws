@@ -61,7 +61,7 @@ The `filter_criteria` configuration block supports the following attributes:
 * `code_vulnerability_file_path` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `component_id` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `component_type` - (Optional) The type of the component. [Documented below](#string-filter).
-* `ec2_instance_image_id` - (Optional) The ID of the Amazon Machine Image (AMI). [Documented below](#string-filter).
+* `ec2_instance_image_id` - (Optional) The ID of the AMI. [Documented below](#string-filter).
 * `ec2_instance_subnet_id` - (Optional) The ID of the subnet. [Documented below](#string-filter).
 * `ec2_instance_vpc_id` - (Optional) The ID of the VPC. [Documented below](#string-filter).
 * `ecr_image_architecture` - (Optional) The architecture of the ECR image. [Documented below](#string-filter).
@@ -170,7 +170,7 @@ resource "aws_inspector2_filter" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Inspector filter.
+- `arn` (String) ARN of the Inspector filter.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Filter using the `arn`. For example:
 
