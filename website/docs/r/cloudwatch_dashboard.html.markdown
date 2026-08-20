@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `dashboard_arn` - The Amazon Resource Name (ARN) of the dashboard.
+* `dashboard_arn` - The ARN of the dashboard.
 
 ## Import
 
