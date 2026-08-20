@@ -78,7 +78,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the RDS DB Proxy.
-* `arn` - The ARN representing the target group.
+* `arn` - ARN representing the target group.
 * `name` - The name of the default target group.
 
 ## Timeouts
