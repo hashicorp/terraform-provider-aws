@@ -1,13 +1,13 @@
 ---
-subcategory: "VPC (Virtual Private Cloud)"
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_route_server_propagation"
 description: |-
-  Terraform resource for managing a VPC (Virtual Private Cloud) Route Server Propagation.
+  Terraform resource for managing a VPC Route Server Propagation.
 ---
 # Resource: aws_vpc_route_server_propagation
 
-  Provides a resource for managing propagation between VPC (Virtual Private Cloud) route server and a route table.
+  Provides a resource for managing propagation between VPC route server and a route table.
 
 ## Example Usage
 
@@ -44,7 +44,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to  to import VPC (Virtual Private Cloud) Route Server Propagation using the associated resource ID and route table ID separated by a comma (,). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to  to import VPC Route Server Propagation using the associated resource ID and route table ID separated by a comma (,). For example:
 
 ```terraform
 import {
@@ -53,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, to  to import VPC (Virtual Private Cloud) Route Server Propagation using the associated resource ID and route table ID separated by a comma (,). For example:
+Using `terraform import`, to  to import VPC Route Server Propagation using the associated resource ID and route table ID separated by a comma (,). For example:
 
 ```console
 % terraform import aws_vpc_route_server_propagation.example rs-12345678,rtb-656c65616e6f72
