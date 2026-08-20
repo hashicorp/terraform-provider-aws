@@ -133,7 +133,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
+func TestAccLogsResourcePolicy_basic_resourceScope(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
@@ -149,8 +149,11 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Config: testAccResourcePolicyConfig_resourceARN(rName, "test1", "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
-					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test1", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -168,8 +171,11 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Config: testAccResourcePolicyConfig_resourceARN(rName, "test1", "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
-					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test1", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", "2"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -182,8 +188,11 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Config: testAccResourcePolicyConfig_resourceARN(rName, "test2", "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
-					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test2", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_cloudwatch_log_group.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
