@@ -46,7 +46,7 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
-* `map_arn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.
+* `map_arn` - The ARN for the map resource. Used to specify a resource across all AWS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `update_time` - The timestamp for when the map resource was last updated in ISO 8601 format.
 
