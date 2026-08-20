@@ -39,6 +39,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccArchivePreCheck")
+// @Testing(serialize=true)
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newArchiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &archiveResource{}, nil
@@ -300,7 +301,7 @@ var (
 )
 
 func (m archiveRetentionModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return &awstypes.ArchiveRetentionMemberRetentionPeriod{
+	return awstypes.ArchiveRetentionMemberRetentionPeriod{
 		Value: awstypes.RetentionPeriod(m.RetentionPeriod.ValueString()),
 	}, nil
 }
@@ -308,7 +309,7 @@ func (m archiveRetentionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 func (m *archiveRetentionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch v := v.(type) {
-	case *awstypes.ArchiveRetentionMemberRetentionPeriod:
+	case awstypes.ArchiveRetentionMemberRetentionPeriod:
 		m.RetentionPeriod = fwtypes.StringEnumValue(v.Value)
 	default:
 		diags.AddError("Unexpected Retention Type",
