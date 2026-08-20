@@ -131,7 +131,7 @@ The following arguments are supported inside the `task_report_config` configurat
 
 The following arguments are supported inside the `s3_destination` configuration block:
 
-* `bucket_access_role_arn` - (Required) Specifies the ARN of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
+* `bucket_access_role_arn` - (Required) ARN of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
 * `s3_bucket_arn` - (Required) Specifies the ARN of the S3 bucket where DataSync uploads your report.
 * `subdirectory` - (Optional) Specifies a bucket prefix for your report.
 
