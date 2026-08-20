@@ -194,7 +194,7 @@ This resource supports the following arguments:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
-* `service_role` - (Optional) The full ARN of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
+* `service_role` - (Optional) Full ARN of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
@@ -207,7 +207,7 @@ This resource supports the following arguments:
 * `desired_vcpus` - (Optional) The desired number of EC2 vCPUS in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `ec2_configuration` - (Optional) Provides information used to select AMIs for EC2 instances in the compute environment. If Ec2Configuration isn't specified, the default is ECS_AL2. This parameter isn't applicable to jobs that are running on Fargate resources, and shouldn't be specified.
 * `ec2_key_pair` - (Optional) The EC2 key pair that is used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
-* `image_id` - (Optional) The AMI ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`ec2_configuration`](#ec2_configuration) `image_id_override` instead)
+* `image_id` - (Optional) AMI ID used for instances launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified. (Deprecated, use [`ec2_configuration`](#ec2_configuration) `image_id_override` instead)
 * `instance_role` - (Optional) The Amazon ECS instance role applied to Amazon EC2 instances in a compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `instance_type` - (Optional) A list of instance types that may be launched. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `launch_template` - (Optional) The launch template to use for your compute resources. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
@@ -215,7 +215,7 @@ This resource supports the following arguments:
 * `min_vcpus` - (Optional) The minimum number of EC2 vCPUs that an environment should maintain. For `EC2` or `SPOT` compute environments, if the parameter is not explicitly defined, a `0` default value will be set. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `placement_group` - (Optional) The Amazon EC2 placement group to associate with your compute resources.
 * `security_group_ids` - (Optional) A list of EC2 security group that are associated with instances launched in the compute environment. This parameter is required for Fargate compute environments.
-* `spot_iam_fleet_role` - (Optional) The ARN of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `spot_iam_fleet_role` - (Optional) ARN of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `type` - (Required) The type of compute environment. Valid items are `EC2`, `SPOT`, `FARGATE` or `FARGATE_SPOT`.
@@ -240,7 +240,7 @@ This resource supports the following arguments:
 
 `eks_configuration` supports the following:
 
-* `eks_cluster_arn` - (Required) The ARN of the Amazon EKS cluster.
+* `eks_cluster_arn` - (Required) ARN of the Amazon EKS cluster.
 * `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
 
 ### update_policy
@@ -254,8 +254,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the compute environment.
-* `ecs_cluster_arn` - The ARN of the underlying Amazon ECS cluster used by the compute environment.
+* `arn` - ARN of the compute environment.
+* `ecs_cluster_arn` - ARN of the underlying Amazon ECS cluster used by the compute environment.
 * `status` - The current status of the compute environment (for example, CREATING or VALID).
 * `status_reason` - A short, human-readable string to provide additional details about the current status of the compute environment.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
