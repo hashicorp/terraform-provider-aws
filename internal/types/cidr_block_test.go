@@ -109,6 +109,33 @@ func TestCIDRBlocksEqual(t *testing.T) {
 	}
 }
 
+func TestCIDRBlockKeyMatchesCIDRBlocksEqual(t *testing.T) {
+	t.Parallel()
+
+	for _, ts := range []struct {
+		cidr1 string
+		cidr2 string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"10.2.2.0/1234", "10.2.2.0/24"},
+		{"10.2.2.0/24", "10.2.2.0/1234"},
+		{"2001::/15", "2001::/15"},
+		{"::/0", "2001::/15"},
+		{"::/0", "::0/0"},
+		{"", ""},
+	} {
+		expected := CIDRBlocksEqual(ts.cidr1, ts.cidr2)
+
+		key1, err1 := CIDRBlockKey(ts.cidr1)
+		key2, err2 := CIDRBlockKey(ts.cidr2)
+		actual := err1 == nil && err2 == nil && key1 == key2
+
+		if expected != actual {
+			t.Fatalf("CIDRBlockKey(%q, %q): expected %t, got %t", ts.cidr1, ts.cidr2, expected, actual)
+		}
+	}
+}
+
 func TestCanonicalCIDRBlock(t *testing.T) {
 	t.Parallel()
 
