@@ -91,7 +91,6 @@ resource "aws_lambdaweb_function" "test" {
     endpoint_name = "default"
     endpoint_type = "HomeRegion"
     auth_type     = "ApplicationManaged"
-    regions       = [data.aws_region.current.region]
   }
 
   tags = {

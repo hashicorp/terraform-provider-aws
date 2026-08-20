@@ -10,4 +10,7 @@ var (
 
 	FindFunctionByName = findFunctionByName
 	FindEndpointByName = findEndpointByName
+
+	ResourceResourcePolicy  = newResourcePolicyResource
+	FindResourcePolicyByARN = findResourcePolicyByARN
 )

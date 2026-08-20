@@ -1,11 +1,11 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = var.rName
@@ -64,6 +64,8 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_lambdaweb_function" "test" {
+  region = var.region
+
   depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
 
   function_name = var.rName
@@ -92,13 +94,26 @@ resource "aws_lambdaweb_function" "test" {
     endpoint_type = "HomeRegion"
     auth_type     = "ApplicationManaged"
   }
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-  }
 }
 
-resource "null_resource" "test" {}
+resource "aws_lambdaweb_resource_policy" "test" {
+  region = var.region
+
+  resource_arn = aws_lambdaweb_function.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowAccount"
+      Effect = "Allow"
+      Principal = {
+        AWS = data.aws_caller_identity.current.account_id
+      }
+      Action   = "lambda:InvokeWebFunction"
+      Resource = aws_lambdaweb_function.test.arn
+    }]
+  })
+}
 
 variable "rName" {
   description = "Name for resource"
@@ -106,7 +121,8 @@ variable "rName" {
   nullable    = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

@@ -307,11 +307,16 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						"regions": schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
+							Computed:    true,
 							ElementType: types.StringType,
 							PlanModifiers: []planmodifier.Set{
 								// Regions are immutable on an endpoint and
 								// UpdateWebFunctionEndpoint does not accept them.
 								setplanmodifier.RequiresReplace(),
+								// HomeRegion endpoints default to the function's
+								// region server-side when regions is omitted, so
+								// keep the known value to avoid post-apply drift.
+								setplanmodifier.UseStateForUnknown(),
 							},
 						},
 					},
