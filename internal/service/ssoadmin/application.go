@@ -299,7 +299,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	input := ssoadmin.DeleteApplicationInput{
-		ApplicationArn: fwflex.StringFromFramework(ctx, data.ARN),
+		ApplicationArn: fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteApplication(ctx, &input)
 
