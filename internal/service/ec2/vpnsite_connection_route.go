@@ -22,6 +22,11 @@ import (
 )
 
 // @SDKResource("aws_vpn_connection_route", name="VPN Connection Route")
+// @IdentityAttribute("destination_cidr_block")
+// @IdentityAttribute("vpn_connection_id")
+// @IdAttrFormat("{destination_cidr_block}:{vpn_connection_id}")
+// @ImportIDHandler("vpnConnectionRouteImportID")
+// @Testing(preIdentityVersion="v6.49.0")
 func resourceVPNConnectionRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionRouteCreate,
@@ -147,4 +152,27 @@ func vpnConnectionRouteParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DestinationCIDRBlock%[2]sVPNConnectionID", id, vpnConnectionRouteResourceIDSeparator)
+}
+
+type vpnConnectionRouteImportID struct{}
+
+func (vpnConnectionRouteImportID) Create(d *schema.ResourceData) string {
+	return vpnConnectionRouteCreateResourceID(
+		d.Get("destination_cidr_block").(string),
+		d.Get("vpn_connection_id").(string),
+	)
+}
+
+func (vpnConnectionRouteImportID) Parse(id string) (string, map[string]any, error) {
+	cidrBlock, vpnConnectionID, err := vpnConnectionRouteParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"destination_cidr_block": cidrBlock,
+		"vpn_connection_id":      vpnConnectionID,
+	}
+
+	return id, result, nil
 }
