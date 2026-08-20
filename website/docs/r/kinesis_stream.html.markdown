@@ -62,7 +62,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique stream ID.
-* `arn` - The ARN specifying the stream (same as `id`).
+* `arn` - ARN specifying the stream (same as `id`).
 * `name` - The unique stream name.
 * `shard_count` - The count of shards for this stream.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
