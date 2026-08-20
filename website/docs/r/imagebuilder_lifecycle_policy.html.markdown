@@ -69,7 +69,7 @@ The following arguments are required:
 
 * `name` - (Required) The name of the lifecycle policy to create.
 * `resource_type` - (Required) The type of Image Builder resource that the lifecycle policy applies to. Valid values: `AMI_IMAGE` or `CONTAINER_IMAGE`.
-* `execution_role` - (Required) The Amazon Resource Name (ARN) for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
+* `execution_role` - (Required) The ARN for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
 * `policy_detail` - (Required) Configuration block with policy details. Detailed below.
 * `resource_selection` - (Required) Selection criteria for the resources that the lifecycle policy applies to. Detailed below.
 
@@ -169,8 +169,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the lifecycle policy.
-* `arn` - Amazon Resource Name (ARN) of the lifecycle policy.
+* `id` - ARN of the lifecycle policy.
+* `arn` - ARN of the lifecycle policy.
 * `status` - The status of the lifecycle policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -195,9 +195,9 @@ resource "aws_imagebuilder_lifecycle_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Image Builder lifecycle policy.
+- `arn` (String) ARN of the Image Builder lifecycle policy.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_lifecycle_policy` using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_lifecycle_policy` using the ARN. For example:
 
 ```terraform
 import {
@@ -206,7 +206,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_lifecycle_policy` using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_lifecycle_policy` using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_lifecycle_policy.example arn:aws:imagebuilder:us-east-1:123456789012:lifecycle-policy/example
