@@ -174,7 +174,7 @@ This resource supports the following arguments:
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-* `service_role_arn` - (Optional) The ARN of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
+* `service_role_arn` - (Optional) ARN of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 * `cloudwatch_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
 
@@ -185,7 +185,7 @@ This resource supports the following arguments:
 
 `notification_config` supports the following:
 
-* `notification_arn` - (Optional) An ARN for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
+* `notification_arn` - (Optional) ARN for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
 * `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
 * `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
 
