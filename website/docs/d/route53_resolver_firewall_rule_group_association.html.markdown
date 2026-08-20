@@ -33,7 +33,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the firewall rule group association.
+* `arn` - ARN of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).
 * `creator_request_id` - A unique string defined by you to identify the request.
 * `firewall_rule_group_id` - The unique identifier of the firewall rule group.
