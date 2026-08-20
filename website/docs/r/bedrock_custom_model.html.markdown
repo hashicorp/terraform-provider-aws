@@ -58,7 +58,7 @@ resource "aws_bedrock_custom_model" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `base_model_identifier` - (Required) The ARN of the base model.
+* `base_model_identifier` - (Required) ARN of the base model.
 * `custom_model_kms_key_id` - (Optional) The custom model is encrypted at rest using this key. Specify the key ARN.
 * `custom_model_name` - (Required) Name for the custom model.
 * `customization_type` -(Optional) The customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
@@ -66,7 +66,7 @@ This resource supports the following arguments:
 * `job_name` - (Required) A name for the customization job.
 * `output_data_config` - (Required) S3 location for the output data.
     * `s3_uri` - (Required) The S3 URI where the output data is stored.
-* `role_arn` - (Required) The ARN of an IAM role that Bedrock can assume to perform tasks on your behalf.
+* `role_arn` - (Required) ARN of an IAM role that Bedrock can assume to perform tasks on your behalf.
 * `tags` - (Optional) A map of tags to assign to the customization job and custom model. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `training_data_config` - (Required) Information about the training dataset.
     * `s3_uri` - (Required) The S3 URI where the training data is stored.
