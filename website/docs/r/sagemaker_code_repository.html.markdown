@@ -61,14 +61,14 @@ This resource supports the following arguments:
 
 * `repository_url` - (Required) The URL where the Git repository is located.
 * `branch` - (Optional) The default branch for the Git repository.
-* `secret_arn` - (Optional) The ARN of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
+* `secret_arn` - (Optional) ARN of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Code Repository.
-* `arn` - The ARN assigned by AWS to this Code Repository.
+* `arn` - ARN assigned by AWS to this Code Repository.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
