@@ -32,9 +32,9 @@ resource "aws_datasync_location_efs" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `access_point_arn` - (Optional) Specifies the Amazon Resource Name (ARN) of the access point that DataSync uses to access the Amazon EFS file system.
+* `access_point_arn` - (Optional) Specifies the ARN of the access point that DataSync uses to access the Amazon EFS file system.
 * `ec2_config` - (Required) Configuration block containing EC2 configurations for connecting to the EFS File System.
-* `efs_file_system_arn` - (Required) Amazon Resource Name (ARN) of EFS File System.
+* `efs_file_system_arn` - (Required) ARN of EFS File System.
 * `file_system_access_role_arn` - (Optional)  Specifies an Identity and Access Management (IAM) role that DataSync assumes when mounting the Amazon EFS file system.
 * `in_transit_encryption` - (Optional) Specifies whether you want DataSync to use TLS encryption when transferring data to or from your Amazon EFS file system. Valid values are `NONE` and `TLS1_2`.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Default `/`.
@@ -44,15 +44,15 @@ This resource supports the following arguments:
 
 The `ec2_config` configuration block supports the following arguments:
 
-* `security_group_arns` - (Required) List of Amazon Resource Names (ARNs) of the EC2 Security Groups that are associated with the EFS Mount Target.
-* `subnet_arn` - (Required) Amazon Resource Name (ARN) of the EC2 Subnet that is associated with the EFS Mount Target.
+* `security_group_arns` - (Required) List of ARNs of the EC2 Security Groups that are associated with the EFS Mount Target.
+* `subnet_arn` - (Required) ARN of the EC2 Subnet that is associated with the EFS Mount Target.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the DataSync Location.
-* `arn` - Amazon Resource Name (ARN) of the DataSync Location.
+* `id` - ARN of the DataSync Location.
+* `arn` - ARN of the DataSync Location.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -76,9 +76,9 @@ resource "aws_datasync_location_efs" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DataSync EFS location.
+- `arn` (String) ARN of the DataSync EFS location.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_efs` using the DataSync Task ARN. For example:
 
 ```terraform
 import {
@@ -87,7 +87,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_location_efs` using the DataSync Task ARN. For example:
 
 ```console
 % terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
