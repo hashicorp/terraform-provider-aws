@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
+* `arn` - The ARN of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
