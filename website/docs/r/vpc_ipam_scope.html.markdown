@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the scope.
+* `arn` - ARN of the scope.
 * `id` - The ID of the IPAM Scope.
 * `ipam_arn` - The ARN of the IPAM for which you're creating this scope.
 * `is_default` - Defines if the scope is the default scope or not.
