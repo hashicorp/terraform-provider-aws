@@ -66,7 +66,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cluster_revision_number` - The cluster revision number
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_type` - Cluster type
-* `cluster_namespace_arn` - The namespace ARN of the cluster
+* `cluster_namespace_arn` - Namespace ARN of the cluster
 * `database_name` - Name of the default database in the cluster
 * `default_iam_role_arn` - The ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `elastic_ip` - Elastic IP of the cluster
