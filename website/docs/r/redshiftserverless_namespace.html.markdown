@@ -33,9 +33,9 @@ This resource supports the following arguments:
 * `admin_user_password_wo_version` - (Optional) Used together with `admin_user_password_wo` to trigger an update. Increment this value when an update to the `admin_user_password_wo` is required
 * `admin_username` - (Optional) The username of the administrator for the first database created in the namespace.
 * `db_name` - (Optional) The name of the first database created in the namespace.
-* `default_iam_role_arn` - (Optional) The ARN of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
+* `default_iam_role_arn` - (Optional) ARN of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
 * `iam_roles` - (Optional) A list of IAM roles to associate with the namespace.
-* `kms_key_id` - (Optional) The ARN of the Amazon Web Services KMS key used to encrypt your data.
+* `kms_key_id` - (Optional) ARN of the Amazon Web Services KMS key used to encrypt your data.
 * `log_exports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespace_name` - (Required) The name of the namespace.
 * `manage_admin_password` - (Optional) Whether to use AWS SecretManager to manage namespace's admin credentials.
