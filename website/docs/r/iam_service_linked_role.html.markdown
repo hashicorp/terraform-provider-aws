@@ -31,8 +31,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the role.
-* `arn` - The ARN specifying the role.
+* `id` - ARN of the role.
+* `arn` - ARN specifying the role.
 * `create_date` - The creation date of the IAM role.
 * `name` - The name of the role.
 * `path` - The path of the role.
