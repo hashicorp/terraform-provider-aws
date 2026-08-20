@@ -56,8 +56,8 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
-* `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
+* `instance_arn` - (Required, Forces new resource) The ARN of the SSO Instance under which the operation will be executed.
+* `permission_set_arn` - (Required, Forces new resource) The ARN of the Permission Set.
 * `customer_managed_policy_reference` - (Required, Forces new resource) Specifies the name and path of a customer managed policy. See below.
 
 ### Customer Managed Policy Reference
@@ -71,7 +71,7 @@ The `customer_managed_policy_reference` config block describes a customer manage
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Policy Name, Policy Path, Permission Set Amazon Resource Name (ARN), and SSO Instance ARN, each separated by a comma (`,`).
+* `id` - Policy Name, Policy Path, Permission Set ARN, and SSO Instance ARN, each separated by a comma (`,`).
 
 ## Timeouts
 
