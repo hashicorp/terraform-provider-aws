@@ -24,7 +24,7 @@ resource "aws_mailmanager_archive" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the archive. 
+* `name` - (Required) Name of the archive.
 
 The following arguments are optional:
 
