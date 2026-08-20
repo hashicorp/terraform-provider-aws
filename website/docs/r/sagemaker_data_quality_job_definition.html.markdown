@@ -56,7 +56,7 @@ This resource supports the following arguments:
 * `job_resources` - (Required) Identifies the resources to deploy for a monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the data quality job definition. If omitted, Terraform will assign a random, unique name.
 * `network_config` - (Optional) Specifies networking configuration for the monitoring job. Fields are documented below.
-* `role_arn` - (Required) The ARN of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
+* `role_arn` - (Required) ARN of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
 * `stopping_condition` - (Optional) A time limit for how long the monitoring job is allowed to run before stopping. Fields are documented below.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
