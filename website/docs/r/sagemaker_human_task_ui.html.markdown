@@ -39,7 +39,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN assigned by AWS to this Human Task UI.
+* `arn` - ARN assigned by AWS to this Human Task UI.
 * `id` - The name of the Human Task UI.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `ui_template` - (Required) The Liquid template for the worker user interface. See [UI Template](#ui-template) below.
