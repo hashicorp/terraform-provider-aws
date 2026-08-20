@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block
 ```
+
+```release-note:enhancement
+data-source/aws_resiliencehubv2_service: Add `associated_system.user_journey_ids` attribute
+```
