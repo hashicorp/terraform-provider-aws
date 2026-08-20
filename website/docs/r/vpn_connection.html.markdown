@@ -193,10 +193,10 @@ The `tunnel1_log_options` and `tunnel2_log_options` block supports the following
 The `cloudwatch_log_options` blocks supports the following arguments:
 
 * `bgp_log_enabled` - (Optional) Enable or disable BGP logging feature. The default is `false`.
-* `bgp_log_group_arn` - (Optional) The ARN of the CloudWatch log group to send BGP logs to.
+* `bgp_log_group_arn` - (Optional) ARN of the CloudWatch log group to send BGP logs to.
 * `bgp_log_output_format` - (Optional) Set BGP log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 * `log_enabled` - (Optional) Enable or disable VPN tunnel logging feature. The default is `false`.
-* `log_group_arn` - (Optional) The ARN of the CloudWatch log group to send logs to.
+* `log_group_arn` - (Optional) ARN of the CloudWatch log group to send logs to.
 * `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 
 ## Attribute Reference
@@ -238,7 +238,7 @@ This resource exports the following attributes in addition to the arguments abov
 ### vgw_telemetry
 
 * `accepted_route_count` - The number of accepted routes.
-* `certificate_arn` - The ARN of the VPN tunnel endpoint certificate.
+* `certificate_arn` - ARN of the VPN tunnel endpoint certificate.
 * `last_status_change` - The date and time of the last change in status.
 * `outside_ip_address` - The Internet-routable IP address of the virtual private gateway's outside interface.
 * `status` - The status of the VPN tunnel.
