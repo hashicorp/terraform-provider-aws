@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name of this upload.
+* `arn` - The ARN of this upload.
 * `url` - The presigned Amazon S3 URL that was used to store a file using a PUT request.
 * `category` - The upload's category.
 * `metadata` - The upload's metadata. For example, for Android, this contains information that is parsed from the manifest and is displayed in the AWS Device Farm console after the associated app is uploaded.
@@ -66,7 +66,7 @@ resource "aws_devicefarm_upload" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Device Farm upload.
+- `arn` (String) ARN of the Device Farm upload.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Uploads using their ARN. For example:
 
