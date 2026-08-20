@@ -74,32 +74,32 @@ function analysis {
     fi
 
     local perf_main_memalloc1
-    perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpcmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpcmain.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_main_meminuse1
-    perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpcmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpcmain.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_main_cputime1
-    perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpcmain.prof 2>/dev/null | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' )
+    perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpcmain.prof 2>/dev/null | grep -o '%% of [0-9.]*s total' | sed 's/%% of //;s/s total//' )
 
     local perf_main_memalloc2
-    perf_main_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssmmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssmmain.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_main_meminuse2
-    perf_main_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssmmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssmmain.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_main_cputime2
-    perf_main_cputime2=$( pprof -top -flat -sample_index=cpu cpussmmain.prof 2>/dev/null | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' )
+    perf_main_cputime2=$( pprof -top -flat -sample_index=cpu cpussmmain.prof 2>/dev/null | grep -o '%% of [0-9.]*s total' | sed 's/%% of //;s/s total//' )
 
     local perf_latest_memalloc1
-    perf_latest_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpclatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpclatest.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_latest_meminuse1
-    perf_latest_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpclatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpclatest.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_latest_cputime1
-    perf_latest_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpclatest.prof 2>/dev/null | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' )
+    perf_latest_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpclatest.prof 2>/dev/null | grep -o '%% of [0-9.]*s total' | sed 's/%% of //;s/s total//' )
 
     local perf_latest_memalloc2
-    perf_latest_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssmlatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssmlatest.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_latest_meminuse2
-    perf_latest_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssmlatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssmlatest.prof 2>/dev/null | grep -o '%% of [0-9.]*MB total' | sed 's/%% of //;s/MB total//' )
     local perf_latest_cputime2
-    perf_latest_cputime2=$( pprof -top -flat -sample_index=cpu cpussmlatest.prof 2>/dev/null | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' )
+    perf_latest_cputime2=$( pprof -top -flat -sample_index=cpu cpussmlatest.prof 2>/dev/null | grep -o '%% of [0-9.]*s total' | sed 's/%% of //;s/s total//' )
 
     local alloc
     alloc=$( bc -l <<< "(((${perf_main_memalloc1}+${perf_main_memalloc2})/2)/((${perf_latest_memalloc1}+${perf_latest_memalloc2})/2)-1)*100" )
@@ -151,7 +151,10 @@ function analysis {
     fi
 
     # shellcheck disable=SC2182 # Doubled "%%" is for TeamCity escaping, not literal percent signs
-    printf "##teamcity[notification notifier='slack' message='*Performance changes from latest version (%%s) to main* |nAllocated memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) %%s |nIn-use memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) (wide-fluctuations normal) |nCPU time: %%.1f%%%% (%%.1fs to %%.1fs) (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_mb_latest}" "${alloc_mb_main}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_mb_latest}" "${inuse_mb_main}" "${inuse_bw}" "${cputime}" "${cputime_s_latest}" "${cputime_s_main}" "${cputime_bw}" "${cputime_emoji}"
+    printf "##teamcity[message text='Performance changes from latest version (%%s) to main: Allocated memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) %%s | In-use memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) | CPU time: %%.1f%%%% (%%.1fs to %%.1fs) (%%s) %%s' status='NORMAL']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_mb_latest}" "${alloc_mb_main}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_mb_latest}" "${inuse_mb_main}" "${inuse_bw}" "${cputime}" "${cputime_s_latest}" "${cputime_s_main}" "${cputime_bw}" "${cputime_emoji}"
+ 
+    # shellcheck disable=SC2182 # Doubled "%%" is for TeamCity escaping, not literal percent signs
+   printf "##teamcity[notification notifier='slack' message='*Performance changes from latest version (%%s) to main* |nAllocated memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) %%s |nIn-use memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) (wide-fluctuations normal) |nCPU time: %%.1f%%%% (%%.1fs to %%.1fs) (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_mb_latest}" "${alloc_mb_main}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_mb_latest}" "${inuse_mb_main}" "${inuse_bw}" "${cputime}" "${cputime_s_latest}" "${cputime_s_main}" "${cputime_bw}" "${cputime_emoji}"
 }
 
 if [[ -f "memvpcmain.prof" ]] && [[ -f "memssmmain.prof" ]] && [[ -f "memvpclatest.prof" ]] && [[ -f "memssmlatest.prof" ]]; then
