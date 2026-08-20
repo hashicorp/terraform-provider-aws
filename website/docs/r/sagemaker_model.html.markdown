@@ -64,23 +64,23 @@ The `primary_container` and `container` block both support:
 * `container_hostname` - (Optional) DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
 * `image` - (Optional) Registry path where the inference code image is stored in Amazon ECR.
-* `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
 * `inference_specification_name` - (Optional) Inference specification name in the model package version.
 * `mode` - (Optional) Container hosts value. Allowed values are: `SingleModel` and `MultiModel`. The default value is `SingleModel`.
 * `model_data_source` - (Optional) Location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
 * `model_data_url` - (Optional) URL for the S3 location where model artifacts are stored.
-* `model_package_name` - (Optional) Amazon Resource Name (ARN) of the model package to use to create the model.
+* `model_package_name` - (Optional) ARN of the model package to use to create the model.
    A list of key value pairs.
 * `multi_model_config` - (Optional) Specifies additional configuration for multi-model endpoints. see [Multi Model Config](#multi-model-config).
 
 ### Image Config
 
-* `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
+* `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
 * `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
 
-* `repository_credentials_provider_arn` - (Required) Amazon Resource Name (ARN) of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
+* `repository_credentials_provider_arn` - (Required) ARN of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
 
 ### Model Data Source
 
@@ -119,7 +119,7 @@ The `primary_container` and `container` block both support:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) assigned by AWS to this model.
+* `arn` - ARN assigned by AWS to this model.
 * `name` - Name of the model.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
