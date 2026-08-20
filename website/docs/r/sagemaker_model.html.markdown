@@ -64,7 +64,7 @@ The `primary_container` and `container` block both support:
 * `container_hostname` - (Optional) DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
 * `image` - (Optional) Registry path where the inference code image is stored in Amazon ECR.
-* `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `image_config` - (Optional) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
 * `inference_specification_name` - (Optional) Inference specification name in the model package version.
 * `mode` - (Optional) Container hosts value. Allowed values are: `SingleModel` and `MultiModel`. The default value is `SingleModel`.
 * `model_data_source` - (Optional) Location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
@@ -75,7 +75,7 @@ The `primary_container` and `container` block both support:
 
 ### Image Config
 
-* `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
+* `repository_access_mode` - (Required) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
 * `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
