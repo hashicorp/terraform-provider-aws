@@ -69,7 +69,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `firewall_arn` - (Required, Forces new resource) The ARN of the Network Firewall firewall.
+* `firewall_arn` - (Required, Forces new resource) ARN of the Network Firewall firewall.
 * `enable_monitoring_dashboard` - (Optional) Whether to enable the detailed firewall monitoring dashboard on the firewall. Defaults to `false`.
 * `logging_configuration` - (Required) A configuration block describing how AWS Network Firewall performs logging for a firewall. See [Logging Configuration](#logging-configuration) below for details.
 
@@ -96,7 +96,7 @@ The `log_destination_config` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the associated firewall.
+* `id` - ARN of the associated firewall.
 
 ## Import
 
