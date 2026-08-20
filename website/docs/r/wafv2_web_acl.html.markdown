@@ -691,7 +691,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 
 The `ip_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `arn` - (Required) The ARN of the IP Set that this statement references.
 * `ip_set_forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [`ip_set_forwarded_ip_config`](#ip_set_forwarded_ip_config-block) below for more details.
 
 ### `label_match_statement` Block
@@ -766,7 +766,7 @@ A rule statement used to search web request components for matches with regular 
 
 The `regex_pattern_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
+* `arn` - (Required) The ARN of the Regex Pattern Set that this statement references.
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`field_to_match`](#field_to_match-block) below for details.
 * `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [`pre_parse_text_transformation`](#pre_parse_text_transformation-block) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`text_transformation`](#text_transformation-block) below for details.
@@ -779,7 +779,7 @@ You can't nest a `rule_group_reference_statement`, for example for use inside a 
 
 The `rule_group_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the `aws_wafv2_rule_group` resource.
+* `arn` - (Required) The ARN of the `aws_wafv2_rule_group` resource.
 * `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [`rule_action_override`](#rule_action_override-block) below for details.
 
 ### `size_constraint_statement` Block
