@@ -115,7 +115,7 @@ This resource supports the following arguments:
 
 ### data_quality_job_output_config
 
-* `kms_key_id` - (Optional) The KMS key that Amazon SageMaker AI uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) KMS key that Amazon SageMaker AI uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 * `monitoring_outputs` - (Required) Monitoring outputs for monitoring jobs. This is where the output of the periodic monitoring jobs is uploaded. Fields are documented below.
 
 #### monitoring_outputs
@@ -136,7 +136,7 @@ This resource supports the following arguments:
 
 * `instance_count` - (Required) The number of ML compute instances to use in the model monitoring job. For distributed processing jobs, specify a value greater than 1.
 * `instance_type` - (Required) The ML compute instance type for the processing job.
-* `volume_kms_key_id` - (Optional) The KMS key that Amazon SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
+* `volume_kms_key_id` - (Optional) KMS key that Amazon SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
 * `volume_size_in_gb` - (Required) The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
 
 ### network_config
@@ -158,7 +158,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN assigned by AWS to this data quality job definition.
+* `arn` - ARN assigned by AWS to this data quality job definition.
 * `name` - The name of the data quality job definition.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
