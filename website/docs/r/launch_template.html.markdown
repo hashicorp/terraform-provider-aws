@@ -245,7 +245,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The ARN of the instance profile. Conflicts with `name`.
+* `arn` - ARN of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
