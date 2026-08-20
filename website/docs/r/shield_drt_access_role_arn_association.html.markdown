@@ -47,7 +47,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 The following arguments are required:
 
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `AWSShieldDRTAccessPolicy` managed policy to this role.
+* `role_arn` - (Required) The ARN of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `AWSShieldDRTAccessPolicy` managed policy to this role.
 
 ## Attribute Reference
 
