@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the vocabulary.
+* `arn` - ARN of the vocabulary.
 * `failure_reason` - The reason why the custom vocabulary was not created.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the vocabulary
 separated by a colon (`:`).
