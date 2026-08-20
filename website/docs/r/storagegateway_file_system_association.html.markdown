@@ -83,11 +83,11 @@ resource "aws_storagegateway_file_system_association" "fsx" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `gateway_arn` - (Required) The ARN of the gateway.
-* `location_arn` - (Required) The ARN of the Amazon FSx file system to associate with the FSx File Gateway.
+* `gateway_arn` - (Required) ARN of the gateway.
+* `location_arn` - (Required) ARN of the Amazon FSx file system to associate with the FSx File Gateway.
 * `username` - (Required) The user name of the user credential that has permission to access the root share of the Amazon FSx file system. The user account must belong to the Amazon FSx delegated admin user group.
 * `password` - (Required, sensitive) The password of the user credential.
-* `audit_destination_arn` - (Optional) The ARN of the storage used for the audit logs.
+* `audit_destination_arn` - (Optional) ARN of the storage used for the audit logs.
 * `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
