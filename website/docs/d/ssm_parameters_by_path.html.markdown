@@ -35,7 +35,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - A list that contains the ARNs of the retrieved parameters.
+* `arns` - List that contains the ARNs of the retrieved parameters.
 * `names` - A list that contains the names of the retrieved parameters.
 * `types` - A list that contains the types (`String`, `StringList`, or `SecureString`) of retrieved parameters.
 * `values` - A list that contains the retrieved parameter values. **Note:** This value is always marked as sensitive in the Terraform plan output, regardless of whether any retrieved parameters are of `SecureString` type. Use the [`nonsensitive` function](https://developer.hashicorp.com/terraform/language/functions/nonsensitive) to override the behavior at your own risk and discretion, if you are certain that there are no sensitive values being retrieved.
