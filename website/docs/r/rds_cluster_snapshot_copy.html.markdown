@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zones` - Specifies the the Availability Zones the DB cluster was located in at the time of the DB snapshot.
-* `db_cluster_snapshot_arn` - The ARN for the DB cluster snapshot.
+* `db_cluster_snapshot_arn` - ARN for the DB cluster snapshot.
 * `engine` - Specifies the name of the database engine.
 * `engine_version` - Specifies the version of the database engine.
 * `id` - Cluster snapshot identifier.
