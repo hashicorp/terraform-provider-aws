@@ -222,7 +222,7 @@ Modifying any of the `ebs_block_device` settings requires resource replacement.
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the launch configuration.
-* `arn` - The ARN of the launch configuration.
+* `arn` - ARN of the launch configuration.
 * `name` - The name of the launch configuration.
 
 ## Import
