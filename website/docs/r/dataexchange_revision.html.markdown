@@ -33,7 +33,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Id of the data set.
 * `revision_id` - The Id of the revision.
-* `arn` - The Amazon Resource Name of this data set.
+* `arn` - The ARN of this data set.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
