@@ -555,6 +555,7 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        // IAM is foundational to most other services, so run its tests first
         script {
             name = "IAM"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -576,11 +577,11 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "KMS"
+            name = "Events"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "IAM"
+            name = "KMS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
@@ -600,6 +601,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
+            name = "SSM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "Secrets Manager"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
@@ -607,6 +612,10 @@ object Sanity : BuildType({
             name = "STS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }  
+        script {
+            name = "Function"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
         script {
             name = "Report Success"
             scriptContent = File("./scripts/sanity.sh").readText()
