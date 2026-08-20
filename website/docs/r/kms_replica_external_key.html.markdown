@@ -67,7 +67,7 @@ For more information about building policy documents with Terraform, see the [AW
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
+* `arn` - ARN of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
 * `expiration_model` - Whether the key material expires. Empty when pending key material import, otherwise `KEY_MATERIAL_EXPIRES` or `KEY_MATERIAL_DOES_NOT_EXPIRE`.
 * `key_id` - The key ID of the replica key. Related multi-Region keys have the same key ID.
 * `key_state` - The state of the replica key.
