@@ -188,7 +188,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### permission Argument Reference
 
 * `actions` - (Required) Set of IAM actions to grant or revoke permissions on. Max of 16 items.
-* `principal` - (Required) The ARN of the principal.
+* `principal` - (Required) ARN of the principal.
 
 ### ssl_properties Argument Reference
 
@@ -196,7 +196,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 ### vpc_connection_properties Argument Reference
 
-* `vpc_connection_arn` - (Required) The ARN for the VPC connection.
+* `vpc_connection_arn` - (Required) ARN for the VPC connection.
 
 ### amazon_elasticsearch Argument Reference
 
