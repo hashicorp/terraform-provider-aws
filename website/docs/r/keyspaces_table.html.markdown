@@ -68,7 +68,7 @@ The `comment` object takes the following arguments:
 
 The `encryption_specification` object takes the following arguments:
 
-* `kms_key_identifier` - (Optional) The Amazon Resource Name (ARN) of the customer managed KMS key.
+* `kms_key_identifier` - (Optional) The ARN of the customer managed KMS key.
 * `type` - (Optional) The encryption option specified for the table. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_MANAGED_KMS_KEY`. The default value is `AWS_OWNED_KMS_KEY`.
 
 The `point_in_time_recovery` object takes the following arguments:
