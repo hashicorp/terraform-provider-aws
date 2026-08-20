@@ -136,8 +136,8 @@ This resource supports the following arguments:
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag) for details.
 * `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition) for details.
-* `resources` - (Optional) An array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
-* `not_resources` - (Optional) An array of strings that either contain ARNs or match patterns of resources to exclude from a backup plan.
+* `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
+* `not_resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to exclude from a backup plan.
 
 ### selection_tag
 
