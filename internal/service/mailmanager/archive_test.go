@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMailManagerArchive_basic(t *testing.T) {
+func testAccMailManagerArchive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_archive.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccArchivePreCheck(ctx, t)
@@ -58,13 +58,13 @@ func TestAccMailManagerArchive_basic(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerArchive_disappears(t *testing.T) {
+func testAccMailManagerArchive_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_archive.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccArchivePreCheck(ctx, t)
@@ -90,14 +90,14 @@ func TestAccMailManagerArchive_disappears(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerArchive_update(t *testing.T) {
+func testAccMailManagerArchive_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_archive.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccArchivePreCheck(ctx, t)
@@ -134,12 +134,12 @@ func TestAccMailManagerArchive_update(t *testing.T) {
 	})
 }
 
-func TestAccMailManagerArchive_retention(t *testing.T) {
+func testAccMailManagerArchive_retention(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mailmanager_archive.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccArchivePreCheck(ctx, t)
