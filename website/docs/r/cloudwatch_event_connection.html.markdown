@@ -303,8 +303,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the connection.
-* `secret_arn` - The ARN of the secret created from the authorization parameters specified for the connection.
+* `arn` - ARN of the connection.
+* `secret_arn` - ARN of the secret created from the authorization parameters specified for the connection.
 
 ## Import
 
