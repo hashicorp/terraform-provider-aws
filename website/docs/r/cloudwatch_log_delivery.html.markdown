@@ -78,7 +78,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the delivery.
+* `arn` - ARN of the delivery.
 * `id` - The unique ID that identifies this delivery in your account.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
