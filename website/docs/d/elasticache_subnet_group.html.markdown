@@ -34,4 +34,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the subnet group.
 * `subnet_ids` - Set of VPC Subnet ID-s of the subnet group.
 * `tags` - Map of tags assigned to the subnet group.
-* `vpc_id` - The VPC identifier (VPC ID) of the cache subnet group.
+* `vpc_id` - VPC identifier (VPC ID) of the cache subnet group.
