@@ -183,7 +183,7 @@ The `matching_rules` configuration block supports the following attributes:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Customer Profiles Domain.
+* `arn` - ARN of the Customer Profiles Domain.
 * `id` - The identifier of the Customer Profiles Domain.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
