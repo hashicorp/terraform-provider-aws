@@ -32,7 +32,7 @@ The following arguments are optional:
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `price_performance_target` - (Optional) Price-performance scaling for the workgroup. See `Price Performance Target` below.
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
-* `enhanced_vpc_routing` - (Optional) The value that specifies whether to turn on enhanced VPC routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
+* `enhanced_vpc_routing` - (Optional) Value that specifies whether to turn on enhanced VPC routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `max_capacity` - (Optional) The maximum data-warehouse capacity Amazon Redshift Serverless uses to serve queries, specified in Redshift Processing Units (RPUs).
 * `port` - (Optional) The port number on which the cluster accepts incoming connections.
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
