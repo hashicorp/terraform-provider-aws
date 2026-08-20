@@ -45,7 +45,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the User.
+* `arn` - ARN of the User.
 * `directory_user_id` - The identifier of the user account in the directory used for identity management.
 * `hierarchy_group_id` - The identifier of the hierarchy group for the user.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the User separated by a colon (`:`).
