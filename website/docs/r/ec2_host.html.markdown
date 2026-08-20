@@ -34,7 +34,7 @@ This resource supports the following arguments:
 * `host_recovery` - (Optional) Indicates whether to enable or disable host recovery for the Dedicated Host. Valid values: `on`, `off`. Default: `off`.
 * `instance_family` - (Optional) Specifies the instance family to be supported by the Dedicated Hosts. If you specify an instance family, the Dedicated Hosts support multiple instance types within that instance family. Exactly one of `instance_family` or `instance_type` must be specified.
 * `instance_type` - (Optional) Specifies the instance type to be supported by the Dedicated Hosts. If you specify an instance type, the Dedicated Hosts support instances of the specified instance type only. Exactly one of `instance_family` or `instance_type` must be specified.
-* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Outpost on which to allocate the Dedicated Host.
+* `outpost_arn` - (Optional) The ARN of the AWS Outpost on which to allocate the Dedicated Host.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
