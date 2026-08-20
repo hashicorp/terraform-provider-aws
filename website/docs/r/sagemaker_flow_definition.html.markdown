@@ -113,7 +113,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `flow_definition_name` - (Required) The name of your flow definition.
 * `human_loop_config` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
-* `role_arn` - (Required) The ARN of the role needed to call other services on your behalf.
+* `role_arn` - (Required) ARN of the role needed to call other services on your behalf.
 * `output_config` - (Required) An object containing information about where the human review results will be uploaded. See [Output Config](#output-config) details below.
 * `human_loop_activation_config` - (Optional) An object containing information about the events that trigger a human workflow. See [Human Loop Activation Config](#human-loop-activation-config) details below.
 * `human_loop_request_source` - (Optional) Container for configuring the source of human task requests. Use to specify if Amazon Rekognition or Amazon Textract is used as an integration source. See [Human Loop Request Source](#human-loop-request-source) details below.
@@ -121,7 +121,7 @@ This resource supports the following arguments:
 
 ### Human Loop Config
 
-* `human_task_ui_arn` - (Required) The ARN of the human task user interface.
+* `human_task_ui_arn` - (Required) ARN of the human task user interface.
 * `public_workforce_task_price` - (Optional) Defines the amount of money paid to an Amazon Mechanical Turk worker for each task performed. See [Public Workforce Task Price](#public-workforce-task-price) details below.
 * `task_availability_lifetime_in_seconds` - (Required) The length of time that a task remains available for review by human workers. Valid value range between `1` and `864000`.
 * `task_count` - (Required) The number of distinct workers who will perform the same task on each object. Valid value range between `1` and `3`.
@@ -129,7 +129,7 @@ This resource supports the following arguments:
 * `task_keywords` - (Optional) An array of keywords used to describe the task so that workers can discover the task.
 * `task_time_limit_in_seconds` - (Optional) The amount of time that a worker has to complete a task. The default value is `3600` seconds.
 * `task_title` - (Required) A title for the human worker task.
-* `workteam_arn` - (Required) The ARN of the human task user interface. ARN of a team of workers. For Public workforces see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-management-public.html).
+* `workteam_arn` - (Required) ARN of the human task user interface. ARN of a team of workers. For Public workforces see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-management-public.html).
 
 #### Public Workforce Task Price
 
@@ -156,13 +156,13 @@ This resource supports the following arguments:
 ### Output Config
 
 * `s3_output_path` - (Required) The Amazon S3 path where the object containing human output will be made available.
-* `kms_key_id` - (Optional) The KMS key ARN for server-side encryption.
+* `kms_key_id` - (Optional) KMS key ARN for server-side encryption.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN assigned by AWS to this Flow Definition.
+* `arn` - ARN assigned by AWS to this Flow Definition.
 * `id` - The name of the Flow Definition.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
