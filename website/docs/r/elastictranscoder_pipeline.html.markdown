@@ -37,14 +37,14 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_kms_key_arn` - (Optional) The KMS key that you want to use with this pipeline.
+* `aws_kms_key_arn` - (Optional) KMS key that you want to use with this pipeline.
 * `content_config` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
 * `content_config_permissions` - (Optional) The permissions for the `content_config` object. (documented below)
 * `input_bucket` - (Required) The Amazon S3 bucket in which you saved the media files that you want to transcode and the graphics that you want to use as watermarks.
 * `name` - (Optional, Forces new resource) The name of the pipeline. Maximum 40 characters
 * `notifications` - (Optional) The Amazon Simple Notification Service (Amazon SNS) topic that you want to notify to report job status. (documented below)
 * `output_bucket` - (Optional) The Amazon S3 bucket in which you want Elastic Transcoder to save the transcoded files.
-* `role` - (Required) The IAM ARN for the role that you want Elastic Transcoder to use to transcode jobs for this pipeline.
+* `role` - (Required) IAM ARN for the role that you want Elastic Transcoder to use to transcode jobs for this pipeline.
 * `thumbnail_config` - (Optional) The ThumbnailConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save thumbnail files. (documented below)
 * `thumbnail_config_permissions` - (Optional) The permissions for the `thumbnail_config` object. (documented below)
 
