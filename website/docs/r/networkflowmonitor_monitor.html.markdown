@@ -48,7 +48,7 @@ resource "aws_networkflowmonitor_monitor" "example" {
 The following arguments are required:
 
 * `monitor_name` - (Required) The name of the monitor. Cannot be changed after creation.
-* `scope_arn` - (Required) The ARN of the scope for the monitor. Cannot be changed after creation.
+* `scope_arn` - (Required) ARN of the scope for the monitor. Cannot be changed after creation.
 
 The following arguments are optional:
 
@@ -68,7 +68,7 @@ The `local_resource` and `remote_resource` blocks support the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `monitor_arn` - The ARN of the monitor.
+* `monitor_arn` - ARN of the monitor.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
