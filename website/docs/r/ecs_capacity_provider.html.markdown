@@ -259,7 +259,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the ECS capacity provider.
+- `arn` (String) ARN of the ECS capacity provider.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `arn`. For example:
 
