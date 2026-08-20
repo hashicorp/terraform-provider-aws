@@ -68,7 +68,7 @@ This data source exports the following attributes in addition to the arguments a
 * `environment_type` - Environment type of the compute fleet.
 * `fleet_service_role` - The service role associated with the compute fleet.
 * `id` - ARN of the Fleet.
-* `image_id` - The AMI of the compute fleet.
+* `image_id` - AMI of the compute fleet.
 * `last_modified` - Last modification time of the fleet.
 * `overflow_behavior` - Overflow behavior for compute fleet.
 * `scaling_configuration` -  Nested attribute containing information about the scaling configuration.
