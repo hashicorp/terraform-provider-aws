@@ -146,6 +146,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, archiveOut.Retention, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -176,6 +177,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Archive")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, out.Retention, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -223,6 +225,7 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, archiveOut.Retention, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -275,14 +278,40 @@ func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (
 	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
+	if out.ArchiveState == awstypes.ArchiveStatePendingDeletion {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: fmt.Errorf("archive is in PENDING_DELETION state"),
+		})
+	}
 
 	return out, nil
+}
+
+func flattenArchiveRetention(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if data.Retention.IsNull() || data.Retention.IsUnknown() {
+		return diags
+	}
+
+	if apiRetention == nil {
+		data.Retention = fwtypes.NewListNestedObjectValueOfNull[archiveRetentionModel](ctx)
+		return diags
+	}
+
+	var m archiveRetentionModel
+	diags.Append(m.Flatten(ctx, apiRetention)...)
+	if diags.HasError() {
+		return diags
+	}
+	data.Retention = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
+	return diags
 }
 
 type archiveResourceModel struct {
 	framework.WithRegionModel
 	ARN                  types.String                                           `tfsdk:"arn"`
-	Retention            fwtypes.ListNestedObjectValueOf[archiveRetentionModel] `tfsdk:"retention"`
+	Retention            fwtypes.ListNestedObjectValueOf[archiveRetentionModel] `tfsdk:"retention" autoflex:",noflatten"`
 	KmsKeyArn            fwtypes.ARN                                            `tfsdk:"kms_key_arn"`
 	ID                   types.String                                           `tfsdk:"id"`
 	Name                 types.String                                           `tfsdk:"name"`
