@@ -37,8 +37,8 @@ The name must start with the word "alias" followed by a forward slash (alias/). 
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the key alias.
-* `target_key_arn` - The Amazon Resource Name (ARN) of the target key identifier.
+* `arn` - The ARN of the key alias.
+* `target_key_arn` - The ARN of the target key identifier.
 
 ## Import
 
