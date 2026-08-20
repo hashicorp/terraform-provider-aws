@@ -49,17 +49,17 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disk_id` - (Optional) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `disk_path` - (Optional) Local disk path. For example, `/dev/nvme1n1`.
-* `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
+* `gateway_arn` - (Required) The ARN of the gateway.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combined gateway Amazon Resource Name (ARN) and local disk identifier.
+* `id` - Combined gateway ARN and local disk identifier.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_upload_buffer` using the gateway Amazon Resource Name (ARN) and local disk identifier separated with a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_upload_buffer` using the gateway ARN and local disk identifier separated with a colon (`:`). For example:
 
 ```terraform
 import {
@@ -68,7 +68,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_storagegateway_upload_buffer` using the gateway Amazon Resource Name (ARN) and local disk identifier separated with a colon (`:`). For example:
+Using `terraform import`, import `aws_storagegateway_upload_buffer` using the gateway ARN and local disk identifier separated with a colon (`:`). For example:
 
 ```console
 % terraform import aws_storagegateway_upload_buffer.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
