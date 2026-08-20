@@ -364,11 +364,15 @@ func testAccTransitVirtualInterface_bgpASNLong(t *testing.T) {
 	ctx := acctest.Context(t)
 	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
 	dxGatewayID := acctest.SkipIfEnvVarNotSet(t, "DX_GATEWAY_ID")
+	vlanString := acctest.SkipIfEnvVarNotSet(t, "DX_VLAN_ID")
+	vlan, err := strconv.Atoi(vlanString)
+	if err != nil || vlan < 1 || vlan > 4094 {
+		t.Fatalf("DX_VLAN_ID must be an integer between 1 and 4094, got %q", vlanString)
+	}
 
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_transit_virtual_interface.test"
 	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", acctest.RandString(t, 9))
-	vlan := acctest.RandIntRange(t, 2049, 4094)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
