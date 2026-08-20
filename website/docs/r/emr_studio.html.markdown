@@ -36,7 +36,7 @@ The following arguments are required:
 * `engine_security_group_id` - (Required) The ID of the Amazon EMR Studio Engine security group. The Engine security group allows inbound network traffic from the Workspace security group, and it must be in the same VPC specified by `vpc_id`.
 * `service_role` - (Required) The IAM role that the Amazon EMR Studio assumes. The service role provides a way for Amazon EMR Studio to interoperate with other Amazon Web Services services.
 * `subnet_ids` - (Required) A list of subnet IDs to associate with the Amazon EMR Studio. A Studio can have a maximum of 5 subnets. The subnets must belong to the VPC specified by `vpc_id`. Studio users can create a Workspace in any of the specified subnets.
-* `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (Amazon VPC) to associate with the Studio.
+* `vpc_id` - (Required) The ID of the VPC to associate with the Studio.
 * `workspace_security_group_id` - (Required) The ID of the Amazon EMR Studio Workspace security group. The Workspace security group allows outbound network traffic to resources in the Engine security group, and it must be in the same VPC specified by `vpc_id`.
 
 The following arguments are optional:
