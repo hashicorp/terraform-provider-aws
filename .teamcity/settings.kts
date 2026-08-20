@@ -134,6 +134,7 @@ class PullRequest(terraformVersion: String) : BuildType({
         text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
         text("TERRAFORM_CORE_VERSION", terraformVersion)
 
+        text("env.GOFLAGS", "-modcacherw")
         text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
         // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
     }
