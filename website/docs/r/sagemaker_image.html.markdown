@@ -27,7 +27,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_name` - (Required) The name of the image. Must be unique to your account.
-* `role_arn` - (Required) The ARN of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
+* `role_arn` - (Required) ARN of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
 * `display_name` - (Optional) The display name of the image. When the image is added to a domain (must be unique to the domain).
 * `description` - (Optional) The description of the image.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -37,7 +37,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Image.
-* `arn` - The ARN assigned by AWS to this Image.
+* `arn` - ARN assigned by AWS to this Image.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
