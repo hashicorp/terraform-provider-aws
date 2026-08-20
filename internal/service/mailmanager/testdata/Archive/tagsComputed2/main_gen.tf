@@ -11,6 +11,7 @@ resource "aws_mailmanager_archive" "test" {
     (var.knownTagKey)   = var.knownTagValue
   }
 }
+
 resource "null_resource" "test" {}
 
 variable "rName" {

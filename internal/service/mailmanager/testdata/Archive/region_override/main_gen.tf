@@ -6,6 +6,7 @@ resource "aws_mailmanager_archive" "test" {
 
   name = var.rName
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
