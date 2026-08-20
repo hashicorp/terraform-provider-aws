@@ -33,12 +33,12 @@ This data source exports the following attributes in addition to the arguments a
 * `auto_minor_version_upgrade` - Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availability_zone` - The EC2 Availability Zone that the replication instance will be created in.
 * `engine_version` - The engine version number of the replication instance.
-* `kms_key_arn` - The Amazon Resource Name (ARN) for the KMS key used to encrypt the connection parameters.
+* `kms_key_arn` - The ARN for the KMS key used to encrypt the connection parameters.
 * `multi_az` - Specifies if the replication instance is a multi-az deployment.
 * `network_type` - The type of IP address protocol used by the replication instance.
 * `preferred_maintenance_window` - The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 * `publicly_accessible` - Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
-* `replication_instance_arn` - The Amazon Resource Name (ARN) of the replication instance.
+* `replication_instance_arn` - The ARN of the replication instance.
 * `replication_instance_class` - The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for information on instance classes.
 * `replication_instance_private_ips` - A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
