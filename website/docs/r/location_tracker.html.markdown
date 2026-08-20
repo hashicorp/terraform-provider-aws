@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `tracker_arn` - The ARN for the tracker resource. Used when you need to specify a resource across all AWS.
+* `tracker_arn` - ARN for the tracker resource. Used when you need to specify a resource across all AWS.
 * `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
 
 ## Import
