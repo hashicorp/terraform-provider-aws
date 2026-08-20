@@ -25,7 +25,7 @@ resource "aws_ssmincidents_response_plan" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - (Required) The Amazon Resource Name (ARN) of the response plan.
+* `arn` - (Required) The ARN of the response plan.
 
 ## Attribute Reference
 
@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - The tags applied to the response plan.
 * `display_name` - The long format of the response plan name. This field can contain spaces.
 * `chat_channel` - The Chatbot chat channel used for collaboration during an incident.
-* `engagements` - The Amazon Resource Name (ARN) for the contacts and escalation plans that the response plan engages during an incident.
+* `engagements` - The ARN for the contacts and escalation plans that the response plan engages during an incident.
 
 The `incident_template` configuration block exports the following attributes:
 
@@ -57,7 +57,7 @@ The `action` configuration block exports the following attributes:
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
     * `ssm_automation` - The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
         * `document_name` - The automation document's name.
-        * `role_arn` - The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
+        * `role_arn` - The ARN of the role that the automation document assumes when it runs commands.
         * `document_version` - The version of the automation document to use at runtime.
         * `target_account` - The account that runs the automation document. This can be in either the management account or an application account.
         * `parameter` - The key-value pair parameters used when the automation document runs. The following values are supported:
