@@ -83,7 +83,7 @@ For more information about building policy documents with Terraform, see the [AW
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
+* `arn` - ARN of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
 * `key_id` - The key ID of the replica key. Related multi-Region keys have the same key ID.
 * `key_rotation_enabled` - A Boolean value that specifies whether key rotation is enabled. This is a shared property of multi-Region keys.
 * `key_spec` - The type of key material in the KMS key. This is a shared property of multi-Region keys.
