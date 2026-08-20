@@ -36,6 +36,7 @@ import (
 // @ImportIDHandler("resourcePolicyImportID")
 // @Testing(preIdentityVersion="v6.51.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.ResourcePolicy")
+// @Testing(identityTestCases="accountscope")
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
