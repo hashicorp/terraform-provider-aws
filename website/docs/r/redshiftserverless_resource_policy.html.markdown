@@ -36,14 +36,14 @@ resource "aws_redshiftserverless_resource_policy" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
+* `resource_arn` - (Required) The ARN of the account to create or update a resource policy for.
 * `policy` - (Required) The policy to create or update. For example, the following policy grants a user authorization to restore a snapshot.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
+* `id` - The ARN of the account to create or update a resource policy for.
 
 ## Import
 
