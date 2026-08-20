@@ -69,7 +69,7 @@ The following arguments are required:
 
 * `name` - (Required) The name of the lifecycle policy to create.
 * `resource_type` - (Required) The type of Image Builder resource that the lifecycle policy applies to. Valid values: `AMI_IMAGE` or `CONTAINER_IMAGE`.
-* `execution_role` - (Required) The ARN for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
+* `execution_role` - (Required) ARN for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
 * `policy_detail` - (Required) Configuration block with policy details. Detailed below.
 * `resource_selection` - (Required) Selection criteria for the resources that the lifecycle policy applies to. Detailed below.
 
