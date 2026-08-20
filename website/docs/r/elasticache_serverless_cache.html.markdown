@@ -135,7 +135,7 @@ The `ecpu_per_second` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the serverless cache.
+* `arn` - The ARN of the serverless cache.
 * `create_time` - Timestamp of when the serverless cache was created.
 * `endpoint` - Represents the information required for client programs to connect to a cache node. See [`endpoint` Block](#endpoint-block) for details.
 * `full_engine_version` - The name and version number of the engine the serverless cache is compatible with.
