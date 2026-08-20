@@ -46,7 +46,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) The policy document.
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the data stream or consumer.
+* `resource_arn` - (Required) The ARN of the data stream or consumer.
 
 ## Attribute Reference
 
@@ -73,7 +73,7 @@ resource "aws_kinesis_resource_policy" "example" {
 
 #### Required
 
-- `resource_arn` (String) Amazon Resource Name (ARN) of the Kinesis stream.
+- `resource_arn` (String) ARN of the Kinesis stream.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis resource policies using the `resource_arn`. For example:
 
