@@ -70,7 +70,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the RDS event notification subscription
-* `arn` - The Amazon Resource Name of the RDS event notification subscription
+* `arn` - The ARN of the RDS event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the RDS event notification subscription
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
