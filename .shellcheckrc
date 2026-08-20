@@ -3,6 +3,5 @@
 
 external-sources=true
 
-disable=SC2034
 disable=SC2046
 disable=SC2207
