@@ -123,7 +123,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) The tags applied to the response plan.
 * `display_name` - (Optional) The long format of the response plan name. This field can contain spaces.
 * `chat_channel` - (Optional) The Chatbot chat channel used for collaboration during an incident.
-* `engagements` - (Optional) The ARN for the contacts and escalation plans that the response plan engages during an incident.
+* `engagements` - (Optional) ARN for the contacts and escalation plans that the response plan engages during an incident.
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
     * `ssm_automation` - (Optional) The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
         * `document_name` - (Required) The automation document's name.
