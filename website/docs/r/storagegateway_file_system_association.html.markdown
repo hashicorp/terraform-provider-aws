@@ -83,11 +83,11 @@ resource "aws_storagegateway_file_system_association" "fsx" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
-* `location_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon FSx file system to associate with the FSx File Gateway.
+* `gateway_arn` - (Required) The ARN of the gateway.
+* `location_arn` - (Required) The ARN of the Amazon FSx file system to associate with the FSx File Gateway.
 * `username` - (Required) The user name of the user credential that has permission to access the root share of the Amazon FSx file system. The user account must belong to the Amazon FSx delegated admin user group.
 * `password` - (Required, sensitive) The password of the user credential.
-* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the storage used for the audit logs.
+* `audit_destination_arn` - (Optional) The ARN of the storage used for the audit logs.
 * `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -101,8 +101,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the FSx file system association
-* `arn` - Amazon Resource Name (ARN) of the newly created file system association.
+* `id` - ARN of the FSx file system association
+* `arn` - ARN of the newly created file system association.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -115,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_file_system_association` using the FSx file system association Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_file_system_association` using the FSx file system association ARN. For example:
 
 ```terraform
 import {
@@ -124,7 +124,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_storagegateway_file_system_association` using the FSx file system association Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_file_system_association` using the FSx file system association ARN. For example:
 
 ```console
 % terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
