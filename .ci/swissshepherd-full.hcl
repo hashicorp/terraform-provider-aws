@@ -32,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -62,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -92,13 +92,13 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -114,13 +114,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -140,13 +140,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -166,14 +166,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -267,7 +267,7 @@ check "schema_docs" {
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 }
 
@@ -304,11 +304,11 @@ check "region_argument" {
 }
 
 check "file_check" {
-  enabled = true
-  max_file_size = 500000
-  allow_extensions = [".html.markdown"]
+  enabled                   = true
+  max_file_size             = 500000
+  allow_extensions          = [".html.markdown"]
   allow_registry_extensions = [".md"]
-  inline_links = true
+  inline_links              = true
 }
 
 check "file_match" {
