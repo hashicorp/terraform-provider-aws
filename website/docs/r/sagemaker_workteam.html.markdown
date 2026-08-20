@@ -95,7 +95,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN assigned by AWS to this Workteam.
+* `arn` - ARN assigned by AWS to this Workteam.
 * `id` - The name of the Workteam.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
