@@ -25,7 +25,7 @@ data "aws_ssmcontacts_contact" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
+* `arn` - (Required) The ARN of the contact or escalation plan.
 
 ## Attribute Reference
 
