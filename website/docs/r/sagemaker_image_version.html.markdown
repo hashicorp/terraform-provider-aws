@@ -51,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN assigned by AWS to this Image Version.
+* `arn` - ARN assigned by AWS to this Image Version.
 * `version`- The version of the image. If not specified, the latest version is described.
 * `container_image` - The registry path of the container image that contains this image version.
 
