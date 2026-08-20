@@ -117,7 +117,7 @@ The following arguments are optional:
 
 ### source_analysis
 
-* `arn` - (Required) The ARN of the resource.
+* `arn` - (Required) ARN of the resource.
 * `data_set_references` - (Required) A list of dataset references used as placeholders in the template. See [data_set_references](#data_set_references).
 
 ### data_set_references
@@ -127,7 +127,7 @@ The following arguments are optional:
 
 ### source_template
 
-* `arn` - (Required) The ARN of the resource.
+* `arn` - (Required) ARN of the resource.
 
 ### definition
 
