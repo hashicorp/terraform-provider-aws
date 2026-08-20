@@ -339,7 +339,7 @@ If the KMS key is a multi-Region primary key with replicas, the waiting period b
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the key.
+* `arn` - ARN of the key.
 * `key_id` - The globally unique identifier for the key.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
