@@ -135,7 +135,7 @@ resource "aws_ssmcontacts_rotation" "example" {
 
 The following arguments are required:
 
-* `contact_ids` - (Required) Amazon Resource Names (ARNs) of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
+* `contact_ids` - (Required) ARNs of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
 * `name` - (Required) The name for the rotation.
 * `time_zone_id` - (Required) The time zone to base the rotation’s activity on in Internet Assigned Numbers Authority (IANA) format.
 * `recurrence` - (Required) Information about when an on-call rotation is in effect and how long the rotation period lasts. Exactly one of either `daily_settings`, `monthly_settings`, or `weekly_settings` must be populated. See [Recurrence](#recurrence) for more details.
@@ -150,7 +150,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the rotation.
+* `arn` - The ARN of the rotation.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Recurrence
@@ -213,7 +213,7 @@ resource "aws_ssmcontacts_rotation" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the SSM Contacts rotation.
+- `arn` (String) ARN of the SSM Contacts rotation.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSMContacts Rotation using the `arn`. For example:
 
