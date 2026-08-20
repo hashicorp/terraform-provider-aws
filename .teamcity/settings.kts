@@ -135,7 +135,7 @@ class PullRequest(terraformVersion: String) : BuildType({
         text("TERRAFORM_CORE_VERSION", terraformVersion)
 
         text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
-        text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
+        // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
     }
 
     vcs {
@@ -182,7 +182,6 @@ class PullRequest(terraformVersion: String) : BuildType({
             publish = true
             rules = """
                 .cache/go-mod
-                .cache/go-build
             """.trimIndent()
         }
 
