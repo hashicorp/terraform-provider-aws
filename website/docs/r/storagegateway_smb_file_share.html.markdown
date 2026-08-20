@@ -43,20 +43,20 @@ resource "aws_storagegateway_smb_file_share" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
+* `gateway_arn` - (Required) ARN of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
 * `vpc_endpoint_dns_name` - (Optional) The DNS name of the VPC endpoint for S3 private link.
 * `bucket_region` - (Optional) The region of the S3 buck used by the file share. Required when specifying a `vpc_endpoint_dns_name`.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
 * `admin_user_list` - (Optional) A list of users in the Active Directory that have admin access to the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `authentication` - (Optional) The authentication method that users use to access the file share. Defaults to `ActiveDirectory`. Valid values: `ActiveDirectory`, `GuestAccess`.
-* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch Log Group used for the audit logs.
+* `audit_destination_arn` - (Optional) The ARN of the CloudWatch Log Group used for the audit logs.
 * `default_storage_class` - (Optional) The default [storage class](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-DefaultStorageClass) for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`.
 * `file_share_name` - (Optional) The name of the file share. Must be set if an S3 prefix name is set in `location_arn`.
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `invalid_user_list` - (Optional) A list of users in the Active Directory that are not allowed to access the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
-* `kms_key_arn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
+* `kms_key_arn` - (Optional) ARN for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
 * `object_acl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `oplocks_enabled` - (Optional) Boolean to indicate Opportunistic lock (oplock) status. Defaults to `true`.
 * `cache_attributes` - (Optional) Refresh cache information. see [`cache_attributes` Block](#cache_attributes-block) for more details.
@@ -83,8 +83,8 @@ The `cache_attributes` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the SMB File Share.
-* `arn` - Amazon Resource Name (ARN) of the SMB File Share.
+* `id` - ARN of the SMB File Share.
+* `arn` - ARN of the SMB File Share.
 * `fileshare_id` - ID of the SMB File Share.
 * `path` - File share path used by the NFS client to identify the mount point.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_smb_file_share` using the SMB File Share Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_smb_file_share` using the SMB File Share ARN. For example:
 
 ```terraform
 import {
@@ -108,7 +108,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_storagegateway_smb_file_share` using the SMB File Share Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_smb_file_share` using the SMB File Share ARN. For example:
 
 ```console
 % terraform import aws_storagegateway_smb_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678
