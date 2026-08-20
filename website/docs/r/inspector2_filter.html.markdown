@@ -61,7 +61,7 @@ The `filter_criteria` configuration block supports the following attributes:
 * `code_vulnerability_file_path` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `component_id` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `component_type` - (Optional) The type of the component. [Documented below](#string-filter).
-* `ec2_instance_image_id` - (Optional) The ID of the AMI. [Documented below](#string-filter).
+* `ec2_instance_image_id` - (Optional) ID of the AMI. [Documented below](#string-filter).
 * `ec2_instance_subnet_id` - (Optional) The ID of the subnet. [Documented below](#string-filter).
 * `ec2_instance_vpc_id` - (Optional) The ID of the VPC. [Documented below](#string-filter).
 * `ecr_image_architecture` - (Optional) The architecture of the ECR image. [Documented below](#string-filter).
