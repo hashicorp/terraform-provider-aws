@@ -20,6 +20,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccMailManagerArchive_listSerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:   testAccMailManagerArchive_List_basic,
+		"includeResource": testAccMailManagerArchive_List_includeResource,
+		"regionOverride":  testAccMailManagerArchive_List_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func testAccMailManagerArchive_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
