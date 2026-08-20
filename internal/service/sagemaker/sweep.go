@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -54,6 +55,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_model_card", sweepModelCards)
 	awsv2.Register("aws_sagemaker_algorithm", sweepAlgorithms)
 	awsv2.Register("aws_sagemaker_training_job", sweepTrainingJobs)
+	awsv2.Register("aws_sagemaker_hyper_parameter_tuning_job", sweepHyperParameterTuningJobs)
 }
 
 func sweepAppImagesConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -772,6 +774,32 @@ func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceTrainingJob, client,
 				framework.NewAttribute("training_job_name", aws.ToString(v.TrainingJobName))),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepHyperParameterTuningJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
+		log.Printf("[WARN] Skipping SageMaker AI Hyper Parameter Tuning Job sweep for region: %s", region)
+		return nil, nil
+	}
+	conn := client.SageMakerClient(ctx)
+	var input sagemaker.ListHyperParameterTuningJobsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sagemaker.NewListHyperParameterTuningJobsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.HyperParameterTuningJobSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newHyperParameterTuningJobResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.HyperParameterTuningJobName))))
 		}
 	}
 

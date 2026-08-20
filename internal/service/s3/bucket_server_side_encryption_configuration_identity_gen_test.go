@@ -67,7 +67,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_basic(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 
@@ -154,7 +154,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_regionOverride(t 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 

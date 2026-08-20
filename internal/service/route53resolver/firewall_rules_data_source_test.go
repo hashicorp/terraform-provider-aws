@@ -28,7 +28,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 		}
 	}
 
-	fqdn := acctest.RandomFQDomainName()
+	fqdn := acctest.RandomFQDomainName(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	action := "ALLOW"
 	priority := "100"

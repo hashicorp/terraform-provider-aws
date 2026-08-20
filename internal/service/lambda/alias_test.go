@@ -102,6 +102,14 @@ func TestAccLambdaAlias_disappears(t *testing.T) {
 					testAccCheckAliasExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceAlias(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -404,7 +412,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -427,7 +435,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -450,7 +458,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

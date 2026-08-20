@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_role: Retry `ConcurrentModificationException`s during role creation
-```

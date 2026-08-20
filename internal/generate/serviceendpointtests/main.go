@@ -34,9 +34,12 @@ func main() {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
-		case "arcregionswitch", // Resolver modifies URL
+		case "acm", // ServiceType is required
+			"agentregistry",           // No FIPS support
+			"arcregionswitch",         // Resolver modifies URL
 			"cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",            // Bearer auth token needs special handling
+			"devopsagent",             // Adds 'cp.' prefix
 			"location",                // Resolver modifies URL
 			"mwaa",                    // Resolver modifies URL
 			"neptunegraph",            // EndpointParameters has an additional parameter, ApiType

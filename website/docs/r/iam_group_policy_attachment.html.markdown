@@ -44,6 +44,34 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_group_policy_attachment.example
+  identity = {
+    group      = "test-group"
+    policy_arn = "arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+  }
+}
+
+resource "aws_iam_group_policy_attachment" "example" {
+  group      = "test-group"
+  policy_arn = "arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `group` (String) Name of the IAM group.
+* `policy_arn` (String) ARN of the IAM policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
 
 ```terraform

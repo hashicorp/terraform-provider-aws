@@ -8,7 +8,7 @@ package xray_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/xray/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +23,7 @@ import (
 func TestAccXRaySamplingRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -209,7 +209,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -280,7 +280,7 @@ func TestAccXRaySamplingRule_Tags_null(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -347,7 +347,7 @@ func TestAccXRaySamplingRule_Tags_emptyMap(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -432,7 +432,7 @@ func TestAccXRaySamplingRule_Tags_addOnUpdate(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -525,7 +525,7 @@ func TestAccXRaySamplingRule_Tags_EmptyTag_onCreate(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -666,7 +666,7 @@ func TestAccXRaySamplingRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -759,7 +759,7 @@ func TestAccXRaySamplingRule_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -944,7 +944,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_providerOnly(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1108,7 +1108,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1288,7 +1288,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_overlapping(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1382,7 +1382,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_updateToProviderOnly(t *testing.T)
 func TestAccXRaySamplingRule_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1475,7 +1475,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_updateToResourceOnly(t *testing.T)
 func TestAccXRaySamplingRule_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1544,7 +1544,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1605,7 +1605,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T)
 func TestAccXRaySamplingRule_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1671,7 +1671,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_nullOverlappingResourceTag(t *test
 func TestAccXRaySamplingRule_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1737,7 +1737,7 @@ func TestAccXRaySamplingRule_Tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 func TestAccXRaySamplingRule_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1796,7 +1796,7 @@ func TestAccXRaySamplingRule_Tags_ComputedTag_onCreate(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1897,7 +1897,7 @@ func TestAccXRaySamplingRule_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1988,7 +1988,7 @@ func TestAccXRaySamplingRule_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2154,7 +2154,7 @@ func TestAccXRaySamplingRule_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 func TestAccXRaySamplingRule_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v types.SamplingRule
+	var v awstypes.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

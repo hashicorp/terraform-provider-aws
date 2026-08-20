@@ -45,94 +45,96 @@ func resourceEndpoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"direction": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ResolverEndpointDirection](),
-			},
-			"host_vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 2,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IsIPAddress,
-						},
-						"ipv6": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IsIPv6Address,
-						},
-						"ip_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSubnetID: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"direction": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResolverEndpointDirection](),
+				},
+				"host_vpc_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 2,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IsIPAddress,
+							},
+							"ipv6": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IsIPv6Address,
+							},
+							"ip_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
+					Set: endpointHashIPAddress,
 				},
-				Set: endpointHashIPAddress,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-			"resolver_endpoint_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ResolverEndpointType](),
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"protocols": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MinItems: 1,
-				MaxItems: 2,
-				Elem: &schema.Schema{
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validResolverName,
+				},
+				"resolver_endpoint_type": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResolverEndpointType](),
 				},
-			},
-			"rni_enhanced_metrics_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_name_server_metrics_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"protocols": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					MinItems: 1,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+					},
+				},
+				"rni_enhanced_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_name_server_metrics_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

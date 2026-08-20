@@ -53,7 +53,7 @@
     "autoflex.source.path": "AllowedMethods",
     "autoflex.source.type": "*github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
     "autoflex.target.path": "AllowedMethods",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel·160]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel·164]"
   },
   {
     "@level": "trace",

@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -211,7 +212,7 @@ func resourceQueue() *schema.Resource {
 
 		CustomizeDiff: resourceQueueCustomizeDiff,
 
-		Schema: queueSchema,
+		Schema: maps.Clone(queueSchema),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),
@@ -298,6 +299,12 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s): %s", d.Id(), err)
 	}
+
+	return resourceQueueFlatten(d, output)
+}
+
+func resourceQueueFlatten(d *schema.ResourceData, output map[types.QueueAttributeName]string) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	name, err := queueNameFromURL(d.Id())
 	if err != nil {

@@ -24,4 +24,7 @@ var (
 	FindScheduleByTwoPartKey                  = findScheduleByTwoPartKey
 	FindTag                                   = findTag
 	FindTrafficSourceAttachmentByThreePartKey = findTrafficSourceAttachmentByThreePartKey
+
+	InstanceHealthStatusHealthy = instanceHealthStatusHealthy
+	TagResourceTypeGroup        = tagResourceTypeGroup
 )

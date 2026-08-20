@@ -151,7 +151,7 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 	for _, tc := range invalidCases {
 		_, errors := tfelb.ValidAccessLogsInterval(tc.Value, names.AttrInterval)
 		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
+			t.Fatalf("Expected %v to trigger a validation error.", tc.Value)
 		}
 	}
 }

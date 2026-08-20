@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +45,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
+													"selected_field_option": sdkschema.StringEnumSchema[awstypes.SelectedFieldOptions](sdkschema.AttrOptional),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -72,7 +73,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
+																"target_visual_option": sdkschema.StringEnumSchema[awstypes.TargetVisualOptions](sdkschema.AttrOptional),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Optional: true,
@@ -193,8 +194,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
-																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
+																"select_all_value_options": sdkschema.StringEnumSchema[awstypes.SelectAllValueOptions](sdkschema.AttrOptional),
+																"source_field":             sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
 																"source_parameter_name": {
 																	Type:     schema.TypeString,
 																	Optional: true,
@@ -215,8 +216,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
-										"url_template": stringLenBetweenSchema(attrRequired, 1, 2048),
+										"url_target":   sdkschema.StringEnumSchema[awstypes.URLTargetConfiguration](sdkschema.AttrRequired),
+										"url_template": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 									},
 								},
 							},
@@ -224,9 +225,168 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 					},
 				},
 				"custom_action_id": idSchema(),
-				names.AttrName:     stringLenBetweenSchema(attrRequired, 1, 256),
-				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
-				names.AttrStatus:   stringEnumSchema[awstypes.Status](attrRequired),
+				names.AttrName:     sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 256),
+				"trigger":          sdkschema.StringEnumSchema[awstypes.VisualCustomActionTrigger](sdkschema.AttrRequired),
+				names.AttrStatus:   sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrRequired),
+			},
+		},
+	}
+}
+
+func visualCustomActionsDataSourceSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_operations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomActionOperation.html
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionFilterOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"selected_fields_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterOperationSelectedFieldsConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"selected_field_option": sdkschema.StringEnumDataSourceSchema[awstypes.SelectedFieldOptions](),
+													"selected_fields": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+												},
+											},
+										},
+										"target_visuals_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterOperationTargetVisualsConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"same_sheet_target_visual_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SameSheetTargetVisualConfiguration.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"target_visual_option": sdkschema.StringEnumDataSourceSchema[awstypes.TargetVisualOptions](),
+																"target_visuals": {
+																	Type:     schema.TypeSet,
+																	Computed: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"navigation_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionNavigationOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"local_navigation_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LocalNavigationConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_sheet_id": idDataSourceSchema(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"set_parameters_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionSetParametersOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"parameter_value_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SetParameterValueConfiguration.html
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"destination_parameter_name": parameterNameDataSourceSchema(),
+													names.AttrValue: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DestinationParameterValueConfiguration.html
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"custom_values_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomValuesConfiguration.html
+																	Type:     schema.TypeList,
+																	Computed: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"custom_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomParameterValues.html
+																				Type:     schema.TypeList,
+																				Computed: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"date_time_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeString},
+																						},
+																						"decimal_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeFloat},
+																						},
+																						"integer_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeInt},
+																						},
+																						"string_values": {
+																							Type:     schema.TypeList,
+																							Computed: true,
+																							Elem:     &schema.Schema{Type: schema.TypeString},
+																						},
+																					},
+																				},
+																			},
+																			"include_null_value": boolComputedOnly(),
+																		},
+																	},
+																},
+																"select_all_value_options": sdkschema.StringEnumDataSourceSchema[awstypes.SelectAllValueOptions](),
+																"source_field":             stringComputedOnly(),
+																"source_parameter_name":    stringComputedOnly(),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"url_operation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomActionURLOperation.html
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"url_target":   sdkschema.StringEnumDataSourceSchema[awstypes.URLTargetConfiguration](),
+										"url_template": stringComputedOnly(),
+									},
+								},
+							},
+						},
+					},
+				},
+				"custom_action_id": idDataSourceSchema(),
+				names.AttrName:     stringComputedOnly(),
+				"trigger":          sdkschema.StringEnumDataSourceSchema[awstypes.VisualCustomActionTrigger](),
+				names.AttrStatus:   sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 			},
 		},
 	}

@@ -253,8 +253,8 @@ resource "aws_lb_listener_rule" "transform" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+).test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }
@@ -390,7 +390,7 @@ Condition Blocks (for `condition`) support the following:
 * `http_request_method` - (Optional) Contains a single `values` item which is a list of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
 * `path_pattern` - (Optional) Path patterns to match against the request URL. [Path Pattern block](#path-pattern-blocks) fields documented below.
 * `query_string` - (Optional) Query strings to match. [Query String block](#query-string-blocks) fields documented below.
-* `source_ip` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
+* `source_ip` - (Optional) Source IP address to match. For ALB, use `values` to specify CIDR ranges. For NLB, use `ip_address_type` to match the IP address type (`ipv4` or `ipv6`). [Source IP block](#source-ip-blocks) fields documented below.
 
 ~> **NOTE::** Exactly one of `host_header`, `http_header`, `http_request_method`, `path_pattern`, `query_string` or `source_ip` must be set per condition.
 
@@ -399,7 +399,7 @@ Condition Blocks (for `condition`) support the following:
 Host Header Blocks (for `host_header`) support the following:
 
 * `regex_values` - (Optional) List of regular expressions to compare against the host header. The maximum length of each string is 128 characters. Conflicts with `values`.
-* `values` - (Optional) List of host header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Conflicts with `regex_values`.
+* `values` - (Optional) List of host header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. To match host headers containing a non-standard port (for example, `example.com:8443`), use `regex_values`. Conflicts with `regex_values`.
 
 #### HTTP Header Blocks
 
@@ -426,6 +426,13 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
+
+#### Source IP Blocks
+
+Source IP Blocks (for `source_ip`) support the following:
+
+* `values` - (Optional) List of source IP addresses in CIDR format for Application Load Balancers. Both IPv4 and IPv6 addresses can be used. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
+* `ip_address_type` - (Optional) IP address type for Network Load Balancers. Valid values are `ipv4` and `ipv6`.
 
 #### Transform Blocks
 

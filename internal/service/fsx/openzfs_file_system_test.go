@@ -63,6 +63,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address_range", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "preferred_subnet_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
@@ -168,6 +169,14 @@ func TestAccFSxOpenZFSFileSystem_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1256,6 +1265,39 @@ func TestAccFSxOpenZFSFileSystem_intelligentTiering(t *testing.T) {
 	})
 }
 
+func TestAccFSxOpenZFSFileSystem_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_networkType(rName, string(awstypes.NetworkTypeDual)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDual)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckOpenZFSFileSystemExists(ctx context.Context, t *testing.T, n string, v *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1325,6 +1367,10 @@ func testAccCheckOpenZFSFileSystemRecreated(i, j *awstypes.FileSystem) resource.
 
 func testAccOpenZFSFileSystemConfig_baseSingleAZ(rName string) string {
 	return acctest.ConfigVPCWithSubnets(rName, 1)
+}
+
+func testAccOpenZFSFileSystemConfig_baseSingleAZIPv6(rName string) string {
+	return acctest.ConfigVPCWithSubnetsIPv6(rName, 1)
 }
 
 func testAccOpenZFSFileSystemConfig_baseMultiAZ(rName string) string {
@@ -2011,4 +2057,18 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, rName, sizingMode))
+}
+
+func testAccOpenZFSFileSystemConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZIPv6(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
+  storage_capacity    = 64
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+
+  network_type = "%[1]s"
+}
+`, networkType))
 }

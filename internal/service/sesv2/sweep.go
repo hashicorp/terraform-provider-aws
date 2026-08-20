@@ -85,7 +85,7 @@ func sweepTenants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 		for _, v := range page.Tenants {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newTenantResource, client,
-				framework.NewAttribute("tenant_id", aws.ToString(v.TenantId))))
+				framework.NewAttribute("tenant_name", aws.ToString(v.TenantName))))
 		}
 	}
 

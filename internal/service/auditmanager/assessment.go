@@ -37,13 +37,17 @@ const iamPropagationTimeout = 2 * time.Minute
 
 // @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(importIgnore="roles")
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.Assessment")
 func newAssessmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &assessmentResource{}, nil
 }
 
 type assessmentResource struct {
 	framework.ResourceWithModel[assessmentResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *assessmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

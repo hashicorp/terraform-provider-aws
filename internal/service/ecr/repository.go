@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,99 +50,101 @@ func resourceRepository() *schema.Resource {
 
 		CustomizeDiff: validateImageTagMutabilityExclusionFilterUsage,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          types.EncryptionTypeAes256,
-							ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          types.EncryptionTypeAes256,
+								ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					ForceNew:         true,
+				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"image_scanning_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"scan_on_push": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				"image_tag_mutability": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.ImageTagMutabilityMutable,
+					ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
+				},
+				"image_tag_mutability_exclusion_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFilter: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+									validation.ToDiagFunc(validation.StringMatch(
+										regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
+										"must contain only letters, numbers, and special characters (._*-)",
+									)),
+									validateImageTagMutabilityExclusionFilter(),
+								),
+							},
+							"filter_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+							},
 						},
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				ForceNew:         true,
-			},
-			names.AttrForceDelete: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"image_scanning_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"scan_on_push": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"image_tag_mutability": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ImageTagMutabilityMutable,
-				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
-			},
-			"image_tag_mutability_exclusion_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFilter: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
-								validation.ToDiagFunc(validation.StringMatch(
-									regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
-									"must contain only letters, numbers, and special characters (._*-)",
-								)),
-								validateImageTagMutabilityExclusionFilter(),
-							),
-						},
-						"filter_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
-						},
-					},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"repository_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -326,9 +327,7 @@ func findRepositoryByName(ctx context.Context, conn *ecr.Client, name string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.RepositoryName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

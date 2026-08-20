@@ -1325,6 +1325,46 @@ func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGa
 	return nil, err
 }
 
+func waitLocalGatewayRouteTableVIFGroupAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
+		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
+		Refresh: statusLocalGatewayRouteTableVIFGroupAssociation(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLocalGatewayRouteTableVIFGroupAssociationDisassociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
+		Target:  []string{},
+		Refresh: statusLocalGatewayRouteTableVIFGroupAssociation(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVirtualInterfaceGroupAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
 	const (
 		timeout = 5 * time.Minute
@@ -1493,7 +1533,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 	return nil, err
 }
 
-func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusUnassigning),
 		Target:  []string{},
@@ -1506,6 +1546,29 @@ func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natG
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
 			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+	}
+
+	return err
+}
+
+func waitNATGatewaySecondaryPrivateIPAddressCount(ctx context.Context, conn *ec2.Client, natGatewayID string, expectedCount int, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"pending"},
+		Target:                    []string{"ready"},
+		Refresh:                   statusNATGatewaySecondaryPrivateIPAddressCount(conn, natGatewayID, expectedCount),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 4,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		for _, natGatewayAddress := range output.NatGatewayAddresses {
+			if !aws.ToBool(natGatewayAddress.IsPrimary) && natGatewayAddress.Status == awstypes.NatGatewayAddressStatusFailed {
+				retry.SetLastError(err, errors.New(aws.ToString(natGatewayAddress.FailureMessage)))
+				break
+			}
 		}
 
 		return output, err
@@ -3081,7 +3144,7 @@ func waitVolumeCreated(ctx context.Context, conn *ec2.Client, id string, timeout
 	return nil, err
 }
 
-func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
+func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VolumeStateDeleting),
 		Target:     []string{},
@@ -3271,23 +3334,20 @@ func waitVPCEndpointConnectionAccepted(ctx context.Context, conn *ec2.Client, se
 	return nil, err
 }
 
-func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*awstypes.VpcEndpoint, error) {
+func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
-		Target:     []string{},
-		Refresh:    statusVPCEndpoint(conn, vpcEndpointID),
-		Timeout:    timeout,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Pending:                   enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
+		Target:                    []string{},
+		Refresh:                   statusVPCEndpoint(conn, vpcEndpointID),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitVPCEndpointRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {

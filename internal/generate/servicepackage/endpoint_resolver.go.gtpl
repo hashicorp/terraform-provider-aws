@@ -7,6 +7,7 @@ package {{ .ProviderPackage }}
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 var _ {{ .GoV2Package }}.EndpointResolverV2 = resolverV2{}
@@ -33,6 +33,7 @@ func newEndpointResolverV2() resolverV2 {
 
 func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }}.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
+{{- if .EndpointFIPSSupport }}
 	useFIPS := aws.ToBool(params.UseFIPS)
 
 	if eps := params.Endpoint; aws.ToString(eps) != "" {
@@ -67,7 +68,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 		resolver := &net.Resolver{}
 		_, err = resolver.LookupHost(lookupCtx, hostname)
 		if err != nil {
-			if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
+			if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
 				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
 					"tf_aws.hostname": hostname,
 				})
@@ -80,6 +81,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 			return endpoint, smarterr.NewError(err)
 		}
 	}
+{{- end }}
 
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }

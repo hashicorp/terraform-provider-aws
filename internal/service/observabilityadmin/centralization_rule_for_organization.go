@@ -163,6 +163,14 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 																Optional:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionConflictResolutionStrategy](),
 															},
+															"encryption_scope": schema.StringAttribute{
+																Optional:   true,
+																Computed:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionScope](),
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.UseStateForUnknown(),
+																},
+															},
 															"encryption_strategy": schema.StringAttribute{
 																Required:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
@@ -170,6 +178,32 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"destination_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[destinationMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"backup_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[metricsBackupConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrRegion: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	fwvalidators.AWSRegion(),
+																},
 															},
 														},
 													},
@@ -246,6 +280,23 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 											},
 										},
 									},
+									"source_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sourceMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metrics_selection_criteria": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -295,6 +346,19 @@ func (r *centralizationRuleForOrganizationResource) Create(ctx context.Context, 
 
 	if _, err := waitCentralizationRuleForOrganizationHealthy(ctx, conn, ruleName, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	// The Create response only returns the rule ARN, so read the rule back to
+	// populate Computed attributes (e.g. encryption_scope) that the service defaults.
+	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, ruleName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Centralization")))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -479,15 +543,17 @@ type centralizationRuleModel struct {
 }
 
 type centralizationRuleDestinationModel struct {
-	Account                      types.String                                                       `tfsdk:"account"`
-	DestinationLogsConfiguration fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel] `tfsdk:"destination_logs_configuration"`
-	Region                       types.String                                                       `tfsdk:"region"`
+	Account                         types.String                                                          `tfsdk:"account"`
+	DestinationLogsConfiguration    fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel]    `tfsdk:"destination_logs_configuration"`
+	DestinationMetricsConfiguration fwtypes.ListNestedObjectValueOf[destinationMetricsConfigurationModel] `tfsdk:"destination_metrics_configuration"`
+	Region                          types.String                                                          `tfsdk:"region"`
 }
 
 type centralizationRuleSourceModel struct {
-	Regions                 fwtypes.SetOfString                                           `tfsdk:"regions"`
-	Scope                   types.String                                                  `tfsdk:"scope"`
-	SourceLogsConfiguration fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel] `tfsdk:"source_logs_configuration"`
+	Regions                    fwtypes.SetOfString                                              `tfsdk:"regions"`
+	Scope                      types.String                                                     `tfsdk:"scope"`
+	SourceLogsConfiguration    fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel]    `tfsdk:"source_logs_configuration"`
+	SourceMetricsConfiguration fwtypes.ListNestedObjectValueOf[sourceMetricsConfigurationModel] `tfsdk:"source_metrics_configuration"`
 }
 
 type destinationLogsConfigurationModel struct {
@@ -513,6 +579,19 @@ type logGroupNameConfigurationModel struct {
 
 type logsEncryptionConfigurationModel struct {
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
+	EncryptionScope                      fwtypes.StringEnum[awstypes.EncryptionScope]                      `tfsdk:"encryption_scope"`
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
+}
+
+type destinationMetricsConfigurationModel struct {
+	BackupConfiguration fwtypes.ListNestedObjectValueOf[metricsBackupConfigurationModel] `tfsdk:"backup_configuration"`
+}
+
+type metricsBackupConfigurationModel struct {
+	Region types.String `tfsdk:"region"`
+}
+
+type sourceMetricsConfigurationModel struct {
+	MetricsSelectionCriteria types.String `tfsdk:"metrics_selection_criteria"`
 }

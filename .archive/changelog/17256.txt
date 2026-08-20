@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_glue_crawler: Use standard retry timeout for IAM eventual consistency and retry on LakeFormation permissions errors
-```

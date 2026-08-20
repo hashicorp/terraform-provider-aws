@@ -29,7 +29,7 @@ resource "aws_ecr_replication_configuration" "example" {
 }
 ```
 
-## Multiple Region Usage
+### Multiple Region Usage
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -53,7 +53,7 @@ resource "aws_ecr_replication_configuration" "example" {
 }
 ```
 
-## Repository Filter Usage
+### Repository Filter Usage
 
 ```terraform
 data "aws_caller_identity" "current" {}

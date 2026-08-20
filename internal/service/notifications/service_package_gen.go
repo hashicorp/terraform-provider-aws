@@ -31,25 +31,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newChannelAssociationResource,
 			TypeName: "aws_notifications_channel_association",
 			Name:     "Channel Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newEventRuleResource,
 			TypeName: "aws_notifications_event_rule",
 			Name:     "Event Rule",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newManagedNotificationAccountContactAssociationResource,
 			TypeName: "aws_notifications_managed_notification_account_contact_association",
 			Name:     "Managed Notification Account Contact Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newManagedNotificationAdditionalChannelAssociationResource,
 			TypeName: "aws_notifications_managed_notification_additional_channel_association",
 			Name:     "Managed Notification Additional Channel Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newNotificationConfigurationResource,
@@ -58,25 +58,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region: inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newNotificationHubResource,
 			TypeName: "aws_notifications_notification_hub",
 			Name:     "Notification Hub",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newOrganizationalUnitAssociationResource,
 			TypeName: "aws_notifications_organizational_unit_association",
 			Name:     "Organizational Unit Association",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newOrganizationsAccessResource,
 			TypeName: "aws_notifications_organizations_access",
 			Name:     "Organizations Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
 }

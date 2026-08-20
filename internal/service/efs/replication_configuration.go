@@ -43,67 +43,69 @@ func resourceReplicationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrFileSystemID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestination: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zone_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidRegionName,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"original_source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"source_file_system_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"original_source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"source_file_system_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

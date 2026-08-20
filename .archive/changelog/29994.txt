@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route: Allow `destination_ipv6_cidr_block` to be specified for a `vpc_endpoint_id` target
-```

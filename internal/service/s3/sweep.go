@@ -31,9 +31,12 @@ func RegisterSweepers() {
 		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",
 		"aws_s3control_multi_region_access_point",
+		"aws_s3files_file_system",
 	)
 
-	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)
+	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets,
+		"aws_s3_object_directory_bucket",
+	)
 
 	awsv2.Register("aws_s3_object", sweepObjects)
 
@@ -241,7 +244,7 @@ func sweepDirectoryBuckets(ctx context.Context, client *conns.AWSClient) ([]swee
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(bucket.Name)),
+				framework.NewAttribute(names.AttrBucket, aws.ToString(bucket.Name)),
 			))
 		}
 	}
