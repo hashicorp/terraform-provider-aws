@@ -29,7 +29,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the serverless cache.
+* `arn` - ARN of the serverless cache.
 * `cache_usage_limits` - The cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
 * `create_time` - Timestamp of when the serverless cache was created.
 * `daily_snapshot_time` - The daily time that snapshots will be created from the new serverless cache. Only available for engine types `"redis"` and `"valkey"`.
