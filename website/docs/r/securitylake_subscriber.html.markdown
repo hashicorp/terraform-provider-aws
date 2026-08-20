@@ -113,8 +113,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the subscriber.
 * `id` - The Subscriber ID of the subscriber.
 * `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
-* `resource_share_arn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
-* `role_arn` - The Amazon Resource Name (ARN) specifying the role of the subscriber.
+* `resource_share_arn` - The ARN which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
+* `role_arn` - The ARN specifying the role of the subscriber.
 * `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
 * `subscriber_status` - The subscriber status of the Amazon Security Lake subscriber account.
 * `resource_share_name` - The name of the resource share.
