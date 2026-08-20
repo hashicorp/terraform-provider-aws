@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the event API Destination.
+* `arn` - The ARN of the event API Destination.
 
 ## Import
 
