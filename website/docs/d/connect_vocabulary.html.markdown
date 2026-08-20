@@ -45,7 +45,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Vocabulary.
+* `arn` - ARN of the Vocabulary.
 * `content` - The content of the custom vocabulary in plain-text format with a table of values. Each row in the table represents a word or a phrase, described with Phrase, IPA, SoundsLike, and DisplayAs fields. Separate the fields with TAB characters. For more information, see [Create a custom vocabulary using a table](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary.html#create-vocabulary-table).
 * `failure_reason` - The reason why the custom vocabulary was not created.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the vocabulary
