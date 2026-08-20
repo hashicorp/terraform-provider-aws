@@ -183,6 +183,24 @@ type "action" {
 
 # ─── Check blocks ───────────────────────────────────────────────────────────
 
+check "banned_glosses" {
+  enabled = true
+
+  banned_glosses = {
+    "Amazon Machine Image"     = "AMI"
+    "Amazon Resource Name"     = "ARN"
+    "Amazon Resource Names"    = "ARNs"
+    "Elastic Compute Cloud"    = "EC2"
+    "Key Management Service"   = "KMS"
+    "Simple Storage Service"   = "S3"
+    "Transport Layer Security" = "TLS"
+    "Virtual Private Cloud"    = "VPC"
+  }
+
+  skip_frontmatter = true 
+  severity         = "error"
+}
+
 check "schema_docs" {
   enabled = true
 
