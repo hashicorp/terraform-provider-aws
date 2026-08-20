@@ -408,6 +408,13 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 				})
 				continue
 			}
+			if v.EvaluatorType == awstypes.EvaluatorTypeThirdParty {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"skip_reason":  "Third-party evaluator",
+					"evaluator_id": aws.ToString(v.EvaluatorId),
+				})
+				continue
+			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
 				framework.NewAttribute("evaluator_id", aws.ToString(v.EvaluatorId))),
