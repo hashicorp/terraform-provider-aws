@@ -32,5 +32,5 @@ This data source exports the following attributes in addition to the arguments a
 * `client_subnets` - The list of subnets in the client VPC.
 * `security_groups` - The security groups attached to the ENIs for the broker nodes.
 * `tags` - Map of key-value pairs assigned to the VPC Connection.
-* `target_cluster_arn` - The Amazon Resource Name (ARN) of the cluster.
+* `target_cluster_arn` - The ARN of the cluster.
 * `vpc_id` - The VPC ID of the remote client.
