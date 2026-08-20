@@ -140,7 +140,7 @@ This resource supports the following arguments:
 * `cloudwatch_alarm_region` - (Optional) The region that the CloudWatch alarm was created in.
 * `insufficient_data_health_status` - (Optional) The status of the health check when CloudWatch has insufficient data about the state of associated alarm. Valid values are `Healthy` , `Unhealthy` and `LastKnownStatus`.
 * `regions` - (Optional) List of AWS Regions from which Amazon Route 53 health checkers check the specified endpoint. Valid values are `us-east-1`, `us-west-1`, `us-west-2`, `eu-west-1`, `ap-southeast-1`, `ap-southeast-2`, `ap-northeast-1`, and `sa-east-1`. If not specified, all of the regions listed under **Valid values** are used by default. Once this argument is set, removing it has no effect.
-* `routing_control_arn` - (Optional) The ARN for the Route 53 Application Recovery Controller routing control. This is used when health check type is `RECOVERY_CONTROL`
+* `routing_control_arn` - (Optional) ARN for the Route 53 Application Recovery Controller routing control. This is used when health check type is `RECOVERY_CONTROL`
 * `tags` - (Optional) A map of tags to assign to the health check. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update of the CloudWatch alarm arguments. Use this argument to synchronize the health check when an alarm is changed. See example above.
 
@@ -148,7 +148,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Health Check.
+* `arn` - ARN of the Health Check.
 * `id` - The id of the health check
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
