@@ -178,7 +178,7 @@ class PullRequest(terraformVersion: String) : BuildType({
         }
 
         buildCache {
-            name = "terraform-provider-aws-build-cache"
+            name = "terraform-provider-aws-mod-cache"
             use = true
             publish = true
             rules = """
