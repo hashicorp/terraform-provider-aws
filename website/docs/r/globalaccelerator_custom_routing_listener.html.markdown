@@ -39,7 +39,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 
 This resource supports the following arguments:
 
-* `accelerator_arn` - (Required) The Amazon Resource Name (ARN) of a custom routing accelerator.
+* `accelerator_arn` - (Required) The ARN of a custom routing accelerator.
 * `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
 
 `port_range` supports the following arguments:
@@ -51,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the custom routing listener.
+* `id` - The ARN of the custom routing listener.
 
 ## Timeouts
 
@@ -82,7 +82,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing listener.
+- `arn` (String) ARN of the Global Accelerator custom routing listener.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing listeners using the `id`. For example:
 
