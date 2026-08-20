@@ -222,7 +222,7 @@ This resource supports the following arguments:
 
 ### certificate_based_auth_properties
 
-* `certificate_authority_arn` - (Optional) The ARN of the certificate manager private certificate authority (ACM-PCA) that is used for certificate-based authentication.
+* `certificate_authority_arn` - (Optional) ARN of the certificate manager private certificate authority (ACM-PCA) that is used for certificate-based authentication.
 * `status` - (Optional) Status of certificate-based authentication. Default `DISABLED`.
 
 ### saml_properties
