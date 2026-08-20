@@ -31,7 +31,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the delegated administrator.
-* `arn` - The ARN of the delegated administrator's account.
+* `arn` - ARN of the delegated administrator's account.
 * `delegation_enabled_date` - The date when the account was made a delegated administrator.
 * `email` - The email address that is associated with the delegated administrator's AWS account.
 * `joined_method` - The method by which the delegated administrator's account joined the organization.
