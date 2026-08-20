@@ -1,11 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-ephemeral "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   identifier          = var.rName
   allocated_storage   = 10
@@ -18,6 +13,11 @@ resource "aws_db_instance" "test" {
   username            = "tfacctest"
 
   tags = var.resource_tags
+}
+
+ephemeral "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
 }
 
 # testAccInstanceConfig_orderableClassMySQL

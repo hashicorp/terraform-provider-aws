@@ -1,13 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-ephemeral "aws_secretsmanager_random_password" "test" {
-  region = var.region
-
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   region = var.region
 
@@ -20,6 +13,13 @@ resource "aws_db_instance" "test" {
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
   password_wo_version = 1
   username            = "tfacctest"
+}
+
+ephemeral "aws_secretsmanager_random_password" "test" {
+  region = var.region
+
+  password_length     = 20
+  exclude_punctuation = true
 }
 
 # testAccInstanceConfig_orderableClassMySQL

@@ -3,11 +3,6 @@
 
 provider "null" {}
 
-ephemeral "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
   identifier          = var.rName
   allocated_storage   = 10
@@ -22,6 +17,11 @@ resource "aws_db_instance" "test" {
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
+}
+
+ephemeral "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
 }
 
 # testAccInstanceConfig_orderableClassMySQL

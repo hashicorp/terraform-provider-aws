@@ -1,9 +1,3 @@
-ephemeral "aws_secretsmanager_random_password" "test" {
-{{- template "region" }}
-  password_length     = 20
-  exclude_punctuation = true
-}
-
 resource "aws_db_instance" "test" {
 {{- template "region" }}
   identifier          = var.rName
@@ -17,6 +11,12 @@ resource "aws_db_instance" "test" {
   username            = "tfacctest"
 
 {{- template "tags" . }}
+}
+
+ephemeral "aws_secretsmanager_random_password" "test" {
+{{- template "region" }}
+  password_length     = 20
+  exclude_punctuation = true
 }
 
 # testAccInstanceConfig_orderableClassMySQL
