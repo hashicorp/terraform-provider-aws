@@ -160,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### Gateway Network Interface
 
-* `ipv4_address` - The Internet Protocol version 4 (IPv4) address of the interface.
+* `ipv4_address` - The IP version 4 (IPv4) address of the interface.
 
 ## Timeouts
 
