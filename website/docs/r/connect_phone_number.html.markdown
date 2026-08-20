@@ -58,7 +58,7 @@ This resource supports the following arguments:
 * `description` - (Optional, Forces new resource) The description of the phone number.
 * `prefix` - (Optional, Forces new resource) The prefix of the phone number that is used to filter available phone numbers. If provided, it must contain `+` as part of the country code. Do not specify this argument when importing the resource.
 * `tags` - (Optional) Tags to apply to the Phone Number. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `target_arn` - (Required) The ARN for Amazon Connect instances that phone numbers are claimed to.
+* `target_arn` - (Required) ARN for Amazon Connect instances that phone numbers are claimed to.
 * `type` - (Required, Forces new resource) The type of phone number. Valid Values: `TOLL_FREE` | `DID`.
 
 ## Attribute Reference
