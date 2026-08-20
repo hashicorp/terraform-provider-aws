@@ -392,7 +392,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `array_properties` - (Optional) The array properties for the submitted job, such as the size of the array. The array size can be between 2 and 10,000. If you specify array properties for a job, it becomes an array job. This parameter is used only if the target is an AWS Batch job. Detailed below.
 * `container_overrides` - (Optional) The overrides that are sent to a container. Detailed below.
 * `depends_on` - (Optional) A list of dependencies for the job. A job can depend upon a maximum of 20 jobs. You can specify a SEQUENTIAL type dependency without specifying a job ID for array jobs so that each child array job completes sequentially, starting at index 0. You can also specify an N_TO_N type dependency with a job ID for array jobs. In that case, each index child of this job must wait for the corresponding index child of each dependency to complete before it can begin. Detailed below.
-* `job_definition` - (Required) The job definition used by this job. This value can be one of name, name:revision, or the ARN for the job definition. If name is specified without a revision then the latest active revision is used.
+* `job_definition` - (Required) Job definition used by this job. This value can be one of name, name:revision, or the ARN for the job definition. If name is specified without a revision then the latest active revision is used.
 * `job_name` - (Required) The name of the job. It can be up to 128 letters long.
 * `parameters` - (Optional) Additional parameters passed to the job that replace parameter substitution placeholders that are set in the job definition. Parameters are specified as a key and value pair mapping. Parameters included here override any corresponding parameter defaults from the job definition. Detailed below.
 * `retry_strategy` - (Optional) The retry strategy to use for failed jobs. When a retry strategy is specified here, it overrides the retry strategy defined in the job definition. Detailed below.
@@ -471,10 +471,10 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `container_override` - (Optional) One or more container overrides that are sent to a task. Detailed below.
 * `cpu` - (Optional) The cpu override for the task.
 * `ephemeral_storage` - (Optional) The ephemeral storage setting override for the task.  Detailed below.
-* `execution_role_arn` - (Optional) The ARN of the task execution IAM role override for the task.
+* `execution_role_arn` - (Optional) ARN of the task execution IAM role override for the task.
 * `inference_accelerator_override` - (Optional) List of Elastic Inference accelerator overrides for the task. Detailed below.
 * `memory` - (Optional) The memory override for the task.
-* `task_role_arn` - (Optional) The ARN of the IAM role that containers in this task can assume. All containers in this task are granted the permissions that are specified in this role.
+* `task_role_arn` - (Optional) ARN of the IAM role that containers in this task can assume. All containers in this task are granted the permissions that are specified in this role.
 
 ###### target_parameters.ecs_task_parameters.overrides.container_override Configuration Block
 
@@ -495,7 +495,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 ###### target_parameters.ecs_task_parameters.overrides.container_override.environment_file Configuration Block
 
 * `type` - (Optional) The file type to use. The only supported value is s3.
-* `value` - (Optional) The ARN of the Amazon S3 object containing the environment variable file.
+* `value` - (Optional) ARN of the Amazon S3 object containing the environment variable file.
 
 ###### target_parameters.ecs_task_parameters.overrides.container_override.resource_requirement Configuration Block
 
