@@ -111,7 +111,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN for the custom engine version.
+* `arn` - ARN for the custom engine version.
 * `create_time` - The date and time that the CEV was created.
 * `db_parameter_group_family` - The name of the DB parameter group family for the CEV.
 * `image_id` - The ID of the AMI that was created with the CEV.
