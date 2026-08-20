@@ -6,12 +6,13 @@ package bedrockagentcore
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -400,14 +401,16 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		}
 
 		for _, v := range page.Evaluators {
-			evaluatorID := aws.ToString(v.EvaluatorId)
-			if strings.HasPrefix(evaluatorID, "Builtin.") {
-				// Skip built-in evaluators, which cannot be deleted.
+			if v.EvaluatorType == awstypes.EvaluatorTypeBuiltin {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"skip_reason":  "Built-in evaluator",
+					"evaluator_id": aws.ToString(v.EvaluatorId),
+				})
 				continue
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
-				framework.NewAttribute("evaluator_id", evaluatorID)),
+				framework.NewAttribute("evaluator_id", aws.ToString(v.EvaluatorId))),
 			)
 		}
 	}
