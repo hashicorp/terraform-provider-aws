@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -27,6 +28,148 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestLifecycleConfigEqual(t *testing.T) {
+	t.Parallel()
+
+	rule := func(id string) types.LifecycleRule {
+		return types.LifecycleRule{
+			Expiration: &types.LifecycleExpiration{Days: aws.Int32(365)},
+			Filter:     &types.LifecycleRuleFilter{Prefix: aws.String("prefix/")},
+			ID:         aws.String(id),
+			Status:     types.ExpirationStatusEnabled,
+		}
+	}
+
+	// What the provider sends for an empty `filter {}` block.
+	emptyFilterRule := func(id string) types.LifecycleRule {
+		return types.LifecycleRule{
+			Expiration: &types.LifecycleExpiration{Days: aws.Int32(365)},
+			Filter:     &types.LifecycleRuleFilter{Prefix: aws.String("")},
+			ID:         aws.String(id),
+			Status:     types.ExpirationStatusEnabled,
+		}
+	}
+
+	// What some third-party implementations read back instead: no `Filter`, and
+	// the deprecated top-level `Prefix` element.
+	legacyPrefixRule := func(id, prefix string) types.LifecycleRule {
+		return types.LifecycleRule{
+			Expiration: &types.LifecycleExpiration{Days: aws.Int32(365)},
+			ID:         aws.String(id),
+			Prefix:     aws.String(prefix),
+			Status:     types.ExpirationStatusEnabled,
+		}
+	}
+
+	testCases := []struct {
+		TestName        string
+		ReadBackMinSize types.TransitionDefaultMinimumObjectSize
+		ReadBackRules   []types.LifecycleRule
+		WantMinSize     types.TransitionDefaultMinimumObjectSize
+		WantRules       []types.LifecycleRule
+		Expected        bool
+	}{
+		{
+			TestName:        "equal",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-1")},
+			Expected:        true,
+		},
+		{
+			TestName:        "different transition default minimum object size",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeVariesByStorageClass,
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-1")},
+			Expected:        false,
+		},
+		{
+			TestName:        "transition default minimum object size not read back",
+			ReadBackMinSize: "",
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-1")},
+			Expected:        true,
+		},
+		{
+			TestName:        "transition default minimum object size not read back, different rules",
+			ReadBackMinSize: "",
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-2")},
+			Expected:        false,
+		},
+		{
+			TestName:        "transition default minimum object size not requested",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     "",
+			WantRules:       []types.LifecycleRule{rule("rule-1")},
+			Expected:        false,
+		},
+		{
+			TestName:        "directory bucket",
+			ReadBackMinSize: "",
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     "",
+			WantRules:       []types.LifecycleRule{rule("rule-1")},
+			Expected:        true,
+		},
+		{
+			TestName:        "rules in a different order",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1"), rule("rule-2")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-2"), rule("rule-1")},
+			Expected:        true,
+		},
+		{
+			TestName:        "different number of rules",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			ReadBackRules:   []types.LifecycleRule{rule("rule-1")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{rule("rule-1"), rule("rule-2")},
+			Expected:        false,
+		},
+		{
+			TestName:        "empty filter read back as the legacy prefix element",
+			ReadBackMinSize: "",
+			ReadBackRules:   []types.LifecycleRule{legacyPrefixRule("rule-1", "")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{emptyFilterRule("rule-1")},
+			Expected:        true,
+		},
+		{
+			TestName:        "empty filter read back as the legacy prefix element, different rules",
+			ReadBackMinSize: "",
+			ReadBackRules:   []types.LifecycleRule{legacyPrefixRule("rule-1", "")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{emptyFilterRule("rule-2")},
+			Expected:        false,
+		},
+		{
+			TestName:        "non-empty legacy prefix is not an empty filter",
+			ReadBackMinSize: types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			ReadBackRules:   []types.LifecycleRule{legacyPrefixRule("rule-1", "prefix/")},
+			WantMinSize:     types.TransitionDefaultMinimumObjectSizeAllStorageClasses128k,
+			WantRules:       []types.LifecycleRule{emptyFilterRule("rule-1")},
+			Expected:        false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfs3.LifecycleConfigEqual(testCase.ReadBackMinSize, testCase.ReadBackRules, testCase.WantMinSize, testCase.WantRules), testCase.Expected; got != want {
+				t.Errorf("LifecycleConfigEqual() = %t, want %t", got, want)
+			}
+		})
+	}
+}
 
 func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)

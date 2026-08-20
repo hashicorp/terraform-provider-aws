@@ -433,7 +433,7 @@ func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, reque
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
 
 	data.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	data.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -546,7 +546,7 @@ func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, reque
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	flattenBucketLifecycleConfigurationResource(ctx, output, &new, &response.Diagnostics)
 
 	new.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	new.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -614,6 +614,19 @@ func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, 
 }
 
 func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {
+	// Some third-party S3 API implementations don't return the `x-amz-transition-default-minimum-object-size`
+	// response header. Retain the planned (Create, Update) or prior (Read) value in that case.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/43333.
+	if bucket.TransitionDefaultMinimumObjectSize == "" {
+		bucket.TransitionDefaultMinimumObjectSize = awstypes.TransitionDefaultMinimumObjectSize(data.TransitionDefaultMinimumObjectSize.ValueString())
+	}
+
+	// Normalize the read-back rules so that a filter reported in the deprecated
+	// form doesn't land in state and produce a perpetual diff.
+	for i, rule := range bucket.Rules {
+		bucket.Rules[i] = normalizeLifecycleRule(rule)
+	}
+
 	diags.Append(fwflex.Flatten(ctx, bucket, data)...)
 }
 
@@ -656,7 +669,11 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 }
 
 func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
-	if transitionMinSize1 != transitionMinSize2 {
+	// `transitionMinSize1` is always the value read back from the S3 API.
+	// Some third-party S3 API implementations don't return the `x-amz-transition-default-minimum-object-size`
+	// response header, so there's nothing to compare.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/43333.
+	if transitionMinSize1 != "" && transitionMinSize1 != transitionMinSize2 {
 		return false
 	}
 
@@ -665,14 +682,34 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	}
 
 	for _, rule1 := range rules1 {
+		rule1 := normalizeLifecycleRule(rule1)
 		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
-			return reflect.DeepEqual(rule1, rule2)
+			return reflect.DeepEqual(rule1, normalizeLifecycleRule(rule2))
 		}) {
 			return false
 		}
 	}
 
 	return true
+}
+
+// normalizeLifecycleRule rewrites a rule whose filter is expressed with the
+// deprecated top-level `Prefix` element into the equivalent empty
+// `LifecycleRuleFilter`, which is what the provider sends for an empty `filter`
+// block. Some third-party S3 API implementations (Ceph RADOS Gateway, which is
+// what Hetzner Object Storage runs) report it that way, and the two are
+// semantically identical: an empty prefix matches every object.
+//
+// A non-empty `Prefix` is left alone: it isn't equivalent to an empty filter.
+// On AWS, `Filter` is never nil in a read-back rule, so this is a no-op there.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/43333.
+func normalizeLifecycleRule(rule awstypes.LifecycleRule) awstypes.LifecycleRule {
+	if rule.Filter == nil && aws.ToString(rule.Prefix) == "" {
+		rule.Filter = &awstypes.LifecycleRuleFilter{Prefix: aws.String("")}
+		rule.Prefix = nil
+	}
+
+	return rule
 }
 
 func statusLifecycleConfigEquals(conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
