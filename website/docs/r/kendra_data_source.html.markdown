@@ -376,7 +376,7 @@ The following arguments are required:
 
 * `index_id` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra data source.
 * `name` - (Required) A name for your data source connector.
-* `role_arn` - (Required, Optional in one scenario) The Amazon Resource Name (ARN) of a role with permission to access the data source connector. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html). You can't specify the `role_arn` parameter when the `type` parameter is set to `CUSTOM`. The `role_arn` parameter is required for all other data sources.
+* `role_arn` - (Required, Optional in one scenario) The ARN of a role with permission to access the data source connector. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html). You can't specify the `role_arn` parameter when the `type` parameter is set to `CUSTOM`. The `role_arn` parameter is required for all other data sources.
 * `type` - (Required, Forces new resource) The type of data source repository. For an updated list of values, refer to [Valid Values for Type](https://docs.aws.amazon.com/kendra/latest/dg/API_CreateDataSource.html#Kendra-CreateDataSource-request-Type).
 
 The following arguments are optional:
@@ -496,7 +496,7 @@ The `custom_document_enrichment_configuration` configuration block supports the 
 * `inline_configurations` - (Optional) Configuration information to alter document attributes or metadata fields and content when ingesting documents into Amazon Kendra. Minimum number of `0` items. Maximum number of `100` items. [Detailed below](#inline_configurations-block).
 * `post_extraction_hook_configuration` - (Optional) A block that specifies the configuration information for invoking a Lambda function in AWS Lambda on the structured documents with their metadata and text extracted. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
 * `pre_extraction_hook_configuration` - (Optional) Configuration information for invoking a Lambda function in AWS Lambda on the original or raw documents before extracting their metadata and text. You can use a Lambda function to apply advanced logic for creating, modifying, or deleting document metadata and content. For more information, see [Advanced data manipulation](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#advanced-data-manipulation). [Detailed below](#pre_extraction_hook_configuration-and-post_extraction_hook_configuration-blocks).
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+* `role_arn` - (Optional) The ARN of a role with permission to run `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` for altering document metadata and content during the document ingestion process. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 
 ### inline_configurations Block
 
@@ -536,7 +536,7 @@ The `target_document_attribute_value` configuration blocks supports the followin
 The `pre_extraction_hook_configuration` and `post_extraction_hook_configuration` configuration blocks each supports the following arguments:
 
 * `invocation_condition` - (Optional) A block that specifies the condition used for when a Lambda function should be invoked. For example, you can specify a condition that if there are empty date-time values, then Amazon Kendra should invoke a function that inserts the current date-time. See [invocation_condition](#invocation_condition-block).
-* `lambda_arn` - (Required) The Amazon Resource Name (ARN) of a Lambda Function that can manipulate your document metadata fields or attributes and content.
+* `lambda_arn` - (Required) The ARN of a Lambda Function that can manipulate your document metadata fields or attributes and content.
 * `s3_bucket` - (Required) Stores the original, raw documents or the structured, parsed documents before and after altering them. For more information, see [Data contracts for Lambda functions](https://docs.aws.amazon.com/kendra/latest/dg/custom-document-enrichment.html#cde-data-contracts-lambda).
 
 ### invocation_condition Block
