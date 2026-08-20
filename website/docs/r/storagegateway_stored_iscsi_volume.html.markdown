@@ -44,14 +44,14 @@ resource "aws_storagegateway_stored_iscsi_volume" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `gateway_arn` - (Required) The ARN of the gateway.
+* `gateway_arn` - (Required) ARN of the gateway.
 * `network_interface_id` - (Required) The network interface of the gateway on which to expose the iSCSI target. Only IPv4 addresses are accepted.
 * `target_name` - (Required) The name of the iSCSI target used by initiators to connect to the target and as a suffix for the target ARN. The target name must be unique across all volumes of a gateway.
 * `disk_id` - (Required) The unique identifier for the gateway local disk that is configured as a stored volume.
 * `preserve_existing_data` - (Required) Specify this field as `true` if you want to preserve the data on the local disk. Otherwise, specifying this field as false creates an empty volume.
 * `snapshot_id` - (Optional) The snapshot ID of the snapshot to restore as the new stored volumeE.g., `snap-1122aabb`.
 * `kms_encrypted` - (Optional) `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Optional.
-* `kms_key` - (Optional) The ARN of the AWS KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is `true`.
+* `kms_key` - (Optional) ARN of the AWS KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is `true`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
