@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the delegated administrator's account.
+* `arn` - ARN of the delegated administrator's account.
 * `email` - The email address that is associated with the delegated administrator's AWS account.
 * `name` - The friendly name of the delegated administrator's account.
 * `service_principal` - The AWS CloudTrail service principal name.
