@@ -70,7 +70,7 @@ This resource supports the following arguments:
 #### capacity_reservation_config
 
 * `capacity_reservation_preference` - (Optional) Capacity reservation preference. Valid value is `capacity-reservations-only`. When set to `capacity-reservations-only`, SageMaker AI launches instances only into an ML capacity reservation; if no capacity is available, the instances fail to launch.
-* `ml_reservation_arn` - (Optional) The ARN that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
+* `ml_reservation_arn` - (Optional) ARN that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
 
 #### core_dump_config
 
