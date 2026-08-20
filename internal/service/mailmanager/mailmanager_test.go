@@ -20,6 +20,7 @@ func TestAccMailManager_serial(t *testing.T) {
 			"retention":          testAccMailManagerArchive_retention,
 			"Identity":           testAccMailManagerArchive_identitySerial,
 			"Tags":               testAccMailManagerArchive_tagsSerial,
+			"List":               testAccMailManagerArchive_listSerial,
 		},
 		"IngressPoint": {
 			acctest.CtBasic:                testAccMailManagerIngressPoint_basic,
