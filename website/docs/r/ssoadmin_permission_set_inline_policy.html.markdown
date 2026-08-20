@@ -53,14 +53,14 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `inline_policy` - (Required) The IAM inline policy to attach to a Permission Set.
-* `instance_arn` - (Required, Forces new resource) The ARN of the SSO Instance under which the operation will be executed.
-* `permission_set_arn` - (Required, Forces new resource) The ARN of the Permission Set.
+* `instance_arn` - (Required, Forces new resource) ARN of the SSO Instance under which the operation will be executed.
+* `permission_set_arn` - (Required, Forces new resource) ARN of the Permission Set.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARNs of the Permission Set and SSO Instance, separated by a comma (`,`).
+* `id` - ARNs of the Permission Set and SSO Instance, separated by a comma (`,`).
 
 ## Timeouts
 
