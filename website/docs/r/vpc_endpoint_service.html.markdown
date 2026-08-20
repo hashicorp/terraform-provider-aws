@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the VPC endpoint service.
 * `availability_zones` - A set of Availability Zones in which the service is available.
-* `arn` - The ARN of the VPC endpoint service.
+* `arn` - ARN of the VPC endpoint service.
 * `base_endpoint_dns_names` - A set of DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `service_name` - The service name.
