@@ -89,7 +89,7 @@ This resource supports the following arguments:
 
 #### Cognito User Pool Configuration
 
-* `user_pool_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Cognito user pool that contains the identities to be authorized.
+* `user_pool_arn` - (Required) The ARN of the Amazon Cognito user pool that contains the identities to be authorized.
 * `client_ids` - (Optional) The unique application client IDs that are associated with the specified Amazon Cognito user pool.
 * `group_configuration` - (Optional) The type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#group-configuration) below.
 
