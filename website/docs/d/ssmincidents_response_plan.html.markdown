@@ -25,7 +25,7 @@ resource "aws_ssmincidents_response_plan" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - (Required) The ARN of the response plan.
+* `arn` - (Required) ARN of the response plan.
 
 ## Attribute Reference
 
@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - The tags applied to the response plan.
 * `display_name` - The long format of the response plan name. This field can contain spaces.
 * `chat_channel` - The Chatbot chat channel used for collaboration during an incident.
-* `engagements` - The ARN for the contacts and escalation plans that the response plan engages during an incident.
+* `engagements` - ARN for the contacts and escalation plans that the response plan engages during an incident.
 
 The `incident_template` configuration block exports the following attributes:
 
