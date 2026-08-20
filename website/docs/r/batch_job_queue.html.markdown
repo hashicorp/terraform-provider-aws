@@ -84,7 +84,7 @@ This resource supports the following arguments:
 
 ### compute_environment_order
 
-* `compute_environment` - (Required) The ARN of the compute environment.
+* `compute_environment` - (Required) ARN of the compute environment.
 * `order` - (Required) The order of the compute environment. Compute environments are tried in ascending order. For example, if two compute environments are associated with a job queue, the compute environment with a lower order integer value is tried for job placement first.
 
 ### job_state_time_limit_action
@@ -98,7 +98,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the job queue.
+* `arn` - ARN of the job queue.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
