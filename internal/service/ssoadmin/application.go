@@ -174,7 +174,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	app, err := findApplicationByID(ctx, conn, data.ID.ValueString())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
@@ -212,7 +212,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
@@ -234,7 +234,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	tags, err := listTags(ctx, conn, data.ARN.ValueString(), data.InstanceARN.ValueString())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s) tags", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s) tags", data.ID.String()), err.Error())
 
 		return
 	}
@@ -270,7 +270,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		_, err := conn.UpdateApplication(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s)", new.ID.String()), err.Error())
 
 			return
 		}
@@ -280,7 +280,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	// explicitly rather than with transparent tagging.
 	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
 		if err := updateTags(ctx, conn, new.ARN.ValueString(), new.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s) tags", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s) tags", new.ID.String()), err.Error())
 
 			return
 		}
@@ -308,7 +308,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
