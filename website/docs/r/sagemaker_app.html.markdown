@@ -31,7 +31,7 @@ This resource supports the following arguments:
 * `app_name` - (Required) The name of the app.
 * `app_type` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway`, `TensorBoard`, `CodeEditor`, `JupyterLab`, `DetailedProfiler`, and `Canvas`.
 * `domain_id` - (Required) The domain ID.
-* `resource_spec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.See [Resource Spec](#resource-spec) below.
+* `resource_spec` - (Optional) The instance type and the ARN of the SageMaker AI image created on the instance.See [Resource Spec](#resource-spec) below.
 * `space_name` - (Optional) The name of the space. At least one of `user_profile_name` or `space_name` required.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_profile_name` - (Optional) The user profile name. At least one of `user_profile_name` or `space_name` required.
@@ -39,7 +39,7 @@ This resource supports the following arguments:
 ### Resource Spec
 
 * `instance_type` - (Optional) The instance type that the image version runs on. For valid values see [SageMaker AI Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
-* `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
+* `lifecycle_config_arn` - (Optional) The ARN of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker AI image that the image version belongs to.
 * `sagemaker_image_version_alias` - (Optional) The SageMaker AI Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
@@ -48,8 +48,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the app.
-* `arn` - The Amazon Resource Name (ARN) of the app.
+* `id` - The ARN of the app.
+* `arn` - The ARN of the app.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
