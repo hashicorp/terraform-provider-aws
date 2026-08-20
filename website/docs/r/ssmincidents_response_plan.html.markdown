@@ -123,11 +123,11 @@ This resource supports the following arguments:
 * `tags` - (Optional) The tags applied to the response plan.
 * `display_name` - (Optional) The long format of the response plan name. This field can contain spaces.
 * `chat_channel` - (Optional) The Chatbot chat channel used for collaboration during an incident.
-* `engagements` - (Optional) The Amazon Resource Name (ARN) for the contacts and escalation plans that the response plan engages during an incident.
+* `engagements` - (Optional) The ARN for the contacts and escalation plans that the response plan engages during an incident.
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
     * `ssm_automation` - (Optional) The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
         * `document_name` - (Required) The automation document's name.
-        * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
+        * `role_arn` - (Required) The ARN of the role that the automation document assumes when it runs commands.
         * `document_version` - (Optional) The version of the automation document to use at runtime.
         * `target_account` -  (Optional) The account that the automation document runs in. This can be in either the management account or an application account.
         * `parameter` - (Optional) The key-value pair parameters to use when the automation document runs. The following values are supported:
