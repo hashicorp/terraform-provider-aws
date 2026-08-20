@@ -36,7 +36,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name of the policy.
+* `arn` - The ARN of the policy.
 * `aws_managed` - Indicates if a policy is an AWS managed policy.
 * `content` - The text content of the policy.
 * `description` - The description of the policy.
