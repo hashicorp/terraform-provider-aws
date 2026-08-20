@@ -1,13 +1,13 @@
 ---
-subcategory: "VPC (Virtual Private Cloud)"
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_route_server_endpoint"
 description: |-
-  Terraform resource for managing a VPC (Virtual Private Cloud) Route Server.
+  Terraform resource for managing a VPC Route Server.
 ---
 # Resource: aws_vpc_route_server_endpoint
 
-  Provides a resource for managing a VPC (Virtual Private Cloud) Route Server Endpoint.
+  Provides a resource for managing a VPC Route Server Endpoint.
 
 ## Example Usage
 
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server Endpoint using the `route_server_endpoint_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Route Server Endpoint using the `route_server_endpoint_id`. For example:
 
 ```terraform
 import {
@@ -65,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC (Virtual Private Cloud) Route Server Endpoint using the `route_server_endpoint_id`. For example:
+Using `terraform import`, import VPC Route Server Endpoint using the `route_server_endpoint_id`. For example:
 
 ```console
 % terraform import aws_vpc_route_server_endpoint.example rse-12345678
