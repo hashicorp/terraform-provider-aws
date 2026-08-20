@@ -66,7 +66,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the hierarchy group.
+* `arn` - The ARN of the hierarchy group.
 * `hierarchy_group_id` - The identifier for the hierarchy group.
 * `hierarchy_path` - A block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group
@@ -84,7 +84,7 @@ A `hierarchy_path` block supports the following attributes:
 
 A level block supports the following attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy group.
+* `arn` -  The ARN of the hierarchy group.
 * `id` -  The identifier of the hierarchy group.
 * `name` - The name of the hierarchy group.
 
