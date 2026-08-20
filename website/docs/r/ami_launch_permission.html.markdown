@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ami_launch_permission
 
-Adds a launch permission to an Amazon Machine Image (AMI).
+Adds a launch permission to an AMI.
 
 ## Example Usage
 
