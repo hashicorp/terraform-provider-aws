@@ -56,7 +56,8 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("id")
+// @IdentityAttribute("identifier")
+// @MutableIdentity
 // @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
