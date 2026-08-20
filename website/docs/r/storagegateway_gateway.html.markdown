@@ -108,8 +108,8 @@ This resource supports the following arguments:
 * `average_upload_rate_limit_in_bits_per_sec` - (Optional) The average upload bandwidth rate limit in bits per second. This is supported for the `CACHED`, `STORED`, and `VTL` gateway types.
 * `gateway_ip_address` - (Optional) Gateway IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. Gateway must be accessible on port 80 from where Terraform is running. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
 * `gateway_type` - (Optional) Type of the gateway. The default value is `STORED`. Valid values: `CACHED`, `FILE_FSX_SMB`, `FILE_S3`, `STORED`, `VTL`.
-* `gateway_vpc_endpoint` - (Optional) VPC endpoint address to be used when activating your gateway. This should be used when your instance is in a private subnet. Requires HTTP access from client computer running terraform. More info on what ports are required by your VPC Endpoint Security group in [Activating a Gateway in a Virtual Private Cloud](https://docs.aws.amazon.com/storagegateway/latest/userguide/gateway-private-link.html).
-* `cloudwatch_log_group_arn` - (Optional) The Amazon Resource Name (ARN) of the Amazon CloudWatch log group to use to monitor and log events in the gateway.
+* `gateway_vpc_endpoint` - (Optional) VPC endpoint address to be used when activating your gateway. This should be used when your instance is in a private subnet. Requires HTTP access from client computer running terraform. More info on what ports are required by your VPC Endpoint Security group in [Activating a Gateway in a VPC](https://docs.aws.amazon.com/storagegateway/latest/userguide/gateway-private-link.html).
+* `cloudwatch_log_group_arn` - (Optional) The ARN of the Amazon CloudWatch log group to use to monitor and log events in the gateway.
 * `maintenance_start_time` - (Optional) The gateway's weekly maintenance start time information, including day and time of the week. The maintenance time is the time in your gateway's time zone. More details below.
 * `medium_changer_type` - (Optional) Type of medium changer to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `STK-L700`, `AWS-Gateway-VTL`, `IBM-03584L32-0402`.
 * `smb_active_directory_settings` - (Optional) Nested argument with Active Directory domain join information for Server Message Block (SMB) file shares. Only valid for `FILE_S3` and `FILE_FSX_SMB` gateway types. Must be set before creating `ActiveDirectory` authentication SMB file shares. More details below.
@@ -149,8 +149,8 @@ Information to join the gateway to an Active Directory domain for Server Message
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the gateway.
-* `arn` - Amazon Resource Name (ARN) of the gateway.
+* `id` - ARN of the gateway.
+* `arn` - ARN of the gateway.
 * `gateway_id` - Identifier of the gateway.
 * `ec2_instance_id` - The ID of the Amazon EC2 instance that was used to launch the gateway.
 * `endpoint_type` - The type of endpoint for your gateway.
@@ -170,7 +170,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_gateway` using the gateway ARN. For example:
 
 ```terraform
 import {
@@ -179,7 +179,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_gateway` using the gateway ARN. For example:
 
 ```console
 % terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
