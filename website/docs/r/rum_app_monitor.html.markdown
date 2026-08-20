@@ -52,7 +52,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) specifying the app monitor.
+* `arn` - The ARN specifying the app monitor.
 * `id` - The CloudWatch RUM name as it is the identifier of a RUM.
 * `app_monitor_id` - The unique ID of the app monitor. Useful for JS templates.
 * `cw_log_group` - The name of the log group where the copies are stored.
