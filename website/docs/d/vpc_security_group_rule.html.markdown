@@ -39,7 +39,7 @@ whose data will be exported as attributes.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the security group rule.
+* `arn` - ARN of the security group rule.
 * `cidr_ipv4` - The destination IPv4 CIDR range.
 * `cidr_ipv6` - The destination IPv6 CIDR range.
 * `description` - The security group rule description.
