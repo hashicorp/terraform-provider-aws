@@ -667,10 +667,7 @@ object Performance : BuildType({
     }
 
     steps {
-        script {
-            name = "Configure Go"
-            scriptContent = File("./scripts/configure_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()
