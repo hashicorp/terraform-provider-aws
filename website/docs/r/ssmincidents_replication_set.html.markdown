@@ -97,7 +97,7 @@ For information about the maximum allowed number of Regions and tag value constr
 The `regions` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the Region, such as `ap-southeast-2`.
-* `kms_key_arn` - (Optional) The ARN of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
+* `kms_key_arn` - (Optional) ARN of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
 
 ## Attribute Reference
 
