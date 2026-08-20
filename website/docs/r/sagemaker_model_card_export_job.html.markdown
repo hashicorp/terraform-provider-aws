@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `export_artifacts` - Exported model card artifacts.
     * `s3_export_artifacts` - Amazon S3 URI of the exported model artifacts.
-* `model_card_export_job_arn` - The ARN of the model card export job.
+* `model_card_export_job_arn` - ARN of the model card export job.
 
 ## Timeouts
 
