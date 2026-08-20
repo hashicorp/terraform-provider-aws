@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 #### S3 Storage Config
 
-* `kms_key_id` - (Optional) The KMS key ID of the key used to encrypt any objects written into the OfflineStore S3 location.
+* `kms_key_id` - (Optional) KMS key ID of the key used to encrypt any objects written into the OfflineStore S3 location.
 * `s3_uri` - (Required) The S3 URI, or location in Amazon S3, of OfflineStore.
 * `resolved_output_s3_uri` - (Optional) The S3 path where offline records are written.
 
@@ -80,7 +80,7 @@ This resource supports the following arguments:
 
 #### Security Config
 
-* `kms_key_id` - (Optional) The ID of the KMS key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) ID of the KMS key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
 
 #### TTl Duration
 
@@ -92,7 +92,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the Feature Group.
-* `arn` - The ARN assigned by AWS to this feature_group.
+* `arn` - ARN assigned by AWS to this feature_group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
