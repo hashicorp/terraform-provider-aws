@@ -312,7 +312,7 @@ Forward Blocks (for `forward`) support the following:
 
 Target Group Blocks (for `target_group`) supports the following:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the target group.
+* `arn` - (Required) The ARN of the target group.
 * `weight` - (Optional) The weight. The range is 0 to 999.
 
 Target Group Stickiness Config Blocks (for `stickiness`) supports the following:
@@ -490,7 +490,7 @@ resource "aws_lb_listener_rule" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener rule.
+- `arn` (String) ARN of the load balancer listener rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import rules using their ARN. For example:
 
