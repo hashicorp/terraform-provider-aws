@@ -301,7 +301,7 @@ var (
 )
 
 func (m archiveRetentionModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return awstypes.ArchiveRetentionMemberRetentionPeriod{
+	return &awstypes.ArchiveRetentionMemberRetentionPeriod{
 		Value: awstypes.RetentionPeriod(m.RetentionPeriod.ValueString()),
 	}, nil
 }
@@ -309,6 +309,10 @@ func (m archiveRetentionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 func (m *archiveRetentionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch v := v.(type) {
+	case *awstypes.ArchiveRetentionMemberRetentionPeriod:
+		if v != nil {
+			m.RetentionPeriod = fwtypes.StringEnumValue(v.Value)
+		}
 	case awstypes.ArchiveRetentionMemberRetentionPeriod:
 		m.RetentionPeriod = fwtypes.StringEnumValue(v.Value)
 	default:
