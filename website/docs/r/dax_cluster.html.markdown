@@ -31,7 +31,7 @@ cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
 Default value is `NONE`.
 * `cluster_name` - (Required) Group identifier. DAX converts this name to
 lowercase
-* `iam_role_arn` - (Required) A valid ARN that identifies
+* `iam_role_arn` - (Required) Valid ARN that identifies
 an IAM role. At runtime, DAX will assume this role and use the role's
 permissions to access DynamoDB on your behalf
 * `node_type` - (Required) The compute and memory capacity of the nodes. See
@@ -42,7 +42,7 @@ replicas
 * `availability_zones` - (Optional) List of Availability Zones in which the
 nodes will be created
 * `description` - (Optional) Description for the cluster
-* `notification_topic_arn` - (Optional) An ARN of an
+* `notification_topic_arn` - (Optional) ARN of an
 SNS topic to send DAX notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `parameter_group_name` - (Optional) Name of the parameter group to associate
