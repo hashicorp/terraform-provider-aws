@@ -57,7 +57,7 @@ This configuration block supports the following:
 
 ### bitbucket
 
-* `connection_arn` - (Required) The ARN of an AWS CodeStar Connections connection.
+* `connection_arn` - (Required) ARN of an AWS CodeStar Connections connection.
 * `name` - (Required) The name of the third party source repository.
 * `owner` - (Required) The username for the account that owns the repository.
 
@@ -67,7 +67,7 @@ This configuration block supports the following:
 
 ### github_enterprise_server
 
-* `connection_arn` - (Required) The ARN of an AWS CodeStar Connections connection.
+* `connection_arn` - (Required) ARN of an AWS CodeStar Connections connection.
 * `name` - (Required) The name of the third party source repository.
 * `owner` - (Required) The username for the account that owns the repository.
 
@@ -80,17 +80,17 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `encryption_option` - (Optional) The encryption option for a repository association. It is either owned by KMS (`AWS_OWNED_CMK`) or customer managed (`CUSTOMER_MANAGED_CMK`).
+* `encryption_option` - (Optional) Encryption option for a repository association. It is either owned by KMS (`AWS_OWNED_CMK`) or customer managed (`CUSTOMER_MANAGED_CMK`).
 * `kms_key_id` - (Optional) The ID of the AWS KMS key that is associated with a repository association.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN identifying the repository association.
+* `arn` - ARN identifying the repository association.
 * `association_id` - The ID of the repository association.
-* `connection_arn` - The ARN of an AWS CodeStar Connections connection.
-* `id` - The ARN identifying the repository association.
+* `connection_arn` - ARN of an AWS CodeStar Connections connection.
+* `id` - ARN identifying the repository association.
 * `name` - The name of the repository.
 * `owner` - The owner of the repository.
 * `provider_type` - The provider type of the repository association.
