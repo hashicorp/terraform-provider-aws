@@ -14770,3 +14770,213 @@ resource "aws_db_instance" "test" {
 }
 `, tfrds.InstanceEnginePostgres, storageType, mainInstanceClasses, rName, allocatedStorage))
 }
+
+// TestAccRDSInstance_engineVersionPrefixAutoMinorVersionUpgrade exercises the
+// motivating case from https://github.com/hashicorp/terraform-provider-aws/issues/39579:
+// transitioning an instance pinned to an exact PostgreSQL minor with automatic
+// minor upgrades disabled to a major-only engine_version prefix with automatic
+// minor upgrades enabled. Terraform must not attempt to downgrade the engine to
+// the major prefix (e.g. "14.22" running -> "14" configured).
+func TestAccRDSInstance_engineVersionPrefixAutoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	var initialVersion string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// engine_version pinned to an exact minor, automatic minor upgrades disabled.
+				Config: testAccInstanceConfig_engineVersionPrefix(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
+					testAccCheckRetrieveValue("data.aws_rds_engine_version.default", names.AttrVersion, &initialVersion),
+				),
+			},
+			{
+				// engine_version relaxed to a major-only prefix and automatic minor
+				// upgrades enabled in the same apply. Only auto_minor_version_upgrade
+				// should change; the engine must not be downgraded to the major prefix.
+				Config: testAccInstanceConfig_engineVersionPrefix(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					// engine_version and engine_version_actual remain the originally
+					// installed minor; no downgrade to the "14"-style prefix occurred.
+					resource.TestCheckResourceAttrPtr(resourceName, names.AttrEngineVersion, &initialVersion),
+					resource.TestCheckResourceAttrPtr(resourceName, "engine_version_actual", &initialVersion),
+				),
+			},
+		},
+	})
+}
+
+// TestAccRDSInstance_engineVersion_outOfBand exercises the automatic minor
+// version upgrade scenario from #39579: after RDS upgrades the running minor
+// version out-of-band (auto_minor_version_upgrade=true), a subsequent plan must
+// not attempt to downgrade the engine back to the configured value, and an
+// unrelated modification must not resend a stale EngineVersion.
+func TestAccRDSInstance_engineVersion_outOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	var minorUpgradeVersion string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_engineVersionAutoMinorPostgres(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+					current := aws.ToString(v1.EngineVersion)
+
+					// Dynamically select a valid PostgreSQL minor upgrade target so the
+					// test does not depend on version strings that age out of RDS.
+					out, err := conn.DescribeDBEngineVersions(ctx, &rds.DescribeDBEngineVersionsInput{
+						Engine:        aws.String(tfrds.InstanceEnginePostgres),
+						EngineVersion: aws.String(current),
+					})
+					if err != nil {
+						t.Fatalf("describing DB engine versions for %s %s: %s", tfrds.InstanceEnginePostgres, current, err)
+					}
+					if len(out.DBEngineVersions) == 0 {
+						t.Fatalf("no DB engine version found for %s %s", tfrds.InstanceEnginePostgres, current)
+					}
+					for _, ut := range out.DBEngineVersions[0].ValidUpgradeTarget {
+						if !aws.ToBool(ut.IsMajorVersionUpgrade) {
+							minorUpgradeVersion = aws.ToString(ut.EngineVersion)
+							break
+						}
+					}
+					if minorUpgradeVersion == "" {
+						t.Skipf("no minor upgrade target available for %s %s", tfrds.InstanceEnginePostgres, current)
+					}
+
+					_, err = conn.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
+						DBInstanceIdentifier: v1.DBInstanceIdentifier,
+						EngineVersion:        aws.String(minorUpgradeVersion),
+						ApplyImmediately:     aws.Bool(true),
+					})
+					if err != nil {
+						t.Fatalf("externally upgrading RDS DB Instance engine version to %s: %s", minorUpgradeVersion, err)
+					}
+
+					if _, err := tfrds.WaitDBInstanceAvailable(ctx, conn, aws.ToString(v1.DBInstanceIdentifier), 60*time.Minute); err != nil {
+						t.Fatalf("waiting for external engine version upgrade: %s", err)
+					}
+				},
+				// Configuration is unchanged. The running version is now newer than the
+				// configured version, so with auto_minor_version_upgrade=true the
+				// instance must plan as a no-op instead of attempting a downgrade.
+				Config: testAccInstanceConfig_engineVersionAutoMinorPostgres(rName, 0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPtr(resourceName, "engine_version_actual", &minorUpgradeVersion),
+				),
+			},
+			{
+				// An unrelated modification must update only that attribute and must not
+				// resend a stale EngineVersion (which RDS would reject as a downgrade).
+				Config: testAccInstanceConfig_engineVersionAutoMinorPostgres(rName, 7),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v3),
+					testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "7"),
+					resource.TestCheckResourceAttrPtr(resourceName, "engine_version_actual", &minorUpgradeVersion),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceConfig_engineVersionPrefix(rName string, usePrefixAndAutoMinor bool) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                 = %[1]q
+  allocated_storage          = 20
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = %[2]t ? regex("^[0-9]+", data.aws_rds_engine_version.default.version) : data.aws_rds_engine_version.default.version
+  auto_minor_version_upgrade = %[2]t
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                    = "test"
+  parameter_group_name       = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot        = true
+  apply_immediately          = true
+  password                   = "avoid-plaintext-passwords"
+  username                   = "tfacctest"
+}
+`, rName, usePrefixAndAutoMinor))
+}
+
+func testAccInstanceConfig_engineVersionAutoMinorPostgres(rName string, backupRetentionPeriod int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                 = %[1]q
+  allocated_storage          = 20
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  auto_minor_version_upgrade = true
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                    = "test"
+  parameter_group_name       = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot        = true
+  apply_immediately          = true
+  backup_retention_period    = %[2]d
+  password                   = "avoid-plaintext-passwords"
+  username                   = "tfacctest"
+}
+`, rName, backupRetentionPeriod))
+}

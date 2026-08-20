@@ -318,6 +318,19 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// When automatic minor upgrades are enabled, RDS can advance
+						// engine_version_actual beyond the configured version. Suppress the
+						// resulting downgrade/prefix diff (e.g. "14" or "14.22" while running
+						// "14.23") while preserving intentional upgrades (configured newer than
+						// actual). When disabled, engine_version is an explicit pin and any
+						// difference stays visible.
+						// https://github.com/hashicorp/terraform-provider-aws/issues/39579
+						if !d.Get(names.AttrAutoMinorVersionUpgrade).(bool) {
+							return false
+						}
+						return !engineVersionIsNewer(new, d.Get("engine_version_actual").(string))
+					},
 				},
 				"engine_version_actual": {
 					Type:     schema.TypeString,
