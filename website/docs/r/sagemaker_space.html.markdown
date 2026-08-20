@@ -63,7 +63,7 @@ The `space_sharing_settings` block supports the following argument:
 The `code_editor_app_settings` block supports the following argument:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `default_resource_spec` - (Required) The default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `default_resource_spec` - (Required) Default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
 
@@ -77,23 +77,23 @@ The `jupyter_lab_app_settings` block supports the following arguments:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
 * `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
-* `default_resource_spec` - (Required) The default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `default_resource_spec` - (Required) Default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block
 
 The `jupyter_server_app_settings` block supports the following arguments:
 
 * `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
-* `default_resource_spec` - (Optional) The default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
-* `lifecycle_config_arns` - (Optional) The ARN of the Lifecycle Configurations.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 ### `kernel_gateway_app_settings` Block
 
 The `kernel_gateway_app_settings` block supports the following arguments:
 
-* `default_resource_spec` - (Required) The default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `default_resource_spec` - (Required) Default instance type and the ARN of the SageMaker AI image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `custom_image` - (Optional) A list of custom SageMaker AI images that are configured to run as a KernelGateway app. See [`custom_image` Block](#custom_image-block) below.
-* `lifecycle_config_arns` - (Optional) The ARN of the Lifecycle Configurations.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 ### `space_storage_settings` Block
 
@@ -112,8 +112,8 @@ The `code_repository` block supports the following argument:
 The `default_resource_spec` block supports the following arguments:
 
 * `instance_type` - (Optional) The instance type.
-* `lifecycle_config_arn` - (Optional) The ARN of the Lifecycle Configuration attached to the Resource.
-* `sagemaker_image_arn` - (Optional) The ARN of the SageMaker AI image created on the instance.
+* `lifecycle_config_arn` - (Optional) ARN of the Lifecycle Configuration attached to the Resource.
+* `sagemaker_image_arn` - (Optional) ARN of the SageMaker AI image created on the instance.
 * `sagemaker_image_version_alias` - (Optional) The SageMaker AI Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
@@ -153,9 +153,9 @@ The `idle_settings` block supports the following argument:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The space's ARN.
+* `arn` - Space's ARN.
 * `home_efs_file_system_uid` - The ID of the space's profile in the Amazon Elastic File System volume.
-* `id` - The space's ARN.
+* `id` - Space's ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center.
 
