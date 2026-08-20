@@ -222,7 +222,7 @@ For more details, see the [Amazon BedrockAgent Confluence documentation](https:/
 The `source_configuration` configuration block supports the following arguments:
 
 * `auth_type` - (Required) The supported authentication type to authenticate and connect to your Confluence instance. Valid values: `BASIC`, `OAUTH2_CLIENT_CREDENTIALS`.
-* `credentials_secret_arn` - (Required) The ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Confluence instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Confluence connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Confluence instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Confluence connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
 * `host_type` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `SAAS`.
 * `host_url` - (Required) The Confluence host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
 
@@ -248,7 +248,7 @@ For more details, see the [Amazon BedrockAgent Salesforce documentation](https:/
 The `source_configuration` configuration block supports the following arguments:
 
 * `auth_type` - (Required) The supported authentication type to authenticate and connect to your Salesforce instance. Valid values: OAUTH2_CLIENT_CREDENTIALS.
-* `credentials_secret_arn` - (Required) The ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Salesforce instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Salesforce connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your Salesforce instance URL. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see Salesforce connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
 * `host_url` - (Required) The Salesforce host URL or instance URL. Pattern: `^https://[A-Za-z0-9][^\s]*$`.
 
 ### `crawler_configuration` block
@@ -290,7 +290,7 @@ For more details, see the [Amazon BedrockAgent SharePoint documentation](https:/
 The `source_configuration` configuration block supports the following arguments:
 
 * `auth_type` - (Required) The supported authentication type to authenticate and connect to your SharePoint site. Valid values: `OAUTH2_CLIENT_CREDENTIALS`, `OAUTH2_SHAREPOINT_APP_ONLY_CLIENT_CREDENTIALS`.
-* `credentials_secret_arn` - (Required) The ARN of an AWS Secrets Manager secret that stores your authentication credentials for your SharePoint site. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see SharePoint connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
+* `credentials_secret_arn` - (Required) ARN of an AWS Secrets Manager secret that stores your authentication credentials for your SharePoint site. For more information on the key-value pairs that must be included in your secret, depending on your authentication type, see SharePoint connection configuration. Pattern: ^arn:aws(|-cn|-us-gov):secretsmanager:[a-z0-9-]{1,20}:([0-9]{12}|):secret:[a-zA-Z0-9!/_+=.@-]{1,512}$.
 * `domain` - (Required) The domain of your SharePoint instance or site URL/URLs.
 * `host_type` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `ONLINE`.
 * `site_urls` - (Required) A list of one or more SharePoint site URLs.
