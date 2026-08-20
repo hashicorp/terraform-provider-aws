@@ -78,16 +78,16 @@ resource "aws_ssoadmin_managed_policy_attachment" "example" {
 
 This resource supports the following arguments:
 
-* `instance_arn` - (Required, Forces new resource) The ARN of the SSO Instance under which the operation will be executed.
-* `managed_policy_arn` - (Required, Forces new resource) The IAM managed policy ARN to be attached to the Permission Set.
-* `permission_set_arn` - (Required, Forces new resource) The ARN of the Permission Set.
+* `instance_arn` - (Required, Forces new resource) ARN of the SSO Instance under which the operation will be executed.
+* `managed_policy_arn` - (Required, Forces new resource) IAM managed policy ARN to be attached to the Permission Set.
+* `permission_set_arn` - (Required, Forces new resource) ARN of the Permission Set.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARNs of the Managed Policy, Permission Set, and SSO Instance, separated by a comma (`,`).
+* `id` - ARNs of the Managed Policy, Permission Set, and SSO Instance, separated by a comma (`,`).
 * `managed_policy_name` - The name of the IAM Managed Policy.
 
 ## Timeouts
