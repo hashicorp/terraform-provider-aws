@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate_creation_date` - The date that the certificate was created.
 * `certificate_pem` - The contents of a .pem file, which contains an X.509 certificate.
 * `certificate_owner` - The owner of the certificate.
-* `certificate_arn` - The ARN for the certificate.
+* `certificate_arn` - ARN for the certificate.
 * `certificate_wallet` - The owner of the certificate.
 * `key_length` - The key length of the cryptographic algorithm being used.
 * `signing_algorithm` - The algorithm for the certificate.
