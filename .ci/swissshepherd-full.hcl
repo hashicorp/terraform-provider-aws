@@ -186,18 +186,45 @@ type "action" {
 check "banned_glosses" {
   enabled = true
 
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
   banned_glosses = {
-    "Amazon Machine Image"     = "AMI"
-    "Amazon Resource Name"     = "ARN"
-    "Amazon Resource Names"    = "ARNs"
-    "Elastic Compute Cloud"    = "EC2"
-    "Key Management Service"   = "KMS"
-    "Simple Storage Service"   = "S3"
-    "Transport Layer Security" = "TLS"
-    "Virtual Private Cloud"    = "VPC"
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Lnaguage"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
   }
 
-  skip_frontmatter = true 
+  skip_frontmatter = true
   severity         = "error"
 }
 

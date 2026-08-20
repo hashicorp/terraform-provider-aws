@@ -32,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -62,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -92,14 +92,14 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "usage_notes" { }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "usage_notes" {}
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -115,13 +115,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -141,13 +141,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -167,14 +167,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -187,459 +187,46 @@ type "action" {
 check "banned_glosses" {
   enabled = true
 
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
   banned_glosses = {
-    "Amazon Machine Image"     = "AMI"
-    "Amazon Resource Name"     = "ARN"
-    "Amazon Resource Names"    = "ARNs"
-    "Elastic Compute Cloud"    = "EC2"
-    "Key Management Service"   = "KMS"
-    "Simple Storage Service"   = "S3"
-    "Transport Layer Security" = "TLS"
-    "Virtual Private Cloud"    = "VPC"
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Lnaguage"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
   }
 
-  skip_frontmatter = true 
+  skip_frontmatter = true
   severity         = "error"
-
-  ignore_targets = [
-    "resource/aws_acmpca_certificate",
-    "resource/aws_acmpca_certificate_authority",
-    "resource/aws_acmpca_policy",
-    "resource/aws_amplify_domain_association",
-    "resource/aws_api_gateway_domain_name_access_association",
-    "resource/aws_appconfig_configuration_profile",
-    "resource/aws_appconfig_extension",
-    "resource/aws_appfabric_app_authorization",
-    "resource/aws_appfabric_app_authorization_connection",
-    "resource/aws_appfabric_app_bundle",
-    "resource/aws_appfabric_ingestion",
-    "resource/aws_appfabric_ingestion_destination",
-    "resource/aws_appintegrations_data_integration",
-    "resource/aws_apprunner_auto_scaling_configuration_version",
-    "resource/aws_apprunner_deployment",
-    "resource/aws_apprunner_observability_configuration",
-    "resource/aws_apprunner_service",
-    "resource/aws_apprunner_vpc_connector",
-    "resource/aws_apprunner_vpc_ingress_connection",
-    "resource/aws_appsync_graphql_api",
-    "resource/aws_arcregionswitch_plan",
-    "resource/aws_athena_workgroup",
-    "resource/aws_auditmanager_assessment",
-    "resource/aws_auditmanager_assessment_delegation",
-    "resource/aws_auditmanager_control",
-    "resource/aws_auditmanager_framework",
-    "resource/aws_autoscaling_group",
-    "resource/aws_autoscaling_traffic_source_attachment",
-    "resource/aws_backup_plan",
-    "resource/aws_backup_report_plan",
-    "resource/aws_backup_selection",
-    "resource/aws_backup_vault_notifications",
-    "resource/aws_batch_compute_environment",
-    "resource/aws_batch_job_definition",
-    "resource/aws_batch_job_queue",
-    "resource/aws_batch_scheduling_policy",
-    "resource/aws_bcmdataexports_export",
-    "resource/aws_bedrock_custom_model",
-    "resource/aws_bedrock_inference_profile",
-    "resource/aws_bedrock_provisioned_model_throughput",
-    "resource/aws_bedrockagent_data_source",
-    "resource/aws_bedrockagent_flow",
-    "resource/aws_bedrockagent_prompt",
-    "resource/aws_bedrockagentcore_resource_policy",
-    "resource/aws_budgets_budget_action",
-    "resource/aws_ce_anomaly_monitor",
-    "resource/aws_ce_anomaly_subscription",
-    "resource/aws_ce_cost_category",
-    "resource/aws_chime_voice_connector",
-    "resource/aws_chimesdkmediapipelines_media_insights_pipeline_configuration",
-    "resource/aws_chimesdkvoice_sip_media_application",
-    "resource/aws_cloud9_environment_membership",
-    "resource/aws_cloudcontrolapi_resource",
-    "resource/aws_cloudformation_stack_set",
-    "resource/aws_cloudformation_type",
-    "resource/aws_cloudfront_function",
-    "resource/aws_cloudfront_key_value_store",
-    "resource/aws_cloudfront_realtime_log_config",
-    "resource/aws_cloudfrontkeyvaluestore_key",
-    "resource/aws_cloudfrontkeyvaluestore_keys_exclusive",
-    "resource/aws_cloudtrail",
-    "resource/aws_cloudtrail_event_data_store",
-    "resource/aws_cloudtrail_organization_delegated_admin_account",
-    "resource/aws_cloudwatch_composite_alarm",
-    "resource/aws_cloudwatch_dashboard",
-    "resource/aws_cloudwatch_event_api_destination",
-    "resource/aws_cloudwatch_event_archive",
-    "resource/aws_cloudwatch_event_bus",
-    "resource/aws_cloudwatch_event_connection",
-    "resource/aws_cloudwatch_event_rule",
-    "resource/aws_cloudwatch_event_target",
-    "resource/aws_cloudwatch_log_delivery",
-    "resource/aws_cloudwatch_log_delivery_destination",
-    "resource/aws_cloudwatch_log_delivery_source",
-    "resource/aws_cloudwatch_log_destination",
-    "resource/aws_cloudwatch_log_group",
-    "resource/aws_cloudwatch_log_stream",
-    "resource/aws_cloudwatch_log_transformer",
-    "resource/aws_cloudwatch_metric_alarm",
-    "resource/aws_codeartifact_domain",
-    "resource/aws_codeartifact_domain_permissions_policy",
-    "resource/aws_codeartifact_repository",
-    "resource/aws_codeartifact_repository_permissions_policy",
-    "resource/aws_codebuild_fleet",
-    "resource/aws_codebuild_project",
-    "resource/aws_codebuild_report_group",
-    "resource/aws_codebuild_resource_policy",
-    "resource/aws_codebuild_source_credential",
-    "resource/aws_codecommit_approval_rule_template",
-    "resource/aws_codeconnections_connection",
-    "resource/aws_codeconnections_host",
-    "resource/aws_codedeploy_deployment_group",
-    "resource/aws_codegurureviewer_repository_association",
-    "resource/aws_codepipeline",
-    "resource/aws_codepipeline_webhook",
-    "resource/aws_codestarconnections_connection",
-    "resource/aws_codestarconnections_host",
-    "resource/aws_codestarnotifications_notification_rule",
-    "resource/aws_cognito_identity_pool",
-    "resource/aws_cognito_risk_configuration",
-    "resource/aws_cognito_user_pool",
-    "resource/aws_comprehend_document_classifier",
-    "resource/aws_comprehend_entity_recognizer",
-    "resource/aws_config_config_rule",
-    "resource/aws_config_configuration_recorder",
-    "resource/aws_config_conformance_pack",
-    "resource/aws_config_organization_conformance_pack",
-    "resource/aws_config_organization_custom_policy_rule",
-    "resource/aws_config_organization_custom_rule",
-    "resource/aws_config_organization_managed_rule",
-    "resource/aws_connect_contact_flow",
-    "resource/aws_connect_contact_flow_module",
-    "resource/aws_connect_hours_of_operation",
-    "resource/aws_connect_instance",
-    "resource/aws_connect_instance_storage_config",
-    "resource/aws_connect_lambda_function_association",
-    "resource/aws_connect_phone_number",
-    "resource/aws_connect_queue",
-    "resource/aws_connect_quick_connect",
-    "resource/aws_connect_routing_profile",
-    "resource/aws_connect_security_profile",
-    "resource/aws_connect_user",
-    "resource/aws_connect_user_hierarchy_group",
-    "resource/aws_connect_user_hierarchy_structure",
-    "resource/aws_connect_vocabulary",
-    "resource/aws_cur_report_definition",
-    "resource/aws_customer_gateway",
-    "resource/aws_customerprofiles_domain",
-    "resource/aws_dataexchange_data_set",
-    "resource/aws_dataexchange_event_action",
-    "resource/aws_dataexchange_revision",
-    "resource/aws_datasync_agent",
-    "resource/aws_datasync_location_azure_blob",
-    "resource/aws_datasync_location_efs",
-    "resource/aws_datasync_location_fsx_lustre_file_system",
-    "resource/aws_datasync_location_fsx_openzfs_file_system",
-    "resource/aws_datasync_location_fsx_windows_file_system",
-    "resource/aws_datasync_location_hdfs",
-    "resource/aws_datasync_location_nfs",
-    "resource/aws_datasync_location_object_storage",
-    "resource/aws_datasync_location_s3",
-    "resource/aws_datasync_location_smb",
-    "resource/aws_datasync_task",
-    "resource/aws_dax_cluster",
-    "resource/aws_db_cluster_snapshot",
-    "resource/aws_db_event_subscription",
-    "resource/aws_db_instance_automated_backups_replication",
-    "resource/aws_db_instance_role_association",
-    "resource/aws_db_proxy",
-    "resource/aws_db_proxy_default_target_group",
-    "resource/aws_db_proxy_endpoint",
-    "resource/aws_db_proxy_target",
-    "resource/aws_db_snapshot",
-    "resource/aws_db_snapshot_copy",
-    "resource/aws_default_route_table",
-    "resource/aws_devicefarm_device_pool",
-    "resource/aws_devicefarm_instance_profile",
-    "resource/aws_devicefarm_network_profile",
-    "resource/aws_devicefarm_project",
-    "resource/aws_devicefarm_test_grid_project",
-    "resource/aws_devicefarm_upload",
-    "resource/aws_devopsguru_notification_channel",
-    "resource/aws_dlm_lifecycle_policy",
-    "resource/aws_dms_certificate",
-    "resource/aws_dms_endpoint",
-    "resource/aws_dms_event_subscription",
-    "resource/aws_dms_replication_config",
-    "resource/aws_dms_replication_instance",
-    "resource/aws_docdb_cluster",
-    "resource/aws_docdb_cluster_snapshot",
-    "resource/aws_docdb_event_subscription",
-    "resource/aws_docdb_global_cluster",
-    "resource/aws_docdbelastic_cluster",
-    "resource/aws_dx_macsec_key_association",
-    "resource/aws_dynamodb_resource_policy",
-    "resource/aws_dynamodb_table_export",
-    "resource/aws_dynamodb_tag",
-    "resource/aws_ebs_snapshot",
-    "resource/aws_ebs_snapshot_copy",
-    "resource/aws_ebs_snapshot_import",
-    "resource/aws_ebs_volume",
-    "resource/aws_ebs_volume_copy",
-    "resource/aws_ec2_capacity_reservation",
-    "resource/aws_ec2_client_vpn_endpoint",
-    "resource/aws_ec2_host",
-    "resource/aws_ec2_instance_connect_endpoint",
-    "resource/aws_ec2_local_gateway_route_table_virtual_interface_group_association",
-    "resource/aws_ec2_network_insights_analysis",
-    "resource/aws_ec2_traffic_mirror_target",
-    "resource/aws_ec2_transit_gateway",
-    "resource/aws_ec2_transit_gateway_multicast_domain",
-    "resource/aws_ec2_transit_gateway_policy_table",
-    "resource/aws_ec2_transit_gateway_route_table",
-    "resource/aws_ecs_capacity_provider",
-    "resource/aws_ecs_service",
-    "resource/aws_ecs_tag",
-    "resource/aws_ecs_task_definition",
-    "resource/aws_ecs_task_set",
-    "resource/aws_efs_file_system",
-    "resource/aws_efs_mount_target",
-    "resource/aws_efs_replication_configuration",
-    "resource/aws_eks_access_entry",
-    "resource/aws_eks_addon",
-    "resource/aws_eks_fargate_profile",
-    "resource/aws_eks_identity_provider_config",
-    "resource/aws_eks_node_group",
-    "resource/aws_eks_pod_identity_association",
-    "resource/aws_elasticache_cluster",
-    "resource/aws_elasticache_replication_group",
-    "resource/aws_elasticache_serverless_cache",
-    "resource/aws_elasticache_subnet_group",
-    "resource/aws_elasticsearch_vpc_endpoint",
-    "resource/aws_elastictranscoder_pipeline",
-    "resource/aws_elastictranscoder_preset",
-    "resource/aws_emr_studio",
-    "resource/aws_emr_studio_session_mapping",
-    "resource/aws_finspace_kx_cluster",
-    "resource/aws_finspace_kx_database",
-    "resource/aws_finspace_kx_dataview",
-    "resource/aws_finspace_kx_environment",
-    "resource/aws_finspace_kx_scaling_group",
-    "resource/aws_finspace_kx_user",
-    "resource/aws_finspace_kx_volume",
-    "resource/aws_fis_experiment_template",
-    "resource/aws_fsx_backup",
-    "resource/aws_fsx_data_repository_association",
-    "resource/aws_fsx_file_cache",
-    "resource/aws_fsx_lustre_file_system",
-    "resource/aws_fsx_ontap_file_system",
-    "resource/aws_fsx_ontap_storage_virtual_machine",
-    "resource/aws_fsx_ontap_volume",
-    "resource/aws_fsx_openzfs_file_system",
-    "resource/aws_fsx_openzfs_snapshot",
-    "resource/aws_fsx_openzfs_volume",
-    "resource/aws_fsx_windows_file_system",
-    "resource/aws_globalaccelerator_accelerator",
-    "resource/aws_globalaccelerator_cross_account_attachment",
-    "resource/aws_globalaccelerator_custom_routing_accelerator",
-    "resource/aws_globalaccelerator_custom_routing_endpoint_group",
-    "resource/aws_globalaccelerator_custom_routing_listener",
-    "resource/aws_globalaccelerator_endpoint_group",
-    "resource/aws_globalaccelerator_listener",
-    "resource/aws_glue_job",
-    "resource/aws_glue_ml_transform",
-    "resource/aws_glue_registry",
-    "resource/aws_glue_schema",
-    "resource/aws_glue_security_configuration",
-    "resource/aws_glue_trigger",
-    "resource/aws_glue_workflow",
-    "resource/aws_grafana_workspace",
-    "resource/aws_guardduty_detector",
-    "resource/aws_guardduty_ipset",
-    "resource/aws_guardduty_threatintelset",
-    "resource/aws_iam_openid_connect_provider",
-    "resource/aws_iam_policy",
-    "resource/aws_iam_role",
-    "resource/aws_iam_saml_provider",
-    "resource/aws_iam_server_certificate",
-    "resource/aws_iam_service_linked_role",
-    "resource/aws_iam_virtual_mfa_device",
-    "resource/aws_imagebuilder_component",
-    "resource/aws_imagebuilder_container_recipe",
-    "resource/aws_imagebuilder_distribution_configuration",
-    "resource/aws_imagebuilder_image",
-    "resource/aws_imagebuilder_image_pipeline",
-    "resource/aws_imagebuilder_image_recipe",
-    "resource/aws_imagebuilder_infrastructure_configuration",
-    "resource/aws_imagebuilder_lifecycle_policy",
-    "resource/aws_imagebuilder_workflow",
-    "resource/aws_inspector_assessment_target",
-    "resource/aws_inspector_assessment_template",
-    "resource/aws_inspector2_filter",
-    "resource/aws_internetmonitor_monitor",
-    "resource/aws_invoicing_invoice_unit",
-    "resource/aws_iot_topic_rule_destination",
-    "resource/aws_ivs_channel",
-    "resource/aws_ivs_playback_key_pair",
-    "resource/aws_ivs_recording_configuration",
-    "resource/aws_ivschat_logging_configuration",
-    "resource/aws_ivschat_room",
-    "resource/aws_kendra_data_source",
-    "resource/aws_kendra_experience",
-    "resource/aws_kendra_faq",
-    "resource/aws_kendra_index",
-    "resource/aws_keyspaces_table",
-    "resource/aws_kinesis_firehose_delivery_stream",
-    "resource/aws_kinesis_resource_policy",
-    "resource/aws_kinesis_stream",
-    "resource/aws_kinesis_stream_consumer",
-    "resource/aws_kinesis_video_stream",
-    "resource/aws_kinesisanalyticsv2_application",
-    "resource/aws_kms_alias",
-    "resource/aws_kms_external_key",
-    "resource/aws_kms_grant",
-    "resource/aws_kms_key",
-    "resource/aws_kms_replica_external_key",
-    "resource/aws_kms_replica_key",
-    "resource/aws_lakeformation_permissions",
-    "resource/aws_lakeformation_resource",
-    "resource/aws_lambda_provisioned_concurrency_config",
-    "resource/aws_launch_configuration",
-    "resource/aws_launch_template",
-    "resource/aws_lex_bot_alias",
-    "resource/aws_lex_intent",
-    "resource/aws_lightsail_container_service",
-    "resource/aws_location_geofence_collection",
-    "resource/aws_location_map",
-    "resource/aws_location_place_index",
-    "resource/aws_location_route_calculator",
-    "resource/aws_location_tracker",
-    "resource/aws_location_tracker_association",
-    "resource/aws_macie2_account",
-    "resource/aws_macie2_classification_export_configuration",
-    "resource/aws_macie2_custom_data_identifier",
-    "resource/aws_macie2_findings_filter",
-    "resource/aws_macie2_member",
-    "resource/aws_msk_cluster",
-    "resource/aws_msk_cluster_policy",
-    "resource/aws_msk_configuration",
-    "resource/aws_msk_replicator",
-    "resource/aws_msk_scram_secret_association",
-    "resource/aws_msk_serverless_cluster",
-    "resource/aws_msk_single_scram_secret_association",
-    "resource/aws_msk_topic",
-    "resource/aws_msk_vpc_connection",
-    "resource/aws_mskconnect_connector",
-    "resource/aws_mskconnect_custom_plugin",
-    "resource/aws_mskconnect_worker_configuration",
-    "resource/aws_mwaa_environment",
-    "resource/aws_neptune_cluster_endpoint",
-    "resource/aws_neptune_cluster_instance",
-    "resource/aws_neptune_cluster_snapshot",
-    "resource/aws_neptune_event_subscription",
-    "resource/aws_neptune_parameter_group",
-    "resource/aws_networkfirewall_firewall",
-    "resource/aws_networkfirewall_firewall_policy",
-    "resource/aws_networkfirewall_logging_configuration",
-    "resource/aws_networkfirewall_resource_policy",
-    "resource/aws_networkfirewall_rule_group",
-    "resource/aws_networkfirewall_tls_inspection_configuration",
-    "resource/aws_networkfirewall_vpc_endpoint_association",
-    "resource/aws_networkflowmonitor_monitor",
-    "resource/aws_networkflowmonitor_scope",
-    "resource/aws_notifications_notification_configuration",
-    "resource/aws_observabilityadmin_s3_table_integration",
-    "resource/aws_odb_cloud_autonomous_vm_cluster",
-    "resource/aws_odb_cloud_exadata_infrastructure",
-    "resource/aws_odb_cloud_vm_cluster",
-    "resource/aws_odb_network",
-    "resource/aws_opensearch_application",
-    "resource/aws_opensearch_vpc_endpoint",
-    "resource/aws_opensearchserverless_collection",
-    "resource/aws_opensearchserverless_collection_group",
-    "resource/aws_opensearchserverless_security_config",
-    "resource/aws_organizations_delegated_administrator",
-    "resource/aws_organizations_policy",
-    "resource/aws_organizations_resource_policy",
-    "resource/aws_osis_pipeline",
-    "resource/aws_paymentcryptography_key",
-    "resource/aws_pinpoint_app",
-    "resource/aws_pinpoint_email_template",
-    "resource/aws_pinpoint_event_stream",
-    "resource/aws_pipes_pipe",
-    "resource/aws_placement_group",
-    "resource/aws_prometheus_rule_group_namespace",
-    "resource/aws_prometheus_workspace",
-    "resource/aws_qldb_stream",
-    "resource/aws_quicksight_account_subscription",
-    "resource/aws_quicksight_analysis",
-    "resource/aws_quicksight_dashboard",
-    "resource/aws_quicksight_data_set",
-    "resource/aws_quicksight_data_source",
-    "resource/aws_quicksight_folder",
-    "resource/aws_quicksight_group",
-    "resource/aws_quicksight_refresh_schedule",
-    "resource/aws_quicksight_template",
-    "resource/aws_quicksight_template_alias",
-    "resource/aws_quicksight_user",
-    "resource/aws_ram_principal_association",
-    "resource/aws_ram_resource_association",
-    "resource/aws_ram_resource_share",
-    "resource/aws_ram_resource_share_associations_exclusive",
-    "resource/aws_rds_cluster",
-    "resource/aws_rds_cluster_activity_stream",
-    "resource/aws_rds_cluster_endpoint",
-    "resource/aws_rds_cluster_instance",
-    "resource/aws_rds_cluster_role_association",
-    "resource/aws_rds_cluster_snapshot_copy",
-    "resource/aws_rds_custom_db_engine_version",
-    "resource/aws_rds_export_task",
-    "resource/aws_rds_global_cluster",
-    "resource/aws_rds_integration",
-    "resource/aws_redshift_cluster",
-    "resource/aws_redshift_cluster_iam_roles",
-    "resource/aws_redshift_cluster_snapshot",
-    "resource/aws_redshift_data_share_authorization",
-    "resource/aws_redshift_data_share_consumer_association",
-    "resource/aws_redshift_endpoint_authorization",
-    "resource/aws_redshift_event_subscription",
-    "resource/aws_redshift_hsm_client_certificate",
-    "resource/aws_redshift_hsm_configuration",
-    "resource/aws_redshift_integration",
-    "resource/aws_redshift_parameter_group",
-    "resource/aws_redshift_resource_policy",
-    "resource/aws_redshift_snapshot_copy_grant",
-    "resource/aws_redshift_snapshot_schedule",
-    "resource/aws_redshift_subnet_group",
-    "resource/aws_redshift_usage_limit",
-    "resource/aws_redshiftserverless_endpoint_access",
-    "resource/aws_redshiftserverless_namespace",
-    "resource/aws_redshiftserverless_resource_policy",
-    "resource/aws_redshiftserverless_snapshot",
-    "resource/aws_redshiftserverless_usage_limit",
-    "resource/aws_redshiftserverless_workgroup",
-    "resource/aws_resiliencehubv2_policy",
-    "resource/aws_resiliencehubv2_service",
-    "resource/aws_resiliencehubv2_system",
-    "resource/aws_resourceexplorer2_index",
-    "resource/aws_resourceexplorer2_view",
-    "resource/aws_rolesanywhere_profile",
-    "resource/aws_rolesanywhere_trust_anchor",
-    "resource/aws_route_table",
-    "resource/aws_route53_cidr_collection",
-    "resource/aws_route53_delegation_set",
-    "resource/aws_route53_health_check",
-    "resource/aws_route53_key_signing_key",
-    "resource/aws_route53_query_log",
-    "resource/aws_route53_resolver_dnssec_config",
-    "resource/aws_route53_resolver_firewall_domain_list",
-    "resource/aws_route53_resolver_firewall_rule_group",
-    "resource/aws_route53_resolver_firewall_rule_group_association",
-    "resource/aws_route53_resolver_query_log_config",
-    "resource/aws_route53_resolver_rule",
-    "resource/aws_route53_traffic_policy",
-    "resource/aws_route53_traffic_policy_instance",
-    "resource/aws_route53_zone",
-    "resource/aws_rum_app_monitor",
-  ]
 }
 
 check "schema_docs" {
@@ -2482,7 +2069,7 @@ check "schema_docs" {
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 
   ignore_targets = [
