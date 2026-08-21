@@ -8,4 +8,5 @@ rules:
       Prefer `fwflex.StringToFramework(ctx, $PTR)` to
       `fwflex.StringValueToFramework(ctx, aws.ToString($PTR))`
     pattern: fwflex.StringValueToFramework($CTX, aws.ToString($PTR))
+    fix: fwflex.StringToFramework($CTX, $PTR)
     severity: ERROR
