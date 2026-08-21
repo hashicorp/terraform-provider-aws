@@ -9,6 +9,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mailmanager/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -37,6 +38,9 @@ func sweepArchives(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.Archives {
+			if v.ArchiveState == awstypes.ArchiveStatePendingDeletion {
+				continue
+			}
 			sweepResources = append(sweepResources, framework.NewSweepResource(newArchiveResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.ArchiveId)),
 			))
