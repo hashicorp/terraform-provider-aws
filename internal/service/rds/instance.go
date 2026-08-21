@@ -184,6 +184,10 @@ func resourceInstance() *schema.Resource {
 								Type:     schema.TypeBool,
 								Optional: true,
 							},
+							"upgrade_target_storage_config": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
