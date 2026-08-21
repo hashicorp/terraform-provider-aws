@@ -47,6 +47,10 @@ func newArchiveResource(_ context.Context) (resource.ResourceWithConfigure, erro
 	return &archiveResource{}, nil
 }
 
+const (
+	archiveCreateTimeout = 2 * time.Minute
+)
+
 type archiveResource struct {
 	framework.ResourceWithModel[archiveResourceModel]
 	framework.WithImportByIdentity
@@ -133,7 +137,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 	input.Tags = getTagsIn(ctx)
 
 	out, err := tfresource.RetryWhenIsA[*mailmanager.CreateArchiveOutput, *awstypes.ConflictException](
-		ctx, 2*time.Minute, func(ctx context.Context) (*mailmanager.CreateArchiveOutput, error) {
+		ctx, archiveCreateTimeout, func(ctx context.Context) (*mailmanager.CreateArchiveOutput, error) {
 			return conn.CreateArchive(ctx, &input)
 		},
 	)
