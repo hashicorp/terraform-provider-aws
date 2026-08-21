@@ -167,20 +167,82 @@ resource "aws_bedrockagentcore_memory_strategy" "custom_episodic" {
 }
 ```
 
+### Custom Strategy with Self-Managed Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
+  name                      = "self-managed-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Self-managed processing strategy"
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed {
+      historical_context_window_size = 10
+
+      trigger_conditions {
+        message_based_trigger {
+          message_count = 12
+        }
+      }
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.example.arn
+        payload_delivery_bucket_name = aws_s3_bucket.example.bucket
+      }
+    }
+  }
+}
+```
+
+### Custom Strategy with Self-Managed Configuration
+
+```terraform
+resource "aws_bedrockagentcore_memory_strategy" "self_managed" {
+  name                      = "self-managed-strategy"
+  memory_id                 = aws_bedrockagentcore_memory.example.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.example.memory_execution_role_arn
+  type                      = "CUSTOM"
+  description               = "Self-managed processing strategy"
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed_configuration {
+      historical_context_window_size = 10
+
+      trigger_condition {
+        message_based_trigger {
+          message_count = 12
+        }
+      }
+
+      invocation_configuration {
+        topic_arn                    = aws_sns_topic.example.arn
+        payload_delivery_bucket_name = aws_s3_bucket.example.bucket
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `memory_id` - (Required) ID of the memory to associate with this strategy. Changing this forces a new resource.
-* `name` - (Required) Name of the memory strategy.
+* `name` - (Required) Name of the memory strategy. Changing this forces a new resource, because the service API does not support renaming a strategy.
 * `type` - (Required) Type of memory strategy. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`, `CUSTOM`. Changing this forces a new resource. Note that only one strategy of each built-in type (`SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`) can exist per memory.
 
 The following arguments are optional:
 
 * `configuration` - (Optional) Custom configuration block. Required when `type` is `CUSTOM`, must be omitted for other types. See [`configuration` Block](#configuration-block) below.
-* `description` - (Optional) Description of the memory strategy.
+* `description` - (Optional) Description of the memory strategy. Once set, a description cannot be removed via update because the service API ignores a null description and retains the previously stored value.
 * `memory_execution_role_arn` - (Optional, **Deprecated**) ARN of the IAM role that the memory service assumes to perform operations.
-* `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured.
+* `namespace_templates` - (Optional) Set containing exactly one namespace template where this strategy applies (for example `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}`). Namespace templates help organize and scope memory content. Exactly one of `namespace_templates` or `namespaces` must be configured for all strategies except `CUSTOM` strategies using `SELF_MANAGED` configuration.
 * `namespaces` - (Optional, **Deprecated**) Set of namespace identifiers where this strategy applies. Exactly one of `namespaces` or `namespace_templates` must be configured. The API treats this as a legacy parameter; prefer `namespace_templates`. Since the API mirrors the two fields, switching an existing configuration from `namespaces` to `namespace_templates` with the same value is an in-place no-op.
 * `reflection_configuration` - (Optional) Configuration for the reflections created with the episodic memory strategy. Valid when `type` is `EPISODIC`, must be omitted for other types. See [`reflection_configuration` Block](#reflection_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -189,10 +251,11 @@ The following arguments are optional:
 
 The `configuration` block supports the following arguments:
 
-* `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Once added, this block cannot be removed without recreating the resource.
-* `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
+* `consolidation` - (Optional) Consolidation configuration for the memory strategy. See [`consolidation` Block](#consolidation-block) below. Cannot be used with `type` set to `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
+* `extraction` - (Optional) Extraction configuration for the memory strategy. See [`extraction` Block](#extraction-block) below. Cannot be used with `type` set to `SUMMARY_OVERRIDE` or `SELF_MANAGED`. Once added, this block cannot be removed without recreating the resource.
 * `reflection` - (Optional) Reflection configuration for the memory strategy. See [`reflection` Block](#reflection-block) below. Can only be used, and is required, with `type` set to `EPISODIC_OVERRIDE`. Once added, this block cannot be removed without recreating the resource.
-* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`. Changing this forces a new resource.
+* `self_managed_configuration` - (Optional) Self-managed processing configuration. Required when `type` is `SELF_MANAGED` and only valid for that type. See [`self_managed_configuration` Block](#self_managed_configuration-block) below.
+* `type` - (Required) Type of custom override. Valid values: `SEMANTIC_OVERRIDE`, `SUMMARY_OVERRIDE`, `USER_PREFERENCE_OVERRIDE`, `EPISODIC_OVERRIDE`, `SELF_MANAGED`. Changing this forces a new resource.
 
 ### `consolidation` Block
 
@@ -218,15 +281,88 @@ The `reflection` block supports the following arguments:
 
 ### `reflection_configuration` Block
 
-The `reflection_configuration` supports the following arguments:
+The `reflection_configuration` block supports the following arguments:
 
 * `namespace_templates` - (Required) Namespace templates over which to create reflections. Can be less nested than episode namespaces.
+
+### `self_managed_configuration` Block
+
+The `self_managed_configuration` block supports the following arguments.
+
+* `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
+* `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
+* `trigger_conditions` - (Optional) Conditions that trigger memory processing. See [`trigger_conditions` Block](#trigger_conditions-block) below. When omitted, the service supplies the documented defaults for all three trigger types.
+
+### `invocation_configuration` Block
+
+The `invocation_configuration` block supports the following arguments:
+
+* `payload_delivery_bucket_name` - (Required) S3 bucket name for event payload delivery.
+* `topic_arn` - (Required) ARN of the SNS topic for job notifications.
+
+### `trigger_conditions` Block
+
+The `trigger_conditions` block supports the following arguments:
+
+* `message_based_trigger` - (Optional) Message-based condition. See [`message_based_trigger` Block](#message_based_trigger-block) below.
+* `time_based_trigger` - (Optional) Idle-time condition. See [`time_based_trigger` Block](#time_based_trigger-block) below.
+* `token_based_trigger` - (Optional) Token-based condition. See [`token_based_trigger` Block](#token_based_trigger-block) below.
+
+### `message_based_trigger` Block
+
+The `message_based_trigger` block supports the following arguments:
+
+* `message_count` - (Required) Number of messages that trigger memory processing. Accepts values from `1` to `50`.
+
+### `time_based_trigger` Block
+
+The `time_based_trigger` block supports the following arguments:
+
+* `idle_session_timeout` - (Required) Idle session timeout (seconds) that triggers memory processing. Accepts values from `10` to `3000`.
+
+### `token_based_trigger` Block
+
+The `token_based_trigger` block supports the following arguments:
+
+* `token_count` - (Required) Number of tokens that trigger memory processing. Accepts values from `100` to `500000`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
+
+### `configuration.self_managed_configuration` Block
+
+The `configuration.self_managed_configuration` block exports the following attributes in addition to the arguments above:
+
+* `trigger_conditions_actual` - Actual deployed trigger conditions.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual` block exports the following attributes:
+
+* `message_based_trigger` - Message-based condition.
+* `time_based_trigger` - Idle-time condition.
+* `token_based_trigger` - Token-based condition.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.message_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.message_based_trigger` block exports the following attributes:
+
+* `message_count` - Number of messages that trigger memory processing.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.time_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.time_based_trigger` block exports the following attributes:
+
+* `idle_session_timeout` - Idle session timeout (seconds) that triggers memory processing.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.token_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.token_based_trigger` block exports the following attributes:
+
+* `token_count` - Number of tokens that trigger memory processing.
 
 ## Timeouts
 
@@ -238,17 +374,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Memory Strategy using the `memory_id,strategy_id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_memory_strategy.example
-  id = "MEMORY1234567890,STRATEGY0987654321"
+  identity = {
+    memory_id          = "example_memory-5JcvKJ4GP0"
+    memory_strategy_id = "example_memory_strategy-pblFzi8VyW"
+  }
+}
+
+resource "aws_bedrockagentcore_memory_strategy" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Memory Strategy using the `memory_id,strategy_id`. For example:
+### Identity Schema
+
+#### Required
+
+* `memory_id` (String) Memory ID.
+* `memory_strategy_id` (String) Memory strategy ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import memory strategies using `memory_id` and `memory_strategy_id` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_memory_strategy.example
+  id = "example_memory-5JcvKJ4GP0,example_memory_strategy-pblFzi8VyW"
+}
+```
+
+Using `terraform import`, import memory strategies using `memory_id` and `memory_strategy_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_bedrockagentcore_memory_strategy.example MEMORY1234567890,STRATEGY0987654321
+% terraform import aws_bedrockagentcore_memory_strategy.example example_memory-5JcvKJ4GP0,example_memory_strategy-pblFzi8VyW
 ```
