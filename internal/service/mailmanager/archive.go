@@ -59,6 +59,13 @@ type archiveResource struct {
 func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"archive_state": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ArchiveState](),
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"created_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -68,6 +75,13 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"last_updated_timestamp": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -80,20 +94,6 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 						regexache.MustCompile(`^[a-zA-Z0-9-_]+$`),
 						"must contain only alphanumeric characters, hyphens, and underscores",
 					),
-				},
-			},
-			names.AttrKMSKeyARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"archive_state": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.ArchiveState](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
