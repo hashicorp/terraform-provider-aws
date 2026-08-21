@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix in-place removal of `volume_configuration` (managed EBS volume)
+```
