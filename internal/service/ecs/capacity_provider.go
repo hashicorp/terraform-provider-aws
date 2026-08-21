@@ -44,11 +44,11 @@ func resourceCapacityProvider() *schema.Resource {
 		DeleteWithoutTimeout: resourceCapacityProviderDelete,
 
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-			// Ensure exactly one of auto_scaling_group_provider or managed_instances_provider is specified
 			asgProvider := diff.Get("auto_scaling_group_provider").([]any)
 			managedProvider := diff.Get("managed_instances_provider").([]any)
 			clusterName := diff.Get("cluster").(string)
 
+			// Ensure exactly one of auto_scaling_group_provider or managed_instances_provider is specified
 			if len(asgProvider) == 0 && len(managedProvider) == 0 {
 				return errors.New("exactly one of auto_scaling_group_provider or managed_instances_provider must be specified")
 			} else if len(asgProvider) > 0 && len(managedProvider) > 0 {
@@ -56,15 +56,40 @@ func resourceCapacityProvider() *schema.Resource {
 			}
 
 			// Validate cluster field requirements
+			if len(managedProvider) > 0 && clusterName == "" {
+				return errors.New("cluster is required when using managed_instances_provider")
+			} else if len(asgProvider) > 0 && clusterName != "" {
+				return errors.New("cluster must not be set when using auto_scaling_group_provider")
+			}
+
+			// Validate capacity reservation rules for managed instances providers
 			if len(managedProvider) > 0 {
-				// cluster is required for Managed Instances CP
-				if clusterName == "" {
-					return errors.New("cluster is required when using managed_instances_provider")
+				capacityOptionType := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_option_type").(string)
+				capacityReservations := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations").([]any)
+				instanceRequirements := diff.Get("managed_instances_provider.0.instance_launch_template.0.instance_requirements").([]any)
+				hasCapacityReservations := len(capacityReservations) > 0
+
+				if hasCapacityReservations && capacityOptionType != string(awstypes.CapacityOptionTypeReserved) {
+					return errors.New("capacity_reservations can only be set when capacity_option_type is RESERVED")
 				}
-			} else if len(asgProvider) > 0 {
-				// cluster must not be set for ASG CP
-				if clusterName != "" {
-					return errors.New("cluster must not be set when using auto_scaling_group_provider")
+				if capacityOptionType == string(awstypes.CapacityOptionTypeReserved) && !hasCapacityReservations {
+					return errors.New("capacity_reservations must be set when capacity_option_type is RESERVED")
+				}
+
+				if hasCapacityReservations {
+					reservationPreference := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_preference").(string)
+					reservationGroupArn := diff.Get("managed_instances_provider.0.instance_launch_template.0.capacity_reservations.0.reservation_group_arn").(string)
+
+					if reservationGroupArn != "" && reservationPreference != "" && reservationPreference != string(awstypes.CapacityReservationPreferenceReservationsOnly) {
+						return errors.New("reservation_group_arn can only be set when reservation_preference is RESERVATIONS_ONLY")
+					}
+
+					switch reservationPreference {
+					case string(awstypes.CapacityReservationPreferenceReservationsOnly), string(awstypes.CapacityReservationPreferenceReservationsFirst):
+						if len(instanceRequirements) == 0 {
+							return errors.New("instance_requirements must be provided when reservation_preference is RESERVATIONS_ONLY or RESERVATIONS_FIRST")
+						}
+					}
 				}
 			}
 
@@ -188,6 +213,26 @@ func resourceCapacityProvider() *schema.Resource {
 											ForceNew:         true,
 											Computed:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+										},
+										"capacity_reservations": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"reservation_group_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"reservation_preference": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+													},
+												},
+											},
 										},
 										"ec2_instance_profile_arn": {
 											Type:         schema.TypeString,
@@ -921,25 +966,25 @@ func expandManagedScaling(configured any) *awstypes.ManagedScaling {
 	return &managedScaling
 }
 
-func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider) []map[string]any {
-	if provider == nil {
+func flattenAutoScalingGroupProvider(apiObject *awstypes.AutoScalingGroupProvider) []map[string]any {
+	if apiObject == nil {
 		return nil
 	}
 
 	p := map[string]any{
-		"auto_scaling_group_arn":         aws.ToString(provider.AutoScalingGroupArn),
-		"managed_draining":               provider.ManagedDraining,
+		"auto_scaling_group_arn":         aws.ToString(apiObject.AutoScalingGroupArn),
+		"managed_draining":               apiObject.ManagedDraining,
 		"managed_scaling":                []map[string]any{},
-		"managed_termination_protection": provider.ManagedTerminationProtection,
+		"managed_termination_protection": apiObject.ManagedTerminationProtection,
 	}
 
-	if provider.ManagedScaling != nil {
+	if apiObject.ManagedScaling != nil {
 		m := map[string]any{
-			"instance_warmup_period":    aws.ToInt32(provider.ManagedScaling.InstanceWarmupPeriod),
-			"maximum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MaximumScalingStepSize),
-			"minimum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MinimumScalingStepSize),
-			names.AttrStatus:            provider.ManagedScaling.Status,
-			"target_capacity":           aws.ToInt32(provider.ManagedScaling.TargetCapacity),
+			"instance_warmup_period":    aws.ToInt32(apiObject.ManagedScaling.InstanceWarmupPeriod),
+			"maximum_scaling_step_size": aws.ToInt32(apiObject.ManagedScaling.MaximumScalingStepSize),
+			"minimum_scaling_step_size": aws.ToInt32(apiObject.ManagedScaling.MinimumScalingStepSize),
+			names.AttrStatus:            apiObject.ManagedScaling.Status,
+			"target_capacity":           aws.ToInt32(apiObject.ManagedScaling.TargetCapacity),
 		}
 
 		p["managed_scaling"] = []map[string]any{m}
@@ -1038,6 +1083,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
 	}
 
+	if v, ok := tfMap["capacity_reservations"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservations = expandCapacityReservationRequest(v)
+	}
+
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
 	}
@@ -1073,6 +1122,10 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplateUpdate{}
 
+	if v, ok := tfMap["capacity_reservations"].([]any); ok && len(v) > 0 {
+		apiObject.CapacityReservations = expandCapacityReservationRequest(v)
+	}
+
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
 	}
@@ -1095,6 +1148,25 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 
 	if v, ok := tfMap["local_storage_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LocalStorageConfiguration = expandManagedInstancesLocalStorageConfiguration(v)
+	}
+
+	return apiObject
+}
+
+func expandCapacityReservationRequest(tfList []any) *awstypes.CapacityReservationRequest {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CapacityReservationRequest{}
+
+	if v, ok := tfMap["reservation_group_arn"].(string); ok && v != "" {
+		apiObject.ReservationGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["reservation_preference"].(string); ok && v != "" {
+		apiObject.ReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
 	return apiObject
@@ -1427,22 +1499,22 @@ func expandAcceleratorTotalMemoryMiBRequest(tfList []any) *awstypes.AcceleratorT
 	return apiObject
 }
 
-func flattenManagedInstancesProvider(provider *awstypes.ManagedInstancesProvider) []map[string]any {
-	if provider == nil {
+func flattenManagedInstancesProvider(apiObject *awstypes.ManagedInstancesProvider) []map[string]any {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]any{
-		"infrastructure_role_arn": aws.ToString(provider.InfrastructureRoleArn),
-		names.AttrPropagateTags:   provider.PropagateTags,
+		"infrastructure_role_arn": aws.ToString(apiObject.InfrastructureRoleArn),
+		names.AttrPropagateTags:   apiObject.PropagateTags,
 	}
 
-	if provider.InstanceLaunchTemplate != nil {
-		tfMap["instance_launch_template"] = flattenInstanceLaunchTemplate(provider.InstanceLaunchTemplate)
+	if apiObject.InstanceLaunchTemplate != nil {
+		tfMap["instance_launch_template"] = flattenInstanceLaunchTemplate(apiObject.InstanceLaunchTemplate)
 	}
 
-	if provider.InfrastructureOptimization != nil {
-		tfMap["infrastructure_optimization"] = flattenInfrastructureOptimization(provider.InfrastructureOptimization)
+	if apiObject.InfrastructureOptimization != nil {
+		tfMap["infrastructure_optimization"] = flattenInfrastructureOptimization(apiObject.InfrastructureOptimization)
 	}
 
 	return []map[string]any{tfMap}
@@ -1460,153 +1532,173 @@ func flattenInfrastructureOptimization(apiObject *awstypes.InfrastructureOptimiz
 	return []map[string]any{tfMap}
 }
 
-func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []map[string]any {
-	if template == nil {
+func flattenInstanceLaunchTemplate(apiObject *awstypes.InstanceLaunchTemplate) []map[string]any {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]any{
-		"capacity_option_type":     template.CapacityOptionType,
-		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
-		"monitoring":               template.Monitoring,
+		"capacity_option_type":     apiObject.CapacityOptionType,
+		"ec2_instance_profile_arn": aws.ToString(apiObject.Ec2InstanceProfileArn),
+		"monitoring":               apiObject.Monitoring,
 	}
 
-	if template.InstanceRequirements != nil {
-		tfMap["instance_requirements"] = flattenInstanceRequirementsRequest(template.InstanceRequirements)
+	if apiObject.CapacityReservations != nil {
+		tfMap["capacity_reservations"] = flattenCapacityReservationRequest(apiObject.CapacityReservations)
 	}
 
-	if template.NetworkConfiguration != nil {
+	if apiObject.InstanceRequirements != nil {
+		tfMap["instance_requirements"] = flattenInstanceRequirementsRequest(apiObject.InstanceRequirements)
+	}
+
+	if apiObject.NetworkConfiguration != nil {
 		networkConfig := map[string]any{
-			names.AttrSubnets: template.NetworkConfiguration.Subnets,
+			names.AttrSubnets: apiObject.NetworkConfiguration.Subnets,
 		}
-		if template.NetworkConfiguration.SecurityGroups != nil {
-			networkConfig[names.AttrSecurityGroups] = template.NetworkConfiguration.SecurityGroups
+		if apiObject.NetworkConfiguration.SecurityGroups != nil {
+			networkConfig[names.AttrSecurityGroups] = apiObject.NetworkConfiguration.SecurityGroups
 		}
 		tfMap[names.AttrNetworkConfiguration] = []map[string]any{networkConfig}
 	}
 
-	if template.StorageConfiguration != nil {
+	if apiObject.StorageConfiguration != nil {
 		tfMap["storage_configuration"] = []map[string]any{{
-			"storage_size_gib": aws.ToInt32(template.StorageConfiguration.StorageSizeGiB),
+			"storage_size_gib": aws.ToInt32(apiObject.StorageConfiguration.StorageSizeGiB),
 		}}
 	}
 
-	if template.LocalStorageConfiguration != nil {
+	if apiObject.LocalStorageConfiguration != nil {
 		tfMap["local_storage_configuration"] = []map[string]any{{
-			"use_local_storage": template.LocalStorageConfiguration.UseLocalStorage,
+			"use_local_storage": apiObject.LocalStorageConfiguration.UseLocalStorage,
 		}}
 	}
 
 	return []map[string]any{tfMap}
 }
 
-func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsRequest) []map[string]any {
-	if req == nil {
+func flattenCapacityReservationRequest(apiObject *awstypes.CapacityReservationRequest) []map[string]any {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]any{
-		"bare_metal":            req.BareMetal,
-		"burstable_performance": req.BurstablePerformance,
-		"local_storage":         req.LocalStorage,
-		"max_spot_price_as_percentage_of_optimal_on_demand_price": aws.ToInt32(req.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice),
-		"on_demand_max_price_percentage_over_lowest_price":        aws.ToInt32(req.OnDemandMaxPricePercentageOverLowestPrice),
-		"require_hibernate_support":                               aws.ToBool(req.RequireHibernateSupport),
-		"spot_max_price_percentage_over_lowest_price":             aws.ToInt32(req.SpotMaxPricePercentageOverLowestPrice),
+		"reservation_preference": apiObject.ReservationPreference,
 	}
 
-	if req.AcceleratorCount != nil {
+	if apiObject.ReservationGroupArn != nil {
+		tfMap["reservation_group_arn"] = aws.ToString(apiObject.ReservationGroupArn)
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenInstanceRequirementsRequest(apiObject *awstypes.InstanceRequirementsRequest) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"bare_metal":            apiObject.BareMetal,
+		"burstable_performance": apiObject.BurstablePerformance,
+		"local_storage":         apiObject.LocalStorage,
+		"max_spot_price_as_percentage_of_optimal_on_demand_price": aws.ToInt32(apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice),
+		"on_demand_max_price_percentage_over_lowest_price":        aws.ToInt32(apiObject.OnDemandMaxPricePercentageOverLowestPrice),
+		"require_hibernate_support":                               aws.ToBool(apiObject.RequireHibernateSupport),
+		"spot_max_price_percentage_over_lowest_price":             aws.ToInt32(apiObject.SpotMaxPricePercentageOverLowestPrice),
+	}
+
+	if apiObject.AcceleratorCount != nil {
 		tfMap["accelerator_count"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.AcceleratorCount.Min),
-			names.AttrMax: aws.ToInt32(req.AcceleratorCount.Max),
+			names.AttrMin: aws.ToInt32(apiObject.AcceleratorCount.Min),
+			names.AttrMax: aws.ToInt32(apiObject.AcceleratorCount.Max),
 		}}
 	}
 
-	if req.AcceleratorManufacturers != nil {
-		tfMap["accelerator_manufacturers"] = req.AcceleratorManufacturers
+	if apiObject.AcceleratorManufacturers != nil {
+		tfMap["accelerator_manufacturers"] = apiObject.AcceleratorManufacturers
 	}
 
-	if req.AcceleratorNames != nil {
-		tfMap["accelerator_names"] = req.AcceleratorNames
+	if apiObject.AcceleratorNames != nil {
+		tfMap["accelerator_names"] = apiObject.AcceleratorNames
 	}
 
-	if req.AcceleratorTotalMemoryMiB != nil {
+	if apiObject.AcceleratorTotalMemoryMiB != nil {
 		tfMap["accelerator_total_memory_mib"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.AcceleratorTotalMemoryMiB.Min),
-			names.AttrMax: aws.ToInt32(req.AcceleratorTotalMemoryMiB.Max),
+			names.AttrMin: aws.ToInt32(apiObject.AcceleratorTotalMemoryMiB.Min),
+			names.AttrMax: aws.ToInt32(apiObject.AcceleratorTotalMemoryMiB.Max),
 		}}
 	}
 
-	if req.AcceleratorTypes != nil {
-		tfMap["accelerator_types"] = req.AcceleratorTypes
+	if apiObject.AcceleratorTypes != nil {
+		tfMap["accelerator_types"] = apiObject.AcceleratorTypes
 	}
 
-	if req.AllowedInstanceTypes != nil {
-		tfMap["allowed_instance_types"] = req.AllowedInstanceTypes
+	if apiObject.AllowedInstanceTypes != nil {
+		tfMap["allowed_instance_types"] = apiObject.AllowedInstanceTypes
 	}
 
-	if req.BaselineEbsBandwidthMbps != nil {
+	if apiObject.BaselineEbsBandwidthMbps != nil {
 		tfMap["baseline_ebs_bandwidth_mbps"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.BaselineEbsBandwidthMbps.Min),
-			names.AttrMax: aws.ToInt32(req.BaselineEbsBandwidthMbps.Max),
+			names.AttrMin: aws.ToInt32(apiObject.BaselineEbsBandwidthMbps.Min),
+			names.AttrMax: aws.ToInt32(apiObject.BaselineEbsBandwidthMbps.Max),
 		}}
 	}
 
-	if req.CpuManufacturers != nil {
-		tfMap["cpu_manufacturers"] = req.CpuManufacturers
+	if apiObject.CpuManufacturers != nil {
+		tfMap["cpu_manufacturers"] = apiObject.CpuManufacturers
 	}
 
-	if req.ExcludedInstanceTypes != nil {
-		tfMap["excluded_instance_types"] = req.ExcludedInstanceTypes
+	if apiObject.ExcludedInstanceTypes != nil {
+		tfMap["excluded_instance_types"] = apiObject.ExcludedInstanceTypes
 	}
 
-	if req.InstanceGenerations != nil {
-		tfMap["instance_generations"] = req.InstanceGenerations
+	if apiObject.InstanceGenerations != nil {
+		tfMap["instance_generations"] = apiObject.InstanceGenerations
 	}
 
-	if req.LocalStorageTypes != nil {
-		tfMap["local_storage_types"] = req.LocalStorageTypes
+	if apiObject.LocalStorageTypes != nil {
+		tfMap["local_storage_types"] = apiObject.LocalStorageTypes
 	}
 
-	if req.MemoryGiBPerVCpu != nil {
+	if apiObject.MemoryGiBPerVCpu != nil {
 		tfMap["memory_gib_per_vcpu"] = []map[string]any{{
-			names.AttrMin: aws.ToFloat64(req.MemoryGiBPerVCpu.Min),
-			names.AttrMax: aws.ToFloat64(req.MemoryGiBPerVCpu.Max),
+			names.AttrMin: aws.ToFloat64(apiObject.MemoryGiBPerVCpu.Min),
+			names.AttrMax: aws.ToFloat64(apiObject.MemoryGiBPerVCpu.Max),
 		}}
 	}
 
-	if req.MemoryMiB != nil {
+	if apiObject.MemoryMiB != nil {
 		tfMap["memory_mib"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.MemoryMiB.Min),
-			names.AttrMax: aws.ToInt32(req.MemoryMiB.Max),
+			names.AttrMin: aws.ToInt32(apiObject.MemoryMiB.Min),
+			names.AttrMax: aws.ToInt32(apiObject.MemoryMiB.Max),
 		}}
 	}
 
-	if req.NetworkBandwidthGbps != nil {
+	if apiObject.NetworkBandwidthGbps != nil {
 		tfMap["network_bandwidth_gbps"] = []map[string]any{{
-			names.AttrMin: aws.ToFloat64(req.NetworkBandwidthGbps.Min),
-			names.AttrMax: aws.ToFloat64(req.NetworkBandwidthGbps.Max),
+			names.AttrMin: aws.ToFloat64(apiObject.NetworkBandwidthGbps.Min),
+			names.AttrMax: aws.ToFloat64(apiObject.NetworkBandwidthGbps.Max),
 		}}
 	}
 
-	if req.NetworkInterfaceCount != nil {
+	if apiObject.NetworkInterfaceCount != nil {
 		tfMap["network_interface_count"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.NetworkInterfaceCount.Min),
-			names.AttrMax: aws.ToInt32(req.NetworkInterfaceCount.Max),
+			names.AttrMin: aws.ToInt32(apiObject.NetworkInterfaceCount.Min),
+			names.AttrMax: aws.ToInt32(apiObject.NetworkInterfaceCount.Max),
 		}}
 	}
 
-	if req.TotalLocalStorageGB != nil {
+	if apiObject.TotalLocalStorageGB != nil {
 		tfMap["total_local_storage_gb"] = []map[string]any{{
-			names.AttrMin: aws.ToFloat64(req.TotalLocalStorageGB.Min),
-			names.AttrMax: aws.ToFloat64(req.TotalLocalStorageGB.Max),
+			names.AttrMin: aws.ToFloat64(apiObject.TotalLocalStorageGB.Min),
+			names.AttrMax: aws.ToFloat64(apiObject.TotalLocalStorageGB.Max),
 		}}
 	}
 
-	if req.VCpuCount != nil {
+	if apiObject.VCpuCount != nil {
 		tfMap["vcpu_count"] = []map[string]any{{
-			names.AttrMin: aws.ToInt32(req.VCpuCount.Min),
-			names.AttrMax: aws.ToInt32(req.VCpuCount.Max),
+			names.AttrMin: aws.ToInt32(apiObject.VCpuCount.Min),
+			names.AttrMax: aws.ToInt32(apiObject.VCpuCount.Max),
 		}}
 	}
 

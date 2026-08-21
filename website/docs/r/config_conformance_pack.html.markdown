@@ -103,7 +103,7 @@ The `input_parameter` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the conformance pack.
+* `arn` - ARN of the conformance pack.
 
 ## Import
 

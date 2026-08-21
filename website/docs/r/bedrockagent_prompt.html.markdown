@@ -66,7 +66,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the prompt.
 * `default_variant` - (Optional) Name of the default variant for your prompt.
-* `customer_encryption_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key that you encrypted the prompt with.
+* `customer_encryption_key_arn` - (Optional) ARN of the KMS key that you encrypted the prompt with.
 * `variant` - (Optional) A list of objects, each containing details about a variant of the prompt. See [Variant](#variant) for more information.
 * `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -180,7 +180,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the prompt.
+* `arn` - ARN of the prompt.
 * `id` - Unique identifier of the prompt.
 * `version` - Version of the prompt. When you create a prompt, the version created is the `DRAFT` version.
 * `created_at` - Time at which the prompt was created.

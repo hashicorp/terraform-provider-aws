@@ -6,7 +6,6 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +27,7 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,8 +51,8 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "bedrock-agentcore", "memory/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -69,7 +68,7 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +104,7 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -158,7 +157,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -197,7 +196,7 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -240,7 +239,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -465,8 +464,4 @@ resource "aws_bedrockagentcore_memory" "test" {
   }
 }
 `, rName))
-}
-
-func randomMemoryName(t *testing.T) string {
-	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10)), "-", "_")
 }

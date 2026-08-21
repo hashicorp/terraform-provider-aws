@@ -107,7 +107,7 @@ The `auto_scaling_configuration` block supports the following arguments:
 The `capacity_configuration` block supports the following arguments:
 
 * `node_count` - (Required) Number of instances running in a cluster. Must be at least 1 and at most 5.
-* `node_type` - (Required) Determines the hardware of the host computer used for your cluster instance. Valid values are `kx.s.large`, `kx.s.xlarge`, `kx.s.2xlarge`, `kx.s.4xlarge`, `kx.s.8xlarge`, `kx.s.16xlarge`, and `kx.s.32xlarge`.
+* `node_type` - (Required) Hardware of the host computer used for your cluster instance. Valid values are `kx.s.large`, `kx.s.xlarge`, `kx.s.2xlarge`, `kx.s.4xlarge`, `kx.s.8xlarge`, `kx.s.16xlarge`, and `kx.s.32xlarge`.
 
 ### `cache_storage_configurations` Block
 
@@ -177,7 +177,7 @@ The `tickerplant_log_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX cluster.
+* `arn` - ARN identifier of the KX cluster.
 * `created_timestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - Comma-delimited string joining environment ID and cluster name.
 * `last_modified_timestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.

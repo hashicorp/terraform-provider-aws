@@ -59,7 +59,7 @@ resource "aws_api_gateway_domain_name_access_association" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the API Gateway domain name access association.
+- `arn` (String) ARN of the API Gateway domain name access association.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain name acces associations using their `arn`. For example:
 

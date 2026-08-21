@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_eip"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) EIP resources.
+  Lists EC2 EIP resources.
 ---
 
 # List Resource: aws_eip
 
-Lists EC2 (Elastic Compute Cloud) EIP resources.
+Lists EC2 EIP resources.
 
 ## Example Usage
 
