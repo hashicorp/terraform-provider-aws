@@ -535,6 +535,32 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_db_instance.default
+  identity = {
+    identifier = "mydb-rds-instance"
+  }
+}
+
+resource "aws_db_instance" "default" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `identifier` (String) Identifier of the DB Instance.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
 ```terraform
