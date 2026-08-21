@@ -133,9 +133,9 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	var resourcePolicy *awstypes.ResourcePolicy
 	var err error
-	if v, ok := d.GetOk(names.AttrResourceARN); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrResourceARN); ok {
 		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, v.(string))
-	} else if v, ok := d.GetOk("policy_name"); ok && v.(string) != "" {
+	} else if v, ok := d.GetOk("policy_name"); ok {
 		resourcePolicy, err = findResourcePolicyByName(ctx, conn, v.(string))
 	} else {
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Resource Policy (%s): missing required policy_name or resource_arn", d.Id())
