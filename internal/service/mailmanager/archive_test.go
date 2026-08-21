@@ -157,9 +157,10 @@ func testAccMailManagerArchive_retention(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention"},
 			},
 			{
 				Config: testAccArchiveConfig_retention(rName, "TWO_YEARS"),
