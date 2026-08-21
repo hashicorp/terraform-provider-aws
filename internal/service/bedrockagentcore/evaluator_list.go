@@ -85,7 +85,7 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 				if request.IncludeResource {
 					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
 				} else {
-					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data))
+					data.EvaluatorID = fwflex.StringToFramework(ctx, item.EvaluatorId)
 				}
 				if result.Diagnostics.HasError() {
 					return
