@@ -30,7 +30,7 @@ Each resource must include at least one example Terraform configuration.
 
 - Examples must be functional.
 - Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
-- Terraform configuration should use `hcl` code fences. Do not use `terraform` code fences.
+- Terraform configuration should use `terraform` code fences. Do not use `hcl` code fences.
 - Examples should not define `terraform` or `provider` blocks.
 - Examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 - Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
