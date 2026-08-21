@@ -370,11 +370,12 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The local node storage allocated to the VM cluster, in gigabytes (GB).",
 			},
 			"system_version": schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: "The operating system version of the image chosen for the VM cluster.",
+				Description: "Operating system version for the VM cluster image. Use the ListSystemVersions operation to list versions available for the specified GI version and Exadata infrastructure shape. If omitted, AWS selects the system version. Changing this creates a new resource.",
 			},
 			"scan_listener_port_tcp": schema.Int32Attribute{
 				Computed: true,
@@ -527,6 +528,8 @@ func (r *resourceCloudVmCluster) ValidateConfig(ctx context.Context, req resourc
 func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var plan cloudVmClusterResourceModel
+	var configuredSystemVersion types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("system_version"), &configuredSystemVersion)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -550,6 +553,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.SystemVersion = cloudVmClusterSystemVersionForCreate(ctx, configuredSystemVersion, plan.SystemVersion)
 	out, err := conn.CreateCloudVmCluster(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -645,6 +649,20 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceCloudVmCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan cloudVmClusterResourceModel
+	var configuredSystemVersion, priorSystemVersion types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("system_version"), &configuredSystemVersion)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("system_version"), &priorSystemVersion)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.SystemVersion = cloudVmClusterSystemVersionForUpdate(configuredSystemVersion, plan.SystemVersion, priorSystemVersion)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceCloudVmCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -825,7 +843,7 @@ type cloudVmClusterResourceModel struct {
 	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                                 `tfsdk:"status"`
 	StatusReason                  types.String                                                                `tfsdk:"status_reason"`
 	StorageSizeInGBs              types.Int32                                                                 `tfsdk:"storage_size_in_gbs"`
-	SystemVersion                 types.String                                                                `tfsdk:"system_version"`
+	SystemVersion                 types.String                                                                `tfsdk:"system_version" autoflex:",noexpand"`
 	Timeouts                      timeouts.Value                                                              `tfsdk:"timeouts"`
 	Timezone                      types.String                                                                `tfsdk:"timezone"`
 	VipIds                        fwtypes.ListValueOf[types.String]                                           `tfsdk:"vip_ids"`
@@ -834,6 +852,22 @@ type cloudVmClusterResourceModel struct {
 	ScanListenerPortTcp           types.Int32                                                                 `tfsdk:"scan_listener_port_tcp" autoflex:",noflatten"`
 	Tags                          tftags.Map                                                                  `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                                  `tfsdk:"tags_all"`
+}
+
+func cloudVmClusterSystemVersionForCreate(ctx context.Context, config, plan types.String) *string {
+	if config.IsNull() {
+		return nil
+	}
+
+	return flex.StringFromFramework(ctx, plan)
+}
+
+func cloudVmClusterSystemVersionForUpdate(config, plan, state types.String) types.String {
+	if config.IsNull() && plan.IsUnknown() {
+		return state
+	}
+
+	return plan
 }
 
 type cloudVMCDataCollectionOptionsResourceModel struct {
