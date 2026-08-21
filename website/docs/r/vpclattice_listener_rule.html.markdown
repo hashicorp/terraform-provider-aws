@@ -85,11 +85,11 @@ resource "aws_vpclattice_listener_rule" "example" {
 The following arguments are required:
 
 * `action` - (Required) Action for the listener rule. See [`action` Block](#action-block) for details.
-* `listener_identifier` - (Required) ID or Amazon Resource Name (ARN) of the listener.
+* `listener_identifier` - (Required) ID or ARN of the listener.
 * `match` - (Required) Rule match. See [`match` Block](#match-block) for details.
 * `name` - (Required) Name of the rule. Must be unique within the listener. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `priority` - (Required) Priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
-* `service_identifier` - (Required) ID or Amazon Resource Name (ARN) of the service.
+* `service_identifier` - (Required) ID or ARN of the service.
 
 The following arguments are optional:
 
