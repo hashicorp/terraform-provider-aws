@@ -84,6 +84,67 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic summarization with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"critical", "high", "medium", "low"}),
+										}),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("priority"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeString),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("summarization_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSummarization),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{
+				Value: awstypes.SummaryMemoryStrategyInput{
+					MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+						MetadataSchema: []awstypes.MetadataSchemaEntry{
+							{
+								ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+									Value: awstypes.LlmExtractionConfig{
+										Definition:               aws.String("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+										LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+										Validation: &awstypes.ValidationMemberStringValidation{
+											Value: awstypes.StringValidation{
+												AllowedValues: []string{"critical", "high", "medium", "low"},
+											},
+										},
+									},
+								},
+								Key:  aws.String("priority"),
+								Type: awstypes.MetadataValueTypeString,
+							},
+						},
+					},
+					Name:               aws.String("summarization_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+		{
 			name: "basic semantic",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
@@ -99,6 +160,44 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			},
 			expected: &awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{
 				Value: awstypes.SemanticMemoryStrategyInput{
+					Name:               aws.String("semantic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
+			name: "basic semantic with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ExtractionConfigModel](ctx),
+							ExtractionType:   fwtypes.StringEnumValue(awstypes.ExtractionTypeStrictlyConsistent),
+							Key:              types.StringValue("key_001"),
+							Type:             fwtypes.StringEnumNull[awstypes.MetadataValueType](),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("semantic_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{
+				Value: awstypes.SemanticMemoryStrategyInput{
+					MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+						MetadataSchema: []awstypes.MetadataSchemaEntry{
+							{
+								ExtractionType: awstypes.ExtractionTypeStrictlyConsistent,
+								Key:            aws.String("key_001"),
+							},
+						},
+					},
 					Name:               aws.String("semantic_builtin_001"),
 					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
 				},
@@ -454,19 +553,26 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.EpisodicOverrideExtractionConfigurationInput{},
 			awstypes.EpisodicOverrideReflectionConfigurationInput{},
 			awstypes.EpisodicReflectionConfigurationInput{},
+			awstypes.ExtractionConfigMemberLlmExtractionConfig{},
 			awstypes.InvocationConfigurationInput{},
+			awstypes.LlmExtractionConfig{},
+			awstypes.MemoryRecordSchema{},
 			awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{},
 			awstypes.MessageBasedTriggerInput{},
+			awstypes.MetadataSchemaEntry{},
+			awstypes.NumberValidation{},
 			awstypes.SemanticMemoryStrategyInput{},
 			awstypes.SelfManagedConfigurationInput{},
 			awstypes.SummaryMemoryStrategyInput{},
 			awstypes.SemanticOverrideConfigurationInput{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
+			awstypes.StringListValidation{},
+			awstypes.StringValidation{},
 			awstypes.SummaryOverrideConfigurationInput{},
 			awstypes.SummaryOverrideConsolidationConfigurationInput{},
 			awstypes.TimeBasedTriggerInput{},
@@ -475,9 +581,12 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.TriggerConditionInputMemberTimeBasedTrigger{},
 			awstypes.TriggerConditionInputMemberTokenBasedTrigger{},
 			awstypes.UserPreferenceMemoryStrategyInput{},
+			awstypes.ValidationMemberNumberValidation{},
 			awstypes.UserPreferenceOverrideConfigurationInput{},
 			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
 			awstypes.UserPreferenceOverrideExtractionConfigurationInput{},
+			awstypes.ValidationMemberStringListValidation{},
+			awstypes.ValidationMemberStringValidation{},
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}
@@ -616,6 +725,101 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			},
 			expected: awstypes.ModifyMemoryStrategyInput{
 				Description:        aws.String("description_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+			},
+		},
+		{
+			name: "basic user preference with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support ranking."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NumberValidationModel{
+											MinValue: types.Float64Value(1.0),
+											MaxValue: types.Float64Value(5.0),
+										}),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("ranking"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeNumber),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support vibes."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringListValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"cool", "creepy", "hot"}),
+											MaxItems:      types.Int32Value(2),
+										}),
+										StringValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("vibes"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeStringlist),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("user_preference_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeUserPreference),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+					MetadataSchema: []awstypes.MetadataSchemaEntry{
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support ranking."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberNumberValidation{
+										Value: awstypes.NumberValidation{
+											MinValue: aws.Float64(1.0),
+											MaxValue: aws.Float64(5.0),
+										},
+									},
+								},
+							},
+							Key:  aws.String("ranking"),
+							Type: awstypes.MetadataValueTypeNumber,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support vibes."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringListValidation{
+										Value: awstypes.StringListValidation{
+											AllowedValues: []string{"cool", "creepy", "hot"},
+											MaxItems:      aws.Int32(2),
+										},
+									},
+								},
+							},
+							Key:  aws.String("vibes"),
+							Type: awstypes.MetadataValueTypeStringlist,
+						},
+					},
+				},
 				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
 			},
 		},
@@ -984,7 +1188,11 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.EpisodicOverrideExtractionConfigurationInput{},
 			awstypes.EpisodicReflectionConfigurationInput{},
 			awstypes.EpisodicOverrideReflectionConfigurationInput{},
+			awstypes.ExtractionConfigMemberLlmExtractionConfig{},
+			awstypes.LlmExtractionConfig{},
+			awstypes.MemoryRecordSchema{},
 			awstypes.MessageBasedTriggerInput{},
+			awstypes.MetadataSchemaEntry{},
 			awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{},
 			awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{},
 			awstypes.ModifyInvocationConfigurationInput{},
@@ -993,8 +1201,11 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{},
 			awstypes.ModifySelfManagedConfiguration{},
 			awstypes.ModifyStrategyConfiguration{},
+			awstypes.NumberValidation{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
+			awstypes.StringListValidation{},
+			awstypes.StringValidation{},
 			awstypes.SummaryOverrideConsolidationConfigurationInput{},
 			awstypes.TimeBasedTriggerInput{},
 			awstypes.TokenBasedTriggerInput{},
@@ -1003,6 +1214,9 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.TriggerConditionInputMemberTokenBasedTrigger{},
 			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
 			awstypes.UserPreferenceOverrideExtractionConfigurationInput{},
+			awstypes.ValidationMemberNumberValidation{},
+			awstypes.ValidationMemberStringListValidation{},
+			awstypes.ValidationMemberStringValidation{},
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}
@@ -1148,6 +1362,148 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Name:                   types.StringValue("episodic_builtin_001"),
 				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
+					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				}),
+				Type: fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeEpisodic),
+			},
+		},
+		{
+			name: "basic user episodic with memory_record_schema",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Type: "EPISODIC", // Yes, really.
+					Reflection: &awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration{
+						Value: awstypes.EpisodicReflectionConfiguration{
+							NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+						},
+					},
+				},
+				MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+					MetadataSchema: []awstypes.MetadataSchemaEntry{
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringValidation{
+										Value: awstypes.StringValidation{
+											AllowedValues: []string{"critical", "high", "medium", "low"},
+										},
+									},
+								},
+							},
+							Key:  aws.String("priority"),
+							Type: awstypes.MetadataValueTypeString,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support ranking."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberNumberValidation{
+										Value: awstypes.NumberValidation{
+											MinValue: aws.Float64(1.0),
+											MaxValue: aws.Float64(5.0),
+										},
+									},
+								},
+							},
+							Key:  aws.String("ranking"),
+							Type: awstypes.MetadataValueTypeNumber,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support vibes."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringListValidation{
+										Value: awstypes.StringListValidation{
+											AllowedValues: []string{"cool", "creepy", "hot"},
+											MaxItems:      aws.Int32(2),
+										},
+									},
+								},
+							},
+							Key:  aws.String("vibes"),
+							Type: awstypes.MetadataValueTypeStringlist,
+						},
+					},
+				},
+				Name:               aws.String("episodic_builtin_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				StrategyId:         aws.String("episodic_builtin_001-Qw47TlFGX5"),
+				Type:               awstypes.MemoryStrategyTypeEpisodic,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringNull(),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"critical", "high", "medium", "low"}),
+										}),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("priority"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeString),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support ranking."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NumberValidationModel{
+											MinValue: types.Float64Value(1.0),
+											MaxValue: types.Float64Value(5.0),
+										}),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("ranking"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeNumber),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support vibes."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringListValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"cool", "creepy", "hot"}),
+											MaxItems:      types.Int32Value(2),
+										}),
+										StringValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("vibes"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeStringlist),
+						},
+					}),
+				}),
+				MemoryStrategyID:   types.StringValue("episodic_builtin_001-Qw47TlFGX5"),
+				Name:               types.StringValue("episodic_builtin_001"),
+				Namespaces:         fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
 				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
 					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 				}),
