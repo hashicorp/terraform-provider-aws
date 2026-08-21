@@ -78,3 +78,5 @@ Using `terraform import`, import Direct Connect private virtual interfaces using
 ```console
 % terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd
 ```
+
+~> **Note:** When a virtual interface uses an ASN in the `bgp_asn` range (`1` to `2147483646`), AWS returns the value in both the `asn` and `asnLong` API fields, so import always populates `bgp_asn` rather than `bgp_asn_long`. If the virtual interface was originally created with `bgp_asn_long` set to a value in that range, update your configuration to use `bgp_asn` after import to avoid a difference. Virtual interfaces using a 4-byte ASN (greater than `2147483646`) import into `bgp_asn_long` as expected.
