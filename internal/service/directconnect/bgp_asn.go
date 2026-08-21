@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	bgpASNAttributeName     = "bgp_asn"
-	bgpASNLongAttributeName = "bgp_asn_long"
-	maxBGPASN               = 2147483646
-	maxBGPASNLong           = 4294967294
+	bgpASNAttributeName           = "bgp_asn"
+	bgpASNLongAttributeName       = "bgp_asn_long"
+	maxBGPASN                     = 2147483646
+	maxBGPASNLong           int64 = 4294967294
 )
 
 func bgpASNAttributeSchema(long bool) *schema.Schema {

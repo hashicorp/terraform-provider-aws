@@ -78,19 +78,30 @@ func TestBGPASNAttributeSchema(t *testing.T) {
 	}
 }
 
-func TestBGPASNPrivateVirtualInterfaceSchema(t *testing.T) {
+func TestBGPASNResourceSchemas(t *testing.T) {
 	t.Parallel()
 
-	resourceSchema := resourcePrivateVirtualInterface().SchemaFunc()
+	resourceFactories := map[string]func() *schema.Resource{
+		"private VIF": resourcePrivateVirtualInterface,
+		"transit VIF": resourceTransitVirtualInterface,
+	}
 
-	if resourceSchema[bgpASNAttributeName].Type != schema.TypeInt {
-		t.Errorf("%s Type = %v, want %v", bgpASNAttributeName, resourceSchema[bgpASNAttributeName].Type, schema.TypeInt)
-	}
-	if resourceSchema[bgpASNLongAttributeName].Type != schema.TypeString {
-		t.Errorf("%s Type = %v, want %v", bgpASNLongAttributeName, resourceSchema[bgpASNLongAttributeName].Type, schema.TypeString)
-	}
-	if !reflect.DeepEqual(resourceSchema[bgpASNAttributeName].ExactlyOneOf, resourceSchema[bgpASNLongAttributeName].ExactlyOneOf) {
-		t.Errorf("BGP ASN attributes have mismatched ExactlyOneOf values")
+	for name, resourceFactory := range resourceFactories {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			resourceSchema := resourceFactory().SchemaFunc()
+
+			if resourceSchema[bgpASNAttributeName].Type != schema.TypeInt {
+				t.Errorf("%s Type = %v, want %v", bgpASNAttributeName, resourceSchema[bgpASNAttributeName].Type, schema.TypeInt)
+			}
+			if resourceSchema[bgpASNLongAttributeName].Type != schema.TypeString {
+				t.Errorf("%s Type = %v, want %v", bgpASNLongAttributeName, resourceSchema[bgpASNLongAttributeName].Type, schema.TypeString)
+			}
+			if !reflect.DeepEqual(resourceSchema[bgpASNAttributeName].ExactlyOneOf, resourceSchema[bgpASNLongAttributeName].ExactlyOneOf) {
+				t.Errorf("BGP ASN attributes have mismatched ExactlyOneOf values")
+			}
+		})
 	}
 }
 
