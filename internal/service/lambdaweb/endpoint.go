@@ -49,6 +49,7 @@ import (
 // @IdentityAttribute("endpoint_name")
 // @ImportIDHandler("endpointImportID")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionEndpointOutput")
 // @Testing(importStateIdFunc="testAccEndpointImportStateIDFunc")
 func newEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {

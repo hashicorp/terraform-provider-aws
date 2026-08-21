@@ -48,6 +48,7 @@ import (
 // @IdentityAttribute("function_name")
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionOutput")
 // @Testing(importStateIdAttribute="function_name")
 func newFunctionResource(_ context.Context) (resource.ResourceWithConfigure, error) {

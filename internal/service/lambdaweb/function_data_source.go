@@ -18,6 +18,7 @@ import (
 
 // @FrameworkDataSource("aws_lambdaweb_function", name="Function")
 // @Tags(identifierAttribute="arn")
+// @Testing(preCheck="testAccPreCheck")
 func newFunctionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &functionDataSource{}, nil
 }

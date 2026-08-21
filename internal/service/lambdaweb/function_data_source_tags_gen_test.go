@@ -28,7 +28,10 @@ func TestAccLambdaWebFunctionDataSource_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -60,7 +63,10 @@ func TestAccLambdaWebFunctionDataSource_Tags_nullMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -88,7 +94,10 @@ func TestAccLambdaWebFunctionDataSource_Tags_emptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -116,7 +125,10 @@ func TestAccLambdaWebFunctionDataSource_Tags_DefaultTags_nonOverlapping(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +164,10 @@ func TestAccLambdaWebFunctionDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *te
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +209,10 @@ func TestAccLambdaWebFunctionDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		Steps: []resource.TestStep{
 			{

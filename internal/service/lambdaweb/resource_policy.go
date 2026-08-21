@@ -35,6 +35,7 @@ import (
 // @FrameworkResource("aws_lambdaweb_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheck")
 // Ignore `policy` because JSON is not normalized during attribute comparison.
 // @Testing(importIgnore="policy")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetResourcePolicyOutput")

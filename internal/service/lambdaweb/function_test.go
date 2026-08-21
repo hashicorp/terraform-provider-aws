@@ -7,13 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,6 +22,30 @@ import (
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// testAccPreCheck skips acceptance tests in regions where the Lambda Web API
+// is not yet available (the service is rolling out region by region pre-GA).
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
+
+	input := lambdaweb.ListWebFunctionsInput{}
+	_, err := conn.ListWebFunctions(ctx, &input)
+
+	// Regions where the Lambda Web API has not been rolled out yet respond
+	// with an AccessDeniedException that the pre-GA SDK surfaces without an
+	// error code, so match on the message as well.
+	if err != nil && strings.Contains(err.Error(), "Unable to determine service/operation name to be authorized") {
+		t.Skipf("skipping acceptance testing: Lambda Web API not available in this region: %s", err)
+	}
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
 
 func TestAccLambdaWebFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -32,7 +56,7 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,7 +99,7 @@ func TestAccLambdaWebFunction_update(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,7 +152,7 @@ func TestAccLambdaWebFunction_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.UsWest2RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
