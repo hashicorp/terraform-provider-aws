@@ -167,7 +167,7 @@ The `configuration` configuration block supports the following arguments:
 
 The `execute_command_configuration` configuration block supports the following arguments:
 
-* `kms_key_id` - (Optional) AWS Key Management Service key ID to encrypt the data between the local client and the container.
+* `kms_key_id` - (Optional) KMS key ID to encrypt the data between the local client and the container.
 * `log_configuration` - (Optional) Log configuration for the results of the execute command actions. Required when `logging` is `OVERRIDE`. See [`log_configuration` Block](#log_configuration-block) for details.
 * `logging` - (Optional) Log setting to use for redirecting logs for your execute command results. Valid values: `NONE`, `DEFAULT`, `OVERRIDE`.
 
@@ -185,8 +185,8 @@ The `log_configuration` configuration block supports the following arguments:
 
 The `managed_storage_configuration` configuration block supports the following arguments:
 
-* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ARN for the Fargate ephemeral storage.
-* `kms_key_id` - (Optional) AWS Key Management Service key ARN to encrypt the managed storage.
+* `fargate_ephemeral_storage_kms_key_id` - (Optional) KMS key ARN for the Fargate ephemeral storage.
+* `kms_key_id` - (Optional) KMS key ARN to encrypt the managed storage.
 
 ### `service_connect_defaults` Block
 
