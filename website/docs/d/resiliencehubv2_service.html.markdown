@@ -45,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 The `associated_system` block supports:
 
 * `system_arn` - ARN of the associated system.
+* `user_journey_ids` - List of user journey identifiers that associate the system with the service.
 
 ### `permission_model` Block
 

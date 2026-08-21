@@ -173,9 +173,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -576,6 +576,110 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 # The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
 # The tests must pass on the earliest supported Terraform version (0.12.31).
 
+SMOKE_TESTS_IAM = \
+	TestAccIAMRole_basic \
+	TestAccIAMRole_namePrefix \
+	TestAccIAMRole_disappears \
+	TestAccIAMRole_InlinePolicy_basic \
+	TestAccIAMPolicyDocumentDataSource_basic \
+	TestAccIAMPolicyDocumentDataSource_sourceConflicting \
+	TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON \
+	TestAccIAMRolePolicyAttachment_basic \
+	TestAccIAMRolePolicyAttachment_disappears \
+	TestAccIAMRolePolicyAttachment_Disappears_role \
+	TestAccIAMPolicy_basic \
+	TestAccIAMPolicy_policy \
+	TestAccIAMPolicy_tags \
+	TestAccIAMRolePolicy_basic \
+	TestAccIAMRolePolicy_unknownsInPolicy \
+	TestAccIAMInstanceProfile_basic \
+	TestAccIAMInstanceProfile_tags \
+	TestAccIAMPolicy_List_basic \
+	TestAccIAMRole_Identity_basic
+
+SMOKE_TESTS_LOGS = \
+	TestAccLogsLogGroup_basic \
+	TestAccLogsLogGroup_multiple
+
+SMOKE_TESTS_EC2 = \
+	TestAccVPCSecurityGroup_basic \
+	TestAccVPCSecurityGroup_egressMode \
+	TestAccVPCSecurityGroup_vpcAllEgress \
+	TestAccVPCSecurityGroupRule_race \
+	TestAccVPCSecurityGroupRule_protocolChange \
+	TestAccVPCDataSource_basic \
+	TestAccVPCSubnet_basic \
+	TestAccVPC_tenancy \
+	TestAccVPCRouteTableAssociation_Subnet_basic \
+	TestAccVPCRouteTable_basic
+
+SMOKE_TESTS_ECS = \
+	TestAccECSTaskDefinition_basic \
+	TestAccECSService_basic
+
+SMOKE_TESTS_ELBV2 = \
+	TestAccELBV2TargetGroup_basic
+
+SMOKE_TESTS_EVENTS = \
+	TestAccEventsPutEventsAction_basic
+
+SMOKE_TESTS_KMS = \
+	TestAccKMSKey_basic
+
+SMOKE_TESTS_LAMBDA = \
+	TestAccLambdaFunction_basic \
+	TestAccLambdaPermission_basic \
+	TestAccLambdaCapacityProvider_List_basic
+
+SMOKE_TESTS_STAGE_2 = \
+	$(SMOKE_TESTS_EC2) \
+	$(SMOKE_TESTS_LOGS) \
+	$(SMOKE_TESTS_ECS) \
+	$(SMOKE_TESTS_ELBV2) \
+	$(SMOKE_TESTS_EVENTS) \
+	$(SMOKE_TESTS_KMS)
+
+SMOKE_TESTS_META = \
+	TestAccMetaRegionDataSource_basic \
+	TestAccMetaRegionDataSource_endpoint \
+	TestAccMetaPartitionDataSource_basic
+
+SMOKE_TESTS_ROUTE53 = \
+	TestAccRoute53Record_basic_FullName \
+	TestAccRoute53Record_basic_ShortName \
+	TestAccRoute53Record_Latency_basic \
+	TestAccRoute53ZoneDataSource_name
+
+SMOKE_TESTS_S3 = \
+	TestAccS3Bucket_Basic_basic \
+	TestAccS3Bucket_Security_corsUpdate \
+	TestAccS3BucketPublicAccessBlock_basic \
+	TestAccS3BucketPolicy_basic \
+	TestAccS3BucketACL_updateACL \
+	TestAccS3Object_basic
+
+SMOKE_TESTS_SSM = \
+	TestAccSSMParameterEphemeral_basic
+
+SMOKE_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecret_basic
+
+SMOKE_TESTS_STS = \
+	TestAccSTSCallerIdentityDataSource_basic
+
+SMOKE_TESTS_FUNCTION = \
+	TestARNParseFunction_known
+
+SMOKE_TESTS_STAGE_3 = \
+	$(SMOKE_TESTS_LAMBDA) \
+	$(SMOKE_TESTS_META) \
+	$(SMOKE_TESTS_ROUTE53) \
+	$(SMOKE_TESTS_S3) \
+	$(SMOKE_TESTS_SSM) \
+	$(SMOKE_TESTS_SECRETSMANAGER) \
+	$(SMOKE_TESTS_STS) \
+	$(SMOKE_TESTS_FUNCTION)
+
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
 	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
@@ -583,7 +687,7 @@ sane: prereq-go ## Run sane check
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -592,7 +696,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -603,7 +707,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/sts/... \
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$'
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -612,7 +716,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$' || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 18-$$fails1 )) ; \
 	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
@@ -624,7 +728,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \
@@ -638,7 +742,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/sts/... \
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' || true` ; \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$' || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
 	passes=$$(( 54-$$tot_fails )) ; \
@@ -824,6 +928,10 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
+
+shellcheck: ## Lint shell scripts with ShellCheck
+	@echo "make: Lint shell scripts with ShellCheck..."
+	@find . -name '*.sh' -not -path './.git/*' -not -path './.teamcity/scripts/performance.sh' -exec shellcheck --severity=warning {} +
 
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
@@ -1300,6 +1408,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-service-naming \
 	semgrep-test \
 	semgrep-validate \
+	shellcheck \
 	skaff \
 	skaff-check-compile \
 	smoke \

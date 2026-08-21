@@ -6,6 +6,8 @@ package resiliencehubv2_test
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
+	"slices"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
@@ -248,6 +250,87 @@ func TestAccResilienceHubV2InputSource_resourceTags(t *testing.T) {
 						"tf_state_file_url": knownvalue.Null(),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/49570.
+func TestAccResilienceHubV2InputSource_resourceTagsShuffled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var is awstypes.InputSourceSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_input_source.test"
+	keys := []string{"Key1", "Key2", "Key3", "Key4"}
+	keysShuffled := slices.Clone(keys)
+	rand.Shuffle(len(keysShuffled), func(i, j int) { keysShuffled[i], keysShuffled[j] = keysShuffled[j], keysShuffled[i] })
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/resource_tag_shuffle/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          config.ListVariable(acctest.ListOfStringVariables(keys...)...),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"resource_tag": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:    knownvalue.StringExact(keys[0]),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact(rName)}),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:    knownvalue.StringExact(keys[1]),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact(rName)}),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:    knownvalue.StringExact(keys[2]),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact(rName)}),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:    knownvalue.StringExact(keys[3]),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact(rName)}),
+							}),
+						}),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/resource_tag_shuffle/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          config.ListVariable(acctest.ListOfStringVariables(keysShuffled...)...),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 		},

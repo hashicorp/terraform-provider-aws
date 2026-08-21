@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_nat_gateway"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) NAT Gateway resources.
+  Lists EC2 NAT Gateway resources.
 ---
 
 # List Resource: aws_nat_gateway
 
-Lists EC2 (Elastic Compute Cloud) NAT Gateway resources.
+Lists EC2 NAT Gateway resources.
 
 By default, NAT Gateways in terminal states (`deleting` and `deleted`) are excluded.
 

@@ -121,7 +121,7 @@ This resource supports the following arguments:
 
 ### `logging_configuration` Configuration Block
 
-* `log_destination` - (Required) Amazon Resource Name (ARN) of Kinesis Firehose Delivery Stream
+* `log_destination` - (Required) ARN of Kinesis Firehose Delivery Stream
 * `redacted_fields` - (Optional) Configuration block containing parts of the request that you want redacted from the logs. Detailed below.
 
 #### `redacted_fields` Configuration Block
@@ -154,7 +154,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the WAF Regional WebACL.
+* `arn` - ARN of the WAF Regional WebACL.
 * `id` - The ID of the WAF Regional WebACL.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

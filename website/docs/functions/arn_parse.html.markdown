@@ -10,7 +10,7 @@ description: |-
 
 Parses an ARN into its constituent parts.
 
-See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) for additional information on Amazon Resource Names.
+See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) for additional information on ARNs.
 
 ## Example Usage
 
@@ -36,4 +36,4 @@ arn_parse(arn string) object
 
 ## Arguments
 
-1. `arn` (String) ARN (Amazon Resource Name) to parse.
+1. `arn` (String) ARN to parse.
