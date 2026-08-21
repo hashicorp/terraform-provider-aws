@@ -57,6 +57,10 @@ func (l *archiveListResource) List(ctx context.Context, request list.ListRequest
 				return
 			}
 
+			if item.ArchiveState == awstypes.ArchiveStatePendingDeletion {
+				continue
+			}
+
 			id := aws.ToString(item.ArchiveId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
 
