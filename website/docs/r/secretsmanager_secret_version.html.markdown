@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secret_binary` - (Optional) Binary data that you want to encrypt and store in this version of the secret. This is required if `secret_string` or `secret_string_wo` is not set. Needs to be encoded to base64.
-* `secret_id` - (Required) Secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
+* `secret_id` - (Required) Secret to which you want to add a new version. You can specify either the ARN or the friendly name of the secret. The secret must already exist.
 * `secret_string` - (Optional) Text data that you want to encrypt and store in this version of the secret. This is required if `secret_binary` or `secret_string_wo` is not set.
 * `secret_string_wo` - (Optional) Text data that you want to encrypt and store in this version of the secret. This is required if `secret_binary` or `secret_string` is not set.
 * `secret_string_wo_version` - (Optional) Version identifier that works together with `secret_string_wo` to trigger an update. Increment this value when an update to `secret_string_wo` is required.

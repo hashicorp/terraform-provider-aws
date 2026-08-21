@@ -109,6 +109,13 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
+						"user_journey_ids": fwschema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Optional:   true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 20),
+							},
+						},
 					},
 				},
 			},
@@ -348,7 +355,8 @@ type serviceResourceModel struct {
 }
 
 type associatedSystemModel struct {
-	SystemARN fwtypes.ARN `tfsdk:"system_arn"`
+	SystemARN      fwtypes.ARN         `tfsdk:"system_arn"`
+	UserJourneyIDs fwtypes.SetOfString `tfsdk:"user_journey_ids"`
 }
 
 type permissionModelModel struct {

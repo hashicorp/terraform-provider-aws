@@ -85,7 +85,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster instance
+* `arn` - ARN of cluster instance
 * `cluster_identifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier

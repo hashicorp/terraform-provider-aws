@@ -32,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -62,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -92,14 +92,14 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "usage_notes" { }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "usage_notes" {}
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -115,13 +115,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -141,13 +141,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -167,14 +167,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -183,6 +183,52 @@ type "action" {
 }
 
 # ─── Check blocks ───────────────────────────────────────────────────────────
+
+check "banned_glosses" {
+  enabled = true
+
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
+  banned_glosses = {
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Domain Name System"                = "DNS"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Language"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
+  }
+
+  skip_frontmatter = true
+  severity         = "error"
+}
 
 check "schema_docs" {
   enabled = true
@@ -708,7 +754,6 @@ check "schema_docs" {
     "data_source/aws_vpc_peering_connections",
     "data_source/aws_vpc_security_group_rule",
     "data_source/aws_vpc_security_group_rules",
-    "data_source/aws_vpc",
     "data_source/aws_vpcs",
     "data_source/aws_vpn_connection",
     "data_source/aws_vpn_gateway",
@@ -745,7 +790,6 @@ check "schema_docs" {
     "list_resource/aws_subnet",
     "list_resource/aws_vpc_endpoint",
     "list_resource/aws_vpc_security_group_egress_rule",
-    "list_resource/aws_vpc",
     "resource/aws_accessanalyzer_analyzer",
     "resource/aws_accessanalyzer_archive_rule",
     "resource/aws_account_alternate_contact",
@@ -828,7 +872,6 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_gateway_target",
     "resource/aws_bedrockagentcore_gateway",
     "resource/aws_bedrockagentcore_harness",
-    "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
     "resource/aws_bedrockagentcore_registry",
     "resource/aws_bedrockagentcore_token_vault_cmk",
@@ -1961,7 +2004,6 @@ check "schema_docs" {
     "resource/aws_vpc_security_group_egress_rule",
     "resource/aws_vpc_security_group_ingress_rule",
     "resource/aws_vpc_security_group_vpc_association",
-    "resource/aws_vpc",
     "resource/aws_vpn_concentrator",
     "resource/aws_vpn_connection_route",
     "resource/aws_vpn_connection",
@@ -2027,7 +2069,7 @@ check "schema_docs" {
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 
   ignore_targets = [

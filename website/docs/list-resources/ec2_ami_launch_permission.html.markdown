@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_ami_launch_permission
 
-Lists EC2 (Elastic Compute Cloud) AMI Launch Permission resources.
+Lists EC2 AMI Launch Permission resources.
 
 This list resource returns all launch permissions granted on AMIs owned by the caller's account.
 

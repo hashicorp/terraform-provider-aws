@@ -65,4 +65,8 @@ variable "associated_system_count" {
   description = "Number of systems to associate with the service"
   type        = number
   nullable    = false
+  validation {
+    condition     = var.associated_system_count >= 0 && var.associated_system_count <= 2
+    error_message = "Value must be between 0 and 2 (inclusive)."
+  }
 }
