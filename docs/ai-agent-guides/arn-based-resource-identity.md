@@ -111,7 +111,7 @@ Relates #42984
 
 ```
 
-- Once the pull request is created, fetch the PR number to add changelog entries. Create a new file, `.changelog/<pr-number>.txt`, and include one enhancement entry per resource. Refer to `.changelog/43503.txt` for the appropriate formatting.
+- Once the pull request is created, run `changie new` for each affected resource and select the `Enhancement` kind. The pull request number is not required at this step — it will be backfilled automatically after the pull request merges.
 - Provide a summary of the completed changes.
 
 ## Common Issues and Troubleshooting
