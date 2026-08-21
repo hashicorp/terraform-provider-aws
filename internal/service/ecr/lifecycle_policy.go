@@ -35,7 +35,10 @@ import (
 // @Testing(idAttrDuplicates="repository")
 func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
+		// Create and Update do essentially teh same thing, so
+		// use teh same function for both
+		CreateWithoutTimeout: resourceLifecyclePolicyPut,
+		UpdateWithoutTimeout: resourceLifecyclePolicyPut,
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
 		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
 
@@ -44,7 +47,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 				names.AttrPolicy: {
 					Type:         schema.TypeString,
 					Required:     true,
-					ForceNew:     true,
 					ValidateFunc: validation.StringIsJSON,
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						equal, _ := equivalentLifecyclePolicyJSON(old, new)
@@ -67,7 +69,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 	}
 }
 
-func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceLifecyclePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
