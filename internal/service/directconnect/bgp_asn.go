@@ -82,7 +82,7 @@ func effectiveBGPASN(asn int32, asnLong *int64) int64 {
 func setBGPASN(d *schema.ResourceData, asn int32, asnLong *int64) error {
 	effectiveASN := effectiveBGPASN(asn, asnLong)
 
-	if _, ok := d.GetOk(bgpASNLongAttributeName); ok || asnLong != nil && effectiveASN > maxBGPASN {
+	if _, ok := d.GetOk(bgpASNLongAttributeName); ok || (asnLong != nil && effectiveASN > maxBGPASN) {
 		return d.Set(bgpASNLongAttributeName, strconv.FormatInt(effectiveASN, 10))
 	}
 

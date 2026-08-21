@@ -3,10 +3,19 @@
 ENHANCEMENTS:
 
 * data-source/aws_resiliencehubv2_service: Add `associated_system.user_journey_ids` attribute ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
+* resource/aws_bedrockagentcore_browser: Add plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory: Add Resource Identity support ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory_strategy: Add Resource Identity support ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory_strategy: Add `configuration.self_managed_configuration` argument in support of self-managed strategies ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory_strategy: Add plan-time validation of `description` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory_strategy: Change `description` to Optional and Computed ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
 
 BUG FIXES:
 
+* resource/aws_bedrockagentcore_harness: Correct plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory_strategy: Force resource replacement when `name` is modified ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_registry: Correct plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_resiliencehubv2_input_source: Change `resource_configuration.resource_tag` from `List` to `Set` to ignore ordering ([#49585](https://github.com/hashicorp/terraform-provider-aws/issues/49585))
 
 ## 6.61.0 (August 19, 2026)
