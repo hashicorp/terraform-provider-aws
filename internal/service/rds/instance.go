@@ -1967,6 +1967,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 	}
 
+	return resourceInstanceFlatten(ctx, meta.(*conns.AWSClient), v, d)
+}
+
+func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v *types.DBInstance, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.SetId(aws.ToString(v.DbiResourceId))
 	d.Set(names.AttrAllocatedStorage, v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
@@ -2068,7 +2074,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			original := original.(string)
 			if arn.IsARN(original) {
 				if !arn.IsARN(sourceDBIdentifier) {
-					awsClient := meta.(*conns.AWSClient)
 					sourceDBIdentifier = newDBInstanceARNString(ctx, awsClient, sourceDBIdentifier)
 				}
 			}
