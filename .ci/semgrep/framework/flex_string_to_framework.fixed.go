@@ -45,3 +45,20 @@ func testStringValueToFrameworkOK(ctx context.Context) types.String {
 	// ok: string-value-to-framework-with-aws-to-string
 	return fwflex.StringValueToFramework(ctx, "some plain string")
 }
+
+// string-value-to-framework-with-deref tests
+
+func testStringValueToFrameworkWithDeref1(ctx context.Context, o output) types.String {
+	// ruleid: string-value-to-framework-with-deref
+	return fwflex.StringValueToFramework(ctx, *o.Name)
+}
+
+func testStringValueToFrameworkWithDerefVariable(ctx context.Context, ptr *string) types.String {
+	// ruleid: string-value-to-framework-with-deref
+	return fwflex.StringValueToFramework(ctx, *ptr)
+}
+
+func testStringToFrameworkDerefOK(ctx context.Context, o output) types.String {
+	// ok: string-value-to-framework-with-deref
+	return fwflex.StringToFramework(ctx, o.Name)
+}
