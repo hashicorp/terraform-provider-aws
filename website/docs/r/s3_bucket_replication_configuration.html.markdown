@@ -422,7 +422,7 @@ The `access_control_translation` configuration block supports the following argu
 
 The `encryption_configuration` configuration block supports the following arguments:
 
-* `replica_kms_key_id` - (Required) ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in AWS Key Management Service (KMS) for the destination bucket.
+* `replica_kms_key_id` - (Required) ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in KMS for the destination bucket.
 
 ### `metrics` Block
 
