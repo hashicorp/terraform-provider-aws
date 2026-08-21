@@ -40,7 +40,7 @@ Use the following steps to add resource identity to an existing resource:
 - The generators will use the template files to generate the resource identity test configuration. These will be located in the `testdata` directory for the service. **Do not manually create test directories or files as they will be generated.**
 - The region template must be included inside each resource block in the template files. Add it as the first line after the resource declaration:
 
-```hcl
+```terraform
 resource "aws_service_thing" "test" {
 {{- template "region" }}
   name = var.rName
@@ -51,7 +51,7 @@ resource "aws_service_thing" "test" {
 - If the resource already has a tags template declaration different than the example above, e.g. `{{- template "tags" . }}`, leave it unchanged.
 - If the test configuration references an `aws_region` data source, the region template should also be embedded here.
 
-```hcl
+```terraform
 data "aws_region" "current" {
 {{- template "region" }}
 }
