@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -103,7 +102,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 	}
 
 	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
-	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
+	data.Status = fwflex.StringToFramework(ctx, out.Status)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
