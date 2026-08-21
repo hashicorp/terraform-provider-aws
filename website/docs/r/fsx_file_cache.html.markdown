@@ -97,7 +97,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the cache.
 * `data_repository_association_ids` - IDs of data repository associations that are associated with the cache.
-* `dns_name` - Domain Name System (DNS) name for the cache.
+* `dns_name` - DNS name for the cache.
 * `file_cache_id` - System-generated, unique ID of the cache.
 * `id` - System-generated, unique ID of the cache.
 * `network_interface_ids` - IDs of the network interfaces.
