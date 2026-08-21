@@ -94,6 +94,10 @@ func resourceEmailIdentity() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"signing_hosted_zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -346,6 +350,10 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]any {
 
 	if v := apiObject.LastKeyGenerationTimestamp; v != nil {
 		m["last_key_generation_timestamp"] = v.Format(time.RFC3339)
+	}
+
+	if v := apiObject.SigningHostedZone; v != nil {
+		m["signing_hosted_zone"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Tokens; v != nil {
