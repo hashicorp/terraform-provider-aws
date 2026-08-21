@@ -255,6 +255,7 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteArchive(ctx, &input)
+	// ConflictException means the archive is already in PENDING_DELETION (deleted but waiting 30 days).
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.ConflictException](err) {
 		return
 	}
