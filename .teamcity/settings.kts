@@ -118,9 +118,6 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
-            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
-
             // set variable to false by default
             text("POST_GITHUB_COMMENT", "false")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -136,6 +133,10 @@ class PullRequest(terraformVersion: String) : BuildType({
     params {
         text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
         text("TERRAFORM_CORE_VERSION", terraformVersion)
+
+        text("env.GOFLAGS", "-modcacherw")
+        text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
+        // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
     }
 
     vcs {
@@ -166,7 +167,6 @@ class PullRequest(terraformVersion: String) : BuildType({
         }
         script {
             name = "Fetch Test Results"
-            // executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
@@ -176,15 +176,14 @@ class PullRequest(terraformVersion: String) : BuildType({
             testFormat = "json"
         }
 
-        // buildCache {
-        //     name = "terraform-provider-aws-build-cache"
-        //     use = true
-        //     publish = true
-        //     rules = """
-        //         go-mod-cache
-        //         go-build-cache
-        //     """.trimIndent()
-        // }
+        buildCache {
+            name = "terraform-provider-aws-mod-cache"
+            use = true
+            publish = true
+            rules = """
+                .cache/go-mod
+            """.trimIndent()
+        }
 
         feature {
             type = "JetBrains.SharedResources"
