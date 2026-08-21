@@ -56,6 +56,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(item.DbiResourceId))
+			rd.Set(names.AttrIdentifier, identifier)
 
 			if request.IncludeResource {
 				if diags := resourceInstanceFlatten(ctx, awsClient, &item, rd); diags.HasError() {
