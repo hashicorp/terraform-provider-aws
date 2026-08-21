@@ -1,5 +1,9 @@
 ## 6.62.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_db_instance` ([#49602](https://github.com/hashicorp/terraform-provider-aws/issues/49602))
+
 ENHANCEMENTS:
 
 * data-source/aws_resiliencehubv2_service: Add `associated_system.user_journey_ids` attribute ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
@@ -9,6 +13,10 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_memory_strategy: Add `configuration.self_managed_configuration` argument in support of self-managed strategies ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory_strategy: Add plan-time validation of `description` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory_strategy: Change `description` to Optional and Computed ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_cloudfront_function: Validate `name`, `code`, and `comment` against CloudFront's documented constraints during plan instead of failing at apply time ([#49395](https://github.com/hashicorp/terraform-provider-aws/issues/49395))
+* resource/aws_db_instance: Add resource identity support ([#49602](https://github.com/hashicorp/terraform-provider-aws/issues/49602))
+* resource/aws_dx_private_virtual_interface: Add `bgp_asn_long` argument ([#49587](https://github.com/hashicorp/terraform-provider-aws/issues/49587))
+* resource/aws_dx_transit_virtual_interface: Add `bgp_asn_long` argument ([#49588](https://github.com/hashicorp/terraform-provider-aws/issues/49588))
 * resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
 
 BUG FIXES:
