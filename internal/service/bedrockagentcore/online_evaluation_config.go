@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -49,7 +50,6 @@ import (
 // @IdentityAttribute("online_evaluation_config_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput")
 // @Testing(generator="testAccRandomOnlineEvaluationConfigName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="online_evaluation_config_id")
 // @Testing(importIgnore="enable_on_create")
@@ -286,7 +286,7 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		out, err = conn.CreateOnlineEvaluationConfig(ctx, &input)
 
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "The provided execution role cannot be assumed") {
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "The provided execution role") {
 			return tfresource.RetryableError(err)
 		}
 
@@ -304,6 +304,8 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 	configID := aws.ToString(out.OnlineEvaluationConfigId)
 
 	if _, err := waitOnlineEvaluationConfigCreated(ctx, conn, configID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("online_evaluation_config_id"), configID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
 		return
 	}

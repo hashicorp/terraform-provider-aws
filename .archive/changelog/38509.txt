@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudsearch_domain: Fix `index_name` character length validation
-```

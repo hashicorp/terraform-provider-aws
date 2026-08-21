@@ -51,14 +51,54 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("SMS"),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("ACTIVE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2PhoneNumber_waitForActiveDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var phoneNumber awstypes.PhoneNumberInformation
+	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// SIMULATOR numbers become ACTIVE almost immediately, so this
+				// only exercises that wait_for_active = false doesn't error
+				// and that the resource still lands in a valid, readable
+				// state; it doesn't prove the PENDING skip-wait path since
+				// SIMULATOR never stays PENDING long enough to observe.
+				Config: testAccPhoneNumberConfig_waitForActiveDisabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("wait_for_active"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrStatus, "wait_for_active"},
 			},
 		},
 	})
@@ -102,9 +142,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, false),
@@ -159,9 +200,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelRole(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleNameUpdated),
@@ -203,9 +245,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelConnect(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 		},
 	})
@@ -245,6 +288,73 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 	})
 }
 
+func TestAccPinpointSMSVoiceV2PhoneNumber_forceDisassociate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var phoneNumber awstypes.PhoneNumberInformation
+	resourceName := "aws_pinpointsmsvoicev2_phone_number.test_with_force_disassociate"
+	poolResourceName := "aws_pinpointsmsvoicev2_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+			testAccPreCheckPool(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_forceDisassociate(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("force_disassociate"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(poolResourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			// Remove the phone number from config and from the pool's origination_identities in
+			// a single apply. Terraform's graph orders the orphan destroy of the phone_number
+			// before the pool update.
+			//
+			// Without force_disassociate resource fails with PHONE_NUMBER_ASSOCIATED_TO_POOL.
+			{
+				Config:      testAccPhoneNumberConfig_forceDisassociated(),
+				ExpectError: regexache.MustCompile(`PHONE_NUMBER_ASSOCIATED_TO_POOL`),
+			},
+			// With force_disassociate=true the phone number is disassociated from the pool, then released.
+			{
+				Config: testAccPhoneNumberConfig_forceDisassociate(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("force_disassociate"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(poolResourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				Config: testAccPhoneNumberConfig_forceDisassociated(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
+						plancheck.ExpectResourceAction(poolResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(poolResourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(1)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var phoneNumber awstypes.PhoneNumberInformation
@@ -271,9 +381,10 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_active"},
 			},
 			{
 				Config: testAccPhoneNumberConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -376,6 +487,66 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
   ]
 }
 `
+
+const testAccPhoneNumberConfig_waitForActiveDisabled = `
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  number_type      = "SIMULATOR"
+  wait_for_active  = false
+
+  number_capabilities = [
+    "SMS"
+  ]
+}
+`
+
+func testAccPhoneNumberConfig_forceDisassociate(forceDisassociate bool) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_pool" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  origination_identities = [
+    aws_pinpointsmsvoicev2_phone_number.test.arn,
+    aws_pinpointsmsvoicev2_phone_number.test_with_force_disassociate.arn,
+  ]
+}
+
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+}
+
+resource "aws_pinpointsmsvoicev2_phone_number" "test_with_force_disassociate" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+  force_disassociate  = %t
+}
+`, forceDisassociate)
+}
+
+func testAccPhoneNumberConfig_forceDisassociated() string {
+	return `
+resource "aws_pinpointsmsvoicev2_pool" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  origination_identities = [
+    aws_pinpointsmsvoicev2_phone_number.test.arn,
+  ]
+}
+
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code    = "US"
+  message_type        = "TRANSACTIONAL"
+  number_type         = "SIMULATOR"
+  number_capabilities = ["SMS"]
+}
+`
+}
 
 func testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName string, deletionProtectionEnabled bool) string {
 	return fmt.Sprintf(`

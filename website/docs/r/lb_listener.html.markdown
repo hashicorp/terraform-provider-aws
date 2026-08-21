@@ -514,6 +514,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 ~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

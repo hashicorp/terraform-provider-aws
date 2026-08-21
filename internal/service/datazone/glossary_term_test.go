@@ -230,7 +230,7 @@ func testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName string) resourc
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["glossary_identifier"]}, ","), nil
+		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID}, ","), nil
 	}
 }
 

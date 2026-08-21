@@ -93,51 +93,66 @@ resource "aws_api_gateway_usage_plan" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name of the usage plan.
+* `api_stages` - (Optional) Associated API stages of the usage plan. See [`api_stages` Block](#api_stages-block) below.
 * `description` - (Optional) Description of a usage plan.
-* `api_stages` - (Optional) Associated [API stages](#api-stages-arguments) of the usage plan.
-* `quota_settings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
-* `throttle_settings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
+* `name` - (Required) Name of the usage plan.
 * `product_code` - (Optional) AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `quota_settings` - (Optional) Quota settings of the usage plan. See [`quota_settings` Block](#quota_settings-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `throttle_settings` - (Optional) Throttling limits of the usage plan. See [`throttle_settings` Block](#throttle_settings-block) below.
 
-#### Api Stages arguments
+### `api_stages` Block
 
-* `api_id` (Required) - API Id of the associated API stage in a usage plan.
-* `stage` (Required) - API stage name of the associated API stage in a usage plan.
-* `throttle` - (Optional) The [throttling limits](#throttle) of the usage plan.
+The following arguments are required:
 
-##### Throttle
+* `api_id` - (Required) API ID of the associated API stage in a usage plan.
+* `stage` - (Required) API stage name of the associated API stage in a usage plan.
 
-* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
-* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
-* `rate_limit` (Optional) - The API request steady-state rate limit.
+The following arguments are optional:
 
-#### Quota Settings Arguments
+* `throttle` - (Optional) Throttling limits applied to the API stage. See [`throttle` Block](#throttle-block) below.
 
-* `limit` (Optional) - Maximum number of requests that can be made in a given time period.
-* `offset` (Optional) - Number of requests subtracted from the given limit in the initial time period.
-* `period` (Optional) - Time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
+### `throttle` Block
 
-#### Throttling Settings Arguments
+The following arguments are required:
 
-* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
-* `rate_limit` (Optional) - The API request steady-state rate limit.
+* `path` - (Required) Method to apply the throttle settings for. Specify the path and method, for example `/test/GET`.
+
+The following arguments are optional:
+
+* `burst_limit` - (Optional) API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` - (Optional) API request steady-state rate limit.
+
+### `quota_settings` Block
+
+The following arguments are required:
+
+* `limit` - (Required) Maximum number of requests that can be made in a given time period.
+* `period` - (Required) Time period in which the limit applies. Valid values are `DAY`, `WEEK`, or `MONTH`.
+
+The following arguments are optional:
+
+* `offset` - (Optional) Number of requests subtracted from the given limit in the initial time period.
+
+### `throttle_settings` Block
+
+* `burst_limit` - (Optional) API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` - (Optional) API request steady-state rate limit.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the API resource
-* `name` - Name of the usage plan.
-* `description` - Description of a usage plan.
 * `api_stages` - Associated API stages of the usage plan.
-* `quota_settings` - Quota of the usage plan.
-* `throttle_settings` - Throttling limits of the usage plan.
-* `product_code` - AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
-* `arn` - ARN
+* `arn` - ARN of the usage plan.
+* `description` - Description of a usage plan.
+* `id` - ID of the usage plan.
+* `name` - Name of the usage plan.
+* `product_code` - AWS Marketplace product identifier associated with the usage plan.
+* `quota_settings` - Quota settings of the usage plan.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `throttle_settings` - Throttling limits of the usage plan.
 
 ## Import
 

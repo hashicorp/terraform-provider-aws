@@ -60,9 +60,10 @@ func resourceUserGroup() *schema.Resource {
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"user_group_id": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
 				},
 				"user_ids": {
 					Type:     schema.TypeSet,

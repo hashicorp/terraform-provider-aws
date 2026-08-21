@@ -9,9 +9,20 @@ var (
 	ResourceEventDestination = newEventDestinationResource
 	ResourceOptOutList       = newOptOutListResource
 	ResourcePhoneNumber      = newPhoneNumberResource
+	ResourcePool             = newPoolResource
+	ResourceResourcePolicy   = newResourcePolicyResource
+	ResourceSenderID         = newSenderIDResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey = findEventDestinationByTwoPartKey
 	FindOptOutListByID               = findOptOutListByID
 	FindPhoneNumberByID              = findPhoneNumberByID
+	FindPoolByID                     = findPoolByID
+	FindResourcePolicyByARN          = findResourcePolicyByARN
+	FindSenderIDByTwoPartKey         = findSenderIDByTwoPartKey
+
+	ValidatePhoneIdentity  = validatePhoneIdentity
+	ValidateSenderIdentity = validateSenderIdentity
 )
+
+type IntendedIdentityConfig = intendedIdentityConfig

@@ -43,113 +43,115 @@ func resourceAccessPoint() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrAlias: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"bucket_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoints: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"has_public_access_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"network_origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"public_access_block_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         true,
-				MinItems:         0,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"block_public_acls": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"block_public_policy": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"ignore_public_acls": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						"restrict_public_buckets": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrAlias: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"bucket_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoints: {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"has_public_access_policy": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"network_origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"public_access_block_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MinItems:         0,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"block_public_acls": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"block_public_policy": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"ignore_public_acls": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							"restrict_public_buckets": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

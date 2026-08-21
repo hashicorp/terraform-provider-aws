@@ -44,49 +44,51 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateS3MultiRegionAccessPointName,
-						},
-						names.AttrPolicy: {
-							Type:                  schema.TypeString,
-							Required:              true,
-							ValidateFunc:          validation.StringIsJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v any) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateS3MultiRegionAccessPointName,
+							},
+							names.AttrPolicy: {
+								Type:                  schema.TypeString,
+								Required:              true,
+								ValidateFunc:          validation.StringIsJSON,
+								DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+								DiffSuppressOnRefresh: true,
+								StateFunc: func(v any) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
 							},
 						},
 					},
 				},
-			},
-			"established": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proposed": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"established": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proposed": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

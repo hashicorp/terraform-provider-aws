@@ -10,10 +10,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -259,6 +264,150 @@ action "aws_codebuild_start_build" "test" {
       value = "test_value"
       type  = "PLAINTEXT"
     }
+  }
+}
+
+resource "terraform_data" "trigger" {
+  lifecycle {
+    action_trigger {
+      events  = [after_create]
+      actions = [action.aws_codebuild_start_build.test]
+    }
+  }
+
+  depends_on = [aws_codebuild_project.test]
+}
+`, rName)
+}
+
+// TestStartBuildActionHostKernelOverride verifies the start-build action model maps
+// host_kernel_override to StartBuildInput.HostKernelOverride for every enum value,
+// and leaves it empty when unset.
+func TestStartBuildActionHostKernelOverride(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		override fwtypes.StringEnum[awstypes.HostKernel]
+		expected awstypes.HostKernel
+	}{
+		"LINUX_KERNEL_4":      {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernel4), expected: awstypes.HostKernelLinuxKernel4},
+		"LINUX_KERNEL_6":      {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernel6), expected: awstypes.HostKernelLinuxKernel6},
+		"LINUX_KERNEL_LATEST": {override: fwtypes.StringEnumValue(awstypes.HostKernelLinuxKernelLatest), expected: awstypes.HostKernelLinuxKernelLatest},
+		"unset":               {override: fwtypes.StringEnumNull[awstypes.HostKernel](), expected: ""},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			model := tfcodebuild.StartBuildActionModel{
+				ProjectName:                  types.StringValue("test-project"),
+				EnvironmentVariablesOverride: fwtypes.NewListNestedObjectValueOfNull[tfcodebuild.EnvironmentVariableModel](ctx),
+				HostKernelOverride:           tc.override,
+			}
+
+			var input codebuild.StartBuildInput
+			if diags := fwflex.Expand(ctx, model, &input); diags.HasError() {
+				t.Fatalf("fwflex.Expand returned errors: %v", diags)
+			}
+
+			if input.HostKernelOverride != tc.expected {
+				t.Errorf("HostKernelOverride = %q, want %q", input.HostKernelOverride, tc.expected)
+			}
+		})
+	}
+}
+
+func TestAccCodeBuildStartBuildAction_hostKernelOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStartBuildActionConfig_hostKernelOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBuildStarted(ctx, t, rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccStartBuildActionConfig_hostKernelOverride(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "codebuild.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "aws/codebuild/amazonlinux-x86_64-standard:6.0"
+    type         = "LINUX_CONTAINER"
+    host_kernel  = "LINUX_KERNEL_6"
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo 'Hello World'"
+  }
+}
+
+action "aws_codebuild_start_build" "test" {
+  config {
+    project_name         = aws_codebuild_project.test.name
+    host_kernel_override = "LINUX_KERNEL_6"
   }
 }
 

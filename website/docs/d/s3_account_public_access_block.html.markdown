@@ -27,8 +27,8 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - AWS account ID
 * `block_public_acls` - Whether or not Amazon S3 should block public ACLs for buckets in this account is enabled. Returns as `true` or `false`.
 * `block_public_policy` - Whether or not Amazon S3 should block public bucket policies for buckets in this account is enabled. Returns as `true` or `false`.
+* `id` - AWS account ID
 * `ignore_public_acls` - Whether or not Amazon S3 should ignore public ACLs for buckets in this account is enabled. Returns as `true` or `false`.
 * `restrict_public_buckets` - Whether or not Amazon S3 should restrict public bucket policies for buckets in this account is enabled. Returns as `true` or `false`.

@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_mq_broker_instance_type_offerings
-```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ec2_managed_prefix_list: Fix crash with multiple description-only updates
-```

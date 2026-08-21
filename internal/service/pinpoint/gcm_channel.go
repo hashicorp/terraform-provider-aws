@@ -46,35 +46,37 @@ func resourceGCMChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"default_authentication_method": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          defaultAuthenticationMethodKey,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(defaultAuthenticationMethod_Values(), false)),
-			},
-			"api_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{"api_key", "service_json"},
-			},
-			"service_json": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{"api_key", "service_json"},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"default_authentication_method": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          defaultAuthenticationMethodKey,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(defaultAuthenticationMethod_Values(), false)),
+				},
+				"api_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{"api_key", "service_json"},
+				},
+				"service_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{"api_key", "service_json"},
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

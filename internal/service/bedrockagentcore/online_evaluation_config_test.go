@@ -31,6 +31,8 @@ func init() {
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
+		// aws_xray_trace_segment_destination not correctly configured:
+		"X-Ray Delivery Destination is supported with CloudWatch",
 		"log groups do not exist",
 	)
 }
@@ -134,70 +136,6 @@ func TestAccBedrockAgentCoreOnlineEvaluationConfig_disappears(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOnlineEvaluationConfig_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput
-	rName := testAccRandomOnlineEvaluationConfigName(t)
-	resourceName := "aws_bedrockagentcore_online_evaluation_config.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOnlineEvaluationConfig(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOnlineEvaluationConfigDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOnlineEvaluationConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "online_evaluation_config_id"),
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "online_evaluation_config_id",
-				ImportStateVerifyIgnore: []string{
-					"enable_on_create",
-				},
-			},
-			{
-				Config: testAccOnlineEvaluationConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccOnlineEvaluationConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOnlineEvaluationConfigExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
 				},
 			},
 		},
@@ -489,69 +427,6 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName)
 }
 
-func testAccOnlineEvaluationConfigConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = %[1]q
-  enable_on_create              = false
-  evaluation_execution_role_arn = aws_iam_role.test.arn
-
-  data_source_config {
-    cloudwatch_logs {
-      log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
-    }
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.Helpfulness"
-  }
-
-  rule {
-    sampling_config {
-      sampling_percentage = 10.0
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tag1Key, tag1Value))
-}
-
-func testAccOnlineEvaluationConfigConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name = %[1]q
-  enable_on_create              = false
-  evaluation_execution_role_arn = aws_iam_role.test.arn
-
-  data_source_config {
-    cloudwatch_logs {
-      log_group_names = [aws_cloudwatch_log_group.test.name]
-      service_names   = ["strands_healthcare_single_agent.DEFAULT"]
-    }
-  }
-
-  evaluator {
-    evaluator_id = "Builtin.Helpfulness"
-  }
-
-  rule {
-    sampling_config {
-      sampling_percentage = 10.0
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
-}
-
 func testAccOnlineEvaluationConfigConfig_executionStatus(rName, executionStatus string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
@@ -576,6 +451,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       sampling_percentage = 10.0
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, executionStatus))
 }
@@ -616,6 +493,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       session_timeout_minutes = 20
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }

@@ -65,7 +65,7 @@ use the default behavior, which is an exponential backoff
 to use in deployment.
 * `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Option Settings
+### Option Settings
 
 Some options can be stack-specific, check [AWS Docs](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html)
 for supported options and examples.

@@ -61,6 +61,8 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 		}
 	}
 
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("zone_id"), query.ZoneID.ValueString())
+
 	tflog.Info(ctx, "Listing Route 53 Records")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &route53.ListResourceRecordSetsInput{
@@ -73,43 +75,45 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 				return
 			}
 
-			// Create a unique ID for this record
-			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
+			name := denormalizeDomainName(item.Name)
+			typ := string(item.Type)
+
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrType), typ)
+			if item.SetIdentifier != nil {
+				ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("set_identifier"), aws.ToString(item.SetIdentifier))
+			}
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
-			rd.SetId(recordID)
+			rd.SetId(createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item))
 
 			// Set identity attributes
 			rd.Set("zone_id", query.ZoneID.ValueString())
-			rd.Set(names.AttrName, aws.ToString(item.Name))
-			rd.Set(names.AttrType, string(item.Type))
+			// The Resource Identity `name` attribute is populated from the resource `fqdn` attribute
+			rd.Set("fqdn", name)
+			rd.Set(names.AttrType, typ)
 			if item.SetIdentifier != nil {
 				rd.Set("set_identifier", aws.ToString(item.SetIdentifier))
 			}
 
-			tflog.Info(ctx, "Reading Route 53 Record")
-			diags := resourceRecordRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
-					names.AttrID: recordID,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				diags := resourceRecordFlatten(rd, &item)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
+				rd.Set(names.AttrName, name)
 			}
 
-			result.DisplayName = aws.ToString(item.Name)
+			result.DisplayName = fmt.Sprintf("%s %s", name, typ)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting Route 53 Record result", map[string]any{
-					names.AttrID: recordID,
-					"diags":      result.Diagnostics,
+					"diags": result.Diagnostics,
 				})
 				continue
 			}

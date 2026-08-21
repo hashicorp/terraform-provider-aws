@@ -17,7 +17,8 @@
 *.test
 *~
 /.kiro
-/.bob
+/.bob/*
+!/.bob/rules/
 /.opencode
 /pkg/
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler

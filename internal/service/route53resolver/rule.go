@@ -49,73 +49,75 @@ func resourceRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-				StateFunc:    trimTrailingPeriod,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resolver_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rule_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_ip": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv4Address,
-						},
-						"ipv6": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsIPv6Address,
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      53,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ProtocolDo53,
-							ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+					StateFunc:    trimTrailingPeriod,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resolver_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"rule_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RuleTypeOption](),
+				},
+				"share_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_ip": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+							"ipv6": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsIPv6Address,
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      53,
+								ValidateFunc: validation.IntBetween(1, 65535),
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.ProtocolDo53,
+								ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		CustomizeDiff: resourceRuleCustomizeDiff,

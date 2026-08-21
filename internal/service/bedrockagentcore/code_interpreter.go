@@ -43,7 +43,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_code_interpreter", name="Code Interpreter")
 // @Tags(identifierAttribute="code_interpreter_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetCodeInterpreterOutput")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(importStateIdAttribute="code_interpreter_id")
+// @Testing(preCheck="testAccPreCheckCodeInterpreters")
 func newCodeInterpreterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &codeInterpreterResource{}
 
@@ -92,6 +95,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			names.AttrCertificate: certificateSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[codeInterpreterNetworkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -114,7 +118,7 @@ func (r *codeInterpreterResource) Schema(ctx context.Context, request resource.S
 					},
 					Blocks: map[string]schema.Block{
 						names.AttrVPCConfig: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigNoS3EndpointModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -196,6 +200,8 @@ func (r *codeInterpreterResource) Create(ctx context.Context, request resource.C
 	codeInterpreterID := aws.ToString(out.CodeInterpreterId)
 
 	if _, err := waitCodeInterpreterCreated(ctx, conn, codeInterpreterID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("code_interpreter_id"), codeInterpreterID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, codeInterpreterID)
 		return
 	}
@@ -349,6 +355,7 @@ func findCodeInterpreter(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 
 type codeInterpreterResourceModel struct {
 	framework.WithRegionModel
+	Certificates         fwtypes.ListNestedObjectValueOf[certificateModel]                         `tfsdk:"certificate"`
 	CodeInterpreterARN   types.String                                                              `tfsdk:"code_interpreter_arn"`
 	CodeInterpreterID    types.String                                                              `tfsdk:"code_interpreter_id"`
 	Description          types.String                                                              `tfsdk:"description"`
@@ -361,6 +368,6 @@ type codeInterpreterResourceModel struct {
 }
 
 type codeInterpreterNetworkConfigurationModel struct {
-	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel]         `tfsdk:"vpc_config"`
+	NetworkMode fwtypes.StringEnum[awstypes.CodeInterpreterNetworkMode]     `tfsdk:"network_mode"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigNoS3EndpointModel] `tfsdk:"vpc_config"`
 }

@@ -4,7 +4,9 @@
 rules:
   - id: map_block_key-meaningful-names
     languages: [go]
-    message: Map Block Keys should have meaningful names
+    message: |
+      Map Block Keys should have meaningful attribute names. While the model field must be named "MapBlockKey", give the attribute in the Terraform schema a meaningful name.
+      !!!DO NOT ADD 'nosemgrep' FOR NEW RESOURCES!!!
     patterns:
       - pattern: |
           map[string]schema.Attribute{
