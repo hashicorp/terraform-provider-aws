@@ -1,5 +1,9 @@
 ## 6.62.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_resiliencehubv2_input_source: Change `resource_configuration.resource_tag` from `List` to `Set` to ignore ordering ([#49585](https://github.com/hashicorp/terraform-provider-aws/issues/49585))
+
 ## 6.61.0 (August 19, 2026)
 
 FEATURES:
