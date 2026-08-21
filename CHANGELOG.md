@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_harness: Correct plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory_strategy: Force resource replacement when `name` is modified ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_registry: Correct plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_cloudwatch_log_resource_policy: Fixes error when importing by identity when using resource-scope ([#49614](https://github.com/hashicorp/terraform-provider-aws/issues/49614))
 * resource/aws_resiliencehubv2_input_source: Change `resource_configuration.resource_tag` from `List` to `Set` to ignore ordering ([#49585](https://github.com/hashicorp/terraform-provider-aws/issues/49585))
 
 ## 6.61.0 (August 19, 2026)
