@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory: Allow adding `indexed_key` entries in place instead of forcing a new resource
+```
