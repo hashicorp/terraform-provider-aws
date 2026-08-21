@@ -183,6 +183,7 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"upfront_payment_amount": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "The up-front payment amount.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
