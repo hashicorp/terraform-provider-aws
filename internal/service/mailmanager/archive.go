@@ -6,6 +6,7 @@ package mailmanager
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -135,7 +136,11 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateArchive(ctx, &input)
+	out, err := tfresource.RetryWhenIsA[*mailmanager.CreateArchiveOutput, *awstypes.ConflictException](
+		ctx, 2*time.Minute, func(ctx context.Context) (*mailmanager.CreateArchiveOutput, error) {
+			return conn.CreateArchive(ctx, &input)
+		},
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
