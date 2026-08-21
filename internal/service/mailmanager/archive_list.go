@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -84,7 +83,7 @@ func (l *archiveListResource) List(ctx context.Context, request list.ListRequest
 				data.Name = types.StringPointerValue(item.ArchiveName)
 
 				if request.IncludeResource {
-					result.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Archive"))...)
+					result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
 					if result.Diagnostics.HasError() {
 						return
 					}

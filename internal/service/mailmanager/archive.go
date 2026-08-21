@@ -153,8 +153,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, archiveOut.Retention, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -184,8 +183,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Archive")))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, out.Retention, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -232,8 +230,7 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
-		smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, archiveOut.Retention, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -266,6 +263,15 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, archiveID)
 	}
+}
+
+func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel) diag.Diagnostics {
+	diags := flex.Flatten(ctx, apiObject, data, flex.WithFieldNamePrefix("Archive"))
+	if diags.HasError() {
+		return diags
+	}
+	diags.Append(setRetentionFromAPI(ctx, apiObject.Retention, data)...)
+	return diags
 }
 
 func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (*mailmanager.GetArchiveOutput, error) {
