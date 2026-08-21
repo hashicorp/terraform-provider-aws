@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_vpc_endpoint_associations
 
-Terraform data source for managing an AWS EC2 (Elastic Compute Cloud) Vpc Endpoint Associations.
+Terraform data source for managing an AWS EC2 Vpc Endpoint Associations.
 
 ## Example Usage
 
