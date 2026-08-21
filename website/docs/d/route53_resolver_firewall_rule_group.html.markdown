@@ -33,7 +33,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN (Amazon Resource Name) of the rule group.
+* `arn` - ARN of the rule group.
 * `creation_time` - The date and time that the rule group was created, in Unix time format and Coordinated Universal Time (UTC).
 * `creator_request_id` - A unique string defined by you to identify the request.
 * `name` - The name of the rule group.

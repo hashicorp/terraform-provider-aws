@@ -77,7 +77,7 @@ The `protection` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).

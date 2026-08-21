@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_secondary_subnet
 
-Lists EC2 (Elastic Compute Cloud) Secondary Subnet resources.
+Lists EC2 Secondary Subnet resources.
 
 ## Example Usage
 

@@ -47,7 +47,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
+* `arn` - ARN identifying your CloudFront Function.
 * `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
 * `live_stage_etag` - ETag hash of any `LIVE` stage of the function.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
