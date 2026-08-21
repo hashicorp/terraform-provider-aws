@@ -1,0 +1,11 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: string-value-to-framework-with-aws-to-string
+    languages: [go]
+    message: >-
+      Prefer `fwflex.StringToFramework(ctx, $PTR)` to
+      `fwflex.StringValueToFramework(ctx, aws.ToString($PTR))`
+    pattern: fwflex.StringValueToFramework($CTX, aws.ToString($PTR))
+    severity: ERROR
