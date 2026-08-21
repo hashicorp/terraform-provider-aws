@@ -126,7 +126,7 @@ resource "aws_securityhub_automation_rule_v2" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Security Hub V2 automation rule.
+- `arn` (String) ARN of the Security Hub V2 automation rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub V2 automation rules using `arn`. For example:
 

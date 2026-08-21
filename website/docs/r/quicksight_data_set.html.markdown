@@ -419,7 +419,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the data set.
+* `arn` - ARN of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
 * `output_columns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`output_columns` Block](#output_columns-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

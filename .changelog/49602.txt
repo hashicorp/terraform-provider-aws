@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_db_instance
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add resource identity support
+```

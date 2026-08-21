@@ -98,7 +98,7 @@ Specify one of the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the collection.
+* `arn` - ARN of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `id` - Unique identifier for the collection.

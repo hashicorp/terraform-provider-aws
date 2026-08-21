@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `delivery_options` - An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
     * `max_delivery_seconds` - The maximum amount of time, in seconds, that Amazon SES API v2 will attempt delivery of email. If specified, the value must greater than or equal to 300 seconds (5 minutes) and less than or equal to 50400 seconds (840 minutes).
     * `sending_pool_name` - The name of the dedicated IP pool to associate with the configuration set.
-    * `tls_policy` - Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS).
+    * `tls_policy` - Specifies whether messages that use the configuration set are required to use TLS.
 * `reputation_options` - An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
     * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start.
     * `reputation_metrics_enabled` - Specifies whether tracking of reputation metrics is enabled.

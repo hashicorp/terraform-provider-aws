@@ -175,7 +175,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceVaultLockConfiguration,
@@ -219,6 +223,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute("plan_id", true),
 				inttypes.StringIdentityAttribute(names.AttrID, true),
 			}),
+		},
+		{
+			Factory:  vaultResourceAsListResource,
+			TypeName: "aws_backup_vault",
+			Name:     "Vault",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }

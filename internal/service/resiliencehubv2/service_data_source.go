@@ -34,6 +34,7 @@ func (d *serviceDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			"associated_system": framework.DataSourceComputedListOfObjectAttribute[associatedSystemModel](ctx),
 			names.AttrDescription: fwschema.StringAttribute{
 				Computed: true,
 			},
@@ -84,12 +85,13 @@ func (d *serviceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 type serviceDataSourceModel struct {
 	framework.WithRegionModel
-	Description     types.String                                          `tfsdk:"description"`
-	KMSKeyID        types.String                                          `tfsdk:"kms_key_id"`
-	Name            types.String                                          `tfsdk:"name"`
-	PermissionModel fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
-	PolicyARN       types.String                                          `tfsdk:"policy_arn"`
-	Regions         fwtypes.ListOfString                                  `tfsdk:"regions"`
-	ServiceARN      fwtypes.ARN                                           `tfsdk:"arn"`
-	Tags            tftags.Map                                            `tfsdk:"tags"`
+	AssociatedSystems fwtypes.ListNestedObjectValueOf[associatedSystemModel] `tfsdk:"associated_system"`
+	Description       types.String                                           `tfsdk:"description"`
+	KMSKeyID          types.String                                           `tfsdk:"kms_key_id"`
+	Name              types.String                                           `tfsdk:"name"`
+	PermissionModel   fwtypes.ListNestedObjectValueOf[permissionModelModel]  `tfsdk:"permission_model"`
+	PolicyARN         types.String                                           `tfsdk:"policy_arn"`
+	Regions           fwtypes.ListOfString                                   `tfsdk:"regions"`
+	ServiceARN        fwtypes.ARN                                            `tfsdk:"arn"`
+	Tags              tftags.Map                                             `tfsdk:"tags"`
 }
