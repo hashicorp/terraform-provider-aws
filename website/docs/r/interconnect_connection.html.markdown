@@ -38,38 +38,31 @@ resource "aws_interconnect_connection" "example" {
 }
 ```
 
-## Selecting a Region and Environment
-
-The AWS Region and the remote partner location are selected separately:
-
-* The **AWS Region** is set by the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference), or overridden per resource with the `region` argument.
-* The **`environment_id`** selects a supported pairing of that AWS Region with a remote partner location (for example, AWS US East (N. Virginia) with GCP `us-east4`). Check the [regional availability](https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html) in the AWS documentation.
-
-~> **Note:** When overriding the resource-level `region` argument, the `environment_id` must belong to that same Region or the connection fails to create. Prefer setting the Region in the provider configuration.
+The AWS Region and the remote partner location are selected separately. The AWS Region is set by the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference), or overridden per resource with the `region` argument. The `environment_id` selects a supported pairing of that AWS Region with a remote partner location (for example, AWS US East (N. Virginia) with GCP `us-east4`). Check the [regional availability](https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html) in the AWS documentation.
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `attach_point` - (Required) Attach point to which the connection logically connects within your AWS network. Changing this forces a new resource to be created. [See below](#attach_point).
+* `attach_point` - (Required) Attach point to which the connection logically connects within your AWS network. Changing this forces a new resource to be created. [See below](#attach_point-block).
 * `bandwidth` - (Required) Desired bandwidth of the connection, in the format `<number>Mbps` or `<number>Gbps` (for example, `10Gbps`).
-* `environment_id` - (Required) Identifier of the Environment on which this connection is created. The Environment determines the AWS Region and remote partner location pairing, and is scoped to the AWS Region you are operating in. Changing this forces a new resource to be created.
+* `environment_id` - (Required) Identifier of the Environment on which this connection is created. The Environment determines the AWS Region and remote partner location pairing, and is scoped to the AWS Region you are operating in. When overriding the resource-level `region` argument, the `environment_id` must belong to that same Region or the connection fails to create; prefer setting the Region in the provider configuration. Changing this forces a new resource to be created.
 
 The following arguments are optional:
 
 * `description` - (Optional) Description to distinguish this connection.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `remote_account` - (Optional) Account or principal identifying information that can be verified by the partner of the Environment. The kind of identifier expected is indicated by the Environment's `remote_identifier_type`. Changing this forces a new resource to be created. [See below](#remote_account).
+* `remote_account` - (Optional) Account or principal identifying information that can be verified by the partner of the Environment. The kind of identifier expected is indicated by the Environment's `remote_identifier_type`. Changing this forces a new resource to be created. [See below](#remote_account-block).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### attach_point
+### `attach_point` Block
 
 Exactly one of the following arguments must be set.
 
 * `arn` - (Optional) ARN of the attach point.
 * `direct_connect_gateway` - (Optional) Identifier of a Direct Connect Gateway attach point.
 
-### remote_account
+### `remote_account` Block
 
 * `identifier` - (Required) ID of the account or project on the partner's environment. For example, for GCP this is the Google Cloud project ID.
 
@@ -98,6 +91,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_interconnect_connection.example
+  identity = {
+    "arn" = "arn:aws:interconnect:us-east-1:123456789012:connection/mcc-abcd1234"
+  }
+}
+
+resource "aws_interconnect_connection" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Interconnect Connection.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Interconnect Connection using the `arn`. For example:
 
