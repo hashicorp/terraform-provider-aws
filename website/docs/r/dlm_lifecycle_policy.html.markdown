@@ -324,11 +324,11 @@ This resource supports the following arguments:
 
 * `encryption_configuration` - (Required) The encryption settings for the copied snapshot. See the [`encryption_configuration`](#encryption-configuration-arguments) block. Max of 1 per action.
 * `retain_rule` - (Required) Specifies the retention rule for cross-Region snapshot copies. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per action.
-* `target` - (Required) The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target` - (Required) Target Region or the ARN of the target Outpost for the snapshot copies.
 
 ###### Encryption Configuration arguments
 
-* `cmk_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+* `cmk_arn` - (Optional) ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 * `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
 
 #### Event Source arguments
@@ -412,13 +412,13 @@ This resource supports the following arguments:
 
 #### Cross Region Copy Rule arguments
 
-* `cmk_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS customer master key (CMK) to use for EBS encryption. If this argument is not specified, the default KMS key for the account is used.
+* `cmk_arn` - (Optional) ARN of the AWS KMS customer master key (CMK) to use for EBS encryption. If this argument is not specified, the default KMS key for the account is used.
 * `copy_tags` - (Optional) Whether to copy all user-defined tags from the source snapshot to the cross-region snapshot copy.
 * `deprecate_rule` - (Optional) The AMI deprecation rule for cross-Region AMI copies created by the rule. See the [`deprecate_rule`](#cross-region-copy-rule-deprecate-rule-arguments) block.
 * `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot if encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or if encryption by default is not enabled.
 * `retain_rule` - (Required) The retention rule that indicates how long snapshot copies are to be retained in the destination Region. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per schedule.
-* `target` - Use only for DLM policies of `policy_type=EBS_SNAPSHOT_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
-* `target_region` - Use only for DLM policies of `policy_type=IMAGE_MANAGEMENT`. The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+* `target` - Use only for DLM policies of `policy_type=EBS_SNAPSHOT_MANAGEMENT`. The target Region or the ARN of the target Outpost for the snapshot copies.
+* `target_region` - Use only for DLM policies of `policy_type=IMAGE_MANAGEMENT`. The target Region or the ARN of the target Outpost for the snapshot copies.
 
 #### Cross Region Copy Rule Deprecate Rule arguments
 
@@ -454,7 +454,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
+* `arn` - ARN of the DLM Lifecycle Policy.
 * `id` - Identifier of the DLM Lifecycle Policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
