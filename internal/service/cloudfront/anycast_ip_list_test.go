@@ -217,11 +217,10 @@ resource "aws_vpc_ipam" "test" {
 }
 
 resource "aws_vpc_ipam_pool" "test" {
-  address_family        = "ipv4"
-  ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
-  locale                = data.aws_region.current.region
-  publicly_advertisable = true
-  aws_service           = "ec2"
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.public_default_scope_id
+  locale         = data.aws_region.current.region
+  aws_service    = "global-services"
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
