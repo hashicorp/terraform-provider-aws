@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -445,19 +444,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					// memory_record_schema can be updated in place, but the API ignores a
-					// nil (cleared) MemoryRecordSchema and retains the prior value, so a
-					// set->unset removal yields "inconsistent result after apply" (block
-					// count 0 -> 1). Force replacement when it is removed.
-					listplanmodifier.RequiresReplaceIf(
-						func(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
-							stateHas := !request.StateValue.IsNull() && len(request.StateValue.Elements()) > 0
-							planHas := !request.PlanValue.IsNull() && len(request.PlanValue.Elements()) > 0
-							response.RequiresReplace = stateHas && !planHas
-						},
-						"Removing memory_record_schema requires replacement.",
-						"Removing memory_record_schema requires replacement.",
-					),
+					tflistplanmodifier.RequiresReplaceIfEmptied,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
