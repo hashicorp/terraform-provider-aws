@@ -21,7 +21,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newEnvironmentsDataSource,
+			TypeName: "aws_interconnect_environments",
+			Name:     "Environments",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
