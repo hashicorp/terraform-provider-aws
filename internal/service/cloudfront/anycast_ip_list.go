@@ -73,6 +73,15 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
+			names.AttrIPAddressType: schema.StringAttribute{
+				Optional:   true,
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"ip_count": schema.Int32Attribute{
 				Required: true,
 				Validators: []validator.Int32{
@@ -141,6 +150,7 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 	data.AnycastIPs = fwflex.FlattenFrameworkStringValueListOfString(ctx, anycastIPList.AnycastIps)
 	data.ARN = fwflex.StringToFramework(ctx, anycastIPList.Arn)
 	data.ID = fwflex.StringToFramework(ctx, anycastIPList.Id)
+	data.IPAddressType = fwtypes.StringEnumValue(anycastIPList.IpAddressType)
 
 	outputGAIL, err := waitAnycastIPListDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -303,13 +313,14 @@ func waitAnycastIPListDeployed(ctx context.Context, conn *cloudfront.Client, id 
 }
 
 type anycastIPListResourceModel struct {
-	AnycastIPs fwtypes.ListOfString `tfsdk:"anycast_ips"`
-	ARN        types.String         `tfsdk:"arn"`
-	ETag       types.String         `tfsdk:"etag"`
-	ID         types.String         `tfsdk:"id"`
-	IPCount    types.Int32          `tfsdk:"ip_count"`
-	Name       types.String         `tfsdk:"name"`
-	Tags       tftags.Map           `tfsdk:"tags"`
-	TagsAll    tftags.Map           `tfsdk:"tags_all"`
-	Timeouts   timeouts.Value       `tfsdk:"timeouts"`
+	AnycastIPs    fwtypes.ListOfString                       `tfsdk:"anycast_ips"`
+	ARN           types.String                               `tfsdk:"arn"`
+	ETag          types.String                               `tfsdk:"etag"`
+	ID            types.String                               `tfsdk:"id"`
+	IPAddressType fwtypes.StringEnum[awstypes.IpAddressType] `tfsdk:"ip_address_type"`
+	IPCount       types.Int32                                `tfsdk:"ip_count"`
+	Name          types.String                               `tfsdk:"name"`
+	Tags          tftags.Map                                 `tfsdk:"tags"`
+	TagsAll       tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts      timeouts.Value                             `tfsdk:"timeouts"`
 }
