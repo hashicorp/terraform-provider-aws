@@ -14,7 +14,7 @@ Terraform data source for reading an AWS Resilience Hub V2 Service.
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_resiliencehubv2_service" "example" {
   arn = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
 }

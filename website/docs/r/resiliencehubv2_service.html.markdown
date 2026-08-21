@@ -16,7 +16,7 @@ A service is the primary building block in Resilience Hub. It comprises AWS reso
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_service" "example" {
   name    = "example-service"
   regions = ["us-west-2"]
@@ -29,7 +29,7 @@ resource "aws_resiliencehubv2_service" "example" {
 
 ### With Policy
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-policy"
 
@@ -56,7 +56,7 @@ resource "aws_resiliencehubv2_service" "example" {
 
 ### With Associated Systems
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_system" "example" {
   name = "example-system"
 }

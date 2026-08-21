@@ -14,7 +14,7 @@ Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Rol
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_odb_iam_role_association" "example" {
   iam_role_arn = "arn:aws:iam::123456789012:role/odb-iam-role-example"
   resource_arn = "arn:aws:odb:us-east-1:123456789012:cloud-vm-cluster/odb-example-cluster-id"
