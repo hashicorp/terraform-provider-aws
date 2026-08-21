@@ -1,5 +1,10 @@
 ## 6.62.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_resiliencehubv2_service: Add `associated_system.user_journey_ids` attribute ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
+* resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
+
 BUG FIXES:
 
 * resource/aws_resiliencehubv2_input_source: Change `resource_configuration.resource_tag` from `List` to `Set` to ignore ordering ([#49585](https://github.com/hashicorp/terraform-provider-aws/issues/49585))
