@@ -12,21 +12,23 @@ resource "aws_resiliencehubv2_service" "test" {
     invoker_role_name = aws_iam_role.test.name
   }
 
-  dynamic "associated_system" {
-    for_each = range(var.associated_system_count)
-
-    content {
-      system_arn = aws_resiliencehubv2_system.test[associated_system.value].arn
-    }
+  associated_system {
+    system_arn       = aws_resiliencehubv2_system.test.arn
+    user_journey_ids = var.user_journey_count > 0 ? slice(aws_resiliencehubv2_user_journey.test[*].user_journey_id, 0, var.user_journey_count) : null
   }
 
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
 }
 
-resource "aws_resiliencehubv2_system" "test" {
+resource "aws_resiliencehubv2_user_journey" "test" {
   count = 2
 
-  name = "${var.rName}-${count.index}"
+  name       = "${var.rName}-${count.index}"
+  system_arn = aws_resiliencehubv2_system.test.arn
+}
+
+resource "aws_resiliencehubv2_system" "test" {
+  name = var.rName
 }
 
 data "aws_partition" "current" {}
@@ -61,12 +63,11 @@ variable "rName" {
   nullable    = false
 }
 
-variable "associated_system_count" {
-  description = "Number of systems to associate with the service"
-  type        = number
-  nullable    = false
+variable "user_journey_count" {
+  type     = number
+  nullable = false
   validation {
-    condition     = var.associated_system_count >= 0 && var.associated_system_count <= 2
+    condition     = var.user_journey_count >= 0 && var.user_journey_count <= 2
     error_message = "Value must be between 0 and 2 (inclusive)."
   }
 }

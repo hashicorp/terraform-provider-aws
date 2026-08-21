@@ -98,6 +98,7 @@ The following arguments are optional:
 The `associated_system` block supports:
 
 * `system_arn` - (Required) ARN of the system to associate with the service.
+* `user_journey_ids` - (Optional) List of user journey identifiers that associate the system with the service.
 
 ### `permission_model` Block
 
