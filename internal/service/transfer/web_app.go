@@ -305,7 +305,7 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 	if diff.HasChanges() {
 		webAppID := fwflex.StringValueFromFramework(ctx, new.WebAppID)
 		var input transfer.UpdateWebAppInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("IdentityProviderDetails"), fwflex.WithIgnoredFieldNamesAppend("EndpointDetails"))...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("IdentityProviderDetails"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -329,10 +329,13 @@ func (r *webAppResource) Update(ctx context.Context, request resource.UpdateRequ
 			}
 		}
 		if !new.EndpointDetails.Equal(old.EndpointDetails) {
-			response.Diagnostics.Append(expandUpdateWebAppEndpointDetails(ctx, &new, &input)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
+			// Reset AccessEndpoint to null to avoid conflicts.
+			// AccessEndpoint must not be specified when EndpointDetails is set.
+			// Note:
+			// AccessEndpoint is a computed attribute when endpoint_details.vpc is specified,
+			// because endpoint_details.vpc and access_endpoint are defined as conflicting
+			// attributes in the schema.
+			input.AccessEndpoint = nil
 		}
 
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
@@ -464,11 +467,11 @@ type webAppEndpointDetailsVPCModel struct {
 }
 
 var (
-	_ fwflex.Expander  = webAppEndpointDetailsModel{}
-	_ fwflex.Flattener = &webAppEndpointDetailsModel{}
+	_ fwflex.TypedExpander = webAppEndpointDetailsModel{}
+	_ fwflex.Flattener     = &webAppEndpointDetailsModel{}
 )
 
-func (m webAppEndpointDetailsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m webAppEndpointDetailsModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	switch {
@@ -478,12 +481,27 @@ func (m webAppEndpointDetailsModel) Expand(ctx context.Context) (any, diag.Diagn
 		if diags.HasError() {
 			return nil, diags
 		}
-		var r awstypes.WebAppEndpointDetailsMemberVpc
-		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
-		if diags.HasError() {
-			return nil, diags
+		switch targetType {
+		case reflect.TypeFor[awstypes.WebAppEndpointDetails]():
+			var r awstypes.WebAppEndpointDetailsMemberVpc
+			diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &r, diags
+		case reflect.TypeFor[awstypes.UpdateWebAppEndpointDetails]():
+			var r awstypes.UpdateWebAppEndpointDetailsMemberVpc
+			diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &r, diags
+		default:
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("web app endpoint details expand: %s", targetType.String()),
+			)
 		}
-		return &r, diags
 	}
 	return nil, diags
 }
@@ -508,49 +526,6 @@ func (m *webAppEndpointDetailsModel) Flatten(ctx context.Context, v any) diag.Di
 			fmt.Sprintf("artifact flatten: %s", reflect.TypeOf(v).String()),
 		)
 	}
-	return diags
-}
-
-func expandUpdateWebAppEndpointDetails(ctx context.Context, data *webAppResourceModel, input *transfer.UpdateWebAppInput) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-expander-functions
-	var diags diag.Diagnostics
-
-	endpointDetails, d := data.EndpointDetails.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() || endpointDetails == nil {
-		return diags
-	}
-
-	vpc, d := endpointDetails.VPC.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() || vpc == nil {
-		return diags
-	}
-
-	vpcConfig := awstypes.UpdateWebAppVpcConfig{
-		SubnetIds: fwflex.ExpandFrameworkStringValueSet(ctx, vpc.SubnetIDs),
-	}
-
-	if !vpc.IpAddressType.IsNull() && !vpc.IpAddressType.IsUnknown() {
-		ipAddressType, d := vpc.IpAddressType.ToStringValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		vpcConfig.IpAddressType = awstypes.WebAppVpcEndpointIpAddressType(fwflex.StringValueFromFramework(ctx, ipAddressType))
-	}
-
-	input.EndpointDetails = &awstypes.UpdateWebAppEndpointDetailsMemberVpc{
-		Value: vpcConfig,
-	}
-	// Reset AccessEndpoint to null to avoid conflicts.
-	// AccessEndpoint must not be specified when EndpointDetails is set.
-	// Note:
-	// AccessEndpoint is a computed attribute when endpoint_details.vpc is specified,
-	// because endpoint_details.vpc and access_endpoint are defined as conflicting
-	// attributes in the schema.
-	input.AccessEndpoint = nil
-
 	return diags
 }
 
