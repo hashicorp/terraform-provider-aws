@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions_enabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
 * `actions_suppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
-    * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.
+    * `alarm` - (Required) Can be an AlarmName or an ARN from an existing alarm.
     * `extension_period` - (Required) The maximum time in seconds that the composite alarm waits after suppressor alarm goes out of the `ALARM` state. After this time, the composite alarm performs its actions.
     * `wait_period` - (Required) The maximum time in seconds that the composite alarm waits for the suppressor alarm to go into the `ALARM` state. After this time, the composite alarm performs its actions.
 * `alarm_actions` - (Optional) The set of actions to execute when this alarm transitions to the `ALARM` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
