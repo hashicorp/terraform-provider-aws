@@ -91,6 +91,9 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			"archive_state": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ArchiveState](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -254,6 +257,9 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
+	if errs.IsA[*awstypes.ConflictException](err) {
+		return
+	}
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, archiveID)
 	}
@@ -340,7 +346,7 @@ func (m archiveRetentionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 func (m *archiveRetentionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch v := v.(type) {
-	case awstypes.ArchiveRetentionMemberRetentionPeriod:
+	case *awstypes.ArchiveRetentionMemberRetentionPeriod:
 		m.RetentionPeriod = fwtypes.StringEnumValue(v.Value)
 	default:
 		diags.AddError("Unexpected Retention Type",
