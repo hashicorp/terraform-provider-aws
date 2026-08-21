@@ -283,8 +283,8 @@ The following arguments are optional:
   Default AWS limit is 5. Higher values may be available with a quota increase.
   Conflicts with `num_cache_clusters`.
   Can only be set if `num_node_groups` is set.
-* `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
-* `security_group_names` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
+* `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in a VPC.
+* `security_group_names` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in a VPC.
 * `snapshot_arns` - (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
 * `snapshot_name` - (Optional) Name of a snapshot from which to restore data into the new node group. Changing the `snapshot_name` forces a new resource.
 * `snapshot_retention_limit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of `snapshot_retention_limit` is set to zero (0), backups are turned off. Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes

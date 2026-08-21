@@ -111,12 +111,12 @@ The `serverless_v2_scaling_configuration` block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `cluster_members` - List of DocumentDB Instances that are a part of this cluster
 * `cluster_resource_id` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
-* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
+* `id` - (**Deprecated**) ARN of cluster
 * `reader_endpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

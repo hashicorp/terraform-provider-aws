@@ -77,6 +77,7 @@ Open the doc file (path is in the ss output) and apply fixes:
 | "heading ... should be ..." | Rename to the suggested heading |
 | "byline does not match expected texts" | Replace with a standard byline |
 | "reference-style link definition" | Convert `[ref]: url` to inline `[text](url)` |
+| "avoid \"X\"; use \"Y\" instead" (banned_glosses) | Replace the spelled-out phrase with its abbreviation. Never edit YAML frontmatter to do this — if the flagged text is in `subcategory`/`layout`/`page_title`/`description`, skip and report it instead. |
 
 #### Documentation style rules
 
@@ -84,6 +85,7 @@ When adding or editing documentation:
 - Arguments: `* \`name\` - (Required) Description.` or `* \`name\` - (Optional) Description.`
 - Attributes: `* \`name\` - Description.` (no Required/Optional label)
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
+- Don't spell out common abbreviations (e.g. ARN, KMS, VPC) — `swissshepherd`'s `banned_glosses` check enforces this; see [Abbreviations](../../../docs/end-user-documentation.md#abbreviations)
 - Boolean arguments: start with "Whether to..."
 - Keep alphabetical order within required/optional groups
 - Block sections use heading: `` ### `block_name` Block ``

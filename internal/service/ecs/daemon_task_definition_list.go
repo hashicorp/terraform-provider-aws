@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -60,16 +61,19 @@ func (r *listResourceDaemonTaskDefinition) List(ctx context.Context, request lis
 				return
 			}
 
+			outputFind, err := findDaemonTaskDefinitionByARN(ctx, conn, aws.ToString(summary.Arn))
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				return
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data daemonTaskDefinitionResourceModel
 			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
-				outputFind, err := findDaemonTaskDefinitionByARN(ctx, conn, aws.ToString(summary.Arn))
-				if err != nil {
-					result.Diagnostics.AddError(fmt.Sprintf("reading ECS Daemon Task Definition (%s)", aws.ToString(summary.Arn)), err.Error())
-					return
-				}
-
 				result.Diagnostics.Append(fwflex.Flatten(ctx, outputFind, &data)...)
 				if result.Diagnostics.HasError() {
 					return

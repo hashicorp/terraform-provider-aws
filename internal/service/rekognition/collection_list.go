@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,6 +46,19 @@ func (l *collectionListResource) List(ctx context.Context, request list.ListRequ
 
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), collectionID)
 
+			var out *rekognition.DescribeCollectionOutput
+			if request.IncludeResource {
+				var err error
+				out, err = findCollectionByID(ctx, conn, collectionID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data collectionResourceModel
@@ -53,12 +67,6 @@ func (l *collectionListResource) List(ctx context.Context, request list.ListRequ
 				data.ID = flex.StringToFramework(ctx, &collectionID)
 
 				if request.IncludeResource {
-					out, err := findCollectionByID(ctx, conn, collectionID)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-						return
-					}
-
 					smerr.AddEnrich(ctx, &result.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Collection")))
 					if result.Diagnostics.HasError() {
 						return

@@ -6,7 +6,7 @@ provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
 
 file_aliases = {
-  "list_resource/aws_ebs_volume" = "aws_ec2_ebs_volume"
+  "list_resource/aws_ami_launch_permission" = "aws_ec2_ami_launch_permission"
 }
 
 ignore_contents_check = [
@@ -32,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -62,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -92,14 +92,14 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "usage_notes" { }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "usage_notes" {}
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -115,13 +115,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -141,13 +141,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -167,14 +167,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -183,6 +183,52 @@ type "action" {
 }
 
 # ─── Check blocks ───────────────────────────────────────────────────────────
+
+check "banned_glosses" {
+  enabled = true
+
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
+  banned_glosses = {
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Domain Name System"                = "DNS"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Language"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
+  }
+
+  skip_frontmatter = true
+  severity         = "error"
+}
 
 check "schema_docs" {
   enabled = true
@@ -195,6 +241,8 @@ check "schema_docs" {
   heading     = true
   labels      = true
   ordering    = true
+
+  nested_object_attributes = true
 
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
@@ -224,17 +272,27 @@ check "schema_docs" {
   ignore_targets = [
     "action/aws_lambda_invoke",
     "action/aws_ses_send_email",
-    "action/aws_transcribe_start_transcription_job",
     "data_source/aws_account_primary_contact",
     "data_source/aws_account_regions",
     "data_source/aws_acm_certificate",
     "data_source/aws_acmpca_certificate_authority",
     "data_source/aws_ami_ids",
     "data_source/aws_ami",
+    "data_source/aws_apigatewayv2_api",
+    "data_source/aws_appintegrations_event_integration",
+    "data_source/aws_appmesh_gateway_route",
+    "data_source/aws_appmesh_mesh",
+    "data_source/aws_appmesh_route",
+    "data_source/aws_appmesh_virtual_gateway",
+    "data_source/aws_appmesh_virtual_router",
+    "data_source/aws_appmesh_virtual_service",
     "data_source/aws_arn",
     "data_source/aws_athena_named_query",
+    "data_source/aws_auditmanager_control",
     "data_source/aws_auditmanager_framework",
     "data_source/aws_backup_framework",
+    "data_source/aws_backup_plan",
+    "data_source/aws_backup_report_plan",
     "data_source/aws_backup_selection",
     "data_source/aws_batch_compute_environment",
     "data_source/aws_batch_job_queue",
@@ -313,6 +371,7 @@ check "schema_docs" {
     "data_source/aws_db_instance",
     "data_source/aws_db_instances",
     "data_source/aws_db_parameter_group",
+    "data_source/aws_db_proxy",
     "data_source/aws_db_snapshot",
     "data_source/aws_db_subnet_group",
     "data_source/aws_devopsguru_notification_channel",
@@ -337,6 +396,7 @@ check "schema_docs" {
     "data_source/aws_ebs_volume",
     "data_source/aws_ebs_volumes",
     "data_source/aws_ec2_capacity_block_offering",
+    "data_source/aws_ec2_capacity_block_reservation",
     "data_source/aws_ec2_client_vpn_endpoint",
     "data_source/aws_ec2_coip_pool",
     "data_source/aws_ec2_coip_pools",
@@ -387,10 +447,6 @@ check "schema_docs" {
     "data_source/aws_ecr_repository",
     "data_source/aws_ecrpublic_images",
     "data_source/aws_ecs_cluster",
-    "data_source/aws_ecs_container_definition",
-    "data_source/aws_ecs_service",
-    "data_source/aws_ecs_task_definition",
-    "data_source/aws_ecs_task_execution",
     "data_source/aws_efs_access_point",
     "data_source/aws_efs_file_system",
     "data_source/aws_efs_mount_target",
@@ -416,14 +472,12 @@ check "schema_docs" {
     "data_source/aws_emr_release_labels",
     "data_source/aws_emr_supported_instance_types",
     "data_source/aws_emrcontainers_virtual_cluster",
-    "data_source/aws_fis_experiment_templates",
     "data_source/aws_fsx_ontap_file_system",
     "data_source/aws_fsx_ontap_storage_virtual_machine",
-    "data_source/aws_fsx_ontap_storage_virtual_machines",
-    "data_source/aws_fsx_openzfs_snapshot",
     "data_source/aws_fsx_windows_file_system",
     "data_source/aws_globalaccelerator_accelerator",
     "data_source/aws_globalaccelerator_custom_routing_accelerator",
+    "data_source/aws_glue_catalog",
     "data_source/aws_glue_catalog_table",
     "data_source/aws_glue_data_catalog_encryption_settings",
     "data_source/aws_glue_registry",
@@ -432,6 +486,7 @@ check "schema_docs" {
     "data_source/aws_guardduty_detector",
     "data_source/aws_guardduty_finding_ids",
     "data_source/aws_iam_access_keys",
+    "data_source/aws_iam_group",
     "data_source/aws_iam_openid_connect_provider",
     "data_source/aws_iam_outbound_web_identity_federation",
     "data_source/aws_iam_policy_document",
@@ -485,7 +540,9 @@ check "schema_docs" {
     "data_source/aws_kms_secrets",
     "data_source/aws_lakeformation_data_lake_settings",
     "data_source/aws_lakeformation_permissions",
+    "data_source/aws_lambda_code_signing_config",
     "data_source/aws_lambda_function",
+    "data_source/aws_lambda_function_url",
     "data_source/aws_lambda_layer_version",
     "data_source/aws_launch_configuration",
     "data_source/aws_launch_template",
@@ -503,6 +560,7 @@ check "schema_docs" {
     "data_source/aws_licensemanager_received_license",
     "data_source/aws_licensemanager_received_licenses",
     "data_source/aws_location_map",
+    "data_source/aws_location_place_index",
     "data_source/aws_media_convert_queue",
     "data_source/aws_medialive_input",
     "data_source/aws_memorydb_acl",
@@ -531,11 +589,18 @@ check "schema_docs" {
     "data_source/aws_networkfirewall_firewall",
     "data_source/aws_networkfirewall_resource_policy",
     "data_source/aws_networkmanager_connection",
+    "data_source/aws_networkmanager_core_network",
     "data_source/aws_networkmanager_core_network_policy_document",
     "data_source/aws_networkmanager_device",
     "data_source/aws_networkmanager_link",
     "data_source/aws_networkmanager_site",
     "data_source/aws_oam_link",
+    "data_source/aws_odb_cloud_autonomous_vm_cluster",
+    "data_source/aws_odb_cloud_exadata_infrastructure",
+    "data_source/aws_odb_cloud_vm_cluster",
+    "data_source/aws_odb_db_system_shapes",
+    "data_source/aws_odb_network",
+    "data_source/aws_odb_network_peering_connections",
     "data_source/aws_opensearch_domain",
     "data_source/aws_opensearchserverless_collection_group",
     "data_source/aws_opensearchserverless_collection_groups",
@@ -611,19 +676,12 @@ check "schema_docs" {
     "data_source/aws_route53_zone",
     "data_source/aws_route53_zones",
     "data_source/aws_route53profiles_profiles",
-    "data_source/aws_s3_access_point",
-    "data_source/aws_s3_account_public_access_block",
+    "data_source/aws_s3_bucket_notification",
     "data_source/aws_s3_bucket_object_lock_configuration",
-    "data_source/aws_s3_bucket_object",
-    "data_source/aws_s3_bucket_objects",
-    "data_source/aws_s3_bucket_replication_configuration",
-    "data_source/aws_s3_bucket",
-    "data_source/aws_s3_object",
-    "data_source/aws_s3_objects",
-    "data_source/aws_s3control_access_points",
     "data_source/aws_s3control_multi_region_access_point",
     "data_source/aws_savingsplans_offerings",
     "data_source/aws_savingsplans_savings_plan",
+    "data_source/aws_secretsmanager_secret_rotation",
     "data_source/aws_security_group",
     "data_source/aws_security_groups",
     "data_source/aws_securityhub_standards_control_associations",
@@ -650,6 +708,7 @@ check "schema_docs" {
     "data_source/aws_sesv2_email_identity_mail_from_attributes",
     "data_source/aws_sesv2_email_identity",
     "data_source/aws_sfn_activity",
+    "data_source/aws_sfn_alias",
     "data_source/aws_sfn_state_machine",
     "data_source/aws_signer_signing_job",
     "data_source/aws_signer_signing_profile",
@@ -680,8 +739,6 @@ check "schema_docs" {
     "data_source/aws_synthetics_runtime_versions",
     "data_source/aws_timestreamwrite_database",
     "data_source/aws_timestreamwrite_table",
-    "data_source/aws_transfer_connector",
-    "data_source/aws_transfer_server",
     "data_source/aws_verifiedpermissions_policy_store",
     "data_source/aws_vpc_dhcp_options",
     "data_source/aws_vpc_endpoint_associations",
@@ -697,11 +754,6 @@ check "schema_docs" {
     "data_source/aws_vpc_peering_connections",
     "data_source/aws_vpc_security_group_rule",
     "data_source/aws_vpc_security_group_rules",
-    "data_source/aws_vpc",
-    "data_source/aws_vpclattice_auth_policy",
-    "data_source/aws_vpclattice_listener",
-    "data_source/aws_vpclattice_service_network",
-    "data_source/aws_vpclattice_service",
     "data_source/aws_vpcs",
     "data_source/aws_vpn_connection",
     "data_source/aws_vpn_gateway",
@@ -733,13 +785,11 @@ check "schema_docs" {
     "list_resource/aws_internet_gateway",
     "list_resource/aws_nat_gateway",
     "list_resource/aws_route_table",
-    "list_resource/aws_s3_object",
     "list_resource/aws_security_group",
     "list_resource/aws_ssm_association",
     "list_resource/aws_subnet",
     "list_resource/aws_vpc_endpoint",
     "list_resource/aws_vpc_security_group_egress_rule",
-    "list_resource/aws_vpc",
     "resource/aws_accessanalyzer_analyzer",
     "resource/aws_accessanalyzer_archive_rule",
     "resource/aws_account_alternate_contact",
@@ -760,7 +810,6 @@ check "schema_docs" {
     "resource/aws_amplify_branch",
     "resource/aws_amplify_domain_association",
     "resource/aws_amplify_webhook",
-    "resource/aws_arcregionswitch_plan",
     "resource/aws_arczonalshift_autoshift_observer_notification_status",
     "resource/aws_arczonalshift_zonal_autoshift_configuration",
     "resource/aws_athena_data_catalog",
@@ -789,7 +838,6 @@ check "schema_docs" {
     "resource/aws_backup_logically_air_gapped_vault",
     "resource/aws_backup_plan",
     "resource/aws_backup_region_settings",
-    "resource/aws_backup_report_plan",
     "resource/aws_backup_restore_testing_plan",
     "resource/aws_backup_restore_testing_selection",
     "resource/aws_backup_selection",
@@ -798,7 +846,6 @@ check "schema_docs" {
     "resource/aws_backup_vault_policy",
     "resource/aws_backup_vault",
     "resource/aws_batch_compute_environment",
-    "resource/aws_batch_job_definition",
     "resource/aws_batch_job_queue",
     "resource/aws_batch_scheduling_policy",
     "resource/aws_bcmdataexports_export",
@@ -825,7 +872,6 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_gateway_target",
     "resource/aws_bedrockagentcore_gateway",
     "resource/aws_bedrockagentcore_harness",
-    "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
     "resource/aws_bedrockagentcore_registry",
     "resource/aws_bedrockagentcore_token_vault_cmk",
@@ -1195,15 +1241,6 @@ check "schema_docs" {
     "resource/aws_ecr_repository",
     "resource/aws_ecrpublic_repository_policy",
     "resource/aws_ecrpublic_repository",
-    "resource/aws_ecs_account_setting_default",
-    "resource/aws_ecs_capacity_provider",
-    "resource/aws_ecs_cluster_capacity_providers",
-    "resource/aws_ecs_cluster",
-    "resource/aws_ecs_express_gateway_service",
-    "resource/aws_ecs_service",
-    "resource/aws_ecs_tag",
-    "resource/aws_ecs_task_definition",
-    "resource/aws_ecs_task_set",
     "resource/aws_efs_access_point",
     "resource/aws_efs_backup_policy",
     "resource/aws_efs_file_system_policy",
@@ -1259,31 +1296,6 @@ check "schema_docs" {
     "resource/aws_evidently_launch",
     "resource/aws_evidently_project",
     "resource/aws_evidently_segment",
-    "resource/aws_finspace_kx_cluster",
-    "resource/aws_finspace_kx_database",
-    "resource/aws_finspace_kx_dataview",
-    "resource/aws_finspace_kx_environment",
-    "resource/aws_finspace_kx_scaling_group",
-    "resource/aws_finspace_kx_user",
-    "resource/aws_finspace_kx_volume",
-    "resource/aws_fis_experiment_template",
-    "resource/aws_fis_target_account_configuration",
-    "resource/aws_flow_log",
-    "resource/aws_fms_admin_account",
-    "resource/aws_fms_policy",
-    "resource/aws_fms_resource_set",
-    "resource/aws_fsx_backup",
-    "resource/aws_fsx_data_repository_association",
-    "resource/aws_fsx_file_cache",
-    "resource/aws_fsx_lustre_file_system",
-    "resource/aws_fsx_ontap_file_system",
-    "resource/aws_fsx_ontap_storage_virtual_machine",
-    "resource/aws_fsx_ontap_volume",
-    "resource/aws_fsx_openzfs_file_system",
-    "resource/aws_fsx_openzfs_snapshot",
-    "resource/aws_fsx_openzfs_volume",
-    "resource/aws_fsx_s3_access_point_attachment",
-    "resource/aws_fsx_windows_file_system",
     "resource/aws_gamelift_alias",
     "resource/aws_gamelift_build",
     "resource/aws_gamelift_fleet",
@@ -1629,7 +1641,6 @@ check "schema_docs" {
     "resource/aws_prometheus_query_logging_configuration",
     "resource/aws_prometheus_resource_policy",
     "resource/aws_prometheus_rule_group_namespace",
-    "resource/aws_prometheus_scraper",
     "resource/aws_prometheus_workspace_configuration",
     "resource/aws_prometheus_workspace",
     "resource/aws_proxy_protocol_policy",
@@ -1752,56 +1763,6 @@ check "schema_docs" {
     "resource/aws_route53recoveryreadiness_resource_set",
     "resource/aws_rum_app_monitor",
     "resource/aws_rum_metrics_destination",
-    "resource/aws_s3_access_point",
-    "resource/aws_s3_account_public_access_block",
-    "resource/aws_s3_bucket_abac",
-    "resource/aws_s3_bucket_accelerate_configuration",
-    "resource/aws_s3_bucket_acl",
-    "resource/aws_s3_bucket_analytics_configuration",
-    "resource/aws_s3_bucket_cors_configuration",
-    "resource/aws_s3_bucket_intelligent_tiering_configuration",
-    "resource/aws_s3_bucket_inventory",
-    "resource/aws_s3_bucket_lifecycle_configuration",
-    "resource/aws_s3_bucket_logging",
-    "resource/aws_s3_bucket_metadata_configuration",
-    "resource/aws_s3_bucket_metric",
-    "resource/aws_s3_bucket_notification",
-    "resource/aws_s3_bucket_object_lock_configuration",
-    "resource/aws_s3_bucket_object",
-    "resource/aws_s3_bucket_ownership_controls",
-    "resource/aws_s3_bucket_public_access_block",
-    "resource/aws_s3_bucket_replication_configuration",
-    "resource/aws_s3_bucket_request_payment_configuration",
-    "resource/aws_s3_bucket_server_side_encryption_configuration",
-    "resource/aws_s3_bucket_versioning",
-    "resource/aws_s3_bucket_website_configuration",
-    "resource/aws_s3_bucket",
-    "resource/aws_s3_directory_bucket",
-    "resource/aws_s3_object_copy",
-    "resource/aws_s3_object",
-    "resource/aws_s3control_access_grant",
-    "resource/aws_s3control_access_grants_instance_resource_policy",
-    "resource/aws_s3control_access_grants_instance",
-    "resource/aws_s3control_access_grants_location",
-    "resource/aws_s3control_access_point_policy",
-    "resource/aws_s3control_bucket_lifecycle_configuration",
-    "resource/aws_s3control_bucket",
-    "resource/aws_s3control_directory_bucket_access_point_scope",
-    "resource/aws_s3control_multi_region_access_point_policy",
-    "resource/aws_s3control_multi_region_access_point",
-    "resource/aws_s3control_object_lambda_access_point_policy",
-    "resource/aws_s3control_object_lambda_access_point",
-    "resource/aws_s3control_storage_lens_configuration",
-    "resource/aws_s3outposts_endpoint",
-    "resource/aws_s3tables_namespace",
-    "resource/aws_s3tables_table_bucket_replication",
-    "resource/aws_s3tables_table_bucket",
-    "resource/aws_s3tables_table_policy",
-    "resource/aws_s3tables_table_replication",
-    "resource/aws_s3tables_table",
-    "resource/aws_s3vectors_index",
-    "resource/aws_s3vectors_vector_bucket_policy",
-    "resource/aws_s3vectors_vector_bucket",
     "resource/aws_sagemaker_algorithm",
     "resource/aws_sagemaker_app_image_config",
     "resource/aws_sagemaker_app",
@@ -1993,23 +1954,6 @@ check "schema_docs" {
     "resource/aws_timestreamquery_scheduled_query",
     "resource/aws_timestreamwrite_database",
     "resource/aws_timestreamwrite_table",
-    "resource/aws_transcribe_language_model",
-    "resource/aws_transcribe_medical_vocabulary",
-    "resource/aws_transcribe_vocabulary_filter",
-    "resource/aws_transcribe_vocabulary",
-    "resource/aws_transfer_access",
-    "resource/aws_transfer_agreement",
-    "resource/aws_transfer_certificate",
-    "resource/aws_transfer_connector",
-    "resource/aws_transfer_host_key",
-    "resource/aws_transfer_profile",
-    "resource/aws_transfer_server",
-    "resource/aws_transfer_ssh_key",
-    "resource/aws_transfer_tag",
-    "resource/aws_transfer_user",
-    "resource/aws_transfer_web_app_customization",
-    "resource/aws_transfer_web_app",
-    "resource/aws_transfer_workflow",
     "resource/aws_verifiedaccess_endpoint",
     "resource/aws_verifiedaccess_group",
     "resource/aws_verifiedaccess_instance_logging_configuration",
@@ -2060,22 +2004,6 @@ check "schema_docs" {
     "resource/aws_vpc_security_group_egress_rule",
     "resource/aws_vpc_security_group_ingress_rule",
     "resource/aws_vpc_security_group_vpc_association",
-    "resource/aws_vpc",
-    "resource/aws_vpclattice_access_log_subscription",
-    "resource/aws_vpclattice_auth_policy",
-    "resource/aws_vpclattice_domain_verification",
-    "resource/aws_vpclattice_listener_rule",
-    "resource/aws_vpclattice_listener",
-    "resource/aws_vpclattice_resource_configuration",
-    "resource/aws_vpclattice_resource_gateway",
-    "resource/aws_vpclattice_resource_policy",
-    "resource/aws_vpclattice_service_network_resource_association",
-    "resource/aws_vpclattice_service_network_service_association",
-    "resource/aws_vpclattice_service_network_vpc_association",
-    "resource/aws_vpclattice_service_network",
-    "resource/aws_vpclattice_service",
-    "resource/aws_vpclattice_target_group_attachment",
-    "resource/aws_vpclattice_target_group",
     "resource/aws_vpn_concentrator",
     "resource/aws_vpn_connection_route",
     "resource/aws_vpn_connection",
@@ -2141,7 +2069,7 @@ check "schema_docs" {
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 
   ignore_targets = [

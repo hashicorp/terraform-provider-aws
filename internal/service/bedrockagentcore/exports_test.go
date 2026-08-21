@@ -13,6 +13,7 @@ var (
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
+	ResourceGatewayRule              = newGatewayRuleResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
 	ResourceResourcePolicy           = newResourcePolicyResource
@@ -35,6 +36,7 @@ var (
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
+	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
@@ -46,6 +48,7 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
+	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
 )
 
 type (
@@ -53,9 +56,15 @@ type (
 	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
 	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
 	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
+	InvocationConfigurationModel           = invocationConfigurationModel
 	ManagedVPCResourceModel                = managedVPCResourceModel
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
+	MessageBasedTriggerModel               = messageBasedTriggerModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel
+	SelfManagedConfigurationModel          = selfManagedConfigurationModel
 	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
+	TimeBasedTriggerModel                  = timeBasedTriggerModel
+	TokenBasedTriggerModel                 = tokenBasedTriggerModel
+	TriggerConditionsModel                 = triggerConditionsModel
 )
