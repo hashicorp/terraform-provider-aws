@@ -47,7 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `ipam_cidr_config` - (Optional, Forces new resource) Configuration block for one or more IPAM CIDRs used to allocate the Anycast static IPs from your own address space (BYOIP). [See below](#ipam_cidr_config).
+* `ipam_cidr_config` - (Optional) Configuration block for one or more IPAM CIDRs used to allocate the Anycast static IPs from your own address space (BYOIP). [See below](#ipam_cidr_config).
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### ipam_cidr_config
