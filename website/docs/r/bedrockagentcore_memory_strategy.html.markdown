@@ -287,7 +287,7 @@ The `reflection_configuration` block supports the following arguments:
 
 ### `self_managed_configuration` Block
 
-The `self_managed_configuration` block supports the following arguments. See [`self_managed_configuration` Attribute Reference](#self_managed_configuration-attribute-reference) below for additional read-only attributes.
+The `self_managed_configuration` block supports the following arguments.
 
 * `historical_context_window_size` - (Optional) Number of historical messages to include in processing context. Valid range: `0` to `50`. Defaults to `4`.
 * `invocation_configuration` - (Required) Configuration used to invoke the self-managed memory processing pipeline. See [`invocation_configuration` Block](#invocation_configuration-block) below.
@@ -332,11 +332,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
 
-### `self_managed_configuration` Attribute Reference
+### `configuration.self_managed_configuration` Block
 
-The `self_managed_configuration` block exports the following attributes in addition to the arguments above:
+The `configuration.self_managed_configuration` block exports the following attributes in addition to the arguments above:
 
 * `trigger_conditions_actual` - Actual deployed trigger conditions.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual` block exports the following attributes:
+
+* `message_based_trigger` - Message-based condition.
+* `time_based_trigger` - Idle-time condition.
+* `token_based_trigger` - Token-based condition.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.message_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.message_based_trigger` block exports the following attributes:
+
+* `message_count` - Number of messages that trigger memory processing.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.time_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.time_based_trigger` block exports the following attributes:
+
+* `idle_session_timeout` - Idle session timeout (seconds) that triggers memory processing.
+
+### `configuration.self_managed_configuration.trigger_conditions_actual.token_based_trigger` Block
+
+The `configuration.self_managed_configuration.trigger_conditions_actual.token_based_trigger` block exports the following attributes:
+
+* `token_count` - Number of tokens that trigger memory processing.
 
 ## Timeouts
 
