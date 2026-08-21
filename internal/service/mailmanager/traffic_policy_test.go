@@ -183,6 +183,79 @@ func TestAccMailManagerTrafficPolicy_conditionTypes(t *testing.T) {
 	})
 }
 
+func TestAccMailManagerTrafficPolicy_emptyPolicyStatements(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mailmanager_traffic_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTrafficPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MailManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultAction, "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "0"),
+				),
+			},
+			{
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrafficPolicyConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "1"),
+				),
+			},
+			{
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_statement.#", "0"),
+				),
+			},
+			{
+				Config: testAccTrafficPolicyConfig_emptyPolicyStatements(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTrafficPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).MailManagerClient(ctx)
@@ -324,6 +397,15 @@ resource "aws_mailmanager_traffic_policy" "test" {
       }
     }
   }
+}
+`, rName)
+}
+
+func testAccTrafficPolicyConfig_emptyPolicyStatements(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_mailmanager_traffic_policy" "test" {
+  default_action = "ALLOW"
+  name           = %[1]q
 }
 `, rName)
 }
