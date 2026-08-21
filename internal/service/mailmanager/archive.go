@@ -149,7 +149,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, archiveOut.Retention, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, archiveOut.Retention, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -180,7 +180,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Archive")))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, out.Retention, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, out.Retention, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -228,7 +228,7 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, archiveOut, &plan, flex.WithFieldNamePrefix("Archive")))
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenArchiveRetention(ctx, archiveOut.Retention, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, setRetentionFromAPI(ctx, archiveOut.Retention, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -254,10 +254,7 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteArchive(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-	if errs.IsA[*awstypes.ConflictException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.ConflictException](err) {
 		return
 	}
 	if err != nil {
@@ -293,7 +290,7 @@ func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (
 	return out, nil
 }
 
-func flattenArchiveRetention(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel) diag.Diagnostics {
+func setRetentionFromAPI(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if data.Retention.IsNull() || data.Retention.IsUnknown() {
