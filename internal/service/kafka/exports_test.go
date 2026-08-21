@@ -28,4 +28,13 @@ var (
 	ClusterUUIDFromARN    = clusterUUIDFromARN
 	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
 	SortEndpointsString   = sortEndpointsString
+
+	ExpandKafkaCluster                      = expandKafkaCluster                      // nosemgrep:ci.kafka-in-var-name
+	ExpandApacheKafkaCluster                = expandApacheKafkaCluster                // nosemgrep:ci.kafka-in-var-name
+	ExpandKafkaClusterClientAuthentication  = expandKafkaClusterClientAuthentication  // nosemgrep:ci.kafka-in-var-name
+	ExpandKafkaClusterEncryptionInTransit   = expandKafkaClusterEncryptionInTransit   // nosemgrep:ci.kafka-in-var-name
+	FlattenApacheKafkaCluster               = flattenApacheKafkaCluster               // nosemgrep:ci.kafka-in-var-name
+	FlattenKafkaClusterClientAuthentication = flattenKafkaClusterClientAuthentication // nosemgrep:ci.kafka-in-var-name
+	FlattenKafkaClusterEncryptionInTransit  = flattenKafkaClusterEncryptionInTransit  // nosemgrep:ci.kafka-in-var-name
+	KafkaClusterIdentifier                  = kafkaClusterIdentifier                  // nosemgrep:ci.kafka-in-var-name
 )
