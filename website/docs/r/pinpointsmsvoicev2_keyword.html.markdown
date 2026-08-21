@@ -89,9 +89,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `origination_identity` - ID of the origination identity the keyword is attached to.
+This resource exports no additional attributes.
 
 ## Import
 

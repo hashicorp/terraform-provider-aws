@@ -129,7 +129,6 @@ func TestAccPinpointSMSVoiceV2Keyword_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("keyword"), knownvalue.StringExact(strings.ToUpper(rName+"-0"))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("keyword_action"), knownvalue.StringExact("AUTOMATIC_RESPONSE")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("keyword_message"), knownvalue.StringExact("test keyword message")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("origination_identity"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("origination_identity_arn"), knownvalue.NotNull()),
 					}),
 				},

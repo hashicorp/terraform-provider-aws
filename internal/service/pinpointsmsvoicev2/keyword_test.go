@@ -50,7 +50,6 @@ func TestAccPinpointSMSVoiceV2Keyword_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword_action"), knownvalue.StringExact("AUTOMATIC_RESPONSE")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword_message"), knownvalue.StringExact("test keyword message")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity"), "aws_pinpointsmsvoicev2_phone_number.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity_arn"), "aws_pinpointsmsvoicev2_phone_number.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
@@ -344,7 +343,6 @@ func TestAccPinpointSMSVoiceV2Keyword_OriginationIdentity_pool(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("keyword"), knownvalue.StringExact(rName)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity"), "aws_pinpointsmsvoicev2_pool.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identity_arn"), "aws_pinpointsmsvoicev2_pool.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
@@ -374,7 +372,7 @@ func testAccCheckKeywordDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, _, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
+			_, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
 
 			if retry.NotFound(err) {
 				continue
@@ -400,7 +398,7 @@ func testAccCheckKeywordExists(ctx context.Context, t *testing.T, n string, v *a
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-		output, _, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
+		output, _, err := tfpinpointsmsvoicev2.FindKeywordByTwoPartKey(ctx, conn, rs.Primary.Attributes["origination_identity_arn"], rs.Primary.Attributes["keyword"])
 
 		if err != nil {
 			return err

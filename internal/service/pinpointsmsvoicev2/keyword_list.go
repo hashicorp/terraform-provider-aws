@@ -61,7 +61,7 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 	tflog.Info(ctx, "Listing End User Messaging SMS Keywords")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		keywords, originationIdentity, originationIdentityARN, err := findKeywords(ctx, conn, &input)
+		keywords, originationIdentityARN, err := findKeywords(ctx, conn, &input)
 		if err != nil {
 			result := fwdiag.NewListResultErrorDiagnostic(err)
 			yield(result)
@@ -72,16 +72,16 @@ func (l *keywordListResource) List(ctx context.Context, request list.ListRequest
 			item := &keywords[i]
 			keyword := aws.ToString(item.Keyword)
 
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("origination_identity"), aws.ToString(originationIdentity))
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("origination_identity_arn"), aws.ToString(originationIdentityARN))
 			ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("keyword"), keyword)
 
 			result := request.NewListResult(ctx)
 
 			var data keywordResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				// KeywordInformation does not carry the origination identity; its ID and
-				// ARN come from the DescribeKeywords response envelope.
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, item, originationIdentity, originationIdentityARN, &data))
+				// KeywordInformation does not carry the origination identity; its ARN
+				// comes from the DescribeKeywords response envelope.
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, item, originationIdentityARN, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}

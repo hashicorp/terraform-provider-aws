@@ -101,13 +101,6 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringvalidator.RegexMatches(regexache.MustCompile(`\S`), "must not be entirely whitespace"),
 				},
 			},
-			"origination_identity": schema.StringAttribute{
-				Description: "ID of the origination identity the keyword is attached to.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"origination_identity_arn": schema.StringAttribute{
 				Description: "ARN of the origination identity (phone number or pool) to attach the keyword to.",
 				CustomType:  fwtypes.ARNType,
@@ -175,7 +168,7 @@ func (r *keywordResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// origination_identity is computed (the ID); the PutKeyword input takes the ARN.
+	// PutKeyword's OriginationIdentity accepts either an ID or an ARN; send the ARN.
 	input.OriginationIdentity = plan.OriginationIdentityARN.ValueStringPointer()
 
 	out, err := conn.PutKeyword(ctx, &input)
@@ -203,7 +196,7 @@ func (r *keywordResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, originationIdentity, originationIdentityARN, err := findKeywordByTwoPartKey(ctx, conn, state.OriginationIdentityARN.ValueString(), state.Keyword.ValueString())
+	out, originationIdentityARN, err := findKeywordByTwoPartKey(ctx, conn, state.OriginationIdentityARN.ValueString(), state.Keyword.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -216,7 +209,7 @@ func (r *keywordResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	// KeywordInformation does not carry the origination identity; its ID and ARN come from
 	// the DescribeKeywords response envelope.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, originationIdentity, originationIdentityARN, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, originationIdentityARN, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -238,7 +231,7 @@ func (r *keywordResource) Update(ctx context.Context, req resource.UpdateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// origination_identity is computed (the ID); the PutKeyword input takes the ARN.
+	// PutKeyword's OriginationIdentity accepts either an ID or an ARN; send the ARN.
 	input.OriginationIdentity = plan.OriginationIdentityARN.ValueStringPointer()
 
 	out, err := conn.PutKeyword(ctx, &input)
@@ -288,7 +281,7 @@ func (r *keywordResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	// Deletion propagation lag; poll until DescribeKeywords no longer sees it.
 	_, err = tfresource.RetryUntilNotFound(ctx, keywordDeletePropagationTimeout, func(ctx context.Context) (any, error) {
-		out, _, _, err := findKeywordByTwoPartKey(ctx, conn, state.OriginationIdentityARN.ValueString(), state.Keyword.ValueString())
+		out, _, err := findKeywordByTwoPartKey(ctx, conn, state.OriginationIdentityARN.ValueString(), state.Keyword.ValueString())
 		return out, err
 	})
 	if err != nil {
@@ -296,10 +289,10 @@ func (r *keywordResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-// flatten maps a KeywordInformation and its origination identity ID and ARN onto the
-// model. KeywordInformation does not carry the origination identity; both the ID and ARN
-// come from the DescribeKeywords response envelope, so they are passed separately.
-func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInformation, originationIdentity, originationIdentityARN *string, data *keywordResourceModel) diag.Diagnostics {
+// flatten maps a KeywordInformation and its origination identity ARN onto the model.
+// KeywordInformation does not carry the origination identity; the ARN comes from the
+// DescribeKeywords response envelope, so it is passed separately.
+func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInformation, originationIdentityARN *string, data *keywordResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, in, data)...)
@@ -307,64 +300,62 @@ func (r *keywordResource) flatten(ctx context.Context, in *awstypes.KeywordInfor
 		return diags
 	}
 
-	data.OriginationIdentity = fwflex.StringToFramework(ctx, originationIdentity)
 	data.OriginationIdentityARN = fwtypes.ARNValue(aws.ToString(originationIdentityARN))
 
 	return diags
 }
 
-// flattenPutKeyword maps a PutKeyword response onto the model. PutKeywordOutput carries
-// both the origination identity ID (origination_identity) and ARN (origination_identity_arn),
-// so AutoFlex populates them directly. keyword is upper-case in both the config (enforced by
-// schema) and the response, so it does not need special handling.
+// flattenPutKeyword maps a PutKeyword response onto the model. PutKeywordOutput carries the
+// origination identity ARN (origination_identity_arn), so AutoFlex populates it directly.
+// keyword is upper-case in both the config (enforced by schema) and the response, so it does
+// not need special handling.
 func (r *keywordResource) flattenPutKeyword(ctx context.Context, out *pinpointsmsvoicev2.PutKeywordOutput, data *keywordResourceModel) diag.Diagnostics {
 	return fwflex.Flatten(ctx, out, data)
 }
 
-func findKeywordByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, originationIdentity, keyword string) (*awstypes.KeywordInformation, *string, *string, error) {
+func findKeywordByTwoPartKey(ctx context.Context, conn *pinpointsmsvoicev2.Client, originationIdentity, keyword string) (*awstypes.KeywordInformation, *string, error) {
 	input := pinpointsmsvoicev2.DescribeKeywordsInput{
 		OriginationIdentity: aws.String(originationIdentity),
 		Keywords:            []string{keyword},
 	}
 
-	keywords, originationIdentityID, originationIdentityARN, err := findKeywords(ctx, conn, &input)
+	keywords, originationIdentityARN, err := findKeywords(ctx, conn, &input)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	for i := range keywords {
 		if strings.EqualFold(aws.ToString(keywords[i].Keyword), keyword) {
-			return &keywords[i], originationIdentityID, originationIdentityARN, nil
+			return &keywords[i], originationIdentityARN, nil
 		}
 	}
 
-	return nil, nil, nil, &retry.NotFoundError{
+	return nil, nil, &retry.NotFoundError{
 		Message: fmt.Sprintf("keyword %q not found on origination identity %q", keyword, originationIdentity),
 	}
 }
 
-func findKeywords(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeKeywordsInput) ([]awstypes.KeywordInformation, *string, *string, error) {
+func findKeywords(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeKeywordsInput) ([]awstypes.KeywordInformation, *string, error) {
 	var keywords []awstypes.KeywordInformation
-	var originationIdentityID, originationIdentityARN *string
+	var originationIdentityARN *string
 
 	pages := pinpointsmsvoicev2.NewDescribeKeywordsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, nil, nil, &retry.NotFoundError{
+			return nil, nil, &retry.NotFoundError{
 				LastError: err,
 			}
 		}
 		if err != nil {
-			return nil, nil, nil, smarterr.NewError(err)
+			return nil, nil, smarterr.NewError(err)
 		}
 
-		originationIdentityID = page.OriginationIdentity
 		originationIdentityARN = page.OriginationIdentityArn
 		keywords = append(keywords, page.Keywords...)
 	}
 
-	return keywords, originationIdentityID, originationIdentityARN, nil
+	return keywords, originationIdentityARN, nil
 }
 
 // isMandatoryKeyword reports whether keyword is an AWS-managed mandatory keyword
@@ -378,7 +369,6 @@ type keywordResourceModel struct {
 	Keyword                types.String                               `tfsdk:"keyword"`
 	KeywordAction          fwtypes.StringEnum[awstypes.KeywordAction] `tfsdk:"keyword_action"`
 	KeywordMessage         types.String                               `tfsdk:"keyword_message"`
-	OriginationIdentity    types.String                               `tfsdk:"origination_identity"`
 	OriginationIdentityARN fwtypes.ARN                                `tfsdk:"origination_identity_arn"`
 }
 
