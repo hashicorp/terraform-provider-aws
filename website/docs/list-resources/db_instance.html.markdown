@@ -1,19 +1,19 @@
 ---
 subcategory: "RDS (Relational Database)"
 layout: "aws"
-page_title: "AWS: aws_rds_db_instance"
+page_title: "AWS: aws_db_instance"
 description: |-
-  Lists RDS (Relational Database) Instance resources.
+  Lists RDS (Relational Database) DB Instance resources.
 ---
 
-# List Resource: aws_rds_db_instance
+# List Resource: aws_db_instance
 
-Lists RDS (Relational Database) Instance resources.
+Lists RDS (Relational Database) DB Instance resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_rds_db_instance" "example" {
+list "aws_db_instance" "example" {
   provider = aws
 }
 ```
