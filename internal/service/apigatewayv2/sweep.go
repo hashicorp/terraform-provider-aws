@@ -4,6 +4,7 @@
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,6 +45,32 @@ func RegisterSweepers() {
 		Name: "aws_apigatewayv2_vpc_link",
 		F:    sweepVPCLinks,
 	})
+
+	awsv2.Register("aws_apigatewayv2_portal_product", sweepPortalProducts)
+}
+
+func sweepPortalProducts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.APIGatewayV2Client(ctx)
+	input := apigatewayv2.ListPortalProductsInput{}
+	var sweepResources []sweep.Sweepable
+
+	err := listPortalProductsPages(ctx, conn, &input, func(page *apigatewayv2.ListPortalProductsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newPortalProductResource, client,
+				sweepfw.NewAttribute("portal_product_id", aws.ToString(v.PortalProductId))))
+		}
+
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return sweepResources, nil
 }
 
 func sweepAPIs(region string) error {
