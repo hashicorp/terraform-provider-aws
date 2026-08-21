@@ -1967,12 +1967,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 	}
 
-	return resourceInstanceFlatten(ctx, meta.(*conns.AWSClient), v, d)
+	return sdkdiag.AppendFromErr(diags, resourceInstanceFlatten(ctx, meta.(*conns.AWSClient), v, d))
 }
 
-func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v *types.DBInstance, d *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v *types.DBInstance, d *schema.ResourceData) error {
 	d.SetId(aws.ToString(v.DbiResourceId))
 	d.Set(names.AttrAllocatedStorage, v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
@@ -2038,7 +2036,7 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if v.MasterUserSecret != nil {
 		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+			return fmt.Errorf("setting master_user_secret: %w", err)
 		}
 	} else {
 		d.Set("master_user_secret", nil)
@@ -2104,7 +2102,7 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 
 	if v.ListenerEndpoint != nil {
 		if err := d.Set("listener_endpoint", []any{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
+			return fmt.Errorf("setting listener_endpoint: %w", err)
 		}
 	} else {
 		d.Set("listener_endpoint", nil)
@@ -2114,7 +2112,7 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 
 	setTagsOut(ctx, v.TagList)
 
-	return diags
+	return nil
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

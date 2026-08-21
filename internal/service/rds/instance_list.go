@@ -59,9 +59,9 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			rd.Set(names.AttrIdentifier, identifier)
 
 			if request.IncludeResource {
-				if diags := resourceInstanceFlatten(ctx, awsClient, &item, rd); diags.HasError() {
+				if err := resourceInstanceFlatten(ctx, awsClient, &item, rd); err != nil {
 					tflog.Error(ctx, "Flattening RDS DB Instance", map[string]any{
-						"error": diags[0].Summary,
+						"error": err.Error(),
 					})
 					continue
 				}
