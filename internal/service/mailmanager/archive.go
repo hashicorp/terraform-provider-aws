@@ -47,10 +47,6 @@ func newArchiveResource(_ context.Context) (resource.ResourceWithConfigure, erro
 	return &archiveResource{}, nil
 }
 
-const (
-	ResNameArchive = "Archive"
-)
-
 type archiveResource struct {
 	framework.ResourceWithModel[archiveResourceModel]
 	framework.WithImportByIdentity
