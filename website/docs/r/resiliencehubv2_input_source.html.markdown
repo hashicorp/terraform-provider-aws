@@ -68,8 +68,7 @@ The following arguments are optional:
 
 ### `resource_configuration` Block
 
-Exactly one attribute must be configured.
-The `resource_configuration` block supports:
+The `resource_configuration` block supports exactly one of the following:
 
 * `cfn_stack_arn` - (Optional) CloudFormation stack ARN.
 * `design_file_s3_url` - (Optional) S3 URL.
