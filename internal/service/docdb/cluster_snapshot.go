@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,6 +31,7 @@ func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
+		UpdateWithoutTimeout: resourceClusterSnapshotUpdate,
 		DeleteWithoutTimeout: resourceClusterSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -78,6 +81,11 @@ func resourceClusterSnapshot() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
+				"shared_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				"snapshot_type": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -125,6 +133,20 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Snapshot (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+		input := &docdb.ModifyDBClusterSnapshotAttributeInput{
+			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
+			DBClusterSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:                 flex.ExpandStringValueSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
@@ -158,7 +180,41 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
+	attribute, err := findClusterSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), clusterSnapshotAttributeNameRestore)
+	switch {
+	case err == nil:
+		d.Set("shared_accounts", attribute.AttributeValues)
+	case retry.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+	}
+
 	return diags
+}
+
+func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
+
+	if d.HasChange("shared_accounts") {
+		o, n := d.GetChange("shared_accounts")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
+		input := &docdb.ModifyDBClusterSnapshotAttributeInput{
+			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
+			DBClusterSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:                 flex.ExpandStringValueSet(add),
+			ValuesToRemove:              flex.ExpandStringValueSet(del),
+		}
+
+		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -270,4 +326,44 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.Client, id stri
 	}
 
 	return nil, err
+}
+
+func findClusterSnapshotAttributeByTwoPartKey(ctx context.Context, conn *docdb.Client, id, attributeName string) (*awstypes.DBClusterSnapshotAttribute, error) {
+	input := &docdb.DescribeDBClusterSnapshotAttributesInput{
+		DBClusterSnapshotIdentifier: aws.String(id),
+	}
+
+	return findClusterSnapshotAttribute(ctx, conn, input, func(v *awstypes.DBClusterSnapshotAttribute) bool {
+		return aws.ToString(v.AttributeName) == attributeName
+	})
+}
+
+func findClusterSnapshotAttribute(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*awstypes.DBClusterSnapshotAttribute]) (*awstypes.DBClusterSnapshotAttribute, error) {
+	output, err := findClusterSnapshotAttributes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClusterSnapshotAttributes(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*awstypes.DBClusterSnapshotAttribute]) ([]awstypes.DBClusterSnapshotAttribute, error) {
+	output, err := conn.DescribeDBClusterSnapshotAttributes(ctx, input)
+
+	if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DBClusterSnapshotAttributesResult == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, tfslices.PredicateValue(filter)), nil
 }
