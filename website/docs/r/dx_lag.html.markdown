@@ -14,6 +14,8 @@ Provides a Direct Connect LAG. Connections can be added to the LAG via the [`aws
 
 ## Example Usage
 
+### Create a LAG
+
 ```terraform
 resource "aws_dx_lag" "hoge" {
   name                  = "tf-dx-lag"
@@ -22,6 +24,31 @@ resource "aws_dx_lag" "hoge" {
   force_destroy         = true
 }
 ```
+
+### Request a MACsec-capable LAG
+
+```terraform
+resource "aws_dx_lag" "example" {
+  name                  = "tf-dx-lag-macsec"
+  connections_bandwidth = "100Gbps"
+  location              = "CSVA1"
+  request_macsec        = true
+}
+
+resource "aws_dx_connection" "example" {
+  name           = "tf-dx-connection-macsec"
+  bandwidth      = "100Gbps"
+  location       = "CSVA1"
+  request_macsec = true
+}
+
+resource "aws_dx_connection_association" "example" {
+  connection_id = aws_dx_connection.example.id
+  lag_id        = aws_dx_lag.example.id
+}
+```
+
+~> *NOTE:* When associating a MACsec-capable [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) to a LAG, both resources must have `request_macsec = true` set at creation. MACsec cannot be enabled on an existing LAG.
 
 ## Argument Reference
 
@@ -32,8 +59,10 @@ This resource supports the following arguments:
 * `connections_bandwidth` - (Required) The bandwidth of the individual dedicated connections bundled by the LAG. Valid values: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html).
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `connection_id` - (Optional) The ID of an existing dedicated connection to migrate to the LAG.
+* `encryption_mode` - (Optional) The MAC Security (MACsec) connection encryption mode. Valid values: `no_encrypt`, `should_encrypt`, `must_encrypt`. Only applicable to LAGs created with `request_macsec = true`.
 * `force_destroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
 * `provider_name` - (Optional) The name of the service provider associated with the LAG.
+* `request_macsec` - (Optional, Forces new resource) Indicates whether the LAG supports MAC Security (MACsec). Default value is `false`. Refer to the AWS Direct Connect documentation for [supported locations and bandwidths](https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-mac-sec-getting-started.html).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -44,6 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `has_logical_redundancy` - Indicates whether the LAG supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the LAG.
 * `jumbo_frame_capable` -Indicates whether jumbo frames (9001 MTU) are supported.
+* `macsec_capable` - Indicates whether the LAG supports MAC Security (MACsec).
 * `owner_account_id` - The ID of the AWS account that owns the LAG.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
