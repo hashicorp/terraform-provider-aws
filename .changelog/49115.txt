@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_elasticache_replication_group: The `auto_minor_version_upgrade` argument must be explicitly set in the configuration for Terraform to detect drift
+```
