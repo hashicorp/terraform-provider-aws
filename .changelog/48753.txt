@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rolesanywhere_trust_anchor: Fix `notification_settings` so that changes to an already-configured event are actually applied via `PutNotificationSettings` instead of being silently dropped
+```
