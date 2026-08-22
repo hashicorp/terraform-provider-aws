@@ -45,7 +45,7 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 				},
 				"client_id_list": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
 						ValidateFunc: validation.StringLenBetween(1, 255),
@@ -79,9 +79,12 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:         getTagsIn(ctx),
-		Url:          aws.String(d.Get(names.AttrURL).(string)),
+		Tags: getTagsIn(ctx),
+		Url:  aws.String(d.Get(names.AttrURL).(string)),
+	}
+
+	if v, ok := d.GetOk("client_id_list"); ok {
+		input.ClientIDList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
