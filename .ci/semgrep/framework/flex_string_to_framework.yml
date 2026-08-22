@@ -10,3 +10,12 @@ rules:
     pattern: fwflex.StringValueToFramework($CTX, aws.ToString($PTR))
     fix: fwflex.StringToFramework($CTX, $PTR)
     severity: ERROR
+
+  - id: string-value-to-framework-with-deref
+    languages: [go]
+    message: >-
+      Prefer `fwflex.StringToFramework(ctx, $PTR)` to
+      `fwflex.StringValueToFramework(ctx, *$PTR)`
+    pattern: fwflex.StringValueToFramework($CTX, *$PTR)
+    fix: fwflex.StringToFramework($CTX, $PTR)
+    severity: ERROR
