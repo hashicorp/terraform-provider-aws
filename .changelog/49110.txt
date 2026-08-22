@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_elasticache_global_replication_group: Clarified `parameter_group_name` documentation to note that AWS auto-generates a `global-datastore-` prefixed parameter group when a replication group joins a global datastore, and that subsequent parameter group changes require a major engine version upgrade
+```
