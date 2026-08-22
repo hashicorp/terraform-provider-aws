@@ -8,15 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/interconnect/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfinterconnect "github.com/hashicorp/terraform-provider-aws/internal/service/interconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +26,9 @@ import (
 //
 //	INTERCONNECT_ACTIVATION_KEY            Activation Key from the partner's portal
 //	INTERCONNECT_DIRECT_CONNECT_GATEWAY_ID Direct Connect Gateway to attach to
-//	INTERCONNECT_REGION                    (optional) Region holding the proposal
+//
+// Proposals are Region scoped, so AWS_DEFAULT_REGION must be set to the Region holding
+// the proposal.
 func TestAccInterconnectConnectionProposalAcceptor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -37,24 +36,18 @@ func TestAccInterconnectConnectionProposalAcceptor_basic(t *testing.T) {
 	resourceName := "aws_interconnect_connection_proposal_acceptor.test"
 	activationKey := acctest.SkipIfEnvVarNotSet(t, "INTERCONNECT_ACTIVATION_KEY")
 	directConnectGatewayID := acctest.SkipIfEnvVarNotSet(t, "INTERCONNECT_DIRECT_CONNECT_GATEWAY_ID")
-	region := testAccRegion()
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InterconnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionProposalAcceptorDestroy(ctx, t, region),
+		CheckDestroy:             testAccCheckConnectionProposalAcceptorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionProposalAcceptorConfig_basic(activationKey, directConnectGatewayID, region),
+				Config: testAccConnectionProposalAcceptorConfig_basic(activationKey, directConnectGatewayID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionProposalAcceptorExists(ctx, t, resourceName, region, &connection),
-					// The ARN is matched with a regular expression rather than using
-					// acctest.CheckResourceAttrRegionalARNFormat, which builds the expected
-					// ARN from the provider's Region and so cannot describe a resource that
-					// sets the region argument.
-					resource.TestMatchResourceAttr(resourceName, names.AttrARN,
-						regexache.MustCompile(fmt.Sprintf(`^arn:[^:]+:interconnect:%s:\d{12}:connection/.+$`, region))),
+					testAccCheckConnectionProposalAcceptorExists(ctx, t, resourceName, &connection),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "interconnect", "connection/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttrSet(resourceName, "bandwidth"),
@@ -62,7 +55,6 @@ func TestAccInterconnectConnectionProposalAcceptor_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "interconnect_provider"),
 					resource.TestCheckResourceAttr(resourceName, "attach_point.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attach_point.0.direct_connect_gateway", directConnectGatewayID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, region),
 				),
 			},
 			{
@@ -80,52 +72,16 @@ func TestAccInterconnectConnectionProposalAcceptor_basic(t *testing.T) {
 	})
 }
 
-// testAccFindConnectionByID looks up a Connection in the given Region, mirroring the
-// behaviour of the package's own finder. The exported finder uses the client's configured
-// Region, whereas this test targets the Region holding the proposal.
-func testAccFindConnectionByID(ctx context.Context, t *testing.T, region, id string) (*awstypes.Connection, error) {
-	t.Helper()
-
-	conn := acctest.ProviderMeta(ctx, t).InterconnectClient(ctx)
-
-	input := interconnect.GetConnectionInput{
-		Identifier: aws.String(id),
-	}
-	out, err := conn.GetConnection(ctx, &input, func(o *interconnect.Options) {
-		o.Region = region
-	})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{LastError: err}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.Connection == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
-	// A deleted Connection lingers in the API in the "deleted" state rather than
-	// returning a not-found error. Treat it as not found.
-	if out.Connection.State == awstypes.ConnectionStateDeleted {
-		return nil, &retry.NotFoundError{
-			LastError: fmt.Errorf("Interconnect Connection (%s) in state %q", id, out.Connection.State),
-		}
-	}
-
-	return out.Connection, nil
-}
-
-func testAccCheckConnectionProposalAcceptorDestroy(ctx context.Context, t *testing.T, region string) resource.TestCheckFunc {
+func testAccCheckConnectionProposalAcceptorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).InterconnectClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_interconnect_connection_proposal_acceptor" {
 				continue
 			}
 
-			_, err := testAccFindConnectionByID(ctx, t, region, rs.Primary.Attributes[names.AttrID])
+			_, err := tfinterconnect.FindConnectionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
 
 			if retry.NotFound(err) {
 				continue
@@ -142,14 +98,16 @@ func testAccCheckConnectionProposalAcceptorDestroy(ctx context.Context, t *testi
 	}
 }
 
-func testAccCheckConnectionProposalAcceptorExists(ctx context.Context, t *testing.T, n, region string, v *awstypes.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionProposalAcceptorExists(ctx context.Context, t *testing.T, n string, v *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := testAccFindConnectionByID(ctx, t, region, rs.Primary.Attributes[names.AttrID])
+		conn := acctest.ProviderMeta(ctx, t).InterconnectClient(ctx)
+
+		output, err := tfinterconnect.FindConnectionByID(ctx, conn, rs.Primary.Attributes[names.AttrID])
 
 		if err != nil {
 			return err
@@ -161,15 +119,14 @@ func testAccCheckConnectionProposalAcceptorExists(ctx context.Context, t *testin
 	}
 }
 
-func testAccConnectionProposalAcceptorConfig_basic(activationKey, directConnectGatewayID, region string) string {
+func testAccConnectionProposalAcceptorConfig_basic(activationKey, directConnectGatewayID string) string {
 	return fmt.Sprintf(`
 resource "aws_interconnect_connection_proposal_acceptor" "test" {
   activation_key = %[1]q
-  region         = %[3]q
 
   attach_point {
     direct_connect_gateway = %[2]q
   }
 }
-`, activationKey, directConnectGatewayID, region)
+`, activationKey, directConnectGatewayID)
 }
