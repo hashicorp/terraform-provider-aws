@@ -19,7 +19,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_lambdamicrovms_image", sweepImages)
-	awsv2.Register("aws_lambdamicrovms_microvm", sweepMicrovms)
+	awsv2.Register("aws_lambdamicrovms_microvm", sweepMicroVMs)
 }
 
 func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -44,7 +44,7 @@ func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 	return sweepResources, nil
 }
 
-func sweepMicrovms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepMicroVMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := lambdamicrovms.ListMicrovmsInput{}
 	conn := client.LambdaMicroVMsClient(ctx)
 	var sweepResources []sweep.Sweepable
