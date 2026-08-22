@@ -7,6 +7,7 @@ resource "aws_lambdamicrovms_image" "test" {
   code_artifact {
     uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   }
+{{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}

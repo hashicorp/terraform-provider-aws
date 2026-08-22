@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicrovmsMicrovm_Identity_basic(t *testing.T) {
+func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmOutput
@@ -36,7 +36,7 @@ func TestAccLambdaMicrovmsMicrovm_Identity_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccLambdaMicrovmsMicrovm_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsMicrovm_Identity_regionOverride(t *testing.T) {
+func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambdamicrovms_microvm.test"
@@ -133,7 +133,7 @@ func TestAccLambdaMicrovmsMicrovm_Identity_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

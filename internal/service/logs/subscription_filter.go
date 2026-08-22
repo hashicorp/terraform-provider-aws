@@ -75,7 +75,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Schema{
 						Type:         schema.TypeString,
-						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region", "@source.log"}, false),
 					},
 				},
 				"filter_pattern": {

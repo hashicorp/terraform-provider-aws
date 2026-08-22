@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_verifiedaccess_endpoint
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Endpoint.
+Terraform resource for managing an AWS EC2 Verified Access Endpoint.
 
 ## Example Usage
 

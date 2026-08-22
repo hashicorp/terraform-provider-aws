@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmImageOutput
@@ -35,7 +35,7 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 
@@ -116,7 +116,7 @@ func TestAccLambdaMicrovmsImage_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
+func TestAccLambdaMicroVMsImage_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambdamicrovms_image.test"
@@ -130,7 +130,7 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -164,7 +164,7 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 
@@ -182,7 +182,7 @@ func TestAccLambdaMicrovmsImage_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
 				},
 			},
 

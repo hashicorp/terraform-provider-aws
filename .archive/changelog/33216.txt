@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_wafv2_web_acl: Prevent deletion of the AWS-managed `ShieldMitigationRuleGroup` rule on resource Update
-```

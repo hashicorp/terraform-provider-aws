@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Add `status` attribute
+```
+
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Add `wait_for_active` argument to allow `create` and `update` to return without waiting for the phone number to reach `ACTIVE` status. Number types gated on carrier or registration approval (for example `TEN_DLC`, `TOLL_FREE`, or any number submitted with `registration_id`) can remain `PENDING` for days to weeks, which previously caused `terraform apply` to time out
+```

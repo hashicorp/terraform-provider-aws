@@ -12,16 +12,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -34,21 +38,41 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
+	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Standard Bedrock AgentCore resource name validator.
+var validResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`),
+	`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`,
+)
+
 // @FrameworkResource("aws_bedrockagentcore_memory_strategy", name="Memory Strategy")
+// @IdentityAttribute("memory_id")
+// @IdentityAttribute("memory_strategy_id")
+// @ImportIDHandler("memoryStrategyImportID")
+// @Testing(preIdentityVersion="v6.60.0")
+// @Testing(importStateIdFunc=testAccMemoryStrategyImportStateIDFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.MemoryStrategy")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(importStateIdAttribute="memory_strategy_id")
 func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceMemoryStrategy{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
@@ -56,17 +80,30 @@ func newResourceMemoryStrategy(_ context.Context) (resource.ResourceWithConfigur
 type resourceMemoryStrategy struct {
 	framework.ResourceWithModel[memoryStrategyResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			// Optional+Computed: The UpdateMemory API treats a nil
+			// description as "leave unchanged" (it never clears), so removing
+			// the argument keeps the prior value rather than erroring with
+			// "inconsistent result after apply".
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 4096),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"memory_execution_role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				CustomType:         fwtypes.ARNType,
+				Optional:           true,
+				DeprecationMessage: "memory_execution_role_arn is deprecated. Use memory_execution_role_arn on the aws_bedrockagentcore_memory resource instead.",
 			},
 			"memory_id": schema.StringAttribute{
 				Required: true,
@@ -83,14 +120,55 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					validResourceName,
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespaces": schema.SetAttribute{
+				CustomType:         fwtypes.SetOfStringType,
+				Optional:           true,
+				Computed:           true,
+				DeprecationMessage: "namespaces is deprecated. Use namespace_templates instead.",
+				PlanModifiers: []planmodifier.Set{
+					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespace_templates")),
+				},
+			},
+			"namespace_templates": schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
-				Required:   true,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespaces")),
+				},
 			},
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
+				Validators: []validator.String{
+					// - configuration {} is only valid and is required when type = "CUSTOM"
+					// - reflection_configuration {} is only valid when type = "EPISODIC"
+					// - Exactly one of namespaces or namespace_templates is required except when type = "CUSTOM" and configuration.type = "SELF_MANAGED"
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRelative().AtParent().AtName(names.AttrConfiguration),
+					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.MemoryStrategyTypeEpisodic,
+						path.MatchRelative().AtParent().AtName("reflection_configuration"),
+					),
+					tfstringvalidator.ExactlyOneOfWhenNotEquals(
+						awstypes.MemoryStrategyTypeCustom,
+						path.MatchRoot("namespaces"),
+						path.MatchRoot("namespace_templates"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -107,6 +185,46 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 						names.AttrType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.OverrideType](),
+							Validators: []validator.String{
+								// - reflection {} is only valid and is required when type = "EPISODIC_OVERRIDE"
+								// - self_managed_configuration {} is only valid and is required when type = "SELF_MANAGED"
+								// - extraction {} is not valid when type = "SUMMARY_OVERRIDE" or type = "SELF_MANAGED"
+								// - consolidation {} is not valid when type = "SELF_MANAGED"
+								// - Exactly one of namespaces or namespace_templates is required except when type = "CUSTOM" and configuration.type = "SELF_MANAGED"
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.OverrideTypeEpisodicOverride,
+									path.MatchRelative().AtParent().AtName("reflection"),
+								),
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRelative().AtParent().AtName("self_managed_configuration"),
+								),
+								tfstringvalidator.ConflictsWithWhenNotEquals(
+									awstypes.OverrideTypeEpisodicOverride,
+									path.MatchRelative().AtParent().AtName("reflection"),
+								),
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.OverrideTypeSummaryOverride,
+									path.MatchRelative().AtParent().AtName("extraction"),
+								),
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRoot("namespaces"),
+									path.MatchRoot("namespace_templates"),
+									path.MatchRelative().AtParent().AtName("consolidation"),
+									path.MatchRelative().AtParent().AtName("extraction"),
+									// "reflection" is handled via the ConflictsWithWhenNotEquals above.
+								),
+								tfstringvalidator.ConflictsWithWhenNotEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRelative().AtParent().AtName("self_managed_configuration"),
+								),
+								tfstringvalidator.ExactlyOneOfWhenNotEquals(
+									awstypes.OverrideTypeSelfManaged,
+									path.MatchRoot("namespaces"),
+									path.MatchRoot("namespace_templates"),
+								),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -119,7 +237,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("consolidation"),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -136,7 +254,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 							CustomType: fwtypes.NewListNestedObjectTypeOf[overrideDetailsModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(1)},
 							PlanModifiers: []planmodifier.List{
-								errorIfSingleBlockRemoved("extraction"),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -148,6 +266,168 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									},
 								},
 							},
+						},
+						"reflection": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[episodicReflectionOverrideDetailsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								tflistplanmodifier.RequiresReplaceIfEmptied,
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"append_to_prompt": schema.StringAttribute{
+										Required: true,
+									},
+									"model_id": schema.StringAttribute{
+										Required: true,
+									},
+									"namespace_templates": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Required:   true,
+									},
+								},
+							},
+						},
+						"self_managed_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[selfManagedConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								tflistplanmodifier.RequiresReplaceIfEmptied,
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"historical_context_window_size": schema.Int32Attribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.Int32{
+											int32validator.Between(0, 50),
+										},
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
+									},
+									"trigger_conditions_actual": framework.ResourceComputedListOfObjectsAttribute[triggerConditionsModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(r.triggerConditionsPath())),
+								},
+								Blocks: map[string]schema.Block{
+									"invocation_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[invocationConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"payload_delivery_bucket_name": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														fwvalidators.S3BucketName,
+													},
+												},
+												names.AttrTopicARN: schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+										},
+									},
+									"trigger_conditions": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[triggerConditionsModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.AtLeastOneOfChildren(
+													path.MatchRelative().AtName("message_based_trigger"),
+													path.MatchRelative().AtName("time_based_trigger"),
+													path.MatchRelative().AtName("token_based_trigger"),
+												),
+											},
+											Blocks: map[string]schema.Block{
+												"message_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[messageBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"message_count": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, 50),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
+												},
+												"time_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[timeBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"idle_session_timeout": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(10, 3000),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
+												},
+												"token_based_trigger": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[tokenBasedTriggerModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"token_count": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(100, 500000),
+																},
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.UseNonNullStateForUnknown(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"reflection_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[episodicReflectionConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					tflistplanmodifier.RequiresReplaceIfEmptied,
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"namespace_templates": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Required:   true,
 						},
 					},
 				},
@@ -161,103 +441,11 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
-type errorIfSingleBlockRemoved_ struct {
-	label string
-}
-
-func errorIfSingleBlockRemoved(label string) planmodifier.List {
-	return errorIfSingleBlockRemoved_{label: label}
-}
-
-func (m errorIfSingleBlockRemoved_) Description(context.Context) string {
-	return "Disallow removing previously configured " + m.label + " block"
-}
-
-func (m errorIfSingleBlockRemoved_) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m errorIfSingleBlockRemoved_) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// Skip create or destroy.
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
-		return
-	}
-
-	// Defer until known values
-	if req.StateValue.IsUnknown() || req.PlanValue.IsUnknown() {
-		return
-	}
-
-	var plannedType awstypes.OverrideType
-	overrideTypePath := path.Root(names.AttrConfiguration).AtListIndex(0).AtName(names.AttrType)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var stateType awstypes.OverrideType
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if plannedType != stateType {
-		return
-	}
-
-	stateList, sDiags := req.StateValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, sDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	planList, pDiags := req.PlanValue.ToListValue(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, pDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
-		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
-	}
-}
-
-func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var data memoryStrategyResourceModel
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if data.Type.IsUnknown() {
-		return
-	}
-
-	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
-		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
-			return
-		} else {
-			c, diags := data.Configuration.ToPtr(ctx)
-			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
-				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
-			}
-		}
-	} else {
-		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
-		}
-	}
-}
-
 func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan memoryStrategyResourceModel
+	var config, plan memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
@@ -269,7 +457,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	memoryID := fwflex.StringValueFromFramework(ctx, plan.MemoryID)
+	memoryID, name := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.Name)
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		MemoryId:    aws.String(memoryID),
@@ -282,44 +470,54 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		input.MemoryExecutionRoleArn = plan.MemoryExecutionRoleARN.ValueStringPointer()
 	}
 
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var plannedTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, r.triggerConditionsPath(), &plannedTriggerConditionsList))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		out, err := updateMemoryWithRetry(ctx, conn, createTimeout, &input, false)
+		out, err := retryUpdateMemoryStrategy(ctx, conn, &input, createTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
 
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
-		var found *awstypes.MemoryStrategy
-		if out != nil && out.Memory != nil {
-			for i := range out.Memory.Strategies {
-				s := &out.Memory.Strategies[i]
-				if s.Name != nil && aws.ToString(s.Name) == name {
-					found = s
-				}
-			}
-		}
-		if found == nil {
-			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("create memory strategy: API response missing strategy name %q", name), smerr.ID, plan.GetIdentifier())
+		found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
+			return aws.ToString(v.Name) == name
+		}))
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
-		// For non-CUSTOM types, clear Configuration from the API response before
-		// flattening. The API returns a StrategyConfiguration with Type values
-		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-		if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-			found.Configuration = nil
-		}
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, found, &plan))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err = waitMemoryStrategyCreated(ctx, conn, memoryID, fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID), createTimeout)
-		if err != nil {
+		// If no `reflection_configuration` is configured, don't overwrite with returned value.
+		if config.ReflectionConfiguration.IsNull() {
+			plan.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
+		}
+
+		memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
+		if _, err := waitMemoryStrategyCreated(ctx, conn, memoryID, memoryStrategyID, createTimeout); err != nil {
 			// Taint the resource.
 			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.GetIdentifier())
+			response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), memoryStrategyID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, createTimeout); err != nil {
+			// Taint the resource.
+			response.State.SetAttribute(ctx, path.Root("memory_id"), memoryID)
+			response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), memoryStrategyID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 	})
@@ -328,6 +526,14 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured trigger_conditions.
+	if !plannedTriggerConditionsList.IsNull() {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), plannedTriggerConditionsList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -352,25 +558,82 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	// For non-CUSTOM types, clear Configuration from the API response before
-	// flattening. The API returns a StrategyConfiguration with Type values
-	// (e.g. "EPISODIC") that are not valid OverrideType enum values.
-	if state.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-		out.Configuration = nil
-	}
+	importing := state.Name.IsNull()
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var configuredTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, r.triggerConditionsPath(), &configuredTriggerConditionsList))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	nullReflectionConfiguration := state.ReflectionConfiguration.IsNull()
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// If no `reflection_configuration` was configured, don't overwrite with returned value.
+	if nullReflectionConfiguration {
+		state.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
+	}
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var newTriggerConditionsActualList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.GetAttribute(ctx, r.triggerConditionsActualPath(), &newTriggerConditionsActualList))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	switch {
+	case importing && !newTriggerConditionsActualList.IsNull():
+		// Set trigger_conditions to trigger_conditions_actual.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), newTriggerConditionsActualList))
+	case !configuredTriggerConditionsList.IsNull() && !newTriggerConditionsActualList.IsNull():
+		// Case of configured trigger_conditions but null trigger_conditions_actual is taken care of in flatten.
+		configuredTriggerConditions, diags := configuredTriggerConditionsList.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		newTriggerConditionsActual, diags := newTriggerConditionsActualList.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Use the fact that each tigger conditions contains a single required attribute to just check for nullness of the block.
+		if configuredTriggerConditions.MessageBasedTrigger.IsNull() {
+			newTriggerConditionsActual.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+		}
+		if configuredTriggerConditions.TimeBasedTrigger.IsNull() {
+			newTriggerConditionsActual.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
+		}
+		if configuredTriggerConditions.TokenBasedTrigger.IsNull() {
+			newTriggerConditionsActual.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+		}
+
+		newTriggerConditionsActualList, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, newTriggerConditionsActual)
+		smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), newTriggerConditionsActualList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan, state memoryStrategyResourceModel
+	var config, plan, state memoryStrategyResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
@@ -379,6 +642,13 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// flatten overwrites trigger_conditions with a null value (trigger_conditions_actual holds the value read from the API).
+	var plannedTriggerConditionsList fwtypes.ListNestedObjectValueOf[triggerConditionsModel]
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, r.triggerConditionsPath(), &plannedTriggerConditionsList))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -405,28 +675,34 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 
 		withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 			updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-			out, err := updateMemoryWithRetry(ctx, conn, updateTimeout, &input, false)
+			out, err := retryUpdateMemoryStrategy(ctx, conn, &input, updateTimeout)
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
 			}
-			var found *awstypes.MemoryStrategy
-			if out != nil && out.Memory != nil {
-				for i := range out.Memory.Strategies {
-					s := &out.Memory.Strategies[i]
-					if s.StrategyId != nil && aws.ToString(s.StrategyId) == memoryStrategyID {
-						found = s
-					}
-				}
-			}
-			if found == nil {
-				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", memoryStrategyID))
+
+			found, err := tfresource.AssertSingleValueResult(tfslices.Filter(out.Memory.Strategies, func(v awstypes.MemoryStrategy) bool {
+				return aws.ToString(v.StrategyId) == memoryStrategyID
+			}))
+			if err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 				return
 			}
-			if plan.Type.ValueEnum() != awstypes.MemoryStrategyTypeCustom {
-				found.Configuration = nil
+
+			smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, found, &plan))
+			if response.Diagnostics.HasError() {
+				return
 			}
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+
+			// If no `reflection_configuration` is configured, don't overwrite with returned value.
+			if config.ReflectionConfiguration.IsNull() {
+				plan.ReflectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[episodicReflectionConfigurationModel](ctx)
+			}
+
+			if _, err := waitMemoryUpdated(ctx, conn, memoryID, updateTimeout); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+				return
+			}
 		})
 	}
 	if response.Diagnostics.HasError() {
@@ -434,6 +710,14 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured trigger_conditions.
+	if !plannedTriggerConditionsList.IsNull() {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, r.triggerConditionsPath(), plannedTriggerConditionsList))
+	}
 }
 
 func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -460,29 +744,70 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 
 	withMemoryLock(ctx, memoryID, func(ctx context.Context) {
 		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err := updateMemoryWithRetry(ctx, conn, deleteTimeout, &input, true)
+		_, err := retryUpdateMemoryStrategy(ctx, conn, &input, deleteTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 
-		_, err = waitMemoryStrategyDeleted(ctx, conn, memoryID, memoryStrategyID, deleteTimeout)
-		if err != nil {
+		if _, err := waitMemoryStrategyDeleted(ctx, conn, memoryID, memoryStrategyID, deleteTimeout); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
+			return
+		}
+
+		if _, err := waitMemoryUpdated(ctx, conn, memoryID, deleteTimeout); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryStrategyID)
 			return
 		}
 	})
 }
 
-func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const idParts = 2
-	parts, err := intflex.ExpandResourceId(request.ID, idParts, false)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
-		return
+func (r *resourceMemoryStrategy) flatten(ctx context.Context, memoryStrategy *awstypes.MemoryStrategy, data *memoryStrategyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, memoryStrategy, data)...)
+
+	return diags
+}
+
+func (*resourceMemoryStrategy) triggerConditionsPath() path.Path {
+	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions")
+}
+
+func (*resourceMemoryStrategy) triggerConditionsActualPath() path.Path {
+	return path.Root(names.AttrConfiguration).AtListIndex(0).AtName("self_managed_configuration").AtListIndex(0).AtName("trigger_conditions_actual")
+}
+
+const memoryStrategyImportIDSeparator = intflex.ResourceIdSeparator
+
+func memoryStrategyParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, memoryStrategyImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_id"), parts[0]))
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), parts[1]))
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected memory-id%[2]smemory-strategy-id", id, memoryStrategyImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser = memoryStrategyImportID{}
+)
+
+type memoryStrategyImportID struct{}
+
+func (memoryStrategyImportID) Parse(id string) (string, map[string]any, error) {
+	memoryID, memoryStrategyID, err := memoryStrategyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"memory_id":          memoryID,
+		"memory_strategy_id": memoryStrategyID,
+	}
+
+	return id, result, nil
 }
 
 // withMemoryLock acquires a per-memory mutex to serialize modifications (and subsequent waits)
@@ -497,13 +822,8 @@ func withMemoryLock(ctx context.Context, memoryID string, fn func(ctx context.Co
 	fn(ctx)
 }
 
-func updateMemoryWithRetry(
-	ctx context.Context,
-	conn *bedrockagentcorecontrol.Client,
-	timeout time.Duration,
-	input *bedrockagentcorecontrol.UpdateMemoryInput,
-	deleteOp bool,
-) (*bedrockagentcorecontrol.UpdateMemoryOutput, error) {
+func retryUpdateMemoryStrategy(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.UpdateMemoryInput, timeout time.Duration) (*bedrockagentcorecontrol.UpdateMemoryOutput, error) {
+	deleteOp := len(input.MemoryStrategies.DeleteMemoryStrategies) > 0
 	return tfresource.RetryWhen(
 		ctx,
 		timeout,
@@ -521,27 +841,25 @@ func updateMemoryWithRetry(
 func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 	const (
 		// Retry message substrings for transitional/ignored states
+		msgMemoryTransitionalState         = "Memory is in transitional state"
 		msgMemoryStrategiesBeingModified   = "Cannot update memory while strategies are being modified"
 		msgMemoryStrategyTransitionalState = "MemoryStrategy is in transitional state"
+		msgRoleValidTrustPolicy            = "Please provide a role with a valid trust policy"
 		msgDeleteNonExistentStrategy       = "Cannot delete non-existent memory strategies"
 	)
 	return func(err error) (bool, error) {
-		if err == nil {
-			return false, nil
-		}
-
 		switch {
 		case errs.IsA[*awstypes.ConflictException](err):
 			return true, smarterr.NewError(err)
 
-		case errs.IsA[*awstypes.ValidationException](err):
-			msg := err.Error()
-			if deleteOp && strings.Contains(msg, msgDeleteNonExistentStrategy) {
-				return false, nil
-			}
-			if strings.Contains(msg, msgMemoryStrategiesBeingModified) || strings.Contains(msg, msgMemoryStrategyTransitionalState) {
-				return true, smarterr.NewError(err)
-			}
+		case deleteOp && errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgDeleteNonExistentStrategy):
+			return false, nil
+
+		case errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategiesBeingModified),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryStrategyTransitionalState),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgRoleValidTrustPolicy),
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, msgMemoryTransitionalState):
+			return true, smarterr.NewError(err)
 		}
 
 		return false, smarterr.NewError(err)
@@ -611,47 +929,88 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration          fwtypes.ListNestedObjectValueOf[customConfigurationModel] `tfsdk:"configuration"`
-	Description            types.String                                              `tfsdk:"description"`
-	MemoryExecutionRoleARN fwtypes.ARN                                               `tfsdk:"memory_execution_role_arn"`
-	MemoryStrategyID       types.String                                              `tfsdk:"memory_strategy_id"`
-	MemoryID               types.String                                              `tfsdk:"memory_id"`
-	Name                   types.String                                              `tfsdk:"name"`
-	Namespaces             fwtypes.SetOfString                                       `tfsdk:"namespaces"`
-	Type                   fwtypes.StringEnum[awstypes.MemoryStrategyType]           `tfsdk:"type"`
-	Timeouts               timeouts.Value                                            `tfsdk:"timeouts"`
-}
-
-func (m *memoryStrategyResourceModel) GetIdentifier() string {
-	if !m.MemoryStrategyID.IsNull() {
-		return m.MemoryStrategyID.ValueString()
-	} else {
-		return m.Name.ValueString()
-	}
+	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]             `tfsdk:"configuration"`
+	Description             types.String                                                          `tfsdk:"description"`
+	MemoryExecutionRoleARN  fwtypes.ARN                                                           `tfsdk:"memory_execution_role_arn"`
+	MemoryStrategyID        types.String                                                          `tfsdk:"memory_strategy_id"`
+	MemoryID                types.String                                                          `tfsdk:"memory_id"`
+	Name                    types.String                                                          `tfsdk:"name"`
+	Namespaces              fwtypes.SetOfString                                                   `tfsdk:"namespaces"`
+	NamespaceTemplates      fwtypes.SetOfString                                                   `tfsdk:"namespace_templates"`
+	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigurationModel] `tfsdk:"reflection_configuration"`
+	Timeouts                timeouts.Value                                                        `tfsdk:"timeouts"`
+	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                       `tfsdk:"type"`
 }
 
 var (
-	_ fwflex.TypedExpander = &memoryStrategyResourceModel{}
+	_ fwflex.TypedExpander = memoryStrategyResourceModel{}
+	_ fwflex.Flattener     = &memoryStrategyResourceModel{}
 )
 
-func (m memoryStrategyResourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
-	switch targetType {
-	case reflect.TypeFor[awstypes.MemoryStrategyInput]():
-		return m.expandToMemoryStrategyInput(ctx)
+func (m *memoryStrategyResourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.MemoryStrategy:
+		// For non-CUSTOM types, clear Configuration from the API response before
+		// flattening. The API returns a StrategyConfiguration with Type values
+		// (e.g. "EPISODIC") that are not valid OverrideType enum values.
+		switch t.Type {
+		case awstypes.MemoryStrategyTypeCustom:
+		case awstypes.MemoryStrategyTypeEpisodic:
+			if t.Configuration != nil {
+				switch t := t.Configuration.Reflection.(type) {
+				case *awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration:
+					m.ReflectionConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, &episodicReflectionConfigurationModel{
+						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value.NamespaceTemplates),
+					})
+				}
 
-	case reflect.TypeFor[awstypes.ModifyMemoryStrategyInput]():
-		return m.expandToModifyMemoryStrategyInput(ctx)
+				t.Configuration = nil
+			}
+		default:
+			t.Configuration = nil
+		}
+
+		// To prevent infinite recursion...
+		type modelAlias *memoryStrategyResourceModel
+		alias := modelAlias(m)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias, fwflex.WithFieldNamePrefix("Memory")))
+		if diags.HasError() {
+			return diags
+		}
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("expand target type: %T", targetType),
+			fmt.Sprintf("memoryStrategyResourceModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m memoryStrategyResourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.MemoryStrategyInput](): // Create
+		return m.expandToMemoryStrategyInput(ctx)
+
+	case reflect.TypeFor[awstypes.ModifyMemoryStrategyInput](): // Update
+		return m.expandToModifyMemoryStrategyInput(ctx)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("memoryStrategyResourceModel.ExpandTo: %s", targetType),
 		)
 	}
 
 	return nil, diags
 }
 
-func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Context) (awstypes.MemoryStrategyInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
 	type modelAlias memoryStrategyResourceModel
 	alias := modelAlias(m)
 	switch m.Type.ValueEnum() {
@@ -689,28 +1048,34 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 
 	case awstypes.MemoryStrategyTypeEpisodic:
 		var r awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy
-		r.Value.Name = m.Name.ValueStringPointer()
-		r.Value.Description = m.Description.ValueStringPointer()
-		smerr.AddEnrich(ctx, &diags, m.Namespaces.ElementsAs(ctx, &r.Value.Namespaces, false))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-		// The API requires the reflection namespace to be the same as or a prefix
-		// of the episodic namespace. Set it to match the episodic namespaces.
-		r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
-			Namespaces: r.Value.Namespaces,
+
+		if r.Value.ReflectionConfiguration == nil {
+			// The API requires the reflection namespace to be the same as or a prefix
+			// of the episodic namespace. Set it to match the episodic namespaces.
+			r.Value.ReflectionConfiguration = &awstypes.EpisodicReflectionConfigurationInput{
+				NamespaceTemplates: r.Value.NamespaceTemplates,
+			}
 		}
+
 		return &r, diags
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("memory strategy type: %q", m.Type.ValueString()),
+			fmt.Sprintf("memoryStrategyResourceModel.Type: %s", m.Type),
 		)
 	}
+
 	return nil, diags
 }
 
-func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx context.Context) (result any, diags diag.Diagnostics) {
+func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx context.Context) (*awstypes.ModifyMemoryStrategyInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
 	type modelAlias memoryStrategyResourceModel
 	alias := modelAlias(m)
 	var r awstypes.ModifyMemoryStrategyInput
@@ -718,19 +1083,41 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	if diags.HasError() {
 		return nil, diags
 	}
+
 	// For non-CUSTOM types, Configuration should not be sent.
 	// Auto-flex may produce an empty ModifyStrategyConfiguration from the
 	// null model Configuration field, which the API rejects.
-	if m.Configuration.IsNull() || m.Configuration.IsUnknown() {
+	switch m.Type.ValueEnum() {
+	case awstypes.MemoryStrategyTypeCustom:
+	case awstypes.MemoryStrategyTypeEpisodic:
+		if !m.ReflectionConfiguration.IsNull() {
+			var rReflectionConfiguration awstypes.EpisodicReflectionConfigurationInput
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.ReflectionConfiguration, &rReflectionConfiguration))
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			r.Configuration = &awstypes.ModifyStrategyConfiguration{
+				Reflection: &awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{
+					Value: rReflectionConfiguration,
+				},
+			}
+		} else {
+			r.Configuration = nil
+		}
+	default:
 		r.Configuration = nil
 	}
+
 	return &r, diags
 }
 
 type customConfigurationModel struct {
-	Type          fwtypes.StringEnum[awstypes.OverrideType]             `tfsdk:"type"`
-	Consolidation fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"consolidation"`
-	Extraction    fwtypes.ListNestedObjectValueOf[overrideDetailsModel] `tfsdk:"extraction"`
+	Consolidation            fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"consolidation"`
+	Extraction               fwtypes.ListNestedObjectValueOf[overrideDetailsModel]                   `tfsdk:"extraction"`
+	Reflection               fwtypes.ListNestedObjectValueOf[episodicReflectionOverrideDetailsModel] `tfsdk:"reflection"`
+	SelfManagedConfiguration fwtypes.ListNestedObjectValueOf[selfManagedConfigurationModel]          `tfsdk:"self_managed_configuration"`
+	Type                     fwtypes.StringEnum[awstypes.OverrideType]                               `tfsdk:"type"`
 }
 
 var (
@@ -738,72 +1125,103 @@ var (
 	_ fwflex.Flattener     = &customConfigurationModel{}
 )
 
-func (m *customConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	var d diag.Diagnostics
+func (m *customConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.StrategyConfiguration:
 		m.Type = fwtypes.StringEnumValue(t.Type)
 
-		if t.Consolidation != nil {
-			var consolidation overrideDetailsModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &consolidation))
+		if v := t.Consolidation; v != nil {
+			// Null out any phantom empty extraction.
+			consolidationList := fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &consolidationList))
 			if diags.HasError() {
 				return diags
 			}
-			if !consolidation.AppendToPrompt.IsNull() && !consolidation.ModelID.IsNull() {
-				m.Consolidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &consolidation)
-				smerr.AddEnrich(ctx, &diags, d)
-				if diags.HasError() {
-					return diags
-				}
+
+			consolidation, d := consolidationList.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return diags
+			}
+			if consolidation == nil || (consolidation.AppendToPrompt.IsNull() && consolidation.ModelID.IsNull()) {
+				m.Consolidation = fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			} else {
+				m.Consolidation = consolidationList
 			}
 		}
 
-		if t.Extraction != nil {
-			var extraction overrideDetailsModel
-			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &extraction))
+		if v := t.Extraction; v != nil {
+			// Null out any phantom empty extraction.
+			extractionList := fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &extractionList))
 			if diags.HasError() {
 				return diags
 			}
-			if !extraction.AppendToPrompt.IsNull() && !extraction.ModelID.IsNull() {
-				m.Extraction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &extraction)
-				smerr.AddEnrich(ctx, &diags, d)
-				if diags.HasError() {
-					return diags
-				}
+
+			extraction, d := extractionList.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &diags, d)
+			if diags.HasError() {
+				return diags
+			}
+			if extraction == nil || (extraction.AppendToPrompt.IsNull() && extraction.ModelID.IsNull()) {
+				m.Extraction = fwtypes.NewListNestedObjectValueOfNull[overrideDetailsModel](ctx)
+			} else {
+				m.Extraction = extractionList
 			}
 		}
+
+		if v := t.Reflection; v != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.Reflection))
+			if diags.HasError() {
+				return diags
+			}
+		}
+
+		if v := t.SelfManagedConfiguration; v != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.SelfManagedConfiguration))
+			if diags.HasError() {
+				return diags
+			}
+		}
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("strategy configuration flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("customConfigurationModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
-func (m customConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+
+func (m customConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	switch targetType {
-	case reflect.TypeFor[awstypes.CustomConfigurationInput]():
+	case reflect.TypeFor[awstypes.CustomConfigurationInput](): // Create
 		return m.expandToCustomConfigurationInput(ctx)
 
-	case reflect.TypeFor[awstypes.ModifyStrategyConfiguration]():
+	case reflect.TypeFor[awstypes.ModifyStrategyConfiguration](): // Update
 		return m.expandToModifyStrategyConfiguration(ctx)
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("configuration expand target type: %s", targetType),
+			fmt.Sprintf("customConfigurationModel.ExpandTo: %s", targetType),
 		)
 	}
+
 	return nil, diags
 }
 
-func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.Context) (result awstypes.CustomConfigurationInput, diags diag.Diagnostics) {
+func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.Context) (awstypes.CustomConfigurationInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
 	type modelAlias customConfigurationModel
 	alias := modelAlias(m)
 
 	switch m.Type.ValueEnum() {
 	case awstypes.OverrideTypeSemanticOverride:
-
 		var r awstypes.CustomConfigurationInputMemberSemanticOverride
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
@@ -834,70 +1252,108 @@ func (m customConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 			return nil, diags
 		}
 		return &r, diags
+
+	case awstypes.OverrideTypeSelfManaged:
+		var r awstypes.CustomConfigurationInputMemberSelfManagedConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias.SelfManagedConfiguration, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("override type (custom configuration input): %q", m.Type.ValueString()),
+			fmt.Sprintf("customConfigurationModel.Type: %s", m.Type),
 		)
 	}
+
 	return nil, diags
 }
 
-func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx context.Context) (result *awstypes.ModifyStrategyConfiguration, diags diag.Diagnostics) {
-	result = &awstypes.ModifyStrategyConfiguration{}
-
+func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx context.Context) (*awstypes.ModifyStrategyConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ModifyStrategyConfiguration
+	var rConsolidation awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration
+	var rExtraction awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration
+	var rReflection awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration
+	var rSelfManaged awstypes.ModifySelfManagedConfiguration
 	var consolidation, extraction *overrideDetailsModel
-	var d diag.Diagnostics
+	var reflection *episodicReflectionOverrideDetailsModel
+	var selfManaged *selfManagedConfigurationModel
 
 	if !m.Consolidation.IsNull() {
+		var d diag.Diagnostics
 		consolidation, d = m.Consolidation.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
+
+		r.Consolidation = &rConsolidation
 	}
 	if !m.Extraction.IsNull() {
+		var d diag.Diagnostics
 		extraction, d = m.Extraction.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
+
+		r.Extraction = &rExtraction
+	}
+	if !m.Reflection.IsNull() {
+		var d diag.Diagnostics
+		reflection, d = m.Reflection.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		r.Reflection = &rReflection
+	}
+	if !m.SelfManagedConfiguration.IsNull() {
+		var d diag.Diagnostics
+		selfManaged, d = m.SelfManagedConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		r.SelfManagedConfiguration = &rSelfManaged
 	}
 
 	switch m.Type.ValueEnum() {
 	case awstypes.OverrideTypeSemanticOverride:
 		if consolidation != nil {
-			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberSemanticConsolidationOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberSemanticConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Consolidation = &awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{
-				Value: &consolidationInput,
-			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			var extractionInput awstypes.CustomExtractionConfigurationInputMemberSemanticExtractionOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberSemanticExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Extraction = &awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{
-				Value: &extractionInput,
-			}
+
+			rExtraction.Value = &r
 		}
 
 	case awstypes.OverrideTypeSummaryOverride:
 		if consolidation != nil {
-			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberSummaryConsolidationOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberSummaryConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Consolidation = &awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{
-				Value: &consolidationInput,
-			}
+
+			rConsolidation.Value = &r
 		}
 
 		// Note: AWS SDK doesn't have SummaryExtractionOverride - only Semantic and UserPreference
@@ -906,57 +1362,73 @@ func (m customConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 
 	case awstypes.OverrideTypeUserPreferenceOverride:
 		if consolidation != nil {
-			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberUserPreferenceConsolidationOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberUserPreferenceConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Consolidation = &awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{
-				Value: &consolidationInput,
-			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			var extractionInput awstypes.CustomExtractionConfigurationInputMemberUserPreferenceExtractionOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberUserPreferenceExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Extraction = &awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{
-				Value: &extractionInput,
-			}
+
+			rExtraction.Value = &r
 		}
 
 	case awstypes.OverrideTypeEpisodicOverride:
 		if consolidation != nil {
-			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberEpisodicConsolidationOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			var r awstypes.CustomConsolidationConfigurationInputMemberEpisodicConsolidationOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Consolidation = &awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{
-				Value: &consolidationInput,
-			}
+
+			rConsolidation.Value = &r
 		}
 
 		if extraction != nil {
-			var extractionInput awstypes.CustomExtractionConfigurationInputMemberEpisodicExtractionOverride
-			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			var r awstypes.CustomExtractionConfigurationInputMemberEpisodicExtractionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &r.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
-			result.Extraction = &awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{
-				Value: &extractionInput,
+
+			rExtraction.Value = &r
+		}
+
+		if reflection != nil {
+			var r awstypes.CustomReflectionConfigurationInputMemberEpisodicReflectionOverride
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, reflection, &r.Value))
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			rReflection.Value = &r
+		}
+
+	case awstypes.OverrideTypeSelfManaged:
+		if selfManaged != nil {
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, selfManaged, &rSelfManaged))
+			if diags.HasError() {
+				return nil, diags
 			}
 		}
+
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("override type (modify strategy configuration): %q", m.Type.ValueString()),
+			fmt.Sprintf("customConfigurationModel.Type: %s", m.Type),
 		)
 		return nil, diags
 	}
-	return result, diags
+
+	return &r, diags
 }
 
 type overrideDetailsModel struct {
@@ -968,72 +1440,415 @@ var (
 	_ fwflex.Flattener = &overrideDetailsModel{}
 )
 
-func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+func (m *overrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *overrideDetailsModel
+	alias := modelAlias(m)
 	switch t := v.(type) {
-	// Consolidation
+	// Consolidation.
 	case awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration:
 		return m.Flatten(ctx, t.Value)
 
 	case *awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride:
 		return m.Flatten(ctx, t.Value)
+
 	case *awstypes.CustomConsolidationConfigurationMemberSummaryConsolidationOverride:
 		return m.Flatten(ctx, t.Value)
+
 	case *awstypes.CustomConsolidationConfigurationMemberUserPreferenceConsolidationOverride:
 		return m.Flatten(ctx, t.Value)
+
 	case *awstypes.CustomConsolidationConfigurationMemberEpisodicConsolidationOverride:
 		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticConsolidationOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.SummaryConsolidationOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.UserPreferenceConsolidationOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.EpisodicConsolidationOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
-	//	Extraction
+	//	Extraction.
 	case awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration:
 		return m.Flatten(ctx, t.Value)
 
 	case *awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride:
 		return m.Flatten(ctx, t.Value)
+
 	case *awstypes.CustomExtractionConfigurationMemberUserPreferenceExtractionOverride:
 		return m.Flatten(ctx, t.Value)
+
 	case *awstypes.CustomExtractionConfigurationMemberEpisodicExtractionOverride:
 		return m.Flatten(ctx, t.Value)
 
 	case awstypes.SemanticExtractionOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.UserPreferenceExtractionOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	case awstypes.EpisodicExtractionOverride:
-		m.AppendToPrompt = types.StringPointerValue(t.AppendToPrompt)
-		m.ModelID = types.StringPointerValue(t.ModelId)
-		return diags
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("override details flatten: %s", reflect.TypeOf(v).String()),
+			fmt.Sprintf("overrideDetailsModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+type episodicReflectionConfigurationModel struct {
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+type episodicReflectionOverrideDetailsModel struct {
+	AppendToPrompt     types.String        `tfsdk:"append_to_prompt"`
+	ModelID            types.String        `tfsdk:"model_id"`
+	NamespaceTemplates fwtypes.SetOfString `tfsdk:"namespace_templates"`
+}
+
+var (
+	_ fwflex.Flattener = &episodicReflectionOverrideDetailsModel{}
+)
+
+func (m *episodicReflectionOverrideDetailsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	//	Reflection.
+	case *awstypes.CustomReflectionConfigurationMemberEpisodicReflectionOverride:
+		return m.Flatten(ctx, t.Value)
+
+	case awstypes.EpisodicReflectionOverride:
+		// To prevent infinite recursion...
+		type modelAlias *episodicReflectionOverrideDetailsModel
+		alias := modelAlias(m)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
+
+	case awstypes.ReflectionConfigurationMemberCustomReflectionConfiguration:
+		return m.Flatten(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("episodicReflectionOverrideDetailsModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+type selfManagedConfigurationModel struct {
+	HistoricalContextWindowSize types.Int32                                                   `tfsdk:"historical_context_window_size"`
+	InvocationConfiguration     fwtypes.ListNestedObjectValueOf[invocationConfigurationModel] `tfsdk:"invocation_configuration"`
+	TriggerConditions           fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions" autoflex:"-"`
+	TriggerConditionsActual     fwtypes.ListNestedObjectValueOf[triggerConditionsModel]       `tfsdk:"trigger_conditions_actual" autoflex:"-"`
+}
+
+var (
+	_ fwflex.TypedExpander = selfManagedConfigurationModel{}
+	_ fwflex.Flattener     = &selfManagedConfigurationModel{}
+)
+
+func (m *selfManagedConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *selfManagedConfigurationModel
+	alias := modelAlias(m)
+	switch t := v.(type) {
+	case awstypes.SelfManagedConfiguration:
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t, alias))
+		if diags.HasError() {
+			return diags
+		}
+
+		m.TriggerConditions = fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
+		m.TriggerConditionsActual = fwtypes.NewListNestedObjectValueOfNull[triggerConditionsModel](ctx)
+		if t.TriggerConditions != nil {
+			var model triggerConditionsModel
+			smerr.AddEnrich(ctx, &diags, model.Flatten(ctx, t.TriggerConditions))
+			if diags.HasError() {
+				return diags
+			}
+			var d diag.Diagnostics
+			m.TriggerConditionsActual, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m selfManagedConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.SelfManagedConfigurationInput](): // Create
+		return m.expandToSelfManagedConfigurationInput(ctx)
+
+	case reflect.TypeFor[awstypes.ModifySelfManagedConfiguration](): // Update
+		return m.expandToModifySelfManagedConfiguration(ctx)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedConfigurationModel.ExpandTo: %s", targetType),
+		)
+	}
+
+	return nil, diags
+}
+
+func (m selfManagedConfigurationModel) expandToSelfManagedConfigurationInput(ctx context.Context) (*awstypes.SelfManagedConfigurationInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.SelfManagedConfigurationInput
+	// To prevent infinite recursion...
+	type modelAlias selfManagedConfigurationModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	conditions, d := m.expandTriggerConditionInputs(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	r.TriggerConditions = conditions
+
+	return &r, diags
+}
+
+func (m selfManagedConfigurationModel) expandToModifySelfManagedConfiguration(ctx context.Context) (*awstypes.ModifySelfManagedConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ModifySelfManagedConfiguration
+	// To prevent infinite recursion...
+	type modelAlias selfManagedConfigurationModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	conditions, d := m.expandTriggerConditionInputs(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	r.TriggerConditions = conditions
+
+	return &r, diags
+}
+
+func (m selfManagedConfigurationModel) expandTriggerConditionInputs(ctx context.Context) ([]awstypes.TriggerConditionInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if !m.TriggerConditions.IsNull() && !m.TriggerConditions.IsUnknown() {
+		model, d := m.TriggerConditions.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		v, d := model.Expand(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		conditions, ok := v.([]awstypes.TriggerConditionInput)
+		if !ok {
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("triggerConditionsModel.Expand: %T", v),
+			)
+			return nil, diags
+		}
+
+		if len(conditions) == 0 {
+			conditions = nil
+		}
+
+		return conditions, diags
+	}
+
+	return nil, diags
+}
+
+type invocationConfigurationModel struct {
+	PayloadDeliveryBucketName types.String `tfsdk:"payload_delivery_bucket_name"`
+	TopicARN                  fwtypes.ARN  `tfsdk:"topic_arn"`
+}
+
+type triggerConditionsModel struct {
+	MessageBasedTrigger fwtypes.ListNestedObjectValueOf[messageBasedTriggerModel] `tfsdk:"message_based_trigger"`
+	TimeBasedTrigger    fwtypes.ListNestedObjectValueOf[timeBasedTriggerModel]    `tfsdk:"time_based_trigger"`
+	TokenBasedTrigger   fwtypes.ListNestedObjectValueOf[tokenBasedTriggerModel]   `tfsdk:"token_based_trigger"`
+}
+
+type messageBasedTriggerModel struct {
+	MessageCount types.Int32 `tfsdk:"message_count"`
+}
+
+type timeBasedTriggerModel struct {
+	IdleSessionTimeout types.Int32 `tfsdk:"idle_session_timeout"`
+}
+
+type tokenBasedTriggerModel struct {
+	TokenCount types.Int32 `tfsdk:"token_count"`
+}
+
+var (
+	_ fwflex.Expander  = triggerConditionsModel{}
+	_ fwflex.Flattener = &triggerConditionsModel{}
+)
+
+func (m *triggerConditionsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conditions, ok := v.([]awstypes.TriggerCondition)
+	if !ok {
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("triggerConditionsModel.Flatten: %T", v),
 		)
 		return diags
 	}
+
+	m.MessageBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[messageBasedTriggerModel](ctx)
+	m.TokenBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[tokenBasedTriggerModel](ctx)
+	m.TimeBasedTrigger = fwtypes.NewListNestedObjectValueOfNull[timeBasedTriggerModel](ctx)
+
+	var d diag.Diagnostics
+	for _, v := range conditions {
+		switch t := v.(type) {
+		case *awstypes.TriggerConditionMemberMessageBasedTrigger:
+			var model messageBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.MessageBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+
+		case *awstypes.TriggerConditionMemberTokenBasedTrigger:
+			var model tokenBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.TokenBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+
+		case *awstypes.TriggerConditionMemberTimeBasedTrigger:
+			var model timeBasedTriggerModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+			if diags.HasError() {
+				return diags
+			}
+			m.TimeBasedTrigger, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+
+		default:
+			diags.AddError(
+				"Unsupported Type",
+				fmt.Sprintf("triggerConditionsModel.Flatten: %T", v),
+			)
+		}
+
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+func (m triggerConditionsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	r := make([]awstypes.TriggerConditionInput, 0, 3)
+
+	if !m.MessageBasedTrigger.IsNull() && !m.MessageBasedTrigger.IsUnknown() {
+		p, d := m.MessageBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberMessageBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		r = append(r, &condition)
+	}
+
+	if !m.TokenBasedTrigger.IsNull() && !m.TokenBasedTrigger.IsUnknown() {
+		p, d := m.TokenBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberTokenBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		r = append(r, &condition)
+	}
+
+	if !m.TimeBasedTrigger.IsNull() && !m.TimeBasedTrigger.IsUnknown() {
+		p, d := m.TimeBasedTrigger.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var condition awstypes.TriggerConditionInputMemberTimeBasedTrigger
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, p, &condition.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		r = append(r, &condition)
+	}
+
+	return r, diags
 }

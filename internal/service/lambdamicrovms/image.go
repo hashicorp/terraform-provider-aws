@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,16 +32,16 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_lambdamicrovms_image", name="Image")
+// @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors")
+// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors;image_version")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmImageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -88,6 +88,13 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -105,6 +112,9 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional:    true,
 				ElementType: types.StringType,
 			},
+			"image_version": schema.StringAttribute{
+				Computed: true,
+			},
 			"latest_active_image_version": schema.StringAttribute{
 				Computed: true,
 			},
@@ -119,6 +129,12 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.MicrovmImageState](),
+				Computed:   true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 		},
@@ -137,6 +153,17 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
+			"cpu_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cpuConfigurationModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"architecture": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.Architecture](),
+							Required:   true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -147,7 +174,7 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var plan imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -156,8 +183,9 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var input lambdamicrovms.CreateMicrovmImageInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
 	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,20 +200,18 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
-	outWait, err := waitImageCreated(ctx, conn, plan.ImageArn.ValueString(), createTimeout)
+	outWait, err := waitImageCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -194,7 +220,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -202,27 +228,28 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	out, err := findImageByARN(ctx, conn, state.ImageArn.ValueString())
+	out, err := findImageByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	setTagsOut(ctx, out.Tags)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var plan, state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -239,8 +266,8 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	if diff.HasChanges() {
 		var input lambdamicrovms.UpdateMicrovmImageInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-		input.ImageIdentifier = plan.ImageArn.ValueStringPointer()
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
+		input.ImageIdentifier = plan.ARN.ValueStringPointer()
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		// The service resolves base_image_version to a full version (e.g. "0.0")
@@ -255,37 +282,44 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		out, err := conn.UpdateMicrovmImage(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		outWait, err := waitImageUpdated(ctx, conn, plan.ImageArn.ValueString(), updateTimeout)
+		outWait, err := waitImageUpdated(ctx, conn, plan.ARN.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Tag-only update: no API call was made, so carry forward the computed
+		// fields from prior state to avoid "unknown value after apply" errors.
+		plan.ImageVersion = state.ImageVersion
+		plan.LatestActiveImageVersion = state.LatestActiveImageVersion
+		plan.LatestFailedImageVersion = state.LatestFailedImageVersion
+		plan.State = state.State
+		plan.UpdatedAt = state.UpdatedAt
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state imageResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -294,7 +328,7 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	input := lambdamicrovms.DeleteMicrovmImageInput{
-		ImageIdentifier: state.ImageArn.ValueStringPointer(),
+		ImageIdentifier: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMicrovmImage(ctx, &input)
@@ -303,14 +337,13 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitImageDeleted(ctx, conn, state.ImageArn.ValueString(), deleteTimeout)
+	_, err = waitImageDeleted(ctx, conn, state.ARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ImageArn.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 }
@@ -321,7 +354,6 @@ func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 		Target:                    enum.Slice(awstypes.MicrovmImageStateCreated),
 		Refresh:                   statusImage(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -339,7 +371,6 @@ func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 		Target:                    enum.Slice(awstypes.MicrovmImageStateUpdated),
 		Refresh:                   statusImage(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -407,20 +438,26 @@ func findImageByARN(ctx context.Context, conn *lambdamicrovms.Client, arn string
 
 type imageResourceModel struct {
 	framework.WithRegionModel
-	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]      `tfsdk:"additional_os_capabilities"`
-	BaseImageArn             fwtypes.ARN                                        `tfsdk:"base_image_arn"`
-	BaseImageVersion         types.String                                       `tfsdk:"base_image_version"`
-	BuildRoleArn             fwtypes.ARN                                        `tfsdk:"build_role_arn"`
-	CodeArtifact             fwtypes.ListNestedObjectValueOf[codeArtifactModel] `tfsdk:"code_artifact"`
-	Description              types.String                                       `tfsdk:"description"`
-	EgressNetworkConnectors  fwtypes.ListOfString                               `tfsdk:"egress_network_connectors"`
-	EnvironmentVariables     fwtypes.MapOfString                                `tfsdk:"environment_variables"`
-	ImageArn                 types.String                                       `tfsdk:"arn"`
-	LatestActiveImageVersion types.String                                       `tfsdk:"latest_active_image_version"`
-	LatestFailedImageVersion types.String                                       `tfsdk:"latest_failed_image_version"`
-	Name                     types.String                                       `tfsdk:"name"`
-	State                    fwtypes.StringEnum[awstypes.MicrovmImageState]     `tfsdk:"state"`
-	Timeouts                 timeouts.Value                                     `tfsdk:"timeouts"`
+	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]          `tfsdk:"additional_os_capabilities"`
+	ARN                      types.String                                           `tfsdk:"arn"`
+	BaseImageARN             fwtypes.ARN                                            `tfsdk:"base_image_arn"`
+	BaseImageVersion         types.String                                           `tfsdk:"base_image_version"`
+	BuildRoleARN             fwtypes.ARN                                            `tfsdk:"build_role_arn"`
+	CodeArtifact             fwtypes.ListNestedObjectValueOf[codeArtifactModel]     `tfsdk:"code_artifact"`
+	CPUConfiguration         fwtypes.ListNestedObjectValueOf[cpuConfigurationModel] `tfsdk:"cpu_configuration"`
+	CreatedAt                timetypes.RFC3339                                      `tfsdk:"created_at"`
+	Description              types.String                                           `tfsdk:"description"`
+	EgressNetworkConnectors  fwtypes.ListOfString                                   `tfsdk:"egress_network_connectors"`
+	EnvironmentVariables     fwtypes.MapOfString                                    `tfsdk:"environment_variables"`
+	ImageVersion             types.String                                           `tfsdk:"image_version"`
+	LatestActiveImageVersion types.String                                           `tfsdk:"latest_active_image_version"`
+	LatestFailedImageVersion types.String                                           `tfsdk:"latest_failed_image_version"`
+	Name                     types.String                                           `tfsdk:"name"`
+	State                    fwtypes.StringEnum[awstypes.MicrovmImageState]         `tfsdk:"state"`
+	Tags                     tftags.Map                                             `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                             `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                         `tfsdk:"timeouts"`
+	UpdatedAt                timetypes.RFC3339                                      `tfsdk:"updated_at"`
 }
 
 type codeArtifactModel struct {
@@ -450,24 +487,6 @@ func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 	return diags
 }
 
-func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdamicrovms.ListMicrovmImagesInput{}
-	conn := client.LambdaMicrovmsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := lambdamicrovms.NewListMicrovmImagesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.Items {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newImageResource, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.ImageArn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+type cpuConfigurationModel struct {
+	Architecture fwtypes.StringEnum[awstypes.Architecture] `tfsdk:"architecture"`
 }

@@ -387,7 +387,7 @@ resource "aws_rds_cluster" "example" {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `id` - RDS Cluster Identifier
 * `cluster_identifier` - RDS Cluster Identifier
 * `cluster_resource_id` - RDS Cluster Resource ID
@@ -421,7 +421,7 @@ load-balanced across replicas
 The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - ARN of the secret.
 * `secret_status` - Status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
@@ -434,6 +434,32 @@ The `master_user_secret` block supports the following attributes:
 any cleanup task during the destroying process.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_cluster.aurora_cluster
+  identity = {
+    cluster_identifier = "aurora-prod-cluster"
+  }
+}
+
+resource "aws_rds_cluster" "aurora_cluster" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `cluster_identifier` (String) Cluster identifier of the RDS Cluster.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters using the `cluster_identifier`. For example:
 

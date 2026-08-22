@@ -163,6 +163,14 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 																Optional:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionConflictResolutionStrategy](),
 															},
+															"encryption_scope": schema.StringAttribute{
+																Optional:   true,
+																Computed:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionScope](),
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.UseStateForUnknown(),
+																},
+															},
 															"encryption_strategy": schema.StringAttribute{
 																Required:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
@@ -338,6 +346,19 @@ func (r *centralizationRuleForOrganizationResource) Create(ctx context.Context, 
 
 	if _, err := waitCentralizationRuleForOrganizationHealthy(ctx, conn, ruleName, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	// The Create response only returns the rule ARN, so read the rule back to
+	// populate Computed attributes (e.g. encryption_scope) that the service defaults.
+	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, ruleName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Centralization")))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -558,6 +579,7 @@ type logGroupNameConfigurationModel struct {
 
 type logsEncryptionConfigurationModel struct {
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
+	EncryptionScope                      fwtypes.StringEnum[awstypes.EncryptionScope]                      `tfsdk:"encryption_scope"`
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
 }

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -35,8 +34,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -216,7 +213,7 @@ func (r *microvmResource) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *microvmResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var plan microvmResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
@@ -262,7 +259,7 @@ func (r *microvmResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *microvmResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state microvmResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -292,7 +289,7 @@ func (r *microvmResource) Read(ctx context.Context, req resource.ReadRequest, re
 // No Update operation for MicroVMs as all configurations are immutable
 
 func (r *microvmResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LambdaMicrovmsClient(ctx)
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
 	var state microvmResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -467,32 +464,4 @@ func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	}
 
 	return nil, diags
-}
-
-func sweepMicrovms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdamicrovms.ListMicrovmsInput{}
-	conn := client.LambdaMicrovmsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := lambdamicrovms.NewListMicrovmsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.Items {
-			// Terminated MicroVMs remain listable until they age out; skip them
-			// so the sweeper does not churn on resources that are already gone.
-			if v.State == awstypes.MicrovmStateTerminated {
-				continue
-			}
-
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newMicrovmResource, client,
-				sweepfw.NewAttribute("microvm_id", aws.ToString(v.MicrovmId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

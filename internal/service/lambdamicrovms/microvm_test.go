@@ -36,7 +36,7 @@ func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccLambdaMicrovmsMicrovm_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicrovmsServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccLambdaMicrovmsMicrovm_disappears(t *testing.T) {
 
 func testAccCheckMicrovmDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambdamicrovms_microvm" {
@@ -120,10 +120,10 @@ func testAccCheckMicrovmDestroy(ctx context.Context, t *testing.T) resource.Test
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], err)
+				return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], err)
 			}
 
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], errors.New("not destroyed"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -134,19 +134,19 @@ func testAccCheckMicrovmExists(ctx context.Context, t *testing.T, name string, v
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not found"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not found"))
 		}
 
 		id := rs.Primary.Attributes["microvm_id"]
 		if id == "" {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not set"))
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not set"))
 		}
 
-		conn := acctest.ProviderMeta(ctx, t).LambdaMicrovmsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
 		out, err := tflambdamicrovms.FindMicrovmByID(ctx, conn, id)
 		if err != nil {
-			return create.Error(names.LambdaMicrovms, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, id, err)
+			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, id, err)
 		}
 		*v = *out
 

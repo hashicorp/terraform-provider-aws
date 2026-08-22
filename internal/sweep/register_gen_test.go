@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
@@ -99,7 +100,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -112,6 +112,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -120,6 +121,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mailmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -132,6 +134,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -146,7 +149,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -222,6 +227,7 @@ func registerSweepers() {
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
+	bedrock.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
 	bedrockagentcore.RegisterSweepers()
 	billing.RegisterSweepers()
@@ -290,7 +296,6 @@ func registerSweepers() {
 	guardduty.RegisterSweepers()
 	iam.RegisterSweepers()
 	imagebuilder.RegisterSweepers()
-	inspector.RegisterSweepers()
 	internetmonitor.RegisterSweepers()
 	iot.RegisterSweepers()
 	kafka.RegisterSweepers()
@@ -303,6 +308,7 @@ func registerSweepers() {
 	kms.RegisterSweepers()
 	lakeformation.RegisterSweepers()
 	lambda.RegisterSweepers()
+	lambdacore.RegisterSweepers()
 	lambdamicrovms.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
@@ -311,6 +317,7 @@ func registerSweepers() {
 	location.RegisterSweepers()
 	logs.RegisterSweepers()
 	m2.RegisterSweepers()
+	mailmanager.RegisterSweepers()
 	medialive.RegisterSweepers()
 	mediapackage.RegisterSweepers()
 	memorydb.RegisterSweepers()
@@ -323,6 +330,7 @@ func registerSweepers() {
 	networkmanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
+	observabilityadmin.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
 	organizations.RegisterSweepers()
@@ -337,7 +345,9 @@ func registerSweepers() {
 	rds.RegisterSweepers()
 	redshift.RegisterSweepers()
 	redshiftserverless.RegisterSweepers()
+	rekognition.RegisterSweepers()
 	resiliencehub.RegisterSweepers()
+	resiliencehubv2.RegisterSweepers()
 	resourceexplorer2.RegisterSweepers()
 	resourcegroups.RegisterSweepers()
 	route53.RegisterSweepers()

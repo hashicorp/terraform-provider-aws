@@ -82,10 +82,12 @@ The following arguments are optional:
 
 * `additional_os_capabilities` - (Optional) List of additional OS capabilities granted to the MicroVM runtime environment. Valid values: `ALL`.
 * `base_image_version` - (Optional) Major version number of the base MicroVM image to use (e.g., `1`). If omitted, the service selects a version.
+* `cpu_configuration` - (Optional) CPU configuration for the MicroVM. See [`cpu_configuration` Block](#cpu_configuration-block) below.
 * `description` - (Optional) Description of the MicroVM image.
 * `egress_network_connectors` - (Optional) List of egress network connectors available to the MicroVM at runtime. Defaults to `["INTERNET_EGRESS"]`.
 * `environment_variables` - (Optional) Map of environment variables set in the MicroVM runtime environment.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `code_artifact` Block
 
@@ -93,14 +95,24 @@ The `code_artifact` block supports the following:
 
 * `uri` - (Required) S3 URI of the zip archive containing the application code and Dockerfile (e.g., `s3://bucket/code.zip`).
 
+### `cpu_configuration` Block
+
+The `cpu_configuration` block supports the following:
+
+* `architecture` - (Required) CPU architecture for the MicroVM. Valid values are `x86_64` and `arm64`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Image.
+* `created_at` - RFC3339 timestamp when the image was created.
+* `image_version` - Current version of the image.
 * `latest_active_image_version` - Latest active version of the image.
 * `latest_failed_image_version` - Latest failed version of the image, if any.
 * `state` - Current state of the image (e.g., `CREATED`).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `updated_at` - RFC3339 timestamp when the image was last updated.
 
 ## Timeouts
 
