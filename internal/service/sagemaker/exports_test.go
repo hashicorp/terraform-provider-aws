@@ -156,4 +156,6 @@ var (
 	ValidPrefix = validPrefix
 
 	StripARNVersion = stripARNVersion
+
+	EndpointConfigNameApplied = endpointConfigNameApplied
 )
