@@ -41,7 +41,7 @@ func TestAccInterconnectConnectionDataSource_basic(t *testing.T) {
 					// Members returned only by GetConnection, and absent from ConnectionSummary.
 					resource.TestCheckResourceAttrSet(dataSourceName, "activation_key"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "owner_account"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrSet(dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 				),
 			},
