@@ -23,6 +23,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAttachPointsDataSource,
+			TypeName: "aws_interconnect_attach_points",
+			Name:     "Attach Points",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newEnvironmentDataSource,
 			TypeName: "aws_interconnect_environment",
 			Name:     "Environment",
