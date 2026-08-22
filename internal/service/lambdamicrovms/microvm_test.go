@@ -5,28 +5,27 @@ package lambdamicrovms_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdamicrovms "github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
+func TestAccLambdaMicroVMsMicroVM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v lambdamicrovms.GetMicrovmOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_microvm.test"
@@ -38,19 +37,32 @@ func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
+		CheckDestroy:             testAccCheckMicroVMDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMicrovmConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMicrovmExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.MicrovmStateRunning)),
-					resource.TestCheckResourceAttrSet(resourceName, "microvm_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "image_arn", "lambda", regexache.MustCompile(`microvm-image:.+$`)),
+					testAccCheckMicroVMExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.MicrovmStateRunning)),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -67,12 +79,8 @@ func TestAccLambdaMicrovmsMicrovm_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicrovmsMicrovm_disappears(t *testing.T) {
+func TestAccLambdaMicroVMsMicroVM_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v lambdamicrovms.GetMicrovmOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_microvm.test"
@@ -84,13 +92,16 @@ func TestAccLambdaMicrovmsMicrovm_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
+		CheckDestroy:             testAccCheckMicroVMDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMicrovmConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMicrovmExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdamicrovms.ResourceMicrovm, resourceName),
+					testAccCheckMicroVMExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdamicrovms.ResourceMicroVM, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -106,7 +117,7 @@ func TestAccLambdaMicrovmsMicrovm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMicrovmDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckMicroVMDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
@@ -115,49 +126,39 @@ func testAccCheckMicrovmDestroy(ctx context.Context, t *testing.T) resource.Test
 				continue
 			}
 
-			_, err := tflambdamicrovms.FindMicrovmByID(ctx, conn, rs.Primary.Attributes["microvm_id"])
+			_, err := tflambdamicrovms.FindMicroVMByID(ctx, conn, rs.Primary.Attributes["microvm_id"])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], err)
+				continue
 			}
 
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameMicrovm, rs.Primary.Attributes["microvm_id"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Lambda MicroVMs Micro VM %s still exists", rs.Primary.Attributes["microvm_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMicrovmExists(ctx context.Context, t *testing.T, name string, v *lambdamicrovms.GetMicrovmOutput) resource.TestCheckFunc {
+func testAccCheckMicroVMExists(ctx context.Context, t *testing.T, n string, v *lambdamicrovms.GetMicrovmOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not found"))
-		}
-
-		id := rs.Primary.Attributes["microvm_id"]
-		if id == "" {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
-		out, err := tflambdamicrovms.FindMicrovmByID(ctx, conn, id)
+		output, err := tflambdamicrovms.FindMicroVMByID(ctx, conn, rs.Primary.Attributes["microvm_id"])
 		if err != nil {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameMicrovm, id, err)
+			return err
 		}
-		*v = *out
+
+		*v = *output
 
 		return nil
 	}
-}
-
-func testAccMicrovmConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccImageConfig_basic(rName), `
-resource "aws_lambdamicrovms_microvm" "test" {
-  image_identifier = aws_lambdamicrovms_image.test.arn
-}
-`)
 }

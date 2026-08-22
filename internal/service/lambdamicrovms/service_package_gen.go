@@ -40,9 +40,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newMicrovmResource,
+			Factory:  newMicroVMResource,
 			TypeName: "aws_lambdamicrovms_microvm",
-			Name:     "Microvm",
+			Name:     "Micro VM",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("microvm_id", true)),
 			Import: inttypes.FrameworkImport{

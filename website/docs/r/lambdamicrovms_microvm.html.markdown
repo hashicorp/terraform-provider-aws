@@ -40,7 +40,7 @@ resource "aws_lambdamicrovms_microvm" "example" {
   }
 
   logging {
-    cloud_watch {
+    cloudwatch {
       log_group = aws_cloudwatch_log_group.example.name
     }
   }
@@ -77,12 +77,12 @@ The `idle_policy` block supports the following:
 
 The `logging` block supports exactly one of the following:
 
-* `cloud_watch` - (Optional) Send logs to Amazon CloudWatch Logs. [See below](#cloud_watch-block).
+* `cloudwatch` - (Optional) Send logs to Amazon CloudWatch Logs. [See below](#cloudwatch-block).
 * `disabled` - (Optional) Disable logging for the MicroVM. Specify an empty block: `disabled {}`.
 
-### `cloud_watch` Block
+### `cloudwatch` Block
 
-The `cloud_watch` block supports the following:
+The `cloudwatch` block supports the following:
 
 * `log_group` - (Optional) Name of the CloudWatch Logs log group to send logs to.
 * `log_stream` - (Optional) Name of the CloudWatch Logs log stream within the log group.

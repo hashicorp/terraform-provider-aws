@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -38,33 +38,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_lambdamicrovms_microvm", name="Microvm")
+// @FrameworkResource("aws_lambdamicrovms_microvm", name="Micro VM")
 // @IdentityAttribute("microvm_id")
 // @Testing(importStateIdAttribute="microvm_id")
 // @Testing(importIgnore="image_identifier;execution_role_arn;logging;run_hook_payload", plannableImportAction="Replace")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
-func newMicrovmResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &microvmResource{}
+func newMicroVMResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &microVMResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameMicrovm = "Microvm"
-)
-
-type microvmResource struct {
-	framework.ResourceWithModel[microvmResourceModel]
+type microVMResource struct {
+	framework.ResourceWithModel[microVMResourceModel]
+	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
-func (r *microvmResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"egress_network_connectors": schema.ListAttribute{
@@ -174,7 +171,7 @@ func (r *microvmResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloud_watch": schema.ListNestedBlock{
+						"cloudwatch": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLoggingModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -212,17 +209,17 @@ func (r *microvmResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *microvmResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *microVMResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
-	var plan microvmResourceModel
+	var plan microVMResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input lambdamicrovms.RunMicrovmInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	if resp.Diagnostics.HasError() {
 		return
@@ -238,19 +235,19 @@ func (r *microvmResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outWait, err := waitMicrovmRunning(ctx, conn, plan.MicrovmID.ValueString(), createTimeout)
+	outWait, err := waitMicroVMRunning(ctx, conn, plan.MicrovmID.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.MicrovmID.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -258,16 +255,16 @@ func (r *microvmResource) Create(ctx context.Context, req resource.CreateRequest
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *microvmResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *microVMResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
-	var state microvmResourceModel
+	var state microVMResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findMicrovmByID(ctx, conn, state.MicrovmID.ValueString())
+	out, err := findMicroVMByID(ctx, conn, state.MicrovmID.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -278,7 +275,7 @@ func (r *microvmResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -288,10 +285,10 @@ func (r *microvmResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 // No Update operation for MicroVMs as all configurations are immutable
 
-func (r *microvmResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *microVMResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LambdaMicroVMsClient(ctx)
 
-	var state microvmResourceModel
+	var state microVMResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -312,18 +309,18 @@ func (r *microvmResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitMicrovmTerminated(ctx, conn, state.MicrovmID.ValueString(), deleteTimeout)
+	_, err = waitMicroVMTerminated(ctx, conn, state.MicrovmID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.MicrovmID.ValueString())
 		return
 	}
 }
 
-func waitMicrovmRunning(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmOutput, error) {
+func waitMicroVMRunning(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MicrovmStatePending),
 		Target:                    enum.Slice(awstypes.MicrovmStateRunning),
-		Refresh:                   statusMicrovm(conn, id),
+		Refresh:                   statusMicroVM(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -337,11 +334,11 @@ func waitMicrovmRunning(ctx context.Context, conn *lambdamicrovms.Client, id str
 	return nil, smarterr.NewError(err)
 }
 
-func waitMicrovmTerminated(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmOutput, error) {
+func waitMicroVMTerminated(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MicrovmStateTerminating, awstypes.MicrovmStateRunning, awstypes.MicrovmStateSuspending, awstypes.MicrovmStateSuspended),
 		Target:  []string{},
-		Refresh: statusMicrovm(conn, id),
+		Refresh: statusMicroVM(conn, id),
 		Timeout: timeout,
 	}
 
@@ -353,9 +350,9 @@ func waitMicrovmTerminated(ctx context.Context, conn *lambdamicrovms.Client, id 
 	return nil, smarterr.NewError(err)
 }
 
-func statusMicrovm(conn *lambdamicrovms.Client, id string) retry.StateRefreshFunc {
+func statusMicroVM(conn *lambdamicrovms.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findMicrovmByID(ctx, conn, id)
+		out, err := findMicroVMByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -368,7 +365,7 @@ func statusMicrovm(conn *lambdamicrovms.Client, id string) retry.StateRefreshFun
 	}
 }
 
-func findMicrovmByID(ctx context.Context, conn *lambdamicrovms.Client, id string) (*lambdamicrovms.GetMicrovmOutput, error) {
+func findMicroVMByID(ctx context.Context, conn *lambdamicrovms.Client, id string) (*lambdamicrovms.GetMicrovmOutput, error) {
 	input := lambdamicrovms.GetMicrovmInput{
 		MicrovmIdentifier: aws.String(id),
 	}
@@ -400,7 +397,7 @@ func findMicrovmByID(ctx context.Context, conn *lambdamicrovms.Client, id string
 	return out, nil
 }
 
-type microvmResourceModel struct {
+type microVMResourceModel struct {
 	framework.WithRegionModel
 	EgressNetworkConnectors  fwtypes.ListOfString                             `tfsdk:"egress_network_connectors"`
 	Endpoint                 types.String                                     `tfsdk:"endpoint"`
@@ -426,7 +423,7 @@ type idlePolicyModel struct {
 }
 
 type loggingModel struct {
-	CloudWatch fwtypes.ListNestedObjectValueOf[cloudWatchLoggingModel] `tfsdk:"cloud_watch"`
+	CloudWatch fwtypes.ListNestedObjectValueOf[cloudWatchLoggingModel] `tfsdk:"cloudwatch"`
 	Disabled   fwtypes.ListNestedObjectValueOf[loggingDisabledModel]   `tfsdk:"disabled"`
 }
 
@@ -437,7 +434,7 @@ type cloudWatchLoggingModel struct {
 
 type loggingDisabledModel struct{}
 
-var _ flex.Expander = loggingModel{}
+var _ fwflex.Expander = loggingModel{}
 
 func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -451,7 +448,7 @@ func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 		}
 
 		var r awstypes.LoggingMemberCloudWatch
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
+func TestAccLambdaMicroVMsMicroVM_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdamicrovms.GetMicrovmOutput
@@ -37,17 +37,17 @@ func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
-		CheckDestroy:             testAccCheckMicrovmDestroy(ctx, t),
+		CheckDestroy:             testAccCheckMicroVMDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMicrovmExists(ctx, t, resourceName, &v),
+					testAccCheckMicroVMExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -62,7 +62,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -79,7 +79,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -99,7 +99,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -119,7 +119,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
+func TestAccLambdaMicroVMsMicroVM_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambdamicrovms_microvm.test"
@@ -139,7 +139,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -157,7 +157,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -175,7 +175,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -196,7 +196,7 @@ func TestAccLambdaMicroVMsMicrovm_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Microvm/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

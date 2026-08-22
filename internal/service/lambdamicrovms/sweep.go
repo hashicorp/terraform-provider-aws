@@ -63,7 +63,7 @@ func sweepMicrovms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 				continue
 			}
 
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newMicrovmResource, client,
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newMicroVMResource, client,
 				sweepfw.NewAttribute("microvm_id", aws.ToString(v.MicrovmId))),
 			)
 		}
