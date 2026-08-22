@@ -150,7 +150,7 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 
 func valueAsType(ctx context.Context, v fwattr.Value) any {
 	if v.IsNull() || v.IsUnknown() {
-		return nil
+		return v
 	}
 
 	switch v.Type(ctx) {
