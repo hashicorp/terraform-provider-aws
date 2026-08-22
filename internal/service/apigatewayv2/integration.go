@@ -23,13 +23,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_integration", name="Integration")
+// @IdentityAttribute("api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("integrationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetIntegrationOutput")
+// @Testing(preIdentityVersion="v6.50.0")
+// @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
+// @CustomImport
 func resourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,
@@ -455,14 +464,18 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", d.Id())
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
 	}
 
-	apiID := parts[0]
-	integrationID := parts[1]
+	apiID := d.Get("api_id").(string)
+	integrationID := d.Id()
 
+	// Region may be overridden in the import block.
+	// Ensure the appropriate value is in context before initializing the client.
+	if v, ok := d.GetOk(names.AttrRegion); ok {
+		ctx = conns.NewResourceContext(ctx, names.APIGatewayV2, "aws_apigatewayv2_integration", "Integration", v.(string))
+	}
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findIntegrationByTwoPartKey(ctx, conn, apiID, integrationID)
@@ -475,10 +488,29 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 		return nil, fmt.Errorf("API Gateway v2 Integration (%s) was created via quick create", integrationID)
 	}
 
-	d.SetId(integrationID)
-	d.Set("api_id", apiID)
-
 	return []*schema.ResourceData{d}, nil
+}
+
+var _ inttypes.SDKv2ImportID = integrationImportID{}
+
+type integrationImportID struct{}
+
+func (integrationImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (integrationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", id)
+	}
+
+	// "abc123/xyz789" -> api_id="abc123", id="xyz789"
+	result := map[string]any{
+		"api_id": parts[0],
+	}
+
+	return parts[1], result, nil
 }
 
 func findIntegrationByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, integrationID string) (*apigatewayv2.GetIntegrationOutput, error) {
