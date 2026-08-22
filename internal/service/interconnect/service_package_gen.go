@@ -29,6 +29,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newConnectionsDataSource,
+			TypeName: "aws_interconnect_connections",
+			Name:     "Connections",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newEnvironmentDataSource,
 			TypeName: "aws_interconnect_environment",
 			Name:     "Environment",
