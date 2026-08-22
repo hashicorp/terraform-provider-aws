@@ -47,6 +47,7 @@ type instanceMetadataDefaultsResource struct {
 func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	httpEndpointType := fwtypes.StringEnumType[awstypes.DefaultInstanceMetadataEndpointState]()
 	httpTokensType := fwtypes.StringEnumType[awstypes.MetadataDefaultHttpTokensState]()
+	httpTokensEnforcedType := fwtypes.StringEnumType[awstypes.DefaultHttpTokensEnforcedState]()
 	instanceMetadataTagsType := fwtypes.StringEnumType[awstypes.DefaultInstanceMetadataTagsState]()
 
 	response.Schema = schema.Schema{
@@ -74,6 +75,12 @@ func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request r
 				Computed:   true,
 				Default:    httpTokensType.AttributeDefault(awstypes.MetadataDefaultHttpTokensStateNoPreference),
 			},
+			"http_tokens_enforced": schema.StringAttribute{
+				CustomType: httpTokensEnforcedType,
+				Optional:   true,
+				Computed:   true,
+				Default:    httpTokensEnforcedType.AttributeDefault(awstypes.DefaultHttpTokensEnforcedStateNoPreference),
+			},
 			names.AttrID: framework.IDAttribute(),
 			"instance_metadata_tags": schema.StringAttribute{
 				CustomType: instanceMetadataTagsType,
@@ -91,6 +98,7 @@ func (r *instanceMetadataDefaultsResource) ConfigValidators(context.Context) []r
 			path.MatchRoot("http_endpoint"),
 			path.MatchRoot("http_put_response_hop_limit"),
 			path.MatchRoot("http_tokens"),
+			path.MatchRoot("http_tokens_enforced"),
 			path.MatchRoot("instance_metadata_tags"),
 		),
 	}
@@ -166,6 +174,9 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 	if data.HttpTokens.IsNull() {
 		data.HttpTokens = fwtypes.StringEnumValue(awstypes.MetadataDefaultHttpTokensStateNoPreference)
 	}
+	if data.HttpTokensEnforced.IsNull() {
+		data.HttpTokensEnforced = fwtypes.StringEnumValue(awstypes.DefaultHttpTokensEnforcedStateNoPreference)
+	}
 	if data.InstanceMetadataTags.IsNull() {
 		data.InstanceMetadataTags = fwtypes.StringEnumValue(awstypes.DefaultInstanceMetadataTagsStateNoPreference)
 	}
@@ -207,6 +218,7 @@ func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request r
 		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
 		HttpPutResponseHopLimit: aws.Int32(httpPutResponseHopLimitNoPreference),
 		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
+		HttpTokensEnforced:      awstypes.DefaultHttpTokensEnforcedStateNoPreference,
 		InstanceMetadataTags:    awstypes.DefaultInstanceMetadataTagsStateNoPreference,
 	}
 
@@ -224,6 +236,7 @@ type instanceMetadataDefaultsResourceModel struct {
 	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`
 	HttpPutResponseHopLimit types.Int64                                                       `tfsdk:"http_put_response_hop_limit"`
 	HttpTokens              fwtypes.StringEnum[awstypes.MetadataDefaultHttpTokensState]       `tfsdk:"http_tokens"`
+	HttpTokensEnforced      fwtypes.StringEnum[awstypes.DefaultHttpTokensEnforcedState]       `tfsdk:"http_tokens_enforced"`
 	ID                      types.String                                                      `tfsdk:"id"`
 	InstanceMetadataTags    fwtypes.StringEnum[awstypes.DefaultInstanceMetadataTagsState]     `tfsdk:"instance_metadata_tags"`
 }
