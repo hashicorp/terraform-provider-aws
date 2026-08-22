@@ -82,13 +82,13 @@ func (d *environmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 	if !data.InterconnectProvider.IsNull() {
 		filter, d := data.InterconnectProvider.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		provider, d := filter.Expand(ctx)
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
