@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_sesv2_configuration_set: Add `suppression_options.suppression_scope` argument
+```
+
+```release-note:enhancement
+resource/aws_sesv2_configuration_set: Add `suppression_options.validation_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_sesv2_configuration_set: Add `suppression_options.suppression_scope` attribute
+```
+
+```release-note:enhancement
+data-source/aws_sesv2_configuration_set: Add `suppression_options.validation_options` block
+```

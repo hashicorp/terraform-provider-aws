@@ -81,6 +81,27 @@ The `sending_options` configuration block supports the following arguments:
 The `suppression_options` configuration block supports the following arguments:
 
 * `suppressed_reasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
+* `suppression_scope` - (Optional) Suppression scope for the configuration set. Valid values: `ACCOUNT`, `TENANT`.
+* `validation_options` - (Optional) Configuration block for information about the email address suppression preferences for the configuration set in the current AWS Region. See [`validation_options` Block](#validation_options-block) for details.
+
+### `validation_options` Block
+
+The `validation_options` configuration block supports the following arguments:
+
+* `condition_threshold` - (Required) Configuration block for condition threshold settings for suppression validation. See [`condition_threshold` Block](#condition_threshold-block) for details.
+
+### `condition_threshold` Block
+
+The `condition_threshold` configuration block supports the following arguments:
+
+* `condition_threshold_enabled` - (Required) Indicates whether Auto Validation is enabled for suppression. Valid values: `ENABLED`, `DISABLED`.
+* `overall_confidence_threshold` - (Optional) Configuration block for overall confidence threshold used to determine suppression decisions. See [`overall_confidence_threshold` Block](#overall_confidence_threshold-block) for details.
+
+### `overall_confidence_threshold` Block
+
+The `overall_confidence_threshold` configuration block supports the following arguments:
+
+* `confidence_verdict_threshold` - (Required) Confidence level threshold for suppression decisions. Valid values: `MEDIUM`, `HIGH`, `MANAGED`.
 
 ### `tracking_options` Block
 

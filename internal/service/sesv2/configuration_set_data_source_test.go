@@ -41,6 +41,12 @@ func TestAccSESV2ConfigurationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sending_options.0.sending_enabled", dataSourceName, "sending_options.0.sending_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.#", dataSourceName, "suppression_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.suppressed_reasons", dataSourceName, "suppression_options.0.suppressed_reasons"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.suppression_scope", dataSourceName, "suppression_options.0.suppression_scope"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.validation_options.#", dataSourceName, "suppression_options.0.validation_options.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.validation_options.0.condition_threshold.#", dataSourceName, "suppression_options.0.validation_options.0.condition_threshold.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled", dataSourceName, "suppression_options.0.validation_options.0.condition_threshold.0.condition_threshold_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.#", dataSourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.0.confidence_verdict_threshold", dataSourceName, "suppression_options.0.validation_options.0.condition_threshold.0.overall_confidence_threshold.0.confidence_verdict_threshold"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "vdm_options.#", dataSourceName, "vdm_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vdm_options.0.dashboard_options.#", dataSourceName, "vdm_options.0.dashboard_options.#"),
@@ -73,6 +79,15 @@ resource "aws_sesv2_configuration_set" "test" {
 
   suppression_options {
     suppressed_reasons = ["BOUNCE"]
+    suppression_scope  = "TENANT"
+    validation_options {
+      condition_threshold {
+        condition_threshold_enabled = "ENABLED"
+        overall_confidence_threshold {
+          confidence_verdict_threshold = "HIGH"
+        }
+      }
+    }
   }
 
   vdm_options {
