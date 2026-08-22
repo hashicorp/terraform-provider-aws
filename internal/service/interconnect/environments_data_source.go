@@ -8,8 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/interconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/interconnect/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -35,6 +40,30 @@ func (d *environmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 			},
 			"environments": framework.DataSourceComputedListOfObjectAttribute[environmentSummaryModel](ctx),
 		},
+		Blocks: map[string]schema.Block{
+			"interconnect_provider": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[providerFilterModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"cloud_service_provider": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("cloud_service_provider"),
+									path.MatchRelative().AtParent().AtName("last_mile_provider"),
+								),
+							},
+						},
+						"last_mile_provider": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -50,6 +79,21 @@ func (d *environmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	var input interconnect.ListEnvironmentsInput
 	if !data.Location.IsNull() {
 		input.Location = data.Location.ValueStringPointer()
+	}
+	if !data.InterconnectProvider.IsNull() {
+		filter, d := data.InterconnectProvider.ToPtr(ctx)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		provider, d := filter.Expand(ctx)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.Provider, _ = provider.(awstypes.Provider)
 	}
 
 	var environments []awstypes.Environment
@@ -81,8 +125,35 @@ func (d *environmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 type environmentsDataSourceModel struct {
 	framework.WithRegionModel
-	Environments fwtypes.ListNestedObjectValueOf[environmentSummaryModel] `tfsdk:"environments"`
-	Location     types.String                                             `tfsdk:"location"`
+	Environments         fwtypes.ListNestedObjectValueOf[environmentSummaryModel] `tfsdk:"environments"`
+	InterconnectProvider fwtypes.ListNestedObjectValueOf[providerFilterModel]     `tfsdk:"interconnect_provider"`
+	Location             types.String                                             `tfsdk:"location"`
+}
+
+// providerFilterModel expands to the SDK Provider tagged union. The block is named
+// "interconnect_provider" because "provider" is a reserved Terraform meta-argument.
+type providerFilterModel struct {
+	CloudServiceProvider types.String `tfsdk:"cloud_service_provider"`
+	LastMileProvider     types.String `tfsdk:"last_mile_provider"`
+}
+
+var _ fwflex.Expander = providerFilterModel{}
+
+func (m providerFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.CloudServiceProvider.IsNull():
+		return &awstypes.ProviderMemberCloudServiceProvider{
+			Value: m.CloudServiceProvider.ValueString(),
+		}, diags
+	case !m.LastMileProvider.IsNull():
+		return &awstypes.ProviderMemberLastMileProvider{
+			Value: m.LastMileProvider.ValueString(),
+		}, diags
+	}
+
+	return nil, diags
 }
 
 type bandwidthsModel struct {
