@@ -14,11 +14,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -32,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -69,6 +72,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.List{
+					listvalidator.SizeBetween(0, 10),
+				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 					listplanmodifier.UseStateForUnknown(),
@@ -104,6 +110,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.List{
+					listvalidator.SizeBetween(0, 10),
+				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 					listplanmodifier.UseStateForUnknown(),
@@ -112,6 +121,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"maximum_duration_in_seconds": schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(1, 28800),
+				},
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 					int32planmodifier.UseStateForUnknown(),
@@ -137,6 +149,10 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType: fwtypes.StringEnumType[awstypes.MicrovmState](),
 				Computed:   true,
 			},
+			"terminated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"idle_policy": schema.ListNestedBlock{
@@ -151,12 +167,27 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 					Attributes: map[string]schema.Attribute{
 						"auto_resume_enabled": schema.BoolAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
 						},
 						"max_idle_duration_seconds": schema.Int32Attribute{
 							Required: true,
+							Validators: []validator.Int32{
+								int32validator.AtMost(60),
+							},
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
 						},
 						"suspended_duration_seconds": schema.Int32Attribute{
 							Required: true,
+							Validators: []validator.Int32{
+								int32validator.AtLeast(0),
+							},
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -170,20 +201,34 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("cloudwatch"),
+							path.MatchRelative().AtName("disabled"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"cloudwatch": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLoggingModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("disabled")),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"log_group": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"log_stream": schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -192,10 +237,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 							CustomType: fwtypes.NewListNestedObjectTypeOf[loggingDisabledModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("cloud_watch")),
 							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 						},
 					},
@@ -218,36 +262,33 @@ func (r *microVMResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	imageID := fwflex.StringValueFromFramework(ctx, plan.ImageIdentifier)
 	var input lambdamicrovms.RunMicrovmInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
-	out, err := conn.RunMicrovm(ctx, &input)
+	outR, err := conn.RunMicrovm(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ImageIdentifier.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ImageIdentifier.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, imageID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outWait, err := waitMicroVMRunning(ctx, conn, plan.MicrovmID.ValueString(), createTimeout)
+	microVMID := aws.ToString(outR.MicrovmId)
+	outG, err := waitMicroVMRunning(ctx, conn, microVMID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.MicrovmID.String())
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("microvm_id"), microVMID)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, microVMID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan))
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outG, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -264,17 +305,19 @@ func (r *microVMResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := findMicroVMByID(ctx, conn, state.MicrovmID.ValueString())
+	microVMID := fwflex.StringValueFromFramework(ctx, state.MicroVMID)
+	out, err := findMicroVMByID(ctx, conn, microVMID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.MicrovmID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, microVMID)
 		return
 	}
 
+	// Set values for import.
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -283,7 +326,7 @@ func (r *microVMResource) Read(ctx context.Context, req resource.ReadRequest, re
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-// No Update operation for MicroVMs as all configurations are immutable
+// No Update operation for MicroVMs as all configurations are immutable.
 
 func (r *microVMResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LambdaMicroVMsClient(ctx)
@@ -294,24 +337,21 @@ func (r *microVMResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
+	microVMID := fwflex.StringValueFromFramework(ctx, state.MicroVMID)
 	input := lambdamicrovms.TerminateMicrovmInput{
-		MicrovmIdentifier: state.MicrovmID.ValueStringPointer(),
+		MicrovmIdentifier: aws.String(microVMID),
 	}
-
 	_, err := conn.TerminateMicrovm(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.MicrovmID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, microVMID)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitMicroVMTerminated(ctx, conn, state.MicrovmID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.MicrovmID.ValueString())
+	if _, err := waitMicroVMTerminated(ctx, conn, microVMID, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, microVMID)
 		return
 	}
 }
@@ -322,12 +362,12 @@ func waitMicroVMRunning(ctx context.Context, conn *lambdamicrovms.Client, id str
 		Target:                    enum.Slice(awstypes.MicrovmStateRunning),
 		Refresh:                   statusMicroVM(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdamicrovms.GetMicrovmOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -344,6 +384,7 @@ func waitMicroVMTerminated(ctx context.Context, conn *lambdamicrovms.Client, id 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdamicrovms.GetMicrovmOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -370,28 +411,38 @@ func findMicroVMByID(ctx context.Context, conn *lambdamicrovms.Client, id string
 		MicrovmIdentifier: aws.String(id),
 	}
 
-	out, err := conn.GetMicrovm(ctx, &input)
+	out, err := findMicroVM(ctx, conn, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
-	}
-
-	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	// A terminated MicroVM remains queryable via GetMicrovm for some time, but
 	// is logically gone. Treat it as not found so Read, the delete waiter, and
 	// destroy checks all agree.
-	if out.State == awstypes.MicrovmStateTerminated {
+	if state := out.State; state == awstypes.MicrovmStateTerminated {
 		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: errors.New("MicroVM is terminated"),
+			LastError: errors.New(string(state)),
 		})
+	}
+
+	return out, nil
+}
+
+func findMicroVM(ctx context.Context, conn *lambdamicrovms.Client, input *lambdamicrovms.GetMicrovmInput) (*lambdamicrovms.GetMicrovmOutput, error) {
+	out, err := conn.GetMicrovm(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if out == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -409,11 +460,12 @@ type microVMResourceModel struct {
 	IngressNetworkConnectors fwtypes.ListOfString                             `tfsdk:"ingress_network_connectors"`
 	Logging                  fwtypes.ListNestedObjectValueOf[loggingModel]    `tfsdk:"logging"`
 	MaximumDurationInSeconds types.Int32                                      `tfsdk:"maximum_duration_in_seconds"`
-	MicrovmID                types.String                                     `tfsdk:"microvm_id"`
+	MicroVMID                types.String                                     `tfsdk:"microvm_id"`
 	RunHookPayload           types.String                                     `tfsdk:"run_hook_payload"`
 	StartedAt                timetypes.RFC3339                                `tfsdk:"started_at"`
 	State                    fwtypes.StringEnum[awstypes.MicrovmState]        `tfsdk:"state"`
 	Timeouts                 timeouts.Value                                   `tfsdk:"timeouts"`
+	TerminatedAt             timetypes.RFC3339                                `tfsdk:"terminated_at"`
 }
 
 type idlePolicyModel struct {
