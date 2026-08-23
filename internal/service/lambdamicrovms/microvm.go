@@ -51,8 +51,8 @@ import (
 func newMicroVMResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &microVMResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
@@ -147,10 +147,6 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.MicrovmState](),
-				Computed:   true,
-			},
-			"terminated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 		},
@@ -465,7 +461,6 @@ type microVMResourceModel struct {
 	StartedAt                timetypes.RFC3339                                `tfsdk:"started_at"`
 	State                    fwtypes.StringEnum[awstypes.MicrovmState]        `tfsdk:"state"`
 	Timeouts                 timeouts.Value                                   `tfsdk:"timeouts"`
-	TerminatedAt             timetypes.RFC3339                                `tfsdk:"terminated_at"`
 }
 
 type idlePolicyModel struct {
