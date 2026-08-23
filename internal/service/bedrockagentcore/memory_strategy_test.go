@@ -3266,12 +3266,14 @@ func TestAccBedrockAgentCoreMemoryStrategy_summarizationMemoryRecordSchemaBasic(
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"extraction_config": knownvalue.ListSizeExact(0),
-							"extraction_type":   knownvalue.NotNull(),
-							names.AttrKey:       knownvalue.StringExact("customer_id"),
-							names.AttrType:      knownvalue.Null(),
-						})}),
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListSizeExact(0),
+								"extraction_type":   knownvalue.NotNull(),
+								names.AttrKey:       knownvalue.StringExact("customer_id"),
+								names.AttrType:      knownvalue.Null(),
+							}),
+						}),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
@@ -3339,7 +3341,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_summarizationMemoryRecordSchemaBasic(
 	})
 }
 
-func TestAccBedrockAgentCoreMemoryStrategy_memoryRecordSchema(t *testing.T) {
+func TestAccBedrockAgentCoreMemoryStrategy_semanticMemoryRecordSchema(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
 	rName := randomWithPrefixAndUnderscore(t)
@@ -3355,57 +3357,237 @@ func TestAccBedrockAgentCoreMemoryStrategy_memoryRecordSchema(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
-			// Setup: Create memory with execution role
 			{
-				Config: testAccMemoryConfig_memoryExecutionRole(rName),
-			},
-			// Step 1: Create SEMANTIC strategy with a memory_record_schema entry
-			{
-				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "The priority of the record"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SEMANTIC"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.key", names.AttrPriority),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_type", "LLM_INFERRED"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.type", "STRING"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.definition", "The priority of the record"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.0.string_validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.validation.0.string_validation.0.allowed_values.#", "3"),
-					resource.TestCheckResourceAttrSet(resourceName, "memory_strategy_id"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Definition 1"),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation":      knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("critical"),
+													knownvalue.StringExact("high"),
+													knownvalue.StringExact("medium"),
+													knownvalue.StringExact("low"),
+												}),
+											})}),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("priority"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSemantic)),
+				},
 			},
-			// Step 2: Update the metadata entry definition (in-place)
 			{
-				Config: testAccMemoryStrategyConfig_memoryRecordSchema(rName, names.AttrPriority, "LLM_INFERRED", "STRING", "Updated priority definition"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 1"),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
-					resource.TestCheckResourceAttr(resourceName, "memory_record_schema.0.metadata_schema.0.extraction_config.0.llm_extraction_config.0.definition", "Updated priority definition"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Definition 2"),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation":      knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("critical"),
+													knownvalue.StringExact("high"),
+													knownvalue.StringExact("medium"),
+													knownvalue.StringExact("low"),
+												}),
+											})}),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("priority"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSemantic)),
+				},
 			},
-			// Step 3: Import test
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_userPreferenceMemoryRecordSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/user_preference_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Support ranking."),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"max_value": knownvalue.Float64Exact(5.0),
+												"min_value": knownvalue.Float64Exact(1.0),
+											})}),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation":      knownvalue.ListSizeExact(0),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("ranking"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Support vibes."),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation": knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("fun"),
+													knownvalue.StringExact("spooky"),
+													knownvalue.StringExact("chill"),
+												}),
+												"max_items": knownvalue.Int32Exact(2),
+											})}),
+											"string_validation": knownvalue.ListSizeExact(0),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("vibes"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeStringlist),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeUserPreference)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/user_preference_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
-				ImportStateVerifyIgnore:              []string{"memory_execution_role_arn"},
 			},
 		},
 	})
@@ -3601,37 +3783,4 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   namespace_templates = ["default"]
 }
 `, rName))
-}
-
-func testAccMemoryStrategyConfig_memoryRecordSchema(rName, key, extractionType, valueType, definition string) string {
-	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_memory_strategy" "test" {
-  name                      = %[1]q
-  memory_id                 = aws_bedrockagentcore_memory.test.id
-  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
-  type                      = "SEMANTIC"
-  description               = "Test memory record schema"
-  namespaces                = ["default"]
-
-  memory_record_schema {
-    metadata_schema {
-      key             = %[2]q
-      extraction_type = %[3]q
-      type            = %[4]q
-
-      extraction_config {
-        llm_extraction_config {
-          definition = %[5]q
-
-          validation {
-            string_validation {
-              allowed_values = ["high", "medium", "low"]
-            }
-          }
-        }
-      }
-    }
-  }
-}
-`, rName, key, extractionType, valueType, definition))
 }
