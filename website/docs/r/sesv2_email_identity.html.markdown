@@ -56,6 +56,11 @@ resource "aws_sesv2_email_identity" "example" {
 }
 ```
 
+~> **NOTE on `configuration_set_name` and `aws_sesv2_email_identity_configuration_set_attributes`:**
+Terraform provides two ways to associate a configuration set with an email identity: the `configuration_set_name` argument on this resource, and the separate [`aws_sesv2_email_identity_configuration_set_attributes`](sesv2_email_identity_configuration_set_attributes) resource.
+Using both on the same identity at the same time will cause conflicts and undefined behavior.
+Use `aws_sesv2_email_identity_configuration_set_attributes` when you need to break a circular dependency between the identity and the configuration set (for example, when the configuration set requires the domain identity to already exist).
+
 ## Argument Reference
 
 The following arguments are required:
