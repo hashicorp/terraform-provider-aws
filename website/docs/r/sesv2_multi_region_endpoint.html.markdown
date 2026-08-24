@@ -15,7 +15,6 @@ Manages an AWS SESv2 (Simple Email V2) Multi Region Endpoint (global endpoint). 
 ### Basic Usage
 
 ```terraform
-
 resource "aws_sesv2_multi_region_endpoint" "example" {
   endpoint_name = "example"
 
@@ -31,23 +30,40 @@ resource "aws_sesv2_multi_region_endpoint" "example" {
 
 The following arguments are required:
 
-* `endpoint_name` - (Required, Forces new resource) Name of the multi-region endpoint.
-* `details` - (Required, Forces new resource) Configuration details for the endpoint. See [`details`](#details) below.
+* `details` - (Required) Configuration details for the endpoint. See [`details` Block](#details-block) below.
+* `endpoint_name` - (Required) Name of the multi-region endpoint.
 
-### `details`
+The following arguments are optional:
 
-* `routes_details` - (Required) List of secondary region route configurations. Each entry contains:
-  * `region` - (Required, Forces new resource) Name of the secondary AWS region.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `details` Block
+
+The `details` block supports:
+
+* `routes_details` - (Required) Secondary region route configuration. See [`routes_details` Block](#routes_details-block) below.
+
+### `routes_details` Block
+
+The `routes_details` block supports:
+
+* `region` - (Required) Name of the secondary AWS region.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the multi-region endpoint (same as `endpoint_name`).
+* `arn` - ARN of the multi-region endpoint.
 * `endpoint_id` - ID assigned to the multi-region endpoint.
-* `routes` - List of active routes. Each entry contains:
-  * `region` - AWS region name for this route.
-* `status` - Current status of the endpoint. One of `CREATING`, `READY`, `FAILED`, `DELETING`.
+* `routes` - List of active routes. See [`routes`](#routes) below.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `routes`
+
+`routes` supports:
+
+* `region` - AWS region name for this route.
 
 ## Timeouts
 
