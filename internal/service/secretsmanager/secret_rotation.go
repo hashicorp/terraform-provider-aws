@@ -309,7 +309,7 @@ func resourceSecretRotationCustomizeDiff(_ context.Context, d *schema.ResourceDi
 
 	switch {
 	case disabled && len(rules) > 0:
-		return fmt.Errorf("`rotation_rules` cannot be configured when `rotation_enabled` is `false`")
+		return fmt.Errorf("`rotation_rules` cannot be set when `rotation_enabled` is `false`; remove the `rotation_rules` block to disable rotation")
 	case !disabled && len(rules) == 0:
 		return fmt.Errorf("`rotation_rules` is required unless `rotation_enabled` is `false`")
 	}
