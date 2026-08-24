@@ -76,6 +76,23 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 
 ~> **NOTE:** For Amazon Aurora and other clustered engines, rotation is finalized once a cluster instance is available, and AWS re-enables rotation if it is cancelled before then. Ensure this resource depends on the cluster instance (for example, with `depends_on = [aws_rds_cluster_instance.example]`) so the cancellation is applied after the instance is available. Destroying this resource does not re-enable the automatic rotation that AWS configured.
 
+When `rotation_enabled` is `false`, `rotation_rules` must be omitted. If you toggle rotation on and off through a variable (for example, in a module), gate the block with a [`dynamic` block](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) so it is only present when rotation is enabled:
+
+```terraform
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id        = aws_db_instance.example.master_user_secret[0].secret_arn
+  rotation_enabled = var.rotation_enabled
+
+  dynamic "rotation_rules" {
+    for_each = var.rotation_enabled ? [1] : []
+
+    content {
+      automatically_after_days = 30
+    }
+  }
+}
+```
+
 ### Rotation Configuration
 
 To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
