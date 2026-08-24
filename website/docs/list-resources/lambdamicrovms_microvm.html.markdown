@@ -22,6 +22,6 @@ list "aws_lambdamicrovms_microvm" "example" {
 
 This list resource supports the following arguments:
 
-* `image_identifier` - (Optional) Filter to list only MicroVMs running the specified image.
+* `image_arn` - (Optional) Filter to list only MicroVMs running the specified image.
 * `image_version` - (Optional) Filter to list only MicroVMs running the specified image version.
 * `region` - (Optional) Region to query. Defaults to provider region.

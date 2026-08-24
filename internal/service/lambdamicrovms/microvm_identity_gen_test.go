@@ -72,9 +72,6 @@ func TestAccLambdaMicroVMsMicroVM_Identity_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "microvm_id",
-				ImportStateVerifyIgnore: []string{
-					"image_identifier", names.AttrExecutionRoleARN, "logging", "run_hook_payload",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -89,12 +86,10 @@ func TestAccLambdaMicroVMsMicroVM_Identity_basic(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "microvm_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("microvm_id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -108,12 +103,10 @@ func TestAccLambdaMicroVMsMicroVM_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("microvm_id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -168,9 +161,6 @@ func TestAccLambdaMicroVMsMicroVM_Identity_regionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "microvm_id",
-				ImportStateVerifyIgnore: []string{
-					"image_identifier", names.AttrExecutionRoleARN, "logging", "run_hook_payload",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -186,12 +176,10 @@ func TestAccLambdaMicroVMsMicroVM_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "microvm_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("microvm_id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -206,12 +194,10 @@ func TestAccLambdaMicroVMsMicroVM_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("microvm_id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

@@ -44,7 +44,6 @@ import (
 // @FrameworkResource("aws_lambdamicrovms_microvm", name="Micro VM")
 // @IdentityAttribute("microvm_id")
 // @Testing(importStateIdAttribute="microvm_id")
-// @Testing(importIgnore="image_identifier;execution_role_arn;logging;run_hook_payload", plannableImportAction="Replace")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -90,9 +89,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"image_arn": framework.ARNAttributeComputedOnly(),
-			"image_identifier": schema.StringAttribute{
-				Required: true,
+			"image_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -258,7 +257,7 @@ func (r *microVMResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	imageID := fwflex.StringValueFromFramework(ctx, plan.ImageIdentifier)
+	imageARN := fwflex.StringValueFromFramework(ctx, plan.ImageARN)
 	var input lambdamicrovms.RunMicrovmInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -267,10 +266,11 @@ func (r *microVMResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.ImageIdentifier = aws.String(imageARN)
 
 	outR, err := conn.RunMicrovm(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, imageID)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, imageARN)
 		return
 	}
 
@@ -456,8 +456,7 @@ type microVMResourceModel struct {
 	Endpoint                 types.String                                     `tfsdk:"endpoint"`
 	ExecutionRoleARN         fwtypes.ARN                                      `tfsdk:"execution_role_arn"`
 	IdlePolicy               fwtypes.ListNestedObjectValueOf[idlePolicyModel] `tfsdk:"idle_policy"`
-	ImageARN                 types.String                                     `tfsdk:"image_arn"`
-	ImageIdentifier          types.String                                     `tfsdk:"image_identifier"`
+	ImageARN                 fwtypes.ARN                                      `tfsdk:"image_arn"`
 	ImageVersion             types.String                                     `tfsdk:"image_version"`
 	IngressNetworkConnectors fwtypes.ListOfString                             `tfsdk:"ingress_network_connectors"`
 	Logging                  fwtypes.ListNestedObjectValueOf[loggingModel]    `tfsdk:"logging"`

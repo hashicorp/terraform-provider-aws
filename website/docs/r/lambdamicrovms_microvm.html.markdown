@@ -18,7 +18,7 @@ MicroVMs are immutable. Because the service has no update operation, changing an
 
 ```terraform
 resource "aws_lambdamicrovms_microvm" "example" {
-  image_identifier = aws_lambdamicrovms_image.example.arn
+  image_arn = aws_lambdamicrovms_image.example.arn
 }
 ```
 
@@ -26,7 +26,7 @@ resource "aws_lambdamicrovms_microvm" "example" {
 
 ```terraform
 resource "aws_lambdamicrovms_microvm" "example" {
-  image_identifier            = aws_lambdamicrovms_image.example.arn
+  image_arn                   = aws_lambdamicrovms_image.example.arn
   execution_role_arn          = aws_iam_role.example.arn
   maximum_duration_in_seconds = 14400
 
@@ -51,7 +51,7 @@ resource "aws_lambdamicrovms_microvm" "example" {
 
 The following arguments are required:
 
-* `image_identifier` - (Required) ARN of the MicroVM image to run. Changing this value creates a new resource.
+* `image_arn` - (Required) ARN of the MicroVM image to run. Changing this value creates a new resource.
 
 The following arguments are optional:
 
@@ -92,7 +92,6 @@ The `cloudwatch` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `endpoint` - HTTPS endpoint URL for communicating with the MicroVM.
-* `image_arn` - ARN of the MicroVM image used to run this MicroVM.
 * `microvm_id` - Unique identifier of the MicroVM.
 * `started_at` - Timestamp when the MicroVM first started, in RFC 3339 format.
 * `state` - Current lifecycle state of the MicroVM (e.g., `RUNNING`).

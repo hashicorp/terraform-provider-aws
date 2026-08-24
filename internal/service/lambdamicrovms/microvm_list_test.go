@@ -122,7 +122,6 @@ func TestAccLambdaMicroVMsMicroVM_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_lambdamicrovms_microvm.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_lambdamicrovms_microvm.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("image_arn"), checkImageARN(rName)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("image_identifier"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("started_at"), knownvalue.NotNull()),

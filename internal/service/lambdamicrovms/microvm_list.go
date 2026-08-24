@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -40,7 +41,8 @@ type microVMListResource struct {
 func (l *microVMListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"image_identifier": listschema.StringAttribute{
+			"image_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
 				Optional:    true,
 				Description: "Filter to list only MicroVMs running the specified image.",
 			},
@@ -118,7 +120,7 @@ func (l *microVMListResource) List(ctx context.Context, request list.ListRequest
 
 type listMicroVMModel struct {
 	framework.WithRegionModel
-	ImageIdentifier types.String `tfsdk:"image_identifier"`
+	ImageIdentifier fwtypes.ARN  `tfsdk:"image_arn"`
 	ImageVersion    types.String `tfsdk:"image_version"`
 }
 

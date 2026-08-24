@@ -348,11 +348,11 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MicrovmImageStateCreating),
 		Target:                    enum.Slice(awstypes.MicrovmImageStateCreated),
-		Refresh:                   statusImage(conn, id),
+		Refresh:                   statusImage(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -365,11 +365,11 @@ func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 	return nil, smarterr.NewError(err)
 }
 
-func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MicrovmImageStateUpdating),
 		Target:                    enum.Slice(awstypes.MicrovmImageStateUpdated),
-		Refresh:                   statusImage(conn, id),
+		Refresh:                   statusImage(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -382,11 +382,11 @@ func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, id strin
 	return nil, smarterr.NewError(err)
 }
 
-func waitImageDeleted(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+func waitImageDeleted(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MicrovmImageStateDeleting),
 		Target:  []string{},
-		Refresh: statusImage(conn, id),
+		Refresh: statusImage(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -398,9 +398,9 @@ func waitImageDeleted(ctx context.Context, conn *lambdamicrovms.Client, id strin
 	return nil, smarterr.NewError(err)
 }
 
-func statusImage(conn *lambdamicrovms.Client, id string) retry.StateRefreshFunc {
+func statusImage(conn *lambdamicrovms.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findImageByARN(ctx, conn, id)
+		out, err := findImageByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -418,14 +418,19 @@ func findImageByARN(ctx context.Context, conn *lambdamicrovms.Client, arn string
 		ImageIdentifier: aws.String(arn),
 	}
 
-	out, err := conn.GetMicrovmImage(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
+	return findImage(ctx, conn, &input)
+}
 
+func findImage(ctx context.Context, conn *lambdamicrovms.Client, input *lambdamicrovms.GetMicrovmImageInput) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	out, err := conn.GetMicrovmImage(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 

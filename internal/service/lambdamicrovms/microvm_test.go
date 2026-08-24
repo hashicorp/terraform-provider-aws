@@ -58,7 +58,6 @@ func TestAccLambdaMicroVMsMicroVM_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("execution_role_arn"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("idle_policy"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("image_arn"), checkImageARN(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("image_identifier"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("image_version"), knownvalue.StringExact("1.0")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_network_connectors"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
@@ -79,12 +78,6 @@ func TestAccLambdaMicroVMsMicroVM_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "microvm_id"),
 				ImportStateVerifyIdentifierAttribute: "microvm_id",
-				ImportStateVerifyIgnore: []string{
-					names.AttrExecutionRoleARN,
-					"image_identifier",
-					"logging",
-					"run_hook_payload",
-				},
 			},
 		},
 	})

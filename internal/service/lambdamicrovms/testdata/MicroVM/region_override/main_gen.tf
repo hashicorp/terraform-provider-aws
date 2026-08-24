@@ -4,7 +4,7 @@
 resource "aws_lambdamicrovms_microvm" "test" {
   region = var.region
 
-  image_identifier = aws_lambdamicrovms_image.test.arn
+  image_arn = aws_lambdamicrovms_image.test.arn
 }
 
 resource "aws_lambdamicrovms_image" "test" {
