@@ -166,7 +166,9 @@ resource "aws_rds_cluster" "test" {
 
 ### Disabling Master Password Rotation
 
-When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`. The rotation resource must depend on a cluster instance, otherwise AWS re-enables rotation once the instance finishes provisioning.
+~> **Note:** The `aws_secretsmanager_secret_rotation` resource must depend on a cluster instance, otherwise AWS re-enables rotation once the instance finishes provisioning. Use `depends_on` as shown below when the cluster and its instance are created together.
+
+When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`.
 
 ```terraform
 resource "aws_rds_cluster" "test" {

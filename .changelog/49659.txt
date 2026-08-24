@@ -5,3 +5,12 @@ resource/aws_secretsmanager_secret_rotation: Add `rotation_enabled` argument, wh
 ```release-note:enhancement
 resource/aws_secretsmanager_secret_rotation: `rotation_rules` is now optional, and must be omitted when `rotation_enabled` is `false`
 ```
+
+
+```release-note:note
+resource/aws_db_instance: When `manage_master_user_password` is enabled, the managed secret's automatic rotation can now be disabled using `aws_secretsmanager_secret_rotation` with `rotation_enabled = false`
+```
+
+```release-note:note
+resource/aws_rds_cluster: When `manage_master_user_password` is enabled, the managed secret's automatic rotation can now be disabled using `aws_secretsmanager_secret_rotation` with `rotation_enabled = false`
+```
