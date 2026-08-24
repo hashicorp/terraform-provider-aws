@@ -50,9 +50,14 @@ func testAccMailManagerArchive_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("retention.#", "1"),
+					acctest.ImportCheckResourceAttr("retention.0.retention_period", "SIX_MONTHS"),
+				),
 			},
 		},
 	})
@@ -126,9 +131,10 @@ func testAccMailManagerArchive_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention"},
 			},
 		},
 	})
@@ -161,6 +167,10 @@ func testAccMailManagerArchive_retention(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("retention.#", "1"),
+					acctest.ImportCheckResourceAttr("retention.0.retention_period", "ONE_YEAR"),
+				),
 			},
 			{
 				Config: testAccArchiveConfig_retention(rName, "TWO_YEARS"),
