@@ -361,8 +361,8 @@ github.com/aws/aws-sdk-go-v2/service/lightsail v1.58.7 h1:s5qt/86J+9UqF9EaNErw73
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.58.7/go.mod h1:nMysWAvXSMK4pvgvM0Iforqs5lxFT8M2p8BX2IQXWvA=
 github.com/aws/aws-sdk-go-v2/service/location v1.54.7 h1:XOlblKiV05/V+hY64uN2Hvd1oyCtCYxSQmrSJAU8PAY=
 github.com/aws/aws-sdk-go-v2/service/location v1.54.7/go.mod h1:UhExmKYoRWh17+Kkku6ipH9CPTabdX7V5zzei1drSWU=
-github.com/aws/aws-sdk-go-v2/service/m2 v1.29.6 h1:JZ13i3Exogq1t9ZrEDi9wevPqvbTuQHZyFDkvBr0wf8=
-github.com/aws/aws-sdk-go-v2/service/m2 v1.29.6/go.mod h1:3Xt9oaXxyCSO0UwFlUfKgxfSbJQjezENkjyKBC4BgAc=
+github.com/aws/aws-sdk-go-v2/service/m2 v1.29.7 h1:PADcKYhwg41uZiaR+7aTp/IUcZaNfM9rqfmRzjl6OuY=
+github.com/aws/aws-sdk-go-v2/service/m2 v1.29.7/go.mod h1:+aOMkMacsL+uzzp2XJVI7HfsFSPrLDXlI8bePfembUw=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.54.6 h1:cTe3zuDnnT4TrrGjpBQBoKx4M9UUbfo7bQRBwfC4Hrc=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.54.6/go.mod h1:YTjesDdLeWocxxYniP47IAtEQq2GwSJJTcssNPykEfw=
 github.com/aws/aws-sdk-go-v2/service/mailmanager v1.21.6 h1:zDEf9jq4x2clFjfUl38iVe9+HkXzyfBnuNJrAfvGSQQ=
