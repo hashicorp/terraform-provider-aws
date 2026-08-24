@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -122,8 +121,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s._:/=+@-]*$`), ""),
+								validMemoryKey,
 							},
 						},
 						names.AttrType: schema.StringAttribute{
