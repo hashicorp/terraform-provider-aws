@@ -16,7 +16,7 @@ import (
 )
 
 // DiffSets returns the set difference a\b: elements present in a but absent in b.
-// Neither a nor b may be Unknown. A Null value is treated as an empty set.
+// Neither a nor b may be Unknown. Null/Unknown values are treated as empty.
 // The returned set uses the element type of a.
 func DiffSets(ctx context.Context, a, b types.Set) types.Set {
 	elemType := a.ElementType(ctx)
