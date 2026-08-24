@@ -187,6 +187,7 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The up-front payment amount.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
