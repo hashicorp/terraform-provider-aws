@@ -453,6 +453,10 @@ func TestAccSecretsManagerSecretRotation_externalRotation(t *testing.T) {
 
 func TestAccSecretsManagerSecretRotation_managedRotationDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const resourceName = "aws_secretsmanager_secret_rotation.test"
@@ -483,6 +487,10 @@ func TestAccSecretsManagerSecretRotation_managedRotationDisabled(t *testing.T) {
 
 func TestAccSecretsManagerSecretRotation_managedRotationDisabledCluster(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const resourceName = "aws_secretsmanager_secret_rotation.test"
