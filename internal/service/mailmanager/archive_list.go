@@ -79,8 +79,8 @@ func (l *archiveListResource) List(ctx context.Context, request list.ListRequest
 			var data archiveResourceModel
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.ID = types.StringValue(id)
-				data.Name = types.StringPointerValue(item.ArchiveName)
+				data.ArchiveId = types.StringValue(id)
+				data.ArchiveName = types.StringPointerValue(item.ArchiveName)
 
 				if request.IncludeResource {
 					result.Diagnostics.Append(l.flatten(ctx, out, &data)...)

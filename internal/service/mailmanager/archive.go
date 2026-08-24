@@ -128,7 +128,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	var input mailmanager.CreateArchiveInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Archive")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -142,7 +142,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 		},
 	)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ArchiveName.String())
 		return
 	}
 
@@ -170,7 +170,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	archiveID := state.ID.ValueString()
+	archiveID := state.ArchiveId.ValueString()
 	out, err := findArchiveByID(ctx, conn, archiveID)
 
 	if retry.NotFound(err) {
@@ -179,7 +179,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ArchiveId.String())
 		return
 	}
 
@@ -207,16 +207,16 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	archiveID := state.ID.ValueString()
+	archiveID := state.ArchiveId.ValueString()
 
 	if diff.HasChanges() {
 		var input mailmanager.UpdateArchiveInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Archive")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		input.ArchiveId = state.ID.ValueStringPointer()
+		input.ArchiveId = state.ArchiveId.ValueStringPointer()
 
 		_, err := conn.UpdateArchive(ctx, &input)
 		if err != nil {
@@ -250,7 +250,7 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	archiveID := state.ID.ValueString()
+	archiveID := state.ArchiveId.ValueString()
 	input := mailmanager.DeleteArchiveInput{
 		ArchiveId: aws.String(archiveID),
 	}
@@ -266,7 +266,7 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel) diag.Diagnostics {
-	diags := flex.Flatten(ctx, apiObject, data, flex.WithFieldNamePrefix("Archive"))
+	diags := flex.Flatten(ctx, apiObject, data)
 	if diags.HasError() {
 		return diags
 	}
@@ -325,11 +325,11 @@ func setRetentionFromAPI(ctx context.Context, apiRetention awstypes.ArchiveReten
 
 type archiveResourceModel struct {
 	framework.WithRegionModel
-	ARN                  types.String                                           `tfsdk:"arn"`
+	ArchiveArn           types.String                                           `tfsdk:"arn"`
 	Retention            fwtypes.ListNestedObjectValueOf[archiveRetentionModel] `tfsdk:"retention" autoflex:",noflatten"`
 	KmsKeyArn            fwtypes.ARN                                            `tfsdk:"kms_key_arn"`
-	ID                   types.String                                           `tfsdk:"id"`
-	Name                 types.String                                           `tfsdk:"name"`
+	ArchiveId            types.String                                           `tfsdk:"id"`
+	ArchiveName          types.String                                           `tfsdk:"name"`
 	ArchiveState         fwtypes.StringEnum[awstypes.ArchiveState]              `tfsdk:"archive_state"`
 	CreatedTimestamp     timetypes.RFC3339                                      `tfsdk:"created_timestamp"`
 	LastUpdatedTimestamp timetypes.RFC3339                                      `tfsdk:"last_updated_timestamp"`
