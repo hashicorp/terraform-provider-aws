@@ -79,6 +79,11 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 When `rotation_enabled` is `false`, `rotation_rules` must be omitted. If you toggle rotation on and off through a variable (for example, in a module), gate the block with a [`dynamic` block](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) so it is only present when rotation is enabled:
 
 ```terraform
+variable "rotation_enabled" {
+  type    = bool
+  default = true
+}
+
 resource "aws_secretsmanager_secret_rotation" "example" {
   secret_id        = aws_db_instance.example.master_user_secret[0].secret_arn
   rotation_enabled = var.rotation_enabled
