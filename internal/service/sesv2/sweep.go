@@ -19,7 +19,6 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sesv2_contact_list", sweepContactLists)
 	awsv2.Register("aws_sesv2_multi_region_endpoint", sweepMultiRegionEndpoints)
 	awsv2.Register("aws_sesv2_tenant", sweepTenants)
-	awsv2.Register("aws_sesv2_multi_region_endpoint", sweepMultiRegionEndpoints)
 }
 
 func sweepConfigurationSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
