@@ -347,8 +347,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.102.0 h1:6DieWbDSZRl/3X9WBd1I2dX5
 github.com/aws/aws-sdk-go-v2/service/lambda v1.102.0/go.mod h1:TjkkzyKth5PG4AMJIif6MBfdZsa0FXl38wx8hLJm9iY=
 github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.7 h1:hTvvlT53NiQV5RzV9NbMYx/qOifq0F+HeItmhTAWmfY=
 github.com/aws/aws-sdk-go-v2/service/lambdacore v1.2.7/go.mod h1:MAm4666EXpnoiE8eFzXVYFGXahg1ZHqpBSNqOcrSZQ8=
-github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.6 h1:ulyIJJ8XZe0bb2j5OCl/GkuHhHihDw7/2hc2e3zia0k=
-github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.6/go.mod h1:cujMiAgQEPDCesNeeqCe4lHh7lZl401B5+tXxXQ9Zmc=
+github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.7 h1:L8xuaguksYpX/TTvPH/tmdl0UjNn/PscEDaxEKflQvA=
+github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.2.7/go.mod h1:oWnat6yBwv3Z+1frsfbVhwvwChgmb1Tnc+hB863CYng=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.17.6 h1:veK93nqwc2kbF3N1LBcoUb/W7wAUq1c2Bgkgc7DByTM=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.17.6/go.mod h1:wRxnUzG5BhHjx4FOjND670Tofgn7wlvaaGvMa9Gzg+8=
 github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.38.6 h1:zxvRdv8dtPQNQ2zm7qkTy2D/TkIF2kbK3X5HQcwwr70=
