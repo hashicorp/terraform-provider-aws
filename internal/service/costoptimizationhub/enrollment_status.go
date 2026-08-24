@@ -196,7 +196,7 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 		}
 
 		old.ID = new.ID
-		old.Status = fwflex.StringValueToFramework(ctx, *out.Status)
+		old.Status = fwflex.StringToFramework(ctx, out.Status)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
