@@ -70,7 +70,7 @@ func TestAccBedrockAgentCoreHarness_Identity_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 
@@ -163,7 +163,7 @@ func TestAccBedrockAgentCoreHarness_Identity_regionOverride(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 

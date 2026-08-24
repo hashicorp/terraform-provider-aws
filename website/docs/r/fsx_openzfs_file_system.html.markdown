@@ -42,11 +42,12 @@ The following arguments are optional:
 * `endpoint_ip_address_range` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
 * `final_backup_tags` - (Optional) Map of tags to apply to the file system's final backup.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
+* `network_type` - (Optional) Network type. Valid values are `IPV4` and `DUAL`. Default value is `IPV4`.
 * `preferred_subnet_id` - (Optional) (Multi-AZ only) Required when `deployment_type` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
 * `read_cache_configuration` - (Optional) Configuration block for optional provisioned SSD read cache on file systems that use the Intelligent-Tiering storage class. Required when `storage_type` is set to `INTELLIGENT_TIERING`. See [`read_cache_configuration` Block](#read_cache_configuration-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `root_volume_configuration` - (Optional) Configuration for the root volume of the file system. All other volumes are children or the root volume. See [`root_volume_configuration` Block](#root_volume_configuration-block) for details.
-* `route_table_ids` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
+* `route_table_ids` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all VPC route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `security_group_ids` - (Optional) List of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `storage_capacity` - (Optional) Storage capacity (GiB) of the file system. Valid values between `64` and `524288`. Required when `storage_type` is set to `SSD`. Must not be set when `storage_type` is set to `INTELLIGENT_TIERING`.
@@ -104,7 +105,7 @@ The `user_and_group_quotas` configuration block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
 * `endpoint_ip_address` - IP address of the endpoint that is used to access data or to manage the file system.
 * `id` - Identifier of the file system, e.g., `fs-12345678`
@@ -112,7 +113,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - AWS account identifier that created the file system.
 * `root_volume_id` - Identifier of the root volume, e.g., `fsvol-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
+* `vpc_id` - Identifier of the VPC for the file system.
 
 ## Timeouts
 

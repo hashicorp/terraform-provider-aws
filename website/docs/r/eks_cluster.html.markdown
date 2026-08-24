@@ -353,6 +353,9 @@ The following arguments are optional:
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
 * `force_update_version` - (Optional) Force version update by overriding upgrade-blocking readiness checks when updating a cluster.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
+* `kube_api_server_config` - (Optional) Configuration block for customizing the Kubernetes API server. [Detailed](#kube_api_server_config) below.
+* `kube_controller_manager_config` - (Optional) Configuration block for customizing the Kubernetes controller manager. [Detailed](#kube_controller_manager_config) below.
+* `kube_scheduler_config` - (Optional) Configuration block for customizing the Kubernetes scheduler. [Detailed](#kube_scheduler_config) below.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remote_network_config` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.
@@ -394,7 +397,7 @@ The `encryption_config` configuration block supports the following arguments:
 
 The `provider` configuration block supports the following arguments:
 
-* `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
+* `key_arn` - (Required) ARN of the KMS customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
 ### remote_network_config
 
@@ -414,6 +417,60 @@ The `remote_node_networks` configuration block supports the following arguments:
 The `remote_pod_networks` configuration block supports the following arguments:
 
 * `cidrs` - (Required) List of network CIDRs that can contain pods that run Kubernetes webhooks on hybrid nodes.
+
+### kube_api_server_config
+
+The `kube_api_server_config` configuration block supports the following arguments:
+
+* `event_ttl` - (Optional) The duration that Kubernetes events are retained. Must be a single-unit duration (e.g., `30m`, `1h`). Valid range: `10m` to `60m`. Default is `1h`.
+* `service_node_port_range` - (Optional) Configuration block for the port range available for NodePort services. [Detailed](#service_node_port_range) below.
+
+#### service_node_port_range
+
+The `service_node_port_range` configuration block supports the following arguments:
+
+* `min_port` - (Optional) The minimum port number in the range. Valid range: `10260` to `32767`. Default is `30000`.
+* `max_port` - (Optional) The maximum port number in the range. Valid range: `10260` to `32767`. Default is `32767`. Must be greater than or equal to `min_port`.
+
+### kube_controller_manager_config
+
+The `kube_controller_manager_config` configuration block supports the following arguments:
+
+* `horizontal_pod_autoscaler_controller_config` - (Optional) Configuration block for the horizontal pod autoscaler controller. [Detailed](#horizontal_pod_autoscaler_controller_config) below.
+
+~> **NOTE:** The `horizontal_pod_autoscaler_controller_config` requires a Provisioned Control Plane scaling tier (e.g., `tier-xl` or higher). It cannot be configured on clusters using the `standard` tier.
+
+#### horizontal_pod_autoscaler_controller_config
+
+The `horizontal_pod_autoscaler_controller_config` configuration block supports the following arguments:
+
+* `horizontal_pod_autoscaler_sync_period` - (Optional) The interval between each sync of the horizontal pod autoscaler. Must be a single-unit duration (e.g., `10s`, `15s`). Valid range: `10s` to `15s`. Default is `15s`.
+
+### kube_scheduler_config
+
+The `kube_scheduler_config` configuration block supports the following arguments:
+
+* `node_resources_fit` - (Optional) Configuration block for the NodeResourcesFit scheduler plugin. [Detailed](#node_resources_fit) below.
+
+#### node_resources_fit
+
+The `node_resources_fit` configuration block supports the following arguments:
+
+* `scoring_strategy` - (Optional) Configuration block for the scoring strategy used to rank nodes during scheduling. [Detailed](#scoring_strategy) below.
+
+#### scoring_strategy
+
+The `scoring_strategy` configuration block supports the following arguments:
+
+* `type` - (Optional) The scoring strategy type. Valid values are `LeastAllocated` and `MostAllocated`. Default is `LeastAllocated`.
+* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resources) below.
+
+#### resource
+
+The `resource` configuration block supports the following arguments:
+
+* `name` - (Optional) The name of the resource (e.g., `cpu`, `memory`, `nvidia.com/gpu`).
+* `weight` - (Optional) The weight assigned to the resource for scoring. Must be between `1` and `100`.
 
 ### vpc_config Arguments
 

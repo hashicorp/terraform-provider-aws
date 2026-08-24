@@ -85,6 +85,7 @@ The following arguments are optional:
 * `disk_iops_configuration` - (Optional) SSD IOPS configuration for the Amazon FSx for Windows File Server file system. See [`disk_iops_configuration` Block](#disk_iops_configuration-block) for details.
 * `final_backup_tags` - (Optional) Map of tags to apply to the file system's final backup.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest. Defaults to an AWS managed KMS Key.
+* `network_type` - (Optional) Network type. Valid values are `IPV4` and `DUAL`. Default value is `IPV4`.
 * `preferred_subnet_id` - (Optional) Subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_ids` - (Optional) List of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
@@ -99,7 +100,7 @@ The following arguments are optional:
 
 The `audit_log_configuration` configuration block supports the following arguments:
 
-* `audit_log_destination` - (Optional) Amazon Resource Name (ARN) for the destination of the audit logs. The destination can be any Amazon CloudWatch Logs log group ARN or Amazon Kinesis Data Firehose delivery stream ARN. Can be specified when `file_access_audit_log_level` and `file_share_access_audit_log_level` are not set to `DISABLED`. The name of the Amazon CloudWatch Logs log group must begin with the `/aws/fsx` prefix. The name of the Amazon Kinesis Data Firehouse delivery stream must begin with the `aws-fsx` prefix. If you do not provide a destination in `audit_log_destionation`, Amazon FSx will create and use a log stream in the CloudWatch Logs /aws/fsx/windows log group.
+* `audit_log_destination` - (Optional) ARN for the destination of the audit logs. The destination can be any Amazon CloudWatch Logs log group ARN or Amazon Kinesis Data Firehose delivery stream ARN. Can be specified when `file_access_audit_log_level` and `file_share_access_audit_log_level` are not set to `DISABLED`. The name of the Amazon CloudWatch Logs log group must begin with the `/aws/fsx` prefix. The name of the Amazon Kinesis Data Firehouse delivery stream must begin with the `aws-fsx` prefix. If you do not provide a destination in `audit_log_destionation`, Amazon FSx will create and use a log stream in the CloudWatch Logs /aws/fsx/windows log group.
 * `file_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file and folder accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 * `file_share_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file share accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 
@@ -115,7 +116,7 @@ The `disk_iops_configuration` configuration block supports the following argumen
 The `self_managed_active_directory` configuration block supports the following arguments:
 
 * `dns_ips` - (Required) List of up to two IP addresses of DNS servers or domain controllers in the self-managed AD directory. The IP addresses need to be either in the same VPC CIDR range as the file system or in the private IP version 4 (IPv4) address ranges as specified in [RFC 1918](https://tools.ietf.org/html/rfc1918).
-* `domain_join_service_account_secret` - (Optional) Amazon Resource Name (ARN) for the AWS Secrets Manager secret that contains the credentials for the service account on your self-managed AD domain. Conflicts with `username` and `password`.
+* `domain_join_service_account_secret` - (Optional) ARN for the AWS Secrets Manager secret that contains the credentials for the service account on your self-managed AD domain. Conflicts with `username` and `password`.
 * `domain_name` - (Required) Fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
 * `file_system_administrators_group` - (Optional) Name of the domain group whose members are granted administrative privileges for the file system. Administrative privileges include taking ownership of files and folders, and setting audit controls (audit ACLs) on files and folders. The group that you specify must already exist in your domain. Defaults to `Domain Admins`.
 * `organizational_unit_distinguished_name` - (Optional) Fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `OU=FSx,DC=yourdomain,DC=corp,DC=com`. Only accepts OU as the direct parent of the file system. If none is provided, the FSx file system is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
@@ -128,7 +129,7 @@ The `self_managed_active_directory` configuration block supports the following a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.corp.example.com` (domain name matching the Active Directory domain name)
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
@@ -136,7 +137,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `preferred_file_server_ip` - IP address of the primary, or preferred, file server.
 * `remote_administration_endpoint` - For `MULTI_AZ_1` deployment types, use this endpoint when performing administrative tasks on the file system using Amazon FSx Remote PowerShell. For `SINGLE_AZ_1` deployment types, this is the DNS name of the file system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
+* `vpc_id` - Identifier of the VPC for the file system.
 
 ## Timeouts
 
