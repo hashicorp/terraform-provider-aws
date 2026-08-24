@@ -40,6 +40,7 @@ import (
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="retention")
 // @Testing(preCheck="testAccArchivePreCheck")
 // @Testing(serialize=true)
 // @Testing(skipEmptyTags=true, skipNullTags=true)
@@ -153,7 +154,7 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, false))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -170,6 +171,9 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	// When importing, all attributes other than `id` will be null.
+	isImport := state.ArchiveName.IsNull()
+
 	archiveID := state.ArchiveId.ValueString()
 	out, err := findArchiveByID(ctx, conn, archiveID)
 
@@ -183,7 +187,7 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state, isImport))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -230,7 +234,7 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, false))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -265,12 +269,12 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel) diag.Diagnostics {
+func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel, isImport bool) diag.Diagnostics {
 	diags := flex.Flatten(ctx, apiObject, data)
 	if diags.HasError() {
 		return diags
 	}
-	diags.Append(setRetentionFromAPI(ctx, apiObject.Retention, data)...)
+	diags.Append(setRetentionFromAPI(ctx, apiObject.Retention, data, isImport)...)
 	return diags
 }
 
@@ -302,10 +306,10 @@ func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (
 	return out, nil
 }
 
-func setRetentionFromAPI(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel) diag.Diagnostics {
+func setRetentionFromAPI(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel, isImport bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if data.Retention.IsNull() || data.Retention.IsUnknown() {
+	if !isImport && (data.Retention.IsNull() || data.Retention.IsUnknown()) {
 		return diags
 	}
 
