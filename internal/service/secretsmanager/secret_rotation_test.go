@@ -513,6 +513,51 @@ func TestAccSecretsManagerSecretRotation_managedRotationDisabledCluster(t *testi
 	})
 }
 
+func TestAccSecretsManagerSecretRotation_managedRotationEnableDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const resourceName = "aws_secretsmanager_secret_rotation.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_managedRotationInstanceToggle(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationNotEnabled(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_managedRotationInstanceToggle(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "7"),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_managedRotationInstanceToggle(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationNotEnabled(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecretRotationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
@@ -879,4 +924,40 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   depends_on = [aws_rds_cluster_instance.test]
 }
 `, rName)
+}
+
+func testAccSecretRotationConfig_managedRotationInstanceToggle(rName string, enabled bool) string {
+	rotation := `rotation_enabled = false`
+	if enabled {
+		rotation = `
+  rotation_rules {
+    automatically_after_days = 7
+  }
+
+  rotate_immediately = false`
+	}
+
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mysql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.t3.micro", "db.t4g.micro", "db.t3.small"]
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  allocated_storage           = 10
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  username                    = "tfacctest"
+  manage_master_user_password = true
+  skip_final_snapshot         = true
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id = aws_db_instance.test.master_user_secret[0].secret_arn
+  %[2]s
+}
+`, rName, rotation)
 }
