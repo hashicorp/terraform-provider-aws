@@ -451,6 +451,60 @@ func TestAccSecretsManagerSecretRotation_externalRotation(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretRotation_managedRotationDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const resourceName = "aws_secretsmanager_secret_rotation.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_managedRotationDisabledInstance(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationNotEnabled(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_managedRotationDisabledCluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const resourceName = "aws_secretsmanager_secret_rotation.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_managedRotationDisabledCluster(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationNotEnabled(ctx, t, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecretRotationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
@@ -498,6 +552,31 @@ func testAccCheckSecretRotationExists(ctx context.Context, t *testing.T, n strin
 
 		if !aws.ToBool(output.RotationEnabled) {
 			return fmt.Errorf("Secrets Manager Secret Rotation %s not enabled", rs.Primary.ID)
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckSecretRotationNotEnabled(ctx context.Context, t *testing.T, n string, v *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
+
+		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if aws.ToBool(output.RotationEnabled) {
+			return fmt.Errorf("Secrets Manager Secret Rotation %s enabled, expected disabled", rs.Primary.ID)
 		}
 
 		*v = *output
@@ -729,4 +808,67 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   depends_on = [aws_secretsmanager_secret.test]
 }
 `, rName, automaticallyAfterDays)
+}
+
+func testAccSecretRotationConfig_managedRotationDisabledInstance(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mysql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.t3.micro", "db.t4g.micro", "db.t3.small"]
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  allocated_storage           = 10
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  username                    = "tfacctest"
+  manage_master_user_password = true
+  skip_final_snapshot         = true
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id        = aws_db_instance.test.master_user_secret[0].secret_arn
+  rotation_enabled = false
+}
+`, rName)
+}
+
+func testAccSecretRotationConfig_managedRotationDisabledCluster(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-mysql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.t3.medium", "db.t4g.medium", "db.r6g.large"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier          = %[1]q
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
+  master_username             = "tfacctest"
+  manage_master_user_password = true
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = "%[1]s-1"
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
+
+# Depends on the cluster instance so rotation is cancelled only after the
+# instance is available. Otherwise AWS re-enables rotation once the instance
+# finishes provisioning.
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id        = aws_rds_cluster.test.master_user_secret[0].secret_arn
+  rotation_enabled = false
+
+  depends_on = [aws_rds_cluster_instance.test]
+}
+`, rName)
 }
