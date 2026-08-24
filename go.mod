@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.44
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.51.7
 	github.com/aws/aws-sdk-go-v2/service/account v1.35.7
-	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.0.1
+	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.0.2
