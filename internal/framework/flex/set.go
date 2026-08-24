@@ -5,6 +5,7 @@ package flex
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -32,18 +33,10 @@ func DiffSets(ctx context.Context, a, b types.Set) types.Set {
 
 	var diff []attr.Value
 	for _, av := range aElems {
-		inB := false
-		for _, bv := range bElems {
-			if av.Equal(bv) {
-				inB = true
-				break
-			}
-		}
-		if !inB {
+		if inB := slices.ContainsFunc(bElems, av.Equal); !inB {
 			diff = append(diff, av)
 		}
 	}
-
 	if diff == nil {
 		diff = []attr.Value{}
 	}
