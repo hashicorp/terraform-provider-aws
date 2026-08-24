@@ -14,14 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdamicrovms "github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkImageARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNExact("lambda", "microvm-image:"+name)
+}
 
 func TestAccLambdaMicroVMsImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)

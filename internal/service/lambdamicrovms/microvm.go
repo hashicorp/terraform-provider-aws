@@ -284,7 +284,7 @@ func (r *microVMResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// Set values for unknowns.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outG, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, outG, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -314,7 +314,7 @@ func (r *microVMResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	// Set values for import.
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -350,6 +350,12 @@ func (r *microVMResource) Delete(ctx context.Context, req resource.DeleteRequest
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, microVMID)
 		return
 	}
+}
+
+func (r *microVMResource) flatten(ctx context.Context, microVM *lambdamicrovms.GetMicrovmOutput, data *microVMResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, microVM, data)...)
+	return diags
 }
 
 func waitMicroVMRunning(ctx context.Context, conn *lambdamicrovms.Client, id string, timeout time.Duration) (*lambdamicrovms.GetMicrovmOutput, error) {
