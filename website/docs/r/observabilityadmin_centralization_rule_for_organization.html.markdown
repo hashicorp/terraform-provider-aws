@@ -206,6 +206,7 @@ The following arguments are optional:
 
 * `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `encryption_conflict_resolution_strategy` - (Optional) Strategy for resolving encryption conflicts. Valid values: `ALLOW`, `SKIP`.
+* `encryption_scope` - (Optional) Determines which newly created destination log groups are encrypted with `kms_key_arn` when `encryption_strategy` is `CUSTOMER_MANAGED`. Valid values: `ENCRYPTED_SOURCE_ONLY` (default), `NEW_DESTINATION_LOG_GROUPS`. Not valid when `encryption_strategy` is `AWS_OWNED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for encryption when `encryption_strategy` is `CUSTOMER_MANAGED`.
 
 #### destination_metrics_configuration

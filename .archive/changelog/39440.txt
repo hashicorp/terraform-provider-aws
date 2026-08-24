@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_bedrockagent_agent: Add `guardrail_configuration` argument
-```

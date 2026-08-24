@@ -226,6 +226,72 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 	})
 }
 
+func TestAccObservabilityAdminCentralizationRuleForOrganization_encryptionScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_encryptionScope(rName, string(awstypes.EncryptionScopeNewDestinationLogGroups), acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("logs_encryption_configuration").AtSliceIndex(0).
+							AtMapKey("encryption_scope"),
+						tfknownvalue.StringExact(awstypes.EncryptionScopeNewDestinationLogGroups)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_encryptionScope(rName, string(awstypes.EncryptionScopeEncryptedSourceOnly), acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("logs_encryption_configuration").AtSliceIndex(0).
+							AtMapKey("encryption_scope"),
+						tfknownvalue.StringExact(awstypes.EncryptionScopeEncryptedSourceOnly)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccObservabilityAdminCentralizationRuleForOrganization_destinationLogGroupNameConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
@@ -549,6 +615,76 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
   }
 }
 `, rName, dstRegion, bkupRegion, acctest.ListOfStrings(srcRegions...))
+}
+
+func testAccCentralizationRuleForOrganizationConfig_encryptionScope(rName, encryptionScope, region string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnableIAMUserPermissions"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowCloudWatchLogs"
+        Effect    = "Allow"
+        Principal = { Service = "logs.amazonaws.com" }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+          "kms:CreateGrant",
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[3]q
+      account = data.aws_caller_identity.current.account_id
+
+      destination_logs_configuration {
+        logs_encryption_configuration {
+          encryption_strategy                     = "CUSTOMER_MANAGED"
+          encryption_conflict_resolution_strategy = "ALLOW"
+          kms_key_arn                             = aws_kms_key.test.arn
+          encryption_scope                        = %[2]q
+        }
+      }
+    }
+
+    source {
+      regions = [%[3]q]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy = "ALLOW"
+        log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
+      }
+    }
+  }
+}
+`, rName, encryptionScope, region)
 }
 
 func testAccCentralizationRuleForOrganizationConfig_destinationLogGroupNameConfiguration(rName, logGroupNamePattern string, dstRegion, bkupRegion string, srcRegions ...string) string {

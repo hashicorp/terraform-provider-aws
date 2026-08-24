@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_sagemaker_algorithm
-```
-
-```release-note:new-list-resource
-aws_sagemaker_algorithm
-```

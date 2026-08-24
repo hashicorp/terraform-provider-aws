@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecs_service: Add `service_connect_configuration.service.timeout` and `service_connect_configuration.service.tls` configuration blocks
-```

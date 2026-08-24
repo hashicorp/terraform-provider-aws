@@ -27,8 +27,8 @@ resource "aws_appfabric_app_bundle" "example" {
 
 This resource supports the following arguments:
 
+* `customer_managed_key_arn` - (Optional) ARN of the KMS key to use to encrypt the application data. If this is not specified, an AWS owned key is used for encryption.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `customer_managed_key_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS) key to use to encrypt the application data. If this is not specified, an AWS owned key is used for encryption.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -59,7 +59,7 @@ resource "aws_appfabric_app_bundle" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the AppFabric app bundle.
+- `arn` (String) ARN of the AppFabric app bundle.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFabric AppBundle using the `arn`. For example:
 

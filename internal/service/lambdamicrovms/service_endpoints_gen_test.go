@@ -283,7 +283,7 @@ func defaultFIPSEndpoint(ctx context.Context, region string) (url.URL, error) {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.LambdaMicrovmsClient(ctx)
+	client := meta.LambdaMicroVMsClient(ctx)
 
 	var result apiCallParams
 

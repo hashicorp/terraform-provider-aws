@@ -76,7 +76,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM
+* `arn` - ARN of IPAM
 * `id` - The ID of the IPAM
 * `default_resource_discovery_id` - The IPAM's default resource discovery ID.
 * `default_resource_discovery_association_id` - The IPAM's default resource discovery association ID.

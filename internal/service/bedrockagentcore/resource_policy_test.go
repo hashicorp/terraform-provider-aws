@@ -25,6 +25,7 @@ import (
 // underscore (`_`).
 //
 // Use this when the resource names do not allow dashes.
+// See `validResourceName`.
 func randomWithPrefixAndUnderscore(t *testing.T) string {
 	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
