@@ -83,7 +83,7 @@ func (l *archiveListResource) List(ctx context.Context, request list.ListRequest
 				data.ArchiveName = types.StringPointerValue(item.ArchiveName)
 
 				if request.IncludeResource {
-					result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
+					result.Diagnostics.Append(l.flatten(ctx, out, &data, false)...)
 					if result.Diagnostics.HasError() {
 						return
 					}
