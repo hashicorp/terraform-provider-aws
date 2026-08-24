@@ -87,8 +87,8 @@ github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.14.0 h1:YySjupnlu2gLiJhs
 github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.14.0/go.mod h1:MF08OalC8/oZyRxyWRhh8NCv838jyobtRuSvA8cdhzk=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.25.7 h1:wU7XTrsXDB+fax5K+yiOa/b++5ymZ+yzVuYBQ/0+4wQ=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.25.7/go.mod h1:Q897L5DdoXmWeHXoy+Q2UzzqI84aHhP4mMgclIyEM44=
-github.com/aws/aws-sdk-go-v2/service/athena v1.60.6 h1:CN9SJeHzpZA9m+LoFtrR0tIp109UhvfBNCbsczXdQok=
-github.com/aws/aws-sdk-go-v2/service/athena v1.60.6/go.mod h1:n9zkr1g3XWNrzzBuqlGxi6fJ3FbB8grBgE7UA1uXVWE=
+github.com/aws/aws-sdk-go-v2/service/athena v1.60.7 h1:/WQ5ZUpMTjtRS6DYdw0mtnxD+p4xDX1NjBBR7IMEj/I=
+github.com/aws/aws-sdk-go-v2/service/athena v1.60.7/go.mod h1:joyS0084c+HXbdM2LfLaLd33+/wcN+0n5AnGlB4zmf8=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.49.6 h1:qSeDmaOqa0gtFB3p0a9VP7F8Rh+zipLZgYhkoRtKowI=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.49.6/go.mod h1:mAsGcX6ykr/KUJkZv7gkw/KKPvlWL9IYJltCbFluaL0=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.1 h1:dphKqIDUM4m9Lz6rPgTJFkgUFC8oUiABxPN4DohkrXM=
