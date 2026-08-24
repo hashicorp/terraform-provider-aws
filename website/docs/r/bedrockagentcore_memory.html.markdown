@@ -70,34 +70,44 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the memory.
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
-* `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Additional keys can be added in place; removing or changing an existing key forces a new resource to be created, because previously indexed keys cannot be removed. See [`indexed_key`](#indexed_key) below.
+* `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Additional keys can be added in place; removing or changing an existing key forces a new resource to be created, because previously indexed keys cannot be removed. See [`indexed_key` Block](#indexed_key-block) below.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources`](#stream_delivery_resources) below.
+* `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources` Block](#stream_delivery_resources-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### indexed_key
+### `indexed_key` Block
+
+The `indexed_key` configuration block supports the following arguments:
 
 * `key` - (Required) Metadata key name to index.
 * `type` - (Required) Data type of the indexed key. Valid values are `STRING`, `STRINGLIST`, and `NUMBER`.
 
-### stream_delivery_resources
+### `stream_delivery_resources` Block
 
-* `resource` - (Required) List of stream delivery resource configurations. See [`resource`](#resource) below.
+The `stream_delivery_resources` configuration block supports the following arguments:
 
-### resource
+* `resource` - (Required) List of stream delivery resource configurations. See [`resource` Block](#resource-block) below.
 
-* `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis`](#kinesis) below.
+### `resource` Block
 
-### kinesis
+The `resource` configuration block supports the following arguments:
 
+* `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis` Block](#kinesis-block) below.
+
+### `kinesis` Block
+
+The `kinesis` configuration block supports the following arguments:
+
+* `content_configuration` - (Required) Content configurations for stream delivery. See [`content_configuration` Block](#content_configuration-block) below.
 * `data_stream_arn` - (Required) ARN of the Kinesis Data Stream.
-* `content_configuration` - (Required) Content configurations for stream delivery. See [`content_configuration`](#content_configuration) below.
 
-### content_configuration
+### `content_configuration` Block
 
-* `type` - (Required) Type of content to stream. Valid value is `MEMORY_RECORDS`.
+The `content_configuration` configuration block supports the following arguments:
+
 * `level` - (Optional) Level of detail for streamed content. Valid values are `METADATA_ONLY` and `FULL_CONTENT`. Defaults to `METADATA_ONLY`.
+* `type` - (Required) Type of content to stream. Valid value is `MEMORY_RECORDS`.
 
 ## Attribute Reference
 
@@ -105,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Memory.
 * `id` - Unique identifier of the Memory.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -117,17 +127,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Memory using the memory ID. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_memory.example
-  id = "MEMORY1234567890"
+  identity = {
+    id = "example_memory-5xKsqQHSWW"
+  }
+}
+
+resource "aws_bedrockagentcore_memory" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Memory using the memory ID. For example:
+### Identity Schema
+
+#### Required
+
+* `id` (String) Memory ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import memories using `id`. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_memory.example
+  id = "example_memory-5xKsqQHSWW"
+}
+```
+
+Using `terraform import`, import memories using `id`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_memory.example MEMORY1234567890
+% terraform import aws_bedrockagentcore_memory.example example_memory-5xKsqQHSWW
 ```

@@ -13,6 +13,7 @@ var (
 	ResourceCodeInterpreter          = newCodeInterpreterResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
+	ResourceGatewayRule              = newGatewayRuleResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
 	ResourceResourcePolicy           = newResourcePolicyResource
@@ -35,6 +36,7 @@ var (
 	FindCodeInterpreterByID              = findCodeInterpreterByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
+	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
 	FindGatewayTargetByTwoPartKey        = findGatewayTargetByTwoPartKey
 	FindMemoryByID                       = findMemoryByID
 	FindMemoryStrategyByTwoPartKey       = findMemoryStrategyByTwoPartKey
@@ -46,6 +48,7 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindRegistryByID                     = findRegistryByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
+	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
 )
 
 type (
@@ -53,9 +56,23 @@ type (
 	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
 	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
 	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
+	ExtractionConfigModel                  = extractionConfigModel
+	InvocationConfigurationModel           = invocationConfigurationModel
+	LLMExtractionConfigModel               = llmExtractionConfigModel
 	ManagedVPCResourceModel                = managedVPCResourceModel
+	MemoryRecordSchemaModel                = memoryRecordSchemaModel
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
+	MessageBasedTriggerModel               = messageBasedTriggerModel
+	MetadataSchemaEntryModel               = metadataSchemaEntryModel
+	NumberValidationModel                  = numberValidationModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel
+	SelfManagedConfigurationModel          = selfManagedConfigurationModel
 	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
+	StringListValidationModel              = stringListValidationModel
+	StringValidationModel                  = stringValidationModel
+	TimeBasedTriggerModel                  = timeBasedTriggerModel
+	TokenBasedTriggerModel                 = tokenBasedTriggerModel
+	TriggerConditionsModel                 = triggerConditionsModel
+	ValidationModel                        = validationModel
 )

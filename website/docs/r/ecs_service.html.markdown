@@ -297,7 +297,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
 * `file_system_type` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
 * `iops` - (Optional) Number of I/O operations per second (IOPS).
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `kms_key_id` - (Optional) ARN identifier of the Amazon Web Services KMS key to use for Amazon EBS encryption.
 * `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
@@ -461,7 +461,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `ingress_port_override` - (Optional) Port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
 * `timeout` - (Optional) Configuration timeouts for Service Connect
-* `tls` - (Optional) Configuration for enabling Transport Layer Security (TLS)
+* `tls` - (Optional) Configuration for enabling TLS
 
 ### `timeout` Block
 
@@ -515,7 +515,7 @@ The `value` configuration block supports the following:
 
 `tag_specifications` supports the following:
 
-* `propagate_tags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `propagate_tags` - (Optional) Whether to propagate the tags from the task definition to the Amazon EBS volume.
 * `resource_type` - (Required) Type of volume resource. Valid values, `volume`.
 * `tags` - (Optional) Tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
 

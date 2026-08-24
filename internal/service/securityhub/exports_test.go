@@ -14,6 +14,7 @@ var (
 	ResourceConfigurationPolicy            = resourceConfigurationPolicy
 	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
 	ResourceConnectorV2                    = newConnectorV2Resource
+	ResourceFeatureV2                      = newFeatureV2Resource
 	ResourceFindingAggregator              = resourceFindingAggregator
 	ResourceInsight                        = resourceInsight
 	ResourceInviteAccepter                 = resourceInviteAccepter
@@ -35,6 +36,7 @@ var (
 	FindConfigurationPolicyAssociationByID        = findConfigurationPolicyAssociationByID
 	FindConfigurationPolicyByID                   = findConfigurationPolicyByID
 	FindConnectorV2ByID                           = findConnectorV2ByID
+	FindFeatureV2ByName                           = findFeatureV2ByName
 	FindFindingAggregatorByARN                    = findFindingAggregatorByARN
 	FindHubByARN                                  = findHubByARN
 	FindInsightByARN                              = findInsightByARN

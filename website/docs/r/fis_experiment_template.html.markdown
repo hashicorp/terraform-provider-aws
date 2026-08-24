@@ -248,7 +248,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `cloudwatch_logs_configuration` Block
 
-* `log_group_arn` - (Required) Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group. The ARN must end with `:*`
+* `log_group_arn` - (Required) ARN of the destination Amazon CloudWatch Logs log group. The ARN must end with `:*`
 
 #### `log_configuration.s3_configuration` Block
 

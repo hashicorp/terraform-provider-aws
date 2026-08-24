@@ -57,19 +57,19 @@ func (l *pipelineListResource) List(ctx context.Context, request list.ListReques
 			name := aws.ToString(item.PipelineName)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
 
+			pipeline, err := findPipelineByName(ctx, conn, name)
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				return
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data pipelineResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				pipeline, err := findPipelineByName(ctx, conn, name)
-				if retry.NotFound(err) {
-					return
-				}
-				if err != nil {
-					result.Diagnostics.AddError("reading OpenSearch Ingestion Pipeline", err.Error())
-					return
-				}
-
 				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, pipeline, &data))
 				if result.Diagnostics.HasError() {
 					return

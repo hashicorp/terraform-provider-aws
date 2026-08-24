@@ -37,6 +37,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var validResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`),
+	`Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`,
+)
+
 // @FrameworkResource("aws_resiliencehubv2_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -47,7 +52,7 @@ func newPolicyResource(context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 type policyResource struct {
-	framework.ResourceWithModel[resourcePolicyModel]
+	framework.ResourceWithModel[policyResourceModel]
 	framework.WithImportByIdentity
 }
 
@@ -71,10 +76,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			names.AttrName: fwschema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`),
-						`Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`,
-					),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -179,7 +181,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 }
 
 func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourcePolicyModel
+	var plan policyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -187,6 +189,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	conn := r.Meta().ResilienceHubV2Client(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input resiliencehubv2.CreatePolicyInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -199,7 +202,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	output, err := conn.CreatePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -210,7 +213,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourcePolicyModel
+	var state policyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -239,7 +242,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourcePolicyModel
+	var plan, state policyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -275,14 +278,9 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 			input.MultiRegion = &awstypes.MultiRegionTargets{}
 		}
 
-		output, err := conn.UpdatePolicy(ctx, &input)
+		_, err := conn.UpdatePolicy(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output.Policy, &plan))
-		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -291,7 +289,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourcePolicyModel
+	var state policyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -312,10 +310,15 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *policyResource) flatten(ctx context.Context, policy *awstypes.Policy, data *resourcePolicyModel) diag.Diagnostics {
+func (r *policyResource) flatten(ctx context.Context, policy *awstypes.Policy, data *policyResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, policy, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	setTagsOut(ctx, policy.Tags)
 
 	return diags
 }
@@ -348,7 +351,7 @@ func findPolicy(ctx context.Context, conn *resiliencehubv2.Client, input *resili
 	return output.Policy, nil
 }
 
-type resourcePolicyModel struct {
+type policyResourceModel struct {
 	framework.WithRegionModel
 	AvailabilitySLO fwtypes.ListNestedObjectValueOf[availabilitySLOModel]     `tfsdk:"availability_slo"`
 	DataRecovery    fwtypes.ListNestedObjectValueOf[dataRecoveryTargetsModel] `tfsdk:"data_recovery"`

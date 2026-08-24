@@ -9,11 +9,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -47,8 +48,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes.Memory")
-// @Testing(generator="randomMemoryName(t)")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(preIdentityVersion="v6.60.0")
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
 
@@ -62,7 +65,7 @@ func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error
 type memoryResource struct {
 	framework.ResourceWithModel[memoryResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -96,7 +99,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -123,8 +126,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s._:/=+@-]*$`), ""),
+								validMemoryKey,
 							},
 						},
 						names.AttrType: schema.StringAttribute{
@@ -485,6 +487,16 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 	}
 
 	return findMemory(ctx, conn, &input)
+}
+
+func findMemoryByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryARN string) (*awstypes.Memory, error) {
+	parsedARN, err := arn.Parse(memoryARN)
+	if err != nil {
+		return nil, smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
+	}
+	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
+
+	return findMemoryByID(ctx, conn, memoryID)
 }
 
 func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetMemoryInput) (*awstypes.Memory, error) {

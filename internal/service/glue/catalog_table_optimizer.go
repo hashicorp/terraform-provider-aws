@@ -182,8 +182,9 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"strategy": schema.StringAttribute{
-													Optional: true,
-													Computed: true,
+													CustomType: fwtypes.StringEnumType[awstypes.CompactionStrategy](),
+													Optional:   true,
+													Computed:   true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.UseStateForUnknown(),
 													},
@@ -276,7 +277,7 @@ func (r *catalogTableOptimizerResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	plan.flatten(ctx, output.TableOptimizer, response.Diagnostics)
+	plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -317,7 +318,7 @@ func (r *catalogTableOptimizerResource) Read(ctx context.Context, request resour
 		return
 	}
 
-	data.flatten(ctx, output.TableOptimizer, response.Diagnostics)
+	data.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -376,7 +377,7 @@ func (r *catalogTableOptimizerResource) Update(ctx context.Context, request reso
 			return
 		}
 
-		plan.flatten(ctx, output.TableOptimizer, response.Diagnostics)
+		plan.flatten(ctx, output.TableOptimizer, &response.Diagnostics)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -446,7 +447,7 @@ func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
-func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *awstypes.TableOptimizer, diags diag.Diagnostics) {
+func (c *catalogTableOptimizerResourceModel) flatten(ctx context.Context, data *awstypes.TableOptimizer, diags *diag.Diagnostics) {
 	configuration, d := c.Configuration.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -478,11 +479,11 @@ type catalogTableOptimizerResourceModel struct {
 }
 
 type configurationData struct {
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 	Enabled                         types.Bool                                                           `tfsdk:"enabled"`
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
 	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
-	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 }
 
 type retentionConfigurationData struct {
@@ -511,9 +512,9 @@ type compactionConfigurationData struct {
 }
 
 type icebergCompactionConfigurationData struct {
-	Strategy            types.String `tfsdk:"strategy"`
-	MinInputFiles       types.Int32  `tfsdk:"min_input_files"`
-	DeleteFileThreshold types.Int32  `tfsdk:"delete_file_threshold"`
+	DeleteFileThreshold types.Int32                                     `tfsdk:"delete_file_threshold"`
+	MinInputFiles       types.Int32                                     `tfsdk:"min_input_files"`
+	Strategy            fwtypes.StringEnum[awstypes.CompactionStrategy] `tfsdk:"strategy"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
