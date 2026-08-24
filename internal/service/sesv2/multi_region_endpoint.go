@@ -30,8 +30,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -314,26 +312,4 @@ type detailsModel struct {
 
 type routeDetailsModel struct {
 	Region types.String `tfsdk:"region"`
-}
-
-func sweepMultiRegionEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sesv2.ListMultiRegionEndpointsInput{}
-	conn := client.SESV2Client(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := sesv2.NewListMultiRegionEndpointsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.MultiRegionEndpoints {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newMultiRegionEndpointResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.EndpointName))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
