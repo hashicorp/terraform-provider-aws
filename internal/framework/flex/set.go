@@ -14,6 +14,43 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
+// DiffSets returns the set difference a\b: elements present in a but absent in b.
+// Neither a nor b may be Unknown. A Null value is treated as an empty set.
+// The returned set uses the element type of a.
+func DiffSets(ctx context.Context, a, b types.Set) types.Set {
+	elemType := a.ElementType(ctx)
+
+	aElems := a.Elements()
+	if len(aElems) == 0 {
+		return types.SetValueMust(elemType, []attr.Value{})
+	}
+
+	bElems := b.Elements()
+	if len(bElems) == 0 {
+		return types.SetValueMust(elemType, aElems)
+	}
+
+	var diff []attr.Value
+	for _, av := range aElems {
+		inB := false
+		for _, bv := range bElems {
+			if av.Equal(bv) {
+				inB = true
+				break
+			}
+		}
+		if !inB {
+			diff = append(diff, av)
+		}
+	}
+
+	if diff == nil {
+		diff = []attr.Value{}
+	}
+
+	return types.SetValueMust(elemType, diff)
+}
+
 func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) inttypes.Set[string] {
 	return ExpandFrameworkStringyValueSet[string](ctx, v)
 }
