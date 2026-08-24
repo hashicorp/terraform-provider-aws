@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.66.7
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.42.7
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.44.7
-	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.33.6
+	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.61.6
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.69.1
 	github.com/aws/aws-sdk-go-v2/service/dax v1.33.1
