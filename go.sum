@@ -173,8 +173,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.57.8 h1:slbqS2zzNqIwevy
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.57.8/go.mod h1:rlNkaUtrgPjY0T6bvQbTveLCqHA41D26tS/6P4JbhZ8=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.68.7 h1:jDzYsSaTN5L7mBs++vJO7xrwmk1cf+XMC8wUMFJB9Sc=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.68.7/go.mod h1:eQTlWAkpbcHW0njwsAQzyyhIDyD6kW++PkaW3SNB2AE=
-github.com/aws/aws-sdk-go-v2/service/connect v1.189.0 h1:mVRv5stFyXj5rFhsXR0bCII4TAES8sMZYasXCc7PoQw=
-github.com/aws/aws-sdk-go-v2/service/connect v1.189.0/go.mod h1:bMdHPiwl0i0BZVO/5YE53nzNd4YMB9m4deKwAnrJuV8=
+github.com/aws/aws-sdk-go-v2/service/connect v1.189.1 h1:eo1Riz6eR7skdqXdwjDczApBH5GLUUtWjUueXL3g0OQ=
+github.com/aws/aws-sdk-go-v2/service/connect v1.189.1/go.mod h1:Jm9g8KVn0yIijWos1CDhmTO2H1UNesQLkBdK1Nq+Tmk=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.45.1 h1:9S/h2W4HavbevUdJH2stKpXnoDVnLPRPeQdjaU6O6pU=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.45.1/go.mod h1:u2ZpueOhgPIRIMoNDMmZ1kIj4FUO2kcU5+UcPeUZ+2I=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.32.1 h1:QudFW5WVjAja0wZb2YDYOiCcT7cWKvE+Gt4fdgl0Dkw=
