@@ -44,8 +44,11 @@ import (
 
 // @FrameworkResource("aws_dsql_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("identifier")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.61.0")
 // @Testing(generator=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
@@ -60,6 +63,7 @@ func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type clusterResource struct {
 	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -361,7 +365,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (r *clusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), request, response)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	// Set force_destroy to false on import to prevent accidental deletion
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)
