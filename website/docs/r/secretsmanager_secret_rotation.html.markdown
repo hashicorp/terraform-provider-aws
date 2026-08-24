@@ -58,6 +58,24 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 
 For more information about managed external secrets and partner-specific metadata requirements, see the [AWS documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) and [partner-specific guides](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html).
 
+### Disable Rotation for a Managed Secret
+
+When a secret is managed by AWS, such as an RDS master user password secret created via `manage_master_user_password`, rotation is enabled automatically. Set `rotation_enabled` to `false` (and omit `rotation_rules`) to turn that rotation off:
+
+```terraform
+resource "aws_db_instance" "example" {
+  # ...
+  manage_master_user_password = true
+}
+
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id        = aws_db_instance.example.master_user_secret[0].secret_arn
+  rotation_enabled = false
+}
+```
+
+~> **NOTE:** For Amazon Aurora and other clustered engines, rotation is finalized once a cluster instance is available, and AWS re-enables rotation if it is cancelled before then. Ensure this resource depends on the cluster instance (for example, with `depends_on = [aws_rds_cluster_instance.example]`) so the cancellation is applied after the instance is available. Destroying this resource does not re-enable the automatic rotation that AWS configured.
+
 ### Rotation Configuration
 
 To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
@@ -75,7 +93,8 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rotate_immediately` - (Optional) Whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotation_rules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
 * `rotation_lambda_arn` - (Optional) ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
-* `rotation_rules` - (Required) Structure that defines the rotation configuration for this secret. Defined below.
+* `rotation_enabled` - (Optional) Whether automatic rotation is enabled for the secret. Set to `false` to disable rotation on a secret whose rotation is otherwise managed by AWS (for example, an RDS master user password secret). When `false`, `rotation_rules` must be omitted. Defaults to enabled when `rotation_rules` is configured.
+* `rotation_rules` - (Optional) Structure that defines the rotation configuration for this secret. Required unless `rotation_enabled` is `false`. Defined below.
 * `secret_id` - (Required) Secret to which you want to add a new version. You can specify either the ARN or the friendly name of the secret. The secret must already exist.
 
 ### `rotation_rules` Block
@@ -94,7 +113,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the secret.
-* `rotation_enabled` - Whether automatic rotation is enabled for this secret.
 
 ## Import
 
