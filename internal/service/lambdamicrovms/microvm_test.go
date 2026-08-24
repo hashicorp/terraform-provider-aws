@@ -55,7 +55,7 @@ func TestAccLambdaMicroVMsMicroVM_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_network_connectors"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("idle_policy"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("image_arn"), checkImageARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("image_version"), knownvalue.StringExact("1.0")),
