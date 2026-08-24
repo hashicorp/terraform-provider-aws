@@ -108,6 +108,9 @@ func testAccMailManagerArchive_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Archive/tags/"),
@@ -157,6 +160,9 @@ func testAccMailManagerArchive_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Archive/tags/"),
@@ -200,6 +206,9 @@ func testAccMailManagerArchive_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Archive/tags/"),
@@ -231,6 +240,9 @@ func testAccMailManagerArchive_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -300,6 +312,7 @@ func testAccMailManagerArchive_Tags_null(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					"retention",
 				},
 			},
 		},
@@ -356,6 +369,7 @@ func testAccMailManagerArchive_Tags_emptyMap(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					"retention",
 				},
 			},
 		},
@@ -443,6 +457,9 @@ func testAccMailManagerArchive_Tags_addOnUpdate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -510,6 +527,9 @@ func testAccMailManagerArchive_Tags_EmptyTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Archive/tags/"),
@@ -541,6 +561,9 @@ func testAccMailManagerArchive_Tags_EmptyTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -645,6 +668,9 @@ func testAccMailManagerArchive_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Archive/tags/"),
@@ -688,6 +714,9 @@ func testAccMailManagerArchive_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -786,6 +815,9 @@ func testAccMailManagerArchive_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -850,6 +882,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -897,6 +932,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -940,6 +978,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -973,6 +1014,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1047,6 +1091,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1106,6 +1153,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1139,6 +1189,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1211,6 +1264,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1270,6 +1326,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1321,6 +1380,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1417,6 +1479,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_updateToProviderOnly(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1512,6 +1577,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_updateToResourceOnly(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1586,6 +1654,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1652,6 +1723,9 @@ func testAccMailManagerArchive_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1728,6 +1802,7 @@ func testAccMailManagerArchive_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					"retention",
 				},
 			},
 		},
@@ -1807,6 +1882,7 @@ func testAccMailManagerArchive_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
+					"retention",
 				},
 			},
 		},
@@ -1869,6 +1945,9 @@ func testAccMailManagerArchive_Tags_ComputedTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -1972,6 +2051,9 @@ func testAccMailManagerArchive_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
@@ -2065,6 +2147,9 @@ func testAccMailManagerArchive_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retention",
+				},
 			},
 		},
 	})
