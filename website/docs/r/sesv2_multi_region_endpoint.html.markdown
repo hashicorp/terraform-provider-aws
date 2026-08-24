@@ -15,14 +15,13 @@ Manages an AWS SESv2 (Simple Email V2) Multi Region Endpoint (global endpoint). 
 ### Basic Usage
 
 ```terraform
-data "aws_region" "secondary" {}
 
 resource "aws_sesv2_multi_region_endpoint" "example" {
   endpoint_name = "example"
 
   details {
     routes_details {
-      region = data.aws_region.secondary.name
+      region = "example-alternate-region"
     }
   }
 }
@@ -54,22 +53,5 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `delete` - (Default `30m`)
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 Multi Region Endpoints using the `endpoint_name`. For example:
-
-```terraform
-import {
-  to = aws_sesv2_multi_region_endpoint.example
-  id = "example"
-}
-```
-
-Using `terraform import`, import SESv2 Multi Region Endpoints using the `endpoint_name`. For example:
-
-```console
-% terraform import aws_sesv2_multi_region_endpoint.example example
-```
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)

@@ -6,18 +6,21 @@ package sesv2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -29,17 +32,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_sesv2_multi_region_endpoint", name="Multi Region Endpoint")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+// @NoImport
 func newMultiRegionEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &multiRegionEndpointResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -50,6 +57,7 @@ const (
 
 type multiRegionEndpointResource struct {
 	framework.ResourceWithModel[multiRegionEndpointResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -57,45 +65,31 @@ type multiRegionEndpointResource struct {
 func (r *multiRegionEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"endpoint_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"endpoint_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"endpoint_id":     framework.IDAttribute(),
+			"routes":          framework.ResourceComputedListOfObjectsAttribute[routeModel](ctx),
+			names.AttrTags:    tftags.TagsAttributeForceNew(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"routes": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[routeModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrRegion: schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
 			"details": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[detailsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"routes_details": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[routeDetailsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrRegion: schema.StringAttribute{
@@ -121,115 +115,75 @@ func (r *multiRegionEndpointResource) Schema(ctx context.Context, req resource.S
 func (r *multiRegionEndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SESV2Client(ctx)
 
-	var plan multiRegionEndpointResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	var data multiRegionEndpointResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	detailsList, d := plan.Details.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	var input sesv2.CreateMultiRegionEndpointInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var apiDetails *awstypes.Details
-	if len(detailsList) > 0 {
-		routesDetailsList, d2 := detailsList[0].RoutesDetails.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, d2)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		rd := make([]awstypes.RouteDetails, len(routesDetailsList))
-		for i, r := range routesDetailsList {
-			rd[i] = awstypes.RouteDetails{
-				Region: fwflex.StringFromFramework(ctx, r.Region),
-			}
-		}
-		apiDetails = &awstypes.Details{RoutesDetails: rd}
-	}
-
-	input := sesv2.CreateMultiRegionEndpointInput{
-		EndpointName: fwflex.StringFromFramework(ctx, plan.EndpointName),
-		Details:      apiDetails,
-	}
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateMultiRegionEndpoint(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, data.EndpointName.String())
 		return
 	}
 
-	plan.ID = plan.EndpointName
-	plan.EndpointID = fwflex.StringToFramework(ctx, out.EndpointId)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	ep, err := waitMultiRegionEndpointCreated(ctx, conn, plan.EndpointName.ValueString(), createTimeout)
+	endpoint, err := waitMultiRegionEndpointCreated(ctx, conn, data.EndpointName.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
 		return
 	}
-
-	plan.Status = fwtypes.StringEnumValue(ep.Status)
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, endpoint, &data))
+	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(r.Meta(), ctx, data.EndpointName.ValueString()))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
 
 func (r *multiRegionEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SESV2Client(ctx)
 
-	var state multiRegionEndpointResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	var data multiRegionEndpointResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findMultiRegionEndpointByName(ctx, conn, state.ID.ValueString())
+	out, err := findMultiRegionEndpointByName(ctx, conn, data.EndpointName.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
 		return
 	}
 
-	state.EndpointID = fwflex.StringToFramework(ctx, out.EndpointId)
-	state.EndpointName = fwflex.StringToFramework(ctx, out.EndpointName)
-	state.Status = fwtypes.StringEnumValue(out.Status)
-
-	routes := make([]routeModel, len(out.Routes))
-	for i, r := range out.Routes {
-		routes[i] = routeModel{
-			Region: fwflex.StringToFramework(ctx, r.Region),
-		}
-	}
-	var routesDiags diag.Diagnostics
-	state.Routes, routesDiags = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, routes)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, routesDiags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(r.Meta(), ctx, data.EndpointName.ValueString()))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *multiRegionEndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SESV2Client(ctx)
 
-	var state multiRegionEndpointResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	var data multiRegionEndpointResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := sesv2.DeleteMultiRegionEndpointInput{
-		EndpointName: state.ID.ValueStringPointer(),
+		EndpointName: data.EndpointName.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMultiRegionEndpoint(ctx, &input)
@@ -238,14 +192,13 @@ func (r *multiRegionEndpointResource) Delete(ctx context.Context, req resource.D
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitMultiRegionEndpointDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitMultiRegionEndpointDeleted(ctx, conn, data.EndpointName.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
 		return
 	}
 }
@@ -253,7 +206,6 @@ func (r *multiRegionEndpointResource) Delete(ctx context.Context, req resource.D
 const (
 	statusCreating = string(awstypes.StatusCreating)
 	statusReady    = string(awstypes.StatusReady)
-	statusFailed   = string(awstypes.StatusFailed)
 	statusDeleting = string(awstypes.StatusDeleting)
 )
 
@@ -329,12 +281,26 @@ func findMultiRegionEndpointByName(ctx context.Context, conn *sesv2.Client, name
 	return out, nil
 }
 
+// Helper function to build resource ARN (required to use ListTagsForResource) as the same is not returned by Get/CreateMultiRegionEndpoint
+func multiRegionEndpointARN(meta *conns.AWSClient, ctx context.Context, endpointName string) string {
+	return awsarn.ARN{
+		Partition: meta.Partition(ctx),
+		Service:   "ses",
+		Region:    meta.Region(ctx),
+		AccountID: meta.AccountID(ctx),
+		Resource:  fmt.Sprintf("multi-region-endpoint/%s", endpointName),
+	}.String()
+}
+
 type multiRegionEndpointResourceModel struct {
+	framework.WithRegionModel
+	ARN          types.String                                  `tfsdk:"arn"`
 	EndpointID   types.String                                  `tfsdk:"endpoint_id"`
 	EndpointName types.String                                  `tfsdk:"endpoint_name"`
 	Details      fwtypes.ListNestedObjectValueOf[detailsModel] `tfsdk:"details"`
 	Routes       fwtypes.ListNestedObjectValueOf[routeModel]   `tfsdk:"routes"`
-	Status       fwtypes.StringEnum[awstypes.Status]           `tfsdk:"status"`
+	Tags         tftags.Map                                    `tfsdk:"tags"`
+	TagsAll      tftags.Map                                    `tfsdk:"tags_all"`
 	Timeouts     timeouts.Value                                `tfsdk:"timeouts"`
 }
 
