@@ -473,8 +473,8 @@ github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.37.2 h1:ss2YMTx0Tb+aZDhjW
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.37.2/go.mod h1:Cdp0xQ6jTfIVo2FCAD/pFWfYWj8WHcuXDO0+3clNtLE=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.36.2 h1:oRm0IE8VDp96+Jb962uA0lMBizn9mzD46/W30JeTKJM=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.36.2/go.mod h1:+39wzLNewz3MoCjhdLvW5nJnmHVayJeTAckPE6vWQ0w=
-github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.26.5 h1:SDWDpFJNc4KoxeDNtxO6wthWP/H/VQ0Bm089Dz4nBJI=
-github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.26.5/go.mod h1:BIGkvRm+KT7FBinZECKqYPwTZx7A10q6kKnTX7Aohb4=
+github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.26.6 h1:7C0GQ7W8nvXQsjg5GxJ5hA/e97P52u804yaQf6CeATc=
+github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.26.6/go.mod h1:3PgIgqkr9nns4v9JU8Bwp2kyA8821f7L1LsDS4mhwnY=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.65.8 h1:kECfPNGc60Bkqgw4Hai4tSDOCJRUKKyfB4MJeJ290VM=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.65.8/go.mod h1:WtIKiMR9xRdOf5LM9MWqv4cYjtfQb90U42m7g5dhT68=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.39.1 h1:z19epGhnsl845Y00eSKDxX+9DkMuRI643WXZ4KaGdCQ=
