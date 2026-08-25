@@ -866,6 +866,14 @@ func regionalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[strin
 	return inttypes.RegionalParameterizedIdentity(attrs)
 }
 
+func regionalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
+	}
+	return inttypes.RegionalParameterizedIdentity(attrs)
+}
+
 func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -1252,6 +1260,26 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			expectedRegion: region,
 			expectError:    false,
 		},
+
+		"null value": {
+			identityAttrValues: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedIdentityAttrs: map[string]string{
+				"account_id": accountID,
+				"region":     region,
+				"name":       "a_name",
+			},
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+			},
+			expectedRegion: region,
+			expectError:    false,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -1373,6 +1401,14 @@ func globalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]
 		} else {
 			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
 		}
+	}
+	return inttypes.GlobalParameterizedIdentity(attrs)
+}
+
+func globalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
 	}
 	return inttypes.GlobalParameterizedIdentity(attrs)
 }
@@ -1681,6 +1717,24 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
+			},
+			expectError: false,
+		},
+
+		"null value": {
+			identityAttrValues: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: globalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedIdentityAttrs: map[string]string{
+				"account_id": accountID,
+				"name":       "a_name",
+			},
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
 			},
 			expectError: false,
 		},
