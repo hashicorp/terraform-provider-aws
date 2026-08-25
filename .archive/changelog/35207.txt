@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_finspace_kx_dataview: Increase default create, update, and delete timeouts to 4 hours
-```

@@ -339,7 +339,9 @@ func TestFlattenJSONInterfaceToStringTypable(t *testing.T) {
 		"non-json interface Source string Target": {
 			Source: awsInterfaceSingle{
 				Field1: &awsInterfaceInterfaceImpl{
-					AWSField: "value1",
+					Value: awsInterfaceInterfaceImplValue{
+						ImplField1: "value1",
+					},
 				},
 			},
 			Target: &tfSingleStringField{},

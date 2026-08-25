@@ -33,7 +33,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_user_access_logging_settings", name="User Access Logging Settings")
 // @Tags(identifierAttribute="user_access_logging_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserAccessLoggingSettings")
 // @Testing(importStateIdAttribute="user_access_logging_settings_arn")
 func newUserAccessLoggingSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {

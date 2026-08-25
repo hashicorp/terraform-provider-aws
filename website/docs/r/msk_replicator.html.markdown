@@ -88,7 +88,7 @@ This resource supports the following arguments:
 
 ### vpc_config Argument Reference
 
-* `subnet_ids` - (Required) The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
+* `subnet_ids` - (Required) List of subnets to connect to in the VPC. AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
 * `security_groups_ids` - (Required) The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.
 
 ### replication_info_list Argument Reference
@@ -112,6 +112,7 @@ This resource supports the following arguments:
 ### consumer_group_replication Argument Reference
 
 * `consumer_groups_to_replicate` - (Required) List of regular expression patterns indicating the consumer groups to copy.
+* `consumer_group_offset_sync_mode` - (Optional) Consumer group offset synchronization mode. Valid values are `LEGACY` and `ENHANCED`. With `LEGACY`, offsets are synchronized when producers write to the source cluster. With `ENHANCED`, consumer offsets are synchronized regardless of producer location. `ENHANCED` requires a corresponding replicator that replicates data from the target cluster to the source cluster and requires `topic_name_configuration.type` to be set to `IDENTICAL`. Defaults to `LEGACY`. Changing this value will force a new resource.
 * `consumer_groups_to_exclude` - (Optional) List of regular expression patterns indicating the consumer groups that should not be replicated.
 * `detect_and_copy_new_consumer_groups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchronise_consumer_group_offsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.

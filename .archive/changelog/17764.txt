@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_gamelift_build: Support all valid operating system values
-```

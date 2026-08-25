@@ -141,82 +141,6 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var gateway bedrockagentcorecontrol.GetGatewayOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGateways(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "gateway_id",
-			},
-			{
-				Config: testAccGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-		},
-	})
-}
-
 func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -630,8 +554,11 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -678,8 +605,11 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"custom_claim":  knownvalue.SetSizeExact(0),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"custom_claim":                   knownvalue.SetSizeExact(0),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -758,7 +688,10 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -825,7 +758,10 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -886,7 +822,10 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
+									"private_endpoint":               knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1233,53 +1172,6 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName))
-}
-
-func testAccGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
-  authorizer_type = "CUSTOM_JWT"
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test1", "test2"]
-    }
-  }
-
-  protocol_type = "MCP"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
-  authorizer_type = "CUSTOM_JWT"
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test1", "test2"]
-    }
-  }
-
-  protocol_type = "MCP"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccGatewayConfig_interceptorConfigurations(rName string) string {

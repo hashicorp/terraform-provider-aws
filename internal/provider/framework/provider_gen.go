@@ -27,6 +27,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// accountaccess
+
+				"accountaccess": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// acm
 
 				"acm": schema.StringAttribute{
@@ -37,6 +44,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// acmpca
 
 				"acmpca": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// agentregistry
+
+				"agentregistry": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -640,6 +654,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// directoryservicedata
+
+				"directoryservicedata": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dlm
 
 				"dlm": schema.StringAttribute{
@@ -1149,6 +1170,20 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdacore
+
+				"lambdacore": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// lambdamicrovms
+
+				"lambdamicrovms": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": schema.StringAttribute{
@@ -1243,6 +1278,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// macie2
 
 				"macie2": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mailmanager
+
+				"mailmanager": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1616,6 +1658,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// resiliencehub
 
 				"resiliencehub": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// resiliencehubv2
+
+				"resiliencehubv2": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

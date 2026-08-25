@@ -6,6 +6,7 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -27,8 +28,354 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const testAccGatewayTargetPolicySessionIDHeader = "x-amzn-bedrock-agentcore-policy-session-id"
+
 func testAccGatewayTargetImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id")
+}
+
+// skipIfKnowledgeBaseIDEnvVarNotSet skips the test unless
+// TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID is set to the ID of an ACTIVE Bedrock
+// knowledge base in the test account/region. The connector "bedrock-knowledge-
+// bases" requires entitlement plus a real KB the gateway role can call
+// bedrock:Retrieve on — there is no offline way to fake either, so the live
+// connector test is gated behind this env var (mirroring the OSS-collection
+// and Kendra-index gating in internal/service/bedrockagent/knowledge_base_test.go).
+func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+	return acctest.SkipIfEnvVarNotSet(t, "TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID")
+}
+
+func TestNormalizeGatewayTargetOutputForState(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		metadataConfiguration         *awstypes.MetadataConfiguration
+		preserveEmptyMetadata         bool
+		expectedMetadataConfiguration *awstypes.MetadataConfiguration
+	}{
+		"no implicit header": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{"x-correlation-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{"x-correlation-id"},
+			},
+		},
+		"implicit header removed": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedQueryParameters: []string{names.AttrVersion},
+				AllowedRequestHeaders:  []string{"x-correlation-id", testAccGatewayTargetPolicySessionIDHeader},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedQueryParameters: []string{names.AttrVersion},
+				AllowedRequestHeaders:  []string{"x-correlation-id"},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+		},
+		"all case-insensitive occurrences removed": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{
+					"X-Amzn-Bedrock-AgentCore-Policy-Session-Id",
+					testAccGatewayTargetPolicySessionIDHeader,
+				},
+			},
+			preserveEmptyMetadata: true,
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{},
+			},
+		},
+		"service-created metadata removed when empty": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{testAccGatewayTargetPolicySessionIDHeader},
+			},
+			expectedMetadataConfiguration: nil,
+		},
+		"configured empty metadata preserved": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{testAccGatewayTargetPolicySessionIDHeader},
+			},
+			preserveEmptyMetadata: true,
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders: []string{},
+			},
+		},
+		"other metadata preserves service-created object": {
+			metadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders:  []string{testAccGatewayTargetPolicySessionIDHeader},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+			expectedMetadataConfiguration: &awstypes.MetadataConfiguration{
+				AllowedRequestHeaders:  []string{},
+				AllowedResponseHeaders: []string{"x-response-id"},
+			},
+		},
+	}
+
+	if got := tfbedrockagentcore.NormalizeGatewayTargetOutputForState(nil, false); got != nil {
+		t.Fatalf("expected nil output, got %#v", got)
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			originalRequestHeaders := append([]string(nil), testCase.metadataConfiguration.AllowedRequestHeaders...)
+			input := &bedrockagentcorecontrol.GetGatewayTargetOutput{
+				MetadataConfiguration: testCase.metadataConfiguration,
+			}
+
+			got := tfbedrockagentcore.NormalizeGatewayTargetOutputForState(input, testCase.preserveEmptyMetadata)
+
+			if diff := cmp.Diff(originalRequestHeaders, input.MetadataConfiguration.AllowedRequestHeaders); diff != "" {
+				t.Errorf("input mutated (-before, +after):\n%s", diff)
+			}
+			if (got.MetadataConfiguration == nil) != (testCase.expectedMetadataConfiguration == nil) {
+				t.Fatalf("unexpected metadata configuration: got %#v, expected %#v", got.MetadataConfiguration, testCase.expectedMetadataConfiguration)
+			}
+			if got.MetadataConfiguration == nil {
+				return
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedQueryParameters, got.MetadataConfiguration.AllowedQueryParameters); diff != "" {
+				t.Errorf("unexpected allowed query parameters (-want, +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedRequestHeaders, got.MetadataConfiguration.AllowedRequestHeaders); diff != "" {
+				t.Errorf("unexpected allowed request headers (-want, +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(testCase.expectedMetadataConfiguration.AllowedResponseHeaders, got.MetadataConfiguration.AllowedResponseHeaders); diff != "" {
+				t.Errorf("unexpected allowed response headers (-want, +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.PrivateEndpointMemberManagedVpcResource{},
+		awstypes.ManagedVpcResource{},
+		awstypes.PrivateEndpointMemberSelfManagedLatticeResource{},
+		awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
+	)
+	testCases := map[string]struct {
+		model    tfbedrockagentcore.PrivateEndpointModel
+		expected awstypes.PrivateEndpoint
+	}{
+		"Simple ManagedVPCResource": {
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringNull(),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags:                  tftags.NewMapValueNull(),
+					VPCIdentifier:         types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SubnetIds:             []string{"sn1", "sn2"},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+		},
+		"Full ManagedVPCResource no tags": {
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringValue("rd1"),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags:                  tftags.NewMapValueNull(),
+					VPCIdentifier:         types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					RoutingDomain:         aws.String("rd1"),
+					SecurityGroupIds:      []string{"sg1"},
+					SubnetIds:             []string{"sn1", "sn2"},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+		},
+		"ManagedVPCResource tags": {
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringNull(),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
+						acctest.CtKey1: acctest.CtValue1,
+						acctest.CtKey2: acctest.CtValue2,
+					})),
+					VPCIdentifier: types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SubnetIds:             []string{"sn1", "sn2"},
+					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+		},
+		"Simple SelfManagedLatticeResource": {
+			model: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
+					ResourceConfigurationIdentifier: types.StringValue("rc1"),
+				}),
+			},
+			expected: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rc1",
+				},
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			switch testCase.expected.(type) {
+			case *awstypes.PrivateEndpointMemberManagedVpcResource:
+				var got awstypes.PrivateEndpointMemberManagedVpcResource
+				diags := fwflex.Expand(ctx, testCase.model, &got)
+				if diags.HasError() {
+					t.Fatalf("unexpected error: %s", diags[0].Summary())
+				}
+				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			case *awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
+				var got awstypes.PrivateEndpointMemberSelfManagedLatticeResource
+				diags := fwflex.Expand(ctx, testCase.model, &got)
+				if diags.HasError() {
+					t.Fatalf("unexpected error: %s", diags[0].Summary())
+				}
+				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	testCases := map[string]struct {
+		apiObject awstypes.PrivateEndpoint
+		expected  tfbedrockagentcore.PrivateEndpointModel
+	}{
+		"Simple ManagedVPCResource": {
+			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SubnetIds:             []string{"sn1", "sn2"},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringNull(),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags:                  tftags.NewMapValueNull(),
+					VPCIdentifier:         types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+		},
+		"Full ManagedVPCResource no tags": {
+			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					RoutingDomain:         aws.String("rd1"),
+					SecurityGroupIds:      []string{"sg1"},
+					SubnetIds:             []string{"sn1", "sn2"},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringValue("rd1"),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags:                  tftags.NewMapValueNull(),
+					VPCIdentifier:         types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+		},
+		"ManagedVPCResource tags": {
+			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
+				Value: awstypes.ManagedVpcResource{
+					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
+					SubnetIds:             []string{"sn1", "sn2"},
+					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
+					VpcIdentifier:         aws.String("vpc1"),
+				},
+			},
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
+					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
+					RoutingDomain:         types.StringNull(),
+					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
+					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
+					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
+						acctest.CtKey1: acctest.CtValue1,
+						acctest.CtKey2: acctest.CtValue2,
+					})),
+					VPCIdentifier: types.StringValue("vpc1"),
+				}),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
+			},
+		},
+		"Simple SelfManagedLatticeResource": {
+			apiObject: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
+				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
+					Value: "rc1",
+				},
+			},
+			expected: tfbedrockagentcore.PrivateEndpointModel{
+				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
+				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
+					ResourceConfigurationIdentifier: types.StringValue("rc1"),
+				}),
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got tfbedrockagentcore.PrivateEndpointModel
+			diags := fwflex.Flatten(ctx, testCase.apiObject, &got)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary())
+			}
+			if diff := cmp.Diff(got, testCase.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
@@ -338,6 +685,43 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerListingMod
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServerToolSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationMCPServerToolSchema(rName, "https://knowledge-mcp.global.api.aws", 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.endpoint", "https://knowledge-mcp.global.api.aws"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.resource_priority", "500"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.0.inline_payload.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.mcp.0.mcp_server.0.mcp_tool_schema.0.inline_payload.0.payload"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -836,6 +1220,78 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_policySessionHeader(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNamePolicyEngine := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	metadataConfiguration := `
+  metadata_configuration {
+    allowed_request_headers = ["x-correlation-id", "x-tenant-id"]
+  }
+`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetHasRequestHeader(&gatewayTarget, testAccGatewayTargetPolicySessionIDHeader),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, metadataConfiguration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetHasRequestHeader(&gatewayTarget, testAccGatewayTargetPolicySessionIDHeader),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-correlation-id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-tenant-id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				Config: testAccGatewayTargetConfig_policySessionHeaderDetached(rName, rNamePolicyEngine, metadataConfiguration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-correlation-id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "metadata_configuration.0.allowed_request_headers.*", "x-tenant-id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -880,234 +1336,6 @@ func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t
 			},
 		},
 	})
-}
-
-func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexExpand(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	ignoreExportedOpts := cmpopts.IgnoreUnexported(
-		awstypes.PrivateEndpointMemberManagedVpcResource{},
-		awstypes.ManagedVpcResource{},
-		awstypes.PrivateEndpointMemberSelfManagedLatticeResource{},
-		awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{},
-	)
-	testCases := map[string]struct {
-		model    tfbedrockagentcore.PrivateEndpointModel
-		expected awstypes.PrivateEndpoint
-	}{
-		"Simple ManagedVPCResource": {
-			model: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringNull(),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags:                  tftags.NewMapValueNull(),
-					VPCIdentifier:         types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					SubnetIds:             []string{"sn1", "sn2"},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-		},
-		"Full ManagedVPCResource no tags": {
-			model: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringValue("rd1"),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags:                  tftags.NewMapValueNull(),
-					VPCIdentifier:         types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					RoutingDomain:         aws.String("rd1"),
-					SecurityGroupIds:      []string{"sg1"},
-					SubnetIds:             []string{"sn1", "sn2"},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-		},
-		"ManagedVPCResource tags": {
-			model: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringNull(),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
-						acctest.CtKey1: acctest.CtValue1,
-						acctest.CtKey2: acctest.CtValue2,
-					})),
-					VPCIdentifier: types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-			expected: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					SubnetIds:             []string{"sn1", "sn2"},
-					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-		},
-		"Simple SelfManagedLatticeResource": {
-			model: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
-					ResourceConfigurationIdentifier: types.StringValue("rc1"),
-				}),
-			},
-			expected: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
-				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
-					Value: "rc1",
-				},
-			},
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			switch testCase.expected.(type) {
-			case *awstypes.PrivateEndpointMemberManagedVpcResource:
-				var got awstypes.PrivateEndpointMemberManagedVpcResource
-				diags := fwflex.Expand(ctx, testCase.model, &got)
-				if diags.HasError() {
-					t.Fatalf("unexpected error: %s", diags[0].Summary())
-				}
-				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-				}
-			case *awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
-				var got awstypes.PrivateEndpointMemberSelfManagedLatticeResource
-				diags := fwflex.Expand(ctx, testCase.model, &got)
-				if diags.HasError() {
-					t.Fatalf("unexpected error: %s", diags[0].Summary())
-				}
-				if diff := cmp.Diff(&got, testCase.expected, ignoreExportedOpts); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-				}
-			}
-		})
-	}
-}
-
-func TestBedrockAgentCoreGatewayTargetPrivateEndpointAutoFlexFlatten(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	testCases := map[string]struct {
-		apiObject awstypes.PrivateEndpoint
-		expected  tfbedrockagentcore.PrivateEndpointModel
-	}{
-		"Simple ManagedVPCResource": {
-			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					SubnetIds:             []string{"sn1", "sn2"},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-			expected: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringNull(),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags:                  tftags.NewMapValueNull(),
-					VPCIdentifier:         types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-		},
-		"Full ManagedVPCResource no tags": {
-			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					RoutingDomain:         aws.String("rd1"),
-					SecurityGroupIds:      []string{"sg1"},
-					SubnetIds:             []string{"sn1", "sn2"},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-			expected: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringValue("rd1"),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sg1"}),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags:                  tftags.NewMapValueNull(),
-					VPCIdentifier:         types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-		},
-		"ManagedVPCResource tags": {
-			apiObject: &awstypes.PrivateEndpointMemberManagedVpcResource{
-				Value: awstypes.ManagedVpcResource{
-					EndpointIpAddressType: awstypes.EndpointIpAddressTypeIpv4,
-					SubnetIds:             []string{"sn1", "sn2"},
-					Tags:                  map[string]string{acctest.CtKey1: acctest.CtValue1, acctest.CtKey2: acctest.CtValue2},
-					VpcIdentifier:         aws.String("vpc1"),
-				},
-			},
-			expected: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ManagedVPCResourceModel{
-					EndpointIPAddressType: fwtypes.StringEnumValue(awstypes.EndpointIpAddressTypeIpv4),
-					RoutingDomain:         types.StringNull(),
-					SecurityGroupIDs:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, nil),
-					SubnetIDs:             fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"sn1", "sn2"}),
-					Tags: tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, map[string]string{
-						acctest.CtKey1: acctest.CtValue1,
-						acctest.CtKey2: acctest.CtValue2,
-					})),
-					VPCIdentifier: types.StringValue("vpc1"),
-				}),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedLatticeResourceModel](ctx),
-			},
-		},
-		"Simple SelfManagedLatticeResource": {
-			apiObject: &awstypes.PrivateEndpointMemberSelfManagedLatticeResource{
-				Value: &awstypes.SelfManagedLatticeResourceMemberResourceConfigurationIdentifier{
-					Value: "rc1",
-				},
-			},
-			expected: tfbedrockagentcore.PrivateEndpointModel{
-				ManagedVPCResource: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ManagedVPCResourceModel](ctx),
-				SelfManagedLatticeResource: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedLatticeResourceModel{
-					ResourceConfigurationIdentifier: types.StringValue("rc1"),
-				}),
-			},
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			var got tfbedrockagentcore.PrivateEndpointModel
-			diags := fwflex.Flatten(ctx, testCase.apiObject, &got)
-			if diags.HasError() {
-				t.Fatalf("unexpected error: %s", diags[0].Summary())
-			}
-			if diff := cmp.Diff(got, testCase.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
 }
 
 func TestAccBedrockAgentCoreGatewayTarget_privateEndpointManagedVPC(t *testing.T) {
@@ -1204,6 +1432,222 @@ func TestAccBedrockAgentCoreGatewayTarget_privateEndpointWithRoutingDomain(t *te
 	})
 }
 
+// TestAccBedrockAgentCoreGatewayTarget_mcpToolSchemaValidation confirms the new
+// mcp_tool_schema/resource_priority validators reject out-of-range priorities, an
+// empty inline payload, and an s3 source without a uri at plan time. These
+// previously passed validation and failed mid-apply with raw API ValidationExceptions.
+func TestAccBedrockAgentCoreGatewayTarget_mcpToolSchemaValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaPriority(rName, 2000),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaPriority(rName, -5),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaEmptyPayload(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Value Length"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpToolSchemaS3NoURI(rName),
+				ExpectError: regexache.MustCompile("Missing required argument"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector exercises
+// the connector MCP target with a LIVE create against the "bedrock-knowledge-
+// bases" connector and a real Bedrock knowledge base. The KB id is supplied
+// via the TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID environment variable; the test is
+// skipped when it is unset. The gateway execution role is granted
+// bedrock:Retrieve on the KB ARN — without it, CreateGatewayTarget fails with
+// "Insufficient permissions to validate the specified resource."
+//
+// The connector's contract was confirmed by probing CreateGatewayTarget
+// directly: the only valid configuration name is "Retrieve", its only
+// recognized parameter is "knowledgeBaseId" (e.g. "numberOfResults" is
+// rejected), and the connector's Retrieve tool requires a MANAGED-type
+// knowledge base — a VECTOR KB fails with "Retrieve is not supported for this
+// knowledge base type". So the supplied KB id must belong to a MANAGED (fully
+// managed) knowledge base. The gateway execution role needs both
+// bedrock:Retrieve and bedrock:GetKnowledgeBase on the KB (the connector
+// validation calls GetKnowledgeBase to inspect the KB type). A time_sleep
+// guards against the freshly-created inline policy not yet having propagated
+// when the target is validated.
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "Retrieve"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters
+// is a focused plan-only test for the `parameter_values` JSON round-trip and
+// `parameter_overrides` block. Kept separate from the main connector test so
+// the parameter-handling code paths are easy to target in isolation when
+// `parameter_values` semantics evolve. Plan-only for the same reason as the
+// main connector test — see its doc comment.
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation confirms the mcp
+// target union requires exactly one member and credential_provider_configuration
+// requires at least one provider, both at plan time. Previously setting multiple mcp
+// members silently dropped all but the first (perpetual diff) and an empty
+// credential_provider_configuration {} only failed at apply.
+func TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_mcpMultipleMembers(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_mcpNoMember(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_credentialEmpty(rName),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
+			},
+		},
+	})
+}
+
+// TestAccBedrockAgentCoreGatewayTarget_descriptionClearing verifies that
+// removing the optional description on update converges to an empty plan.
+// description is plain Optional (not Computed), so the set->unset transition
+// must leave no perpetual diff or "inconsistent result after apply".
+func TestAccBedrockAgentCoreGatewayTarget_descriptionClearing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: create with description set.
+			{
+				Config: testAccGatewayTargetConfig_description(rName, "initial description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Step 2: identical config with description removed; must converge.
+			{
+				Config: testAccGatewayTargetConfig_descriptionRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -1249,7 +1693,26 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
+func testAccCheckGatewayTargetHasRequestHeader(v *bedrockagentcorecontrol.GetGatewayTargetOutput, expected string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if v.MetadataConfiguration == nil {
+			return fmt.Errorf("expected metadata configuration")
+		}
+		for _, header := range v.MetadataConfiguration.AllowedRequestHeaders {
+			if strings.EqualFold(header, expected) {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("expected request header %q, got %v", expected, v.MetadataConfiguration.AllowedRequestHeaders)
+	}
+}
+
 func testAccGatewayTargetConfig_base(rName string) string {
+	return testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, "")
+}
+
+func testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, gatewayConfiguration string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -1331,8 +1794,48 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 
   protocol_type = "MCP"
+%[2]s
 }
-`, rName)
+`, rName, gatewayConfiguration)
+}
+
+func testAccGatewayTargetConfig_baseWithPolicyEngine(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithGatewayConfiguration(rName, `
+  policy_engine_configuration {
+    arn  = aws_bedrockagentcore_policy_engine.test.policy_engine_arn
+    mode = "LOG_ONLY"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.policy_engine]
+`),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "policy_engine" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
+}
+`, rNamePolicyEngine),
+	)
+}
+
+func testAccGatewayTargetConfig_baseWithDetachedPolicyEngine(rName, rNamePolicyEngine string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_policy_engine" "test" {
+  name = %[1]q
+}
+
+resource "aws_iam_role_policy_attachment" "policy_engine" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreFullAccess"
+}
+`, rNamePolicyEngine),
+	)
 }
 
 func testAccGatewayTargetConfig_basic(rName string) string {
@@ -1632,6 +2135,35 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, endpoint, listingMode))
 }
 
+func testAccGatewayTargetConfig_targetConfigurationMCPServerToolSchema(rName, endpoint string, resourcePriority int) string {
+	toolSchema := `{"tools":[{"name":"echo","description":"Echoes input","inputSchema":{"type":"object","properties":{"message":{"type":"string"}},"required":["message"]}}]}`
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+%[5]s
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint          = %[2]q
+        resource_priority = %[3]d
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = %[4]q
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, endpoint, resourcePriority, toolSchema, testAccCredentialProvider_oauth()))
+}
+
 func testAccSchema_primitive() string {
 	return `
 			type        = "string"
@@ -1878,6 +2410,38 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGatewayTargetConfig_policySessionHeader(rName, rNamePolicyEngine, metadataConfiguration string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithPolicyEngine(rName, rNamePolicyEngine),
+		testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration),
+	)
+}
+
+func testAccGatewayTargetConfig_policySessionHeaderDetached(rName, rNamePolicyEngine, metadataConfiguration string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayTargetConfig_baseWithDetachedPolicyEngine(rName, rNamePolicyEngine),
+		testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration),
+	)
+}
+
+func testAccGatewayTargetConfig_policySessionHeaderTarget(rName, metadataConfiguration string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+%[2]s
+}
+`, rName, metadataConfiguration)
 }
 
 func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
@@ -2366,111 +2930,84 @@ resource "aws_route_table_association" "test" {
 `, rName, subnetCount))
 }
 
-// skipIfKnowledgeBaseIDEnvVarNotSet skips the test unless
-// TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID is set to the ID of an ACTIVE Bedrock
-// knowledge base in the test account/region. The connector "bedrock-knowledge-
-// bases" requires entitlement plus a real KB the gateway role can call
-// bedrock:Retrieve on — there is no offline way to fake either, so the live
-// connector test is gated behind this env var (mirroring the OSS-collection
-// and Kendra-index gating in internal/service/bedrockagent/knowledge_base_test.go).
-func skipIfKnowledgeBaseIDEnvVarNotSet(t *testing.T) string {
-	t.Helper()
-	return acctest.SkipIfEnvVarNotSet(t, "TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID")
+func testAccGatewayTargetConfig_mcpToolSchemaPriority(rName string, priority int) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint          = "https://example.com/mcp"
+        resource_priority = %[2]d
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = "{\"tools\":[]}"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, priority))
 }
 
-// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector exercises
-// the connector MCP target with a LIVE create against the "bedrock-knowledge-
-// bases" connector and a real Bedrock knowledge base. The KB id is supplied
-// via the TF_AWS_BEDROCK_KNOWLEDGE_BASE_ID environment variable; the test is
-// skipped when it is unset. The gateway execution role is granted
-// bedrock:Retrieve on the KB ARN — without it, CreateGatewayTarget fails with
-// "Insufficient permissions to validate the specified resource."
-//
-// The connector's contract was confirmed by probing CreateGatewayTarget
-// directly: the only valid configuration name is "Retrieve", its only
-// recognized parameter is "knowledgeBaseId" (e.g. "numberOfResults" is
-// rejected), and the connector's Retrieve tool requires a MANAGED-type
-// knowledge base — a VECTOR KB fails with "Retrieve is not supported for this
-// knowledge base type". So the supplied KB id must belong to a MANAGED (fully
-// managed) knowledge base. The gateway execution role needs both
-// bedrock:Retrieve and bedrock:GetKnowledgeBase on the KB (the connector
-// validation calls GetKnowledgeBase to inspect the KB type). A time_sleep
-// guards against the freshly-created inline policy not yet having propagated
-// when the target is validated.
-func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnector(t *testing.T) {
-	ctx := acctest.Context(t)
-	kbID := skipIfKnowledgeBaseIDEnvVarNotSet(t)
-	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
+func testAccGatewayTargetConfig_mcpToolSchemaEmptyPayload(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
-			},
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayTargetConfig_targetConfigurationConnectorLive(rName, kbID),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.source.0.connector_id", "bedrock-knowledge-bases"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.connector.0.configurations.0.name", "Retrieve"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "target_id",
-			},
-		},
-	})
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+
+        mcp_tool_schema {
+          inline_payload {
+            payload = ""
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
 }
 
-// TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters
-// is a focused plan-only test for the `parameter_values` JSON round-trip and
-// `parameter_overrides` block. Kept separate from the main connector test so
-// the parameter-handling code paths are easy to target in isolation when
-// `parameter_values` semantics evolve. Plan-only for the same reason as the
-// main connector test — see its doc comment.
-func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+func testAccGatewayTargetConfig_mcpToolSchemaS3NoURI(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
+  credential_provider_configuration {
+    gateway_iam_role {}
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+
+        mcp_tool_schema {
+          s3 {}
+        }
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, connectorID, toolName string) string {
@@ -2580,40 +3117,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, kbID))
 }
 
-// TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation confirms the mcp
-// target union requires exactly one member and credential_provider_configuration
-// requires at least one provider, both at plan time. Previously setting multiple mcp
-// members silently dropped all but the first (perpetual diff) and an empty
-// credential_provider_configuration {} only failed at apply.
-func TestAccBedrockAgentCoreGatewayTarget_mcpAndCredentialValidation(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGatewayTargetConfig_mcpMultipleMembers(rName),
-				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
-			},
-			{
-				Config:      testAccGatewayTargetConfig_mcpNoMember(rName),
-				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
-			},
-			{
-				Config:      testAccGatewayTargetConfig_credentialEmpty(rName),
-				ExpectError: regexache.MustCompile("Invalid Attribute Combination"),
-			},
-		},
-	})
-}
-
 func testAccGatewayTargetConfig_mcpMultipleMembers(rName string) string {
 	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test" {
@@ -2674,56 +3177,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName))
-}
-
-// TestAccBedrockAgentCoreGatewayTarget_descriptionClearing verifies that
-// removing the optional description on update converges to an empty plan.
-// description is plain Optional (not Computed), so the set->unset transition
-// must leave no perpetual diff or "inconsistent result after apply".
-func TestAccBedrockAgentCoreGatewayTarget_descriptionClearing(t *testing.T) {
-	ctx := acctest.Context(t)
-	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			// Step 1: create with description set.
-			{
-				Config: testAccGatewayTargetConfig_description(rName, "initial description"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			// Step 2: identical config with description removed; must converge.
-			{
-				Config: testAccGatewayTargetConfig_descriptionRemoved(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-			},
-		},
-	})
 }
 
 // testAccGatewayTargetConfig_description and _descriptionRemoved are an

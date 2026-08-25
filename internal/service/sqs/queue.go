@@ -300,6 +300,12 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
+	return resourceQueueFlatten(d, output)
+}
+
+func resourceQueueFlatten(d *schema.ResourceData, output map[types.QueueAttributeName]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	name, err := queueNameFromURL(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

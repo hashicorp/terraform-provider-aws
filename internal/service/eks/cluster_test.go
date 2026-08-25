@@ -76,6 +76,9 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity.0.oidc.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "identity.0.oidc.0.issuer", regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "kube_api_server_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kube_controller_manager_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kube_scheduler_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
@@ -1811,6 +1814,196 @@ func TestAccEKSCluster_deletionProtection(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_kubeAPIServerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_kubeAPIServerConfig(rName, "30m", 30000, 32767),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_api_server_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"event_ttl": knownvalue.StringExact("30m"),
+						"service_node_port_range": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"min_port": knownvalue.Int64Exact(30000),
+							"max_port": knownvalue.Int64Exact(32767),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_kubeAPIServerConfig(rName, "45m", 30100, 32767),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_api_server_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"event_ttl": knownvalue.StringExact("45m"),
+						"service_node_port_range": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"min_port": knownvalue.Int64Exact(30100),
+							"max_port": knownvalue.Int64Exact(32767),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_kubeSchedulerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_kubeSchedulerConfig(rName, "LeastAllocated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_scheduler_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"node_resources_fit": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"scoring_strategy": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrType: tfknownvalue.StringExact(types.ScoringStrategyTypeLeastAllocated),
+								"resource": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									acctest.CtName:   knownvalue.StringExact("cpu"),
+									names.AttrWeight: knownvalue.Int64Exact(1),
+								})}),
+							})}),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_kubeSchedulerConfig(rName, "MostAllocated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_scheduler_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"node_resources_fit": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"scoring_strategy": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrType: tfknownvalue.StringExact(types.ScoringStrategyTypeMostAllocated),
+								"resource": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									acctest.CtName:   knownvalue.StringExact("cpu"),
+									names.AttrWeight: knownvalue.Int64Exact(1),
+								})}),
+							})}),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_kubeControllerManagerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "10s"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_controller_manager_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"horizontal_pod_autoscaler_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"horizontal_pod_autoscaler_sync_period": knownvalue.StringExact("10s"),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_kubeControllerManagerConfig(rName, "13s"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kube_controller_manager_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"horizontal_pod_autoscaler_controller_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"horizontal_pod_autoscaler_sync_period": knownvalue.StringExact("13s"),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterExists(ctx context.Context, t *testing.T, n string, v *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2962,4 +3155,81 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, tier))
+}
+
+func testAccClusterConfig_kubeAPIServerConfig(rName, eventTTL string, minPort, maxPort int) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  kube_api_server_config {
+    event_ttl = %[2]q
+
+    service_node_port_range {
+      min_port = %[3]d
+      max_port = %[4]d
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, eventTTL, minPort, maxPort))
+}
+
+func testAccClusterConfig_kubeSchedulerConfig(rName, strategyType string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  kube_scheduler_config {
+    node_resources_fit {
+      scoring_strategy {
+        type = %[2]q
+
+        resource {
+          name   = "cpu"
+          weight = 1
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, strategyType))
+}
+
+func testAccClusterConfig_kubeControllerManagerConfig(rName, syncPeriod string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  control_plane_scaling_config {
+    tier = "tier-xl"
+  }
+
+  kube_controller_manager_config {
+    horizontal_pod_autoscaler_controller_config {
+      horizontal_pod_autoscaler_sync_period = %[2]q
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, syncPeriod))
 }

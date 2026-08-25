@@ -1,3 +1,0 @@
-```release-note:bug
-data-source/aws_appstream_image: Fix issue where the most recent image is not returned
-```

@@ -48,7 +48,7 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PEM }}
 
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github/actions/
 
@@ -107,7 +107,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github/actions/
 
@@ -126,7 +126,7 @@ jobs:
         if: |
           steps.community_check.outputs.maintainer == 'true'
           && github.actor != 'dependabot[bot]'
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -145,7 +145,7 @@ jobs:
 
       - name: New Partner Pull Request
         if: steps.community_check.outputs.partner == 'true'
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -164,7 +164,7 @@ jobs:
 
       - name: Crashes and Regressions
         if: github.event.label.name == 'regression' || github.event.label.name == 'crash'
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -203,7 +203,7 @@ jobs:
 
       - name: Pull Request Merged
         if: github.event.pull_request.merged
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         env:
           MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
           MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
@@ -241,7 +241,7 @@ jobs:
 
       - name: Release Tag
         if: github.event_name == 'push'
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

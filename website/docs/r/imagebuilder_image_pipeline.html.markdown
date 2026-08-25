@@ -66,18 +66,18 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
 The following arguments are required:
 
-* `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
+* `infrastructure_configuration_arn` - (Required) ARN of the Image Builder Infrastructure Configuration.
 * `name` - (Required) Name of the image pipeline.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `container_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the container recipe.
+* `container_recipe_arn` - (Optional) ARN of the container recipe.
 * `description` - (Optional) Description of the image pipeline.
-* `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
+* `distribution_configuration_arn` - (Optional) ARN of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
-* `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
-* `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
+* `execution_role` - (Optional) ARN of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
+* `image_recipe_arn` - (Optional) ARN of the image recipe.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
@@ -134,7 +134,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `workflow_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
+* `workflow_arn` - (Required) ARN of the Image Builder Workflow.
 
 The following arguments are optional:
 
@@ -154,8 +154,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the image pipeline.
-* `arn` - Amazon Resource Name (ARN) of the image pipeline.
+* `id` - ARN of the image pipeline.
+* `arn` - ARN of the image pipeline.
 * `date_created` - Date the image pipeline was created.
 * `date_last_run` - Date the image pipeline was last run.
 * `date_next_run` - Date the image pipeline will run next.
@@ -184,9 +184,9 @@ resource "aws_imagebuilder_image_pipeline" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image pipeline.
+- `arn` (String) ARN of the Image Builder image pipeline.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_pipeline` resources using the ARN. For example:
 
 ```terraform
 import {
@@ -195,7 +195,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example

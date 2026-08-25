@@ -672,7 +672,7 @@ The following arguments are optional:
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
 * `image_config` - (Optional) Container image configuration values. [See below](#image_config-configuration-block).
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
-* `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
 * `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-configuration-block).
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
@@ -690,11 +690,12 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `source_code_hash` - (Optional) User-defined hash of the source code package file. Use this argument to trigger updates when the local function source code changes. This is a synthetic argument tracked only by the AWS provider and does not need to match the hashing algorithm used by Lambda to compute the `CodeSha256` response value. Out-of-band changes to the source code _will not_ be captured by this argument. To include out-of-band source code changes as an update trigger, use the `code_sha256` argument instead.
-* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
+* `source_kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
+* `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration

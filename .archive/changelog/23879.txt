@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lambda_function: Add error handling for `ResourceConflictException` errors on create and update
-```
