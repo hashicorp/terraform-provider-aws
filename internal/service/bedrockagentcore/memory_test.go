@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -210,7 +212,11 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemoryConfig_indexedKeys(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
@@ -223,16 +229,21 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKey:  knownvalue.StringExact("customer_id"),
-							names.AttrType: knownvalue.StringExact("STRING"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKey:  knownvalue.StringExact("score"),
-							names.AttrType: knownvalue.StringExact("NUMBER"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
 						}),
 					})),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
