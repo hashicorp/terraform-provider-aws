@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -279,7 +280,7 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	// Wait until the archive goes to PENDING_DELETION (or is gone)
 	_, err = (&retry.StateChangeConf{
-		Pending: []string{string(awstypes.ArchiveStateActive)},
+		Pending: enum.Slice(awstypes.ArchiveStateActive),
 		Target:  []string{},
 		Refresh: func(ctx context.Context) (any, string, error) {
 			out, err := conn.GetArchive(ctx, &mailmanager.GetArchiveInput{
