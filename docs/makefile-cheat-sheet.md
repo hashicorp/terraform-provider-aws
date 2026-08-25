@@ -174,6 +174,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
 | `smoke` | Smoke tests (alias of `sane`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
+| `smoke-identity`<sup>D</sup> | Run Resource Identity smoke tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
 | `sweeper`<sup>D</sup> | Run sweepers with failures allowed |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP` |
 | `sweeper-check`<sup>M</sup> | Provider Checks / Sweeper Linked, Unlinked | ✔️ |  |  |

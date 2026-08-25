@@ -944,6 +944,174 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 
 smoke: sane ## Smoke tests (alias of sane)
 
+# smoke-identity runs Resource Identity smoke tests for a representative set of resource types.
+# For each resource it includes all _Identity_ tests.
+
+# aws_batch_job_queue: Framework Regional ARN
+SMOKE_IDENTITY_TESTS_BATCH = \
+	TestAccBatchJobQueue_Identity_
+
+# aws_cloudfront_key_value_store: Framework Global Single-Parameter
+SMOKE_IDENTITY_TESTS_CLOUDFRONT = \
+	TestAccCloudFrontKeyValueStore_Identity_
+
+# aws_cloudfrontkeyvaluestore_key: Framework Global Multiple-Parameter
+SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE = \
+	TestAccCloudFrontKeyValueStoreKey_Identity_
+
+# aws_globalaccelerator_cross_account_attachment: Framework Global ARN
+SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR = \
+	TestAccGlobalAcceleratorCrossAccountAttachment_Identity_
+
+# aws_iam_policy: SDKv2 Global ARN
+# aws_iam_policy_attachment: SDKv2 Global ARN (with rename)
+# aws_iam_role: SDKv2 Global Single-Parameter
+# aws_iam_role_policy: SDKv2 Global Multiple-Parameter
+SMOKE_IDENTITY_TESTS_IAM = \
+	TestAccIAMPolicy_Identity_ \
+	TestAccIAMPolicyAttachment_Identity_ \
+	TestAccIAMRole_Identity_ \
+	TestAccIAMRolePolicy_Identity_
+
+# aws_lambda_function_scaling_config: Framework Regional Multiple-Parameter
+SMOKE_IDENTITY_TESTS_LAMBDA = \
+	TestAccLambdaFunctionScalingConfig_Identity_
+
+# aws_cloudwatch_log_resource_policy: SDKv2 Regional Multiple-Parameter (with optional)
+# aws_cloudwatch_log_transformer: Framework Regional ARN (with rename)
+# aws_cloudwatch_log_storage_tier_policy: Framework Regional Singleton
+SMOKE_IDENTITY_TESTS_LOGS = \
+	TestAccLogsResourcePolicy_Identity_ \
+	TestAccLogsTransformer_Identity_ \
+	TestAccLogs_serial/StorageTierPolicy/Identity
+
+# aws_osis_pipeline: Framework Regional Single-Parameter (with rename)
+SMOKE_IDENTITY_TESTS_OSIS = \
+	TestAccOpenSearchIngestionPipeline_Identity_
+
+# aws_rds_certificate : SDKv2 Regional Singleton
+SMOKE_IDENTITY_TESTS_RDS = \
+	TestAccRDSCertificate_serial/Identity
+
+# aws_redshift_namespace_registration : Framework Regional Multiple-Parameter (with optional)
+
+# aws_route53_record: SDKv2 Global Multiple-Parameter (with rename), (with optional), Mutable
+SMOKE_IDENTITY_TESTS_ROUTE53 = \
+	TestAccRoute53Record_Identity_
+
+# aws_s3_bucket: SDKv2 Regional Single-Parameter
+# aws_s3_bucket_acl: SDKv2 Identity Schema Upgrader
+# aws_s3_directory_bucket: Framework Regional Single-Parameter
+# aws_s3_object: SDKv2 Regional Multiple-Parameter
+SMOKE_IDENTITY_TESTS_S3 = \
+	TestAccS3Bucket_Identity_ \
+	TestAccS3BucketACL_Identity_ \
+	TestAccS3DirectoryBucket_Identity_ \
+	TestAccS3Object_Identity_
+
+# aws_s3_account_public_access_block : SDKv2 Global Singleton
+# SMOKE_IDENTITY_TESTS_S3CONTROL = \
+# 	TestAccS3ControlAccountPublicAccessBlock_serial/PublicAccessBlock/Identity
+
+# aws_secretsmanager_secret_policy: SDKv2 Regional ARN (with rename)
+SMOKE_IDENTITY_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecretPolicy_Identity_
+
+# aws_shield_application_layer_automatic_response: Framework Global ARN (with rename)
+SMOKE_IDENTITY_TESTS_SHIELD = \
+	TestAccShieldApplicationLayerAutomaticResponse_Identity_
+
+# aws_sns_topic: SDKv2 Regional ARN
+SMOKE_IDENTITY_TESTS_SNS = \
+	TestAccSNSTopic_Identity_
+
+# aws_sqs_queue: SDKv2 Custom Inherent Regional
+SMOKE_IDENTITY_TESTS_SQS = \
+	TestAccSQSQueue_Identity_
+
+# aws_ssoadmin_application: Framework Global ARN format for regional resource
+SMOKE_IDENTITY_TESTS_SSOADMIN = \
+	TestAccSSOAdminApplication_Identity_
+
+# aws_uxc_account_customizations: Framework Global Singleton
+SMOKE_IDENTITY_TESTS_UXC = \
+	TestAccUXC_serial/AccountCustomizations/Identity
+
+smoke-identity: prereq-go ## Run Resource Identity smoke tests
+	@echo "make: Resource Identity Smoke Tests"
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/batch/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_BATCH)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/cloudfront/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_CLOUDFRONT)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/cloudfrontkeyvaluestore/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/globalaccelerator/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/iam/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_IAM)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/lambda/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_LAMBDA)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/logs/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_LOGS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/osis/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_OSIS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/rds/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_RDS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/route53/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_ROUTE53)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/s3/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3)))' || true
+# 	@TF_ACC=1 $(GO_VER) test \
+# 		./internal/service/s3control/... \
+# 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+# 		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3CONTROL)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/secretsmanager/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SECRETSMANAGER)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/shield/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SHIELD)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/sns/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SNS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/sqs/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SQS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/ssoadmin/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SSOADMIN)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/uxc/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_UXC)))'
+
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
@@ -1412,6 +1580,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	skaff \
 	skaff-check-compile \
 	smoke \
+	smoke-identity \
 	sweep \
 	sweeper \
 	sweeper-check \
