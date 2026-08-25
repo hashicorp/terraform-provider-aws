@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Fixes long delay in creation of replicas
-```

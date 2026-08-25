@@ -58,6 +58,21 @@ This data source exports the following attributes in addition to the arguments a
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
+* `kube_api_server_config` - Configuration for the Kubernetes API server.
+    * `event_ttl` - The duration that Kubernetes events are retained.
+    * `service_node_port_range` - The port range for NodePort services.
+        * `min_port` - The minimum port number in the range.
+        * `max_port` - The maximum port number in the range.
+* `kube_controller_manager_config` - Configuration for the Kubernetes controller manager.
+    * `horizontal_pod_autoscaler_controller_config` - Configuration for the horizontal pod autoscaler controller.
+        * `horizontal_pod_autoscaler_sync_period` - The interval between each sync of the horizontal pod autoscaler.
+* `kube_scheduler_config` - Configuration for the Kubernetes scheduler.
+    * `node_resources_fit` - Configuration for the NodeResourcesFit scheduler plugin.
+        * `scoring_strategy` - The scoring strategy used to rank nodes during scheduling.
+            * `type` - The scoring strategy type (`LeastAllocated` or `MostAllocated`).
+            * `resource` - List of resource weights for scoring nodes.
+                * `name` - The name of the resource (e.g., `cpu`, `memory`).
+                * `weight` - The weight assigned to the resource for scoring (1-100).
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
     * `elastic_load_balancing` - Contains Elastic Load Balancing configuration for EKS Auto Mode enabled cluster.
         * `enabled` - Indicates if the load balancing capability is enabled for EKS Auto Mode enabled cluster.

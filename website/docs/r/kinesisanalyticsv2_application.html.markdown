@@ -370,7 +370,7 @@ The `input` object supports the following:
 An input processor transforms records as they are received from the stream, before the application's SQL code executes.
 * `input_starting_position_configuration` (Optional) The point at which the application starts processing records from the streaming source.
 * `kinesis_firehose_input` - (Optional) If the streaming source is a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html), identifies the delivery stream's ARN.
-* `kinesis_streams_input` - (Optional) If the streaming source is a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html), identifies the stream's Amazon Resource Name (ARN).
+* `kinesis_streams_input` - (Optional) If the streaming source is a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html), identifies the stream's ARN.
 
 The `input_parallelism` object supports the following:
 

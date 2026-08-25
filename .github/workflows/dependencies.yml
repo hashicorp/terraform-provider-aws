@@ -19,7 +19,6 @@ on:
       - .teamcity/**
       - .release/**
       - infrastructure/**
-      - .archive/**
       - .changelog/**
       - .devcontainer/**
       - docs/**

@@ -141,7 +141,7 @@ The following arguments are optional:
 * `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Documentation.
 
   ~> **Note:** If Amazon EKS times out an add-on update (which can happen on large or high-churn clusters), the update is marked as failed but the new configuration remains applied and the add-on transitions to a `DEGRADED` status. In this case the resource waits for the add-on to self-heal to an `ACTIVE` status within the remaining [update timeout](#timeouts) instead of returning an error.
-* `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
+* `service_account_role_arn` - (Optional) ARN of an
   existing IAM role to bind to the add-on's service account. The role must be
   assigned the IAM permissions required by the add-on. If you don't specify
   an existing IAM role, then the add-on uses the permissions assigned to the node
@@ -160,14 +160,14 @@ The following arguments are optional:
 
 ### pod_identity_association
 
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
+* `role_arn` - (Required) ARN of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
 * `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS add-on.
+* `arn` - ARN of the EKS add-on.
 * `id` - EKS Cluster name and EKS Addon name separated by a colon (`:`).
 * `status` - Status of the EKS add-on.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.

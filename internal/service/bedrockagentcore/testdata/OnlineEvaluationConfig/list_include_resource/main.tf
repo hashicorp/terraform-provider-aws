@@ -26,6 +26,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
   }
 
   tags = var.resource_tags
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 data "aws_partition" "current" {}

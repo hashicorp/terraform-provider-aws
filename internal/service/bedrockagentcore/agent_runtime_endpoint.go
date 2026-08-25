@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -41,7 +40,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime_endpoint", name="Agent Runtime Endpoint")
 // @Tags(identifierAttribute="agent_runtime_endpoint_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttributes="agent_runtime_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preCheck="testAccAgentRuntimeEndpointPreCheck")
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeEndpointResource{}
 
@@ -81,7 +84,7 @@ func (r *agentRuntimeEndpointResource) Schema(ctx context.Context, request resou
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

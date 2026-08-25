@@ -41,7 +41,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `security_control_definitions` - List of controls. See below for details.
 
-### `security_control_definitions`
+### `security_control_definitions` Block
 
 Each control has the following attributes:
 
