@@ -8,7 +8,6 @@ package dsql
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -106,26 +106,24 @@ func (r *clusterPolicyResource) Create(ctx context.Context, request resource.Cre
 	id := data.Identifier.ValueString()
 
 	conn := r.Meta().DSQLClient(ctx)
-	input := dsql.PutClusterPolicyInput{
-		BypassPolicyLockoutSafetyCheck: data.BypassPolicyLockoutSafetyCheck.ValueBool(),
-		ClientToken:                    aws.String(create.UniqueId(ctx)),
-		Identifier:                     aws.String(id),
-		Policy:                         data.Policy.ValueStringPointer(),
+
+	var input dsql.PutClusterPolicyInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.PutClusterPolicy(ctx, &input)
+	// Additional fields
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+
+	output, err := r.putClusterPolicyAndWait(ctx, conn, &input, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
-	if output == nil || output.PolicyVersion == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, data.Identifier.String())
-		return
-	}
-	policyVersion := aws.ToString(output.PolicyVersion)
 
-	if err := syncClusterPolicyAfterPut(ctx, conn, &data, policyVersion, "create", r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -142,26 +140,20 @@ func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadR
 
 	conn := r.Meta().DSQLClient(ctx)
 	output, err := findClusterPolicyByID(ctx, conn, id)
-
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(output.Policy))
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Identifier.String())
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
-	data.PolicyVersion = types.StringPointerValue(output.PolicyVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -176,27 +168,24 @@ func (r *clusterPolicyResource) Update(ctx context.Context, request resource.Upd
 
 	conn := r.Meta().DSQLClient(ctx)
 	id := plan.Identifier.ValueString()
-	input := dsql.PutClusterPolicyInput{
-		BypassPolicyLockoutSafetyCheck: plan.BypassPolicyLockoutSafetyCheck.ValueBool(),
-		ClientToken:                    aws.String(create.UniqueId(ctx)),
-		ExpectedPolicyVersion:          state.PolicyVersion.ValueStringPointer(),
-		Identifier:                     aws.String(id),
-		Policy:                         plan.Policy.ValueStringPointer(),
+
+	var input dsql.PutClusterPolicyInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.PutClusterPolicy(ctx, &input)
+	// Additional fields
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+
+	output, err := r.putClusterPolicyAndWait(ctx, conn, &input, r.UpdateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Identifier.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
-	if output == nil || output.PolicyVersion == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Identifier.String())
-		return
-	}
-	policyVersion := aws.ToString(output.PolicyVersion)
 
-	if err := syncClusterPolicyAfterPut(ctx, conn, &plan, policyVersion, "update", r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Identifier.String())
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &plan))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -213,8 +202,7 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().DSQLClient(ctx)
 	input := dsql.DeleteClusterPolicyInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
-		Identifier:  aws.String(id),
+		Identifier: data.Identifier.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteClusterPolicy(ctx, &input)
@@ -235,25 +223,20 @@ func (r *clusterPolicyResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func syncClusterPolicyAfterPut(ctx context.Context, conn *dsql.Client, data *clusterPolicyResourceModel, policyVersion, operationName string, timeout time.Duration) error {
-	id := data.Identifier.ValueString()
-
-	data.PolicyVersion = types.StringValue(policyVersion)
-
-	clusterPolicy, err := waitClusterPolicyUpdated(ctx, conn, id, policyVersion, data.Policy.ValueString(), timeout)
+func (r *clusterPolicyResource) putClusterPolicyAndWait(ctx context.Context, conn *dsql.Client, input *dsql.PutClusterPolicyInput, timeout time.Duration) (*dsql.GetClusterPolicyOutput, error) {
+	output, err := conn.PutClusterPolicy(ctx, input)
 	if err != nil {
-		return fmt.Errorf("waiting for Aurora DSQL Cluster Policy (%s) %s: %w", id, operationName, err)
+		return nil, err
+	}
+	if output == nil || output.PolicyVersion == nil {
+		return nil, errors.New("empty output")
 	}
 
-	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(clusterPolicy.Policy))
-	if err != nil {
-		return fmt.Errorf("setting Aurora DSQL Cluster Policy (%s): %w", id, err)
-	}
+	id := aws.ToString(input.Identifier)
+	policy := aws.ToString(input.Policy)
+	policyVersion := aws.ToString(output.PolicyVersion)
 
-	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
-	data.PolicyVersion = types.StringPointerValue(clusterPolicy.PolicyVersion)
-
-	return nil
+	return waitClusterPolicyUpdated(ctx, conn, id, policyVersion, policy, timeout)
 }
 
 func findClusterPolicyByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.GetClusterPolicyOutput, error) {
@@ -284,8 +267,8 @@ func waitClusterPolicyUpdated(ctx context.Context, conn *dsql.Client, id, expect
 
 	err := tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
 		var err error
-		policyOutput, err = findClusterPolicyByID(ctx, conn, id)
 
+		policyOutput, err = findClusterPolicyByID(ctx, conn, id)
 		if err != nil {
 			return false, err
 		}
