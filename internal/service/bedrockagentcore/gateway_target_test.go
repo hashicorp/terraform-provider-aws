@@ -16,9 +16,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -394,28 +398,56 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.mcp.0.lambda.0.lambda_arn"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.lambda.0.tool_schema.0.inline_payload.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"api_key":                knownvalue.ListSizeExact(0),
+						"caller_iam_credentials": knownvalue.ListSizeExact(0),
+						"gateway_iam_role":       knownvalue.ListSizeExact(1),
+						"jwt_passthrough":        knownvalue.ListSizeExact(0),
+						"oauth":                  knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_identifier"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_endpoint"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListSizeExact(0),
+						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"api_gateway": knownvalue.ListSizeExact(0),
+							"connector":   knownvalue.ListSizeExact(0),
+							"lambda": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"lambda_arn": knownvalue.NotNull(),
+								"tool_schema": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"inline_payload": knownvalue.ListSizeExact(1),
+									"s3":             knownvalue.ListSizeExact(0),
+								})}),
+							})}),
+							"mcp_server":      knownvalue.ListSizeExact(0),
+							"open_api_schema": knownvalue.ListSizeExact(0),
+							"smithy_model":    knownvalue.ListSizeExact(0),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_id"), knownvalue.NotNull()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
@@ -442,7 +474,10 @@ func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGatewayTarget, resourceName),
@@ -1837,46 +1872,6 @@ resource "aws_iam_role_policy_attachment" "policy_engine" {
 }
 `, rNamePolicyEngine),
 	)
-}
-
-func testAccGatewayTargetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-    gateway_iam_role {}
-  }
-
-  target_configuration {
-    mcp {
-      lambda {
-        lambda_arn = aws_lambda_function.test.arn
-
-        tool_schema {
-          inline_payload {
-            name        = "test_tool"
-            description = "A test tool"
-
-            input_schema {
-              type = "object"
-
-              property {
-                name        = "input"
-                description = "some input"
-                type        = "string"
-                required    = true
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-`, rName))
 }
 
 func testAccGatewayTargetConfig_credentialProviderLambda(rName, credentialProviderContent string) string {

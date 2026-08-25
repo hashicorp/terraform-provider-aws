@@ -41,12 +41,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -60,6 +62,13 @@ import (
 const gatewayTargetPolicySessionIDHeader = "x-amzn-bedrock-agentcore-policy-session-id"
 
 // @FrameworkResource("aws_bedrockagentcore_gateway_target", name="Gateway Target")
+// @IdentityAttribute("gateway_identifier")
+// @IdentityAttribute("target_id")
+// @ImportIDHandler("gatewayTargetImportID")
+// @Testing(preIdentityVersion="v6.61.0")
+// @Testing(importStateIdFunc=testAccGatewayTargetImportStateIDFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;;bedrockagentcorecontrol.GetGatewayTargetOutput")
+// @Testing(importStateIdAttribute="target_id")
 func newGatewayTargetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &gatewayTargetResource{}
 
@@ -73,6 +82,7 @@ func newGatewayTargetResource(_ context.Context) (resource.ResourceWithConfigure
 type gatewayTargetResource struct {
 	framework.ResourceWithModel[gatewayTargetResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func jsonAttribute(conflictWith string) schema.StringAttribute {
@@ -1036,6 +1046,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var (
 		out *bedrockagentcorecontrol.CreateGatewayTargetOutput
 		err error
@@ -1055,7 +1066,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
@@ -1149,33 +1160,6 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
-func normalizeGatewayTargetOutputForState(out *bedrockagentcorecontrol.GetGatewayTargetOutput, preserveEmptyMetadataConfiguration bool) *bedrockagentcorecontrol.GetGatewayTargetOutput {
-	if out == nil || out.MetadataConfiguration == nil {
-		return out
-	}
-
-	allowedRequestHeaders := slices.DeleteFunc(slices.Clone(out.MetadataConfiguration.AllowedRequestHeaders), func(header string) bool {
-		return strings.EqualFold(header, gatewayTargetPolicySessionIDHeader)
-	})
-	if len(allowedRequestHeaders) == len(out.MetadataConfiguration.AllowedRequestHeaders) {
-		return out
-	}
-
-	normalized := *out
-	metadataConfiguration := *out.MetadataConfiguration
-	metadataConfiguration.AllowedRequestHeaders = allowedRequestHeaders
-	if !preserveEmptyMetadataConfiguration &&
-		len(metadataConfiguration.AllowedRequestHeaders) == 0 &&
-		len(metadataConfiguration.AllowedResponseHeaders) == 0 &&
-		len(metadataConfiguration.AllowedQueryParameters) == 0 {
-		normalized.MetadataConfiguration = nil
-	} else {
-		normalized.MetadataConfiguration = &metadataConfiguration
-	}
-
-	return &normalized
-}
-
 func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data gatewayTargetResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
@@ -1195,18 +1179,6 @@ func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.Del
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 		return
 	}
-}
-
-func (r *gatewayTargetResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, ",")
-
-	if len(parts) != 2 {
-		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("target_id"), parts[1]))
 }
 
 func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -1236,6 +1208,38 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 	if planTargetType != stateTargetType {
 		response.RequiresReplace = append(response.RequiresReplace, path.Root("target_configuration"))
 	}
+}
+
+const gatewayTargetImportIDSeparator = intflex.ResourceIdSeparator
+
+func gatewayTargetParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, gatewayTargetImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected gateway-identifier%[2]starget-id", id, gatewayTargetImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser = gatewayTargetImportID{}
+)
+
+type gatewayTargetImportID struct{}
+
+func (gatewayTargetImportID) Parse(id string) (string, map[string]any, error) {
+	gatewayIdentifier, targetID, err := gatewayTargetParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"gateway_identifier": gatewayIdentifier,
+		"target_id":          targetID,
+	}
+
+	return id, result, nil
 }
 
 func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) {
@@ -1355,23 +1359,52 @@ func deleteGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Clie
 	return nil
 }
 
-func listGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListGatewayTargetsInput) iter.Seq2[awstypes.TargetSummary, error] {
-	return func(yield func(awstypes.TargetSummary, error) bool) {
+func listGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListGatewayTargetsInput, optFns ...func(*bedrockagentcorecontrol.Options)) iter.Seq2[awstypes.TargetSummary, error] {
+	return tfiter.ConcatValuesWithError(listGatewayTargetPages(ctx, conn, input, optFns...))
+}
+
+func listGatewayTargetPages(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListGatewayTargetsInput, optFns ...func(*bedrockagentcorecontrol.Options)) iter.Seq2[[]awstypes.TargetSummary, error] {
+	return func(yield func([]awstypes.TargetSummary, error) bool) {
 		pages := bedrockagentcorecontrol.NewListGatewayTargetsPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.TargetSummary](), fmt.Errorf("listing Bedrock AgentCore Gateway Targets: %w", err))
+				yield(nil, fmt.Errorf("listing Bedrock AgentCore Gateway Targets: %w", err))
 				return
 			}
 
-			for _, item := range page.Items {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.Items, nil) {
+				return
 			}
 		}
 	}
+}
+
+func normalizeGatewayTargetOutputForState(out *bedrockagentcorecontrol.GetGatewayTargetOutput, preserveEmptyMetadataConfiguration bool) *bedrockagentcorecontrol.GetGatewayTargetOutput {
+	if out == nil || out.MetadataConfiguration == nil {
+		return out
+	}
+
+	allowedRequestHeaders := slices.DeleteFunc(slices.Clone(out.MetadataConfiguration.AllowedRequestHeaders), func(header string) bool {
+		return strings.EqualFold(header, gatewayTargetPolicySessionIDHeader)
+	})
+	if len(allowedRequestHeaders) == len(out.MetadataConfiguration.AllowedRequestHeaders) {
+		return out
+	}
+
+	normalized := *out
+	metadataConfiguration := *out.MetadataConfiguration
+	metadataConfiguration.AllowedRequestHeaders = allowedRequestHeaders
+	if !preserveEmptyMetadataConfiguration &&
+		len(metadataConfiguration.AllowedRequestHeaders) == 0 &&
+		len(metadataConfiguration.AllowedResponseHeaders) == 0 &&
+		len(metadataConfiguration.AllowedQueryParameters) == 0 {
+		normalized.MetadataConfiguration = nil
+	} else {
+		normalized.MetadataConfiguration = &metadataConfiguration
+	}
+
+	return &normalized
 }
 
 type gatewayTargetResourceModel struct {
@@ -1706,7 +1739,7 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 			return "lambda"
 		case !mcpData.MCPServer.IsNull():
 			return "mcp_server"
-		case !mcpData.OpenApiSchema.IsNull():
+		case !mcpData.OpenAPISchema.IsNull():
 			return "open_api_schema"
 		case !mcpData.SmithyModel.IsNull():
 			return "smithy_model"
@@ -1840,8 +1873,8 @@ type mcpTargetConfigurationModel struct {
 	Connector     fwtypes.ListNestedObjectValueOf[connectorTargetConfigurationModel]  `tfsdk:"connector"`
 	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaTargetConfigurationModel]  `tfsdk:"lambda"`
 	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerTargetConfigurationModel]  `tfsdk:"mcp_server"`
+	OpenAPISchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]        `tfsdk:"open_api_schema"`
 	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]        `tfsdk:"smithy_model"`
-	OpenApiSchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]        `tfsdk:"open_api_schema"`
 }
 
 var (
@@ -1890,7 +1923,7 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.OpenApiSchema = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		m.OpenAPISchema = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.McpTargetConfigurationMemberSmithyModel:
 		var model apiSchemaConfigurationModel
@@ -1968,8 +2001,8 @@ func (m mcpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 		}
 		return &r, diags
 
-	case !m.OpenApiSchema.IsNull():
-		openApiMCPConfigurationData, d := m.OpenApiSchema.ToPtr(ctx)
+	case !m.OpenAPISchema.IsNull():
+		openApiMCPConfigurationData, d := m.OpenAPISchema.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags

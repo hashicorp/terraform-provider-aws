@@ -765,7 +765,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Gateway Target using the gateway identifier and target ID separated by a comma. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_gateway_target.example
+  identity = {
+    gateway_identifier = "GATEWAY1234567890"
+    target_id          = "TARGET0987654321"
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `gateway_identifier` (String) Gateway identifier.
+* `target_id` (String) Gateway target ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import gateway targets using `gateway_identifier` and `target_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
@@ -774,7 +802,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Gateway Target using the gateway identifier and target ID separated by a comma. For example:
+Using `terraform import`, import gateway targets using `gateway_identifier` and `target_id` separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_bedrockagentcore_gateway_target.example GATEWAY1234567890,TARGET0987654321
