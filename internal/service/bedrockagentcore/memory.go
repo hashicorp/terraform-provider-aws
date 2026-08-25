@@ -35,14 +35,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -330,28 +328,22 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
-		// AddIndexedKeys is additive and does not map from the indexed_key model field, so send only
-		// the keys that are not already present. Removals force replacement (see the schema plan modifier).
-		newKeys, d := new.IndexedKeys.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		oldKeys, d := old.IndexedKeys.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
+		if !new.IndexedKeys.Equal(old.IndexedKeys) {
+			// AddIndexedKeys is additive and does not map from the indexed_key model field, so send only
+			// the keys that are not already present. Removals force replacement (see the schema plan modifier).
+			diff, d := fwflex.SetDifference(ctx, new.IndexedKeys.SetValue, old.IndexedKeys.SetValue)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if response.Diagnostics.HasError() {
+				return
+			}
 
-		if addKeys, _, _ := intflex.DiffSlices(oldKeys, newKeys, func(a, b *indexedKeyModel) bool {
-			return a != nil && b != nil && a.Key.Equal(b.Key) && a.Type.Equal(b.Type)
-		}); len(addKeys) > 0 {
-			input.AddIndexedKeys = tfslices.ApplyToAll(addKeys, func(v *indexedKeyModel) awstypes.IndexedKey {
-				return awstypes.IndexedKey{
-					Key:  fwflex.StringFromFramework(ctx, v.Key),
-					Type: v.Type.ValueEnum(),
+			if diff.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+				indexedKeySet := fwtypes.SetNestedObjectValueOf[indexedKeyModel]{SetValue: diff}
+				smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, indexedKeySet, &input.AddIndexedKeys))
+				if response.Diagnostics.HasError() {
+					return
 				}
-			})
+			}
 		}
 
 		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
