@@ -1555,6 +1555,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorParameters
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:             testAccGatewayTargetConfig_targetConfigurationConnectorWithParameters(rName, "bedrock-knowledge-bases", "retrieve"),
 				PlanOnly:           true,
