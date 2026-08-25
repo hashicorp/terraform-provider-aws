@@ -477,6 +477,11 @@ func testAccDirectory_workspaceAccessProperties_accessEndpointConfig(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.access_endpoint_config.0.internet_fallback_protocols.0", "PCOIP"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
