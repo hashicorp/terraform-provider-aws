@@ -49,13 +49,8 @@ func newMultiRegionEndpointResource(_ context.Context) (resource.ResourceWithCon
 	return r, nil
 }
 
-const (
-	ResNameMultiRegionEndpoint = "Multi Region Endpoint"
-)
-
 type multiRegionEndpointResource struct {
 	framework.ResourceWithModel[multiRegionEndpointResourceModel]
-	framework.WithImportByIdentity
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -80,6 +75,7 @@ func (r *multiRegionEndpointResource) Schema(ctx context.Context, req resource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[detailsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -87,6 +83,7 @@ func (r *multiRegionEndpointResource) Schema(ctx context.Context, req resource.S
 							CustomType: fwtypes.NewListNestedObjectTypeOf[routeDetailsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -128,22 +125,22 @@ func (r *multiRegionEndpointResource) Create(ctx context.Context, req resource.C
 
 	out, err := conn.CreateMultiRegionEndpoint(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 
 	endpoint, err := waitMultiRegionEndpointCreated(ctx, conn, data.EndpointName.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, endpoint, &data))
 	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(ctx, r.Meta(), data.EndpointName.ValueString()))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *multiRegionEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -162,7 +159,7 @@ func (r *multiRegionEndpointResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 
@@ -190,21 +187,22 @@ func (r *multiRegionEndpointResource) Delete(ctx context.Context, req resource.D
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 
 	_, err = waitMultiRegionEndpointDeleted(ctx, conn, data.EndpointName.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.EndpointName.ValueString())
 		return
 	}
 }
 
 const (
 	statusCreating = string(awstypes.StatusCreating)
-	statusReady    = string(awstypes.StatusReady)
 	statusDeleting = string(awstypes.StatusDeleting)
+	statusFailed   = string(awstypes.StatusFailed)
+	statusReady    = string(awstypes.StatusReady)
 )
 
 func waitMultiRegionEndpointCreated(ctx context.Context, conn *sesv2.Client, name string, timeout time.Duration) (*sesv2.GetMultiRegionEndpointOutput, error) {
@@ -213,7 +211,6 @@ func waitMultiRegionEndpointCreated(ctx context.Context, conn *sesv2.Client, nam
 		Target:                    []string{statusReady},
 		Refresh:                   statusMultiRegionEndpoint(conn, name),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -227,7 +224,7 @@ func waitMultiRegionEndpointCreated(ctx context.Context, conn *sesv2.Client, nam
 
 func waitMultiRegionEndpointDeleted(ctx context.Context, conn *sesv2.Client, name string, timeout time.Duration) (*sesv2.GetMultiRegionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusReady},
+		Pending: []string{statusDeleting, statusReady, statusFailed},
 		Target:  []string{},
 		Refresh: statusMultiRegionEndpoint(conn, name),
 		Timeout: timeout,

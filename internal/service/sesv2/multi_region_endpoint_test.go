@@ -22,6 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	ResNameMultiRegionEndpoint = "Multi Region Endpoint"
+)
+
 func TestAccSESV2MultiRegionEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -175,15 +179,15 @@ func testAccCheckMultiRegionEndpointDestroy(ctx context.Context, t *testing.T) r
 				continue
 			}
 
-			_, err := tfsesv2.FindMultiRegionEndpointByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsesv2.FindMultiRegionEndpointByName(ctx, conn, rs.Primary.Attributes["endpoint_name"])
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameMultiRegionEndpoint, rs.Primary.ID, err)
+				return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, ResNameMultiRegionEndpoint, rs.Primary.Attributes["endpoint_name"], err)
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameMultiRegionEndpoint, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, ResNameMultiRegionEndpoint, rs.Primary.Attributes["endpoint_name"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -194,7 +198,7 @@ func testAccCheckMultiRegionEndpointExists(ctx context.Context, t *testing.T, na
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameMultiRegionEndpoint, name, errors.New("not found"))
+			return create.Error(names.SESV2, create.ErrActionCheckingExistence, ResNameMultiRegionEndpoint, name, errors.New("not found"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
