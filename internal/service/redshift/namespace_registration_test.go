@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
+func TestAccRedshiftNamespaceRegistration_basic_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_namespace_registration.test"
@@ -28,7 +28,7 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceRegistrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceRegistrationConfig_basic(rName),
+				Config: testAccNamespaceRegistrationConfig_basic_serverless(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
@@ -49,7 +49,7 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
+func TestAccRedshiftNamespaceRegistration_basic_provisioned(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_namespace_registration.test"
@@ -61,7 +61,7 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceRegistrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceRegistrationConfig_cluster(rName),
+				Config: testAccNamespaceRegistrationConfig_basic_provisioned(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
@@ -154,7 +154,7 @@ func testAccNamespaceRegistrationImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccNamespaceRegistrationConfig_basic(rName string) string {
+func testAccNamespaceRegistrationConfig_basic_serverless(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -177,7 +177,7 @@ resource "aws_redshift_namespace_registration" "test" {
 `, rName)
 }
 
-func testAccNamespaceRegistrationConfig_cluster(rName string) string {
+func testAccNamespaceRegistrationConfig_basic_provisioned(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
