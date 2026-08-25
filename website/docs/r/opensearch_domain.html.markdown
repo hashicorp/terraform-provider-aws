@@ -489,6 +489,7 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 ### software_update_options
 
 * `auto_software_update_enabled` - (Optional) Whether automatic service software updates are enabled for the domain. Defaults to `false`.
+* `use_latest_service_software_for_blue_green` - (Optional) Whether the domain should use the latest available service software during a blue/green deployment. When enabled, the domain automatically uses the latest available service software when a blue/green deployment is triggered. Defaults to `false`.
 
 ### vpc_options
 
