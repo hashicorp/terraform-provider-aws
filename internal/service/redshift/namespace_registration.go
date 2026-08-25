@@ -44,6 +44,8 @@ const (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(identityTest=false)
 // @Testing(importStateIdFunc="testAccNamespaceRegistrationImportStateIdFunc")
+// @Testing(identityTestCases="serverless;provisioned")
+// @Testing(importStateIdAttribute="consumer_identifier")
 func newNamespaceRegistrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &namespaceRegistrationResource{}, nil
 }
