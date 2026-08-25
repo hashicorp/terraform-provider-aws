@@ -76,7 +76,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM
+* `arn` - ARN of IPAM
 * `id` - The ID of the IPAM
 * `default_resource_discovery_id` - The IPAM's default resource discovery ID.
 * `default_resource_discovery_association_id` - The IPAM's default resource discovery association ID.
@@ -85,6 +85,14 @@ This resource exports the following attributes in addition to the arguments abov
 IP space. The public scope is intended for all internet-routable IP space.
 * `scope_count` - The number of scopes in the IPAM.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

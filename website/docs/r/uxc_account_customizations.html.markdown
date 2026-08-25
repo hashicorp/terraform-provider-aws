@@ -61,6 +61,12 @@ import {
 resource "aws_uxc_account_customizations" "example" {}
 ```
 
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import UXC Account Customizations using the AWS account ID. For example:
 
 ```terraform

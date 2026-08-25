@@ -31,23 +31,9 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
-## RDS Instance Class Types
+Amazon RDS supports instance classes for General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads use cases. For more information see [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html).
 
-Amazon RDS supports instance classes for the following use cases: General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads.
-For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
-
-## Low-Downtime Updates
-
-By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
-Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
-
-Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
-as other engines are not supported by RDS Blue/Green deployments.
-They cannot be used with DB Instances with replicas.
-
-Backups must be enabled to use low-downtime updates.
-
-Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
+By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
 ## Example Usage
 
@@ -536,7 +522,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 The `master_user_secret` configuration block supports the following attributes:
 
 * `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - ARN of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
@@ -548,6 +534,32 @@ The `master_user_secret` configuration block supports the following attributes:
 - `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_db_instance.default
+  identity = {
+    identifier = "mydb-rds-instance"
+  }
+}
+
+resource "aws_db_instance" "default" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `identifier` (String) Identifier of the DB Instance.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 

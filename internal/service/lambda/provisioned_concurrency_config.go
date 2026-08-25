@@ -53,29 +53,31 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"provisioned_concurrent_executions": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"qualifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"provisioned_concurrent_executions": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"qualifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+			}
 		},
 	}
 }
@@ -100,7 +102,11 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	if _, err := conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
+	if err = waitAliasRoutingWeightsCleared(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
+	}
+
+	if _, err = conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
 	}
 
@@ -160,9 +166,11 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	_, err = conn.PutProvisionedConcurrencyConfig(ctx, input)
+	if err = waitAliasRoutingWeightsCleared(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
+	}
 
-	if err != nil {
+	if _, err = conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 

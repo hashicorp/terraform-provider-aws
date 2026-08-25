@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
@@ -31,7 +32,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	var sourceName string
 	sourceName = os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,7 +88,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var sourceName string
 	sourceName = os.Getenv(key)
 	if sourceName == "" {
-		sourceName = "aws.partner/examplepartner.com"
+		sourceName = "aws.partner/example.com"
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -106,6 +107,14 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappintegrations.ResourceEventIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

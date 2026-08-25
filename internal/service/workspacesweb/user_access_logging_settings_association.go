@@ -26,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_user_access_logging_settings_association", name="User Access Logging Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserAccessLoggingSettings")
-// @Testing(importStateIdAttribute="user_access_logging_settings_arn,portal_arn")
 func newUserAccessLoggingSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userAccessLoggingSettingsAssociationResource{}, nil
 }

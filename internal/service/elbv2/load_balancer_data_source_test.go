@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_ALB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
@@ -26,7 +26,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerDataSourceConfig_basic(rName),
+				Config: testAccLoadBalancerDataSourceConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -94,7 +94,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_ALB_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
@@ -106,7 +106,7 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerDataSourceConfig_outpost(rName),
+				Config: testAccLoadBalancerDataSourceConfig_albOutpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -218,7 +218,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
+func TestAccELBV2LoadBalancerDataSource_NLB_secondaryIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.nlb_test_with_arn"
@@ -240,7 +240,7 @@ func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
 	})
 }
 
-func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
+func testAccLoadBalancerDataSourceConfig_albBasic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -296,7 +296,7 @@ data "aws_lb" "alb_test_with_tags" {
 `, rName))
 }
 
-func testAccLoadBalancerDataSourceConfig_outpost(rName string) string {
+func testAccLoadBalancerDataSourceConfig_albOutpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

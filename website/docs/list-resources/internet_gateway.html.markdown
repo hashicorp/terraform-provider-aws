@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_internet_gateway"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) Internet Gateway resources.
+  Lists EC2 Internet Gateway resources.
 ---
 
 # List Resource: aws_internet_gateway
 
-Lists EC2 (Elastic Compute Cloud) Internet Gateway resources.
+Lists EC2 Internet Gateway resources.
 
 ## Example Usage
 
@@ -43,7 +43,7 @@ This list resource supports the following arguments:
 
 * `filter` - (Optional) One or more filters to apply to the search.
   If multiple `filter` blocks are provided, they all must be true.
-  For a full reference of filter names, see [describe-internet-gateways in the AWS CLI reference][describe-internet-gateways].
+  For a full reference of filter names, see [describe-internet-gateways in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-internet-gateways.html).
   See [`filter` Block](#filter-block) below.
 * `internet_gateway_ids` - (Optional) List of Internet Gateway IDs to query.
 * `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query.
@@ -54,7 +54,5 @@ This list resource supports the following arguments:
 The `filter` block supports the following arguments:
 
 * `name` - (Required) Name of the filter.
-  For a full reference of filter names, see [describe-internet-gateways in the AWS CLI reference][describe-internet-gateways].
+  For a full reference of filter names, see [describe-internet-gateways in the AWS CLI reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-internet-gateways.html).
 * `values` - (Required) One or more values to match.
-
-[describe-internet-gateways]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-internet-gateways.html

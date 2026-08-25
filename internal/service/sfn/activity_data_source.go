@@ -26,29 +26,31 @@ func dataSourceActivity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActivityRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrARN,
-					names.AttrName,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrARN,
+						names.AttrName,
+					},
 				},
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrARN,
-					names.AttrName,
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrARN,
+						names.AttrName,
+					},
+				},
+			}
 		},
 	}
 }

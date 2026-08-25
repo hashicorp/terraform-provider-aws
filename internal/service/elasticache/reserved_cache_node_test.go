@@ -47,7 +47,7 @@ func TestAccElastiCacheReservedCacheNode_Redis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_cache_nodes_offering_id", resourceName, "offering_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "reserved_cache_nodes_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_type", resourceName, "offering_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
@@ -90,7 +90,7 @@ func TestAccElastiCacheReservedCacheNode_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_cache_nodes_offering_id", resourceName, "offering_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "reserved_cache_nodes_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_type", resourceName, "offering_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
@@ -158,12 +158,12 @@ func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, 
 func testAccReservedInstanceConfig_Redis_basic() string {
 	return `
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }
@@ -173,12 +173,12 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 func testAccReservedInstanceConfig_Valkey_basic() string {
 	return `
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "valkey"
 }
@@ -188,13 +188,13 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 func testAccReservedInstanceConfig_ID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
-  id          = %[1]q
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  id                               = %[1]q
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }

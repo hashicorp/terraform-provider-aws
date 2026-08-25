@@ -38,53 +38,55 @@ func resourceTrafficMirrorTarget() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"gateway_load_balancer_endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"gateway_load_balancer_endpoint_id",
-					names.AttrNetworkInterfaceID,
-					"network_load_balancer_arn",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"gateway_load_balancer_endpoint_id",
-					names.AttrNetworkInterfaceID,
-					"network_load_balancer_arn",
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"network_load_balancer_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"gateway_load_balancer_endpoint_id",
-					names.AttrNetworkInterfaceID,
-					"network_load_balancer_arn",
+				"gateway_load_balancer_endpoint_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"gateway_load_balancer_endpoint_id",
+						names.AttrNetworkInterfaceID,
+						"network_load_balancer_arn",
+					},
 				},
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"gateway_load_balancer_endpoint_id",
+						names.AttrNetworkInterfaceID,
+						"network_load_balancer_arn",
+					},
+				},
+				"network_load_balancer_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"gateway_load_balancer_endpoint_id",
+						names.AttrNetworkInterfaceID,
+						"network_load_balancer_arn",
+					},
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

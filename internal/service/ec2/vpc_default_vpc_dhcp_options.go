@@ -41,42 +41,44 @@ func resourceDefaultVPCDHCPOptions() *schema.Resource {
 		//   - netbios_node_type is Computed-only
 		//   - ntp_servers is Computed-only and is TypeString
 		//   - owner_id is Optional/Computed
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_name_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_address_preferred_lease_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"netbios_name_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"netbios_node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ntp_servers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_name_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_address_preferred_lease_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"netbios_name_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"netbios_node_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ntp_servers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

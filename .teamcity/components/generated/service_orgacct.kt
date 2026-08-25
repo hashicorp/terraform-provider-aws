@@ -1,3 +1,7 @@
+/*
+ * Copyright IBM Corp. 2014, 2026
+ */
+
 val orgacctServices = mapOf(
     "accessanalyzer" to ServiceSpec("IAM Access Analyzer"),
     "backup" to ServiceSpec("Backup", "TestAccBackupGlobalSettings_basic"),

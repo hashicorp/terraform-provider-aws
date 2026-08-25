@@ -205,20 +205,12 @@ If no security groups are specified, the VPC's [default security group](https://
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
 * `subnet_id` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `10m`)
-- `update` - (Default `10m`)
-- `delete` - (Default `10m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC endpoint.
-* `arn` - The Amazon Resource Name (ARN) of the VPC endpoint.
+* `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - The list of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `dns_entry` - The DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
@@ -232,6 +224,14 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - The DNS name.
 * `hosted_zone_id` - The ID of the private hosted zone.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

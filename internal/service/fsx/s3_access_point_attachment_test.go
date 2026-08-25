@@ -154,6 +154,14 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tffsx.ResourceS3AccessPointAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

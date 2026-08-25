@@ -50,53 +50,55 @@ func resourceAccessEntry() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_entry_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterName,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kubernetes_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_entry_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"principal_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      accessEntryTypeStandard,
-				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
+				names.AttrClusterName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validClusterName,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kubernetes_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"modified_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"principal_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      accessEntryTypeStandard,
+					ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -157,16 +159,9 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading EKS Access Entry (%s): %s", d.Id(), err)
 	}
 
-	d.Set("access_entry_arn", output.AccessEntryArn)
-	d.Set(names.AttrClusterName, output.ClusterName)
-	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
-	d.Set("kubernetes_groups", output.KubernetesGroups)
-	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
-	d.Set("principal_arn", output.PrincipalArn)
-	d.Set(names.AttrType, output.Type)
-	d.Set(names.AttrUserName, output.Username)
-
-	setTagsOut(ctx, output.Tags)
+	if err := resourceAccessEntryFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -224,6 +219,21 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func resourceAccessEntryFlatten(ctx context.Context, accessEntry *types.AccessEntry, d *schema.ResourceData) error { //nolint:unparam
+	d.Set("access_entry_arn", accessEntry.AccessEntryArn)
+	d.Set(names.AttrClusterName, accessEntry.ClusterName)
+	d.Set(names.AttrCreatedAt, aws.ToTime(accessEntry.CreatedAt).Format(time.RFC3339))
+	d.Set("kubernetes_groups", accessEntry.KubernetesGroups)
+	d.Set("modified_at", aws.ToTime(accessEntry.ModifiedAt).Format(time.RFC3339))
+	d.Set("principal_arn", accessEntry.PrincipalArn)
+	d.Set(names.AttrType, accessEntry.Type)
+	d.Set(names.AttrUserName, accessEntry.Username)
+
+	setTagsOut(ctx, accessEntry.Tags)
+
+	return nil
 }
 
 const accessEntryResourceIDSeparator = ":"

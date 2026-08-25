@@ -41,18 +41,18 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Access point status.
 * `tags` - Map of tags assigned to the resource.
 
-### posix_user
+### `posix_user` Block
 
 * `gid` - POSIX group ID.
 * `secondary_gids` - Set of secondary POSIX group IDs.
 * `uid` - POSIX user ID.
 
-### root_directory
+### `root_directory` Block
 
+* `creation_permissions` - Permissions set when the root directory was created. See [`creation_permissions`](#creation_permissions-block) below.
 * `path` - Root directory path.
-* `creation_permissions` - Permissions set when the root directory was created. See [`creation_permissions`](#creation_permissions) below.
 
-### creation_permissions
+### `creation_permissions` Block
 
 * `owner_gid` - Owner group ID.
 * `owner_uid` - Owner user ID.

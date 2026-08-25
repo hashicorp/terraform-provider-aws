@@ -161,6 +161,14 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
@@ -640,7 +648,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 	var def awstypes.TaskDefinition
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

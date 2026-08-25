@@ -34,8 +34,6 @@ This resource supports the following arguments:
 * `insights_configuration` - (Optional) Configuration options for enabling insights.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested fields
-
 #### `insights_configuration`
 
 * `insights_enabled` - (Required) Specifies whether insights are enabled.
@@ -70,7 +68,7 @@ resource "aws_xray_group" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the X-Ray group.
+- `arn` (String) ARN of the X-Ray group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Groups using the ARN. For example:
 

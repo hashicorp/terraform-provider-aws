@@ -7,6 +7,7 @@ package apigateway
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -50,6 +51,12 @@ func resourceRestAPI() *schema.Resource {
 		UpdateWithoutTimeout: resourceRestAPIUpdate,
 		DeleteWithoutTimeout: resourceRestAPIDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				if err := importer.Import(ctx, d, meta); err != nil {
@@ -62,123 +69,136 @@ func resourceRestAPI() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_key_source": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"binary_media_types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disable_execute_api_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"endpoint_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
-						},
-						"types": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_key_source": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"binary_media_types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disable_execute_api_endpoint": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"endpoint_access_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.EndpointAccessMode](),
+				},
+				"endpoint_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddressType: {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.EndpointType](),
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 							},
-						},
-						"vpc_endpoint_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"types": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.EndpointType](),
+								},
+							},
+							"vpc_endpoint_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fail_on_warnings": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"minimum_compression_size": {
-				Type:         nullable.TypeNullableInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-1, 10485760),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// suppress null trigger when value is already null
-					return old == "" && new == "-1"
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"put_rest_api_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.PutModeOverwrite,
-				ValidateDiagFunc: enum.Validate[types.PutMode](),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "" && new == string(types.PutModeOverwrite) {
-						return true
-					}
-					return false
+				"fail_on_warnings": {
+					Type:     schema.TypeBool,
+					Optional: true,
 				},
-			},
-			"root_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"minimum_compression_size": {
+					Type:         nullable.TypeNullableInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-1, 10485760),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// suppress null trigger when value is already null
+						return old == "" && new == "-1"
+					},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"put_rest_api_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.PutModeOverwrite,
+					ValidateDiagFunc: enum.Validate[types.PutMode](),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == "" && new == string(types.PutModeOverwrite) {
+							return true
+						}
+						return false
+					},
+				},
+				"root_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.SecurityPolicy](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: endpointConfigurationPlantimeValidate,
@@ -211,6 +231,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
+	if v, ok := d.GetOk("endpoint_access_mode"); ok {
+		input.EndpointAccessMode = types.EndpointAccessMode(v.(string))
+	}
+
 	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -230,6 +254,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Policy = aws.String(v)
 	}
 
+	if v, ok := d.GetOk("security_policy"); ok {
+		input.SecurityPolicy = types.SecurityPolicy(v.(string))
+	}
+
 	output, err := conn.CreateRestApi(ctx, &input)
 
 	if err != nil {
@@ -237,6 +265,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.SetId(aws.ToString(output.Id))
+
+	err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+	}
 
 	if body, ok := d.GetOk("body"); ok {
 		// Terraform implementation uses the `overwrite` mode by default.
@@ -264,6 +297,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "creating API Gateway REST API (%s) specification: %s", d.Id(), err)
 		}
 
+		err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+		}
+
 		// Using PutRestApi with mode overwrite will remove any configuration
 		// that was done with CreateRestApi. Reconcile these changes by having
 		// any Terraform configured values overwrite imported configuration.
@@ -277,6 +315,11 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
+			}
+
+			err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available after OpenAPI import: %s", d.Id(), err)
 			}
 		}
 	}
@@ -319,6 +362,7 @@ func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.R
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
+	d.Set("endpoint_access_mode", api.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
@@ -329,6 +373,7 @@ func resourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.R
 		d.Set("minimum_compression_size", flex.Int32ToStringValue(api.MinimumCompressionSize))
 	}
 	d.Set(names.AttrName, api.Name)
+	d.Set("security_policy", api.SecurityPolicy)
 
 	policy, err := flattenAPIPolicy(api.Policy)
 	if err != nil {
@@ -430,6 +475,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			})
 		}
 
+		if d.HasChange("endpoint_access_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/endpointAccessMode"),
+				Value: aws.String(d.Get("endpoint_access_mode").(string)),
+			})
+		}
+
 		if d.HasChange("endpoint_configuration.0.types") {
 			// The REST API must have an endpoint type.
 			// If attempting to remove the configuration, do nothing.
@@ -522,6 +575,14 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			})
 		}
 
+		if d.HasChange("security_policy") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/securityPolicy"),
+				Value: aws.String(d.Get("security_policy").(string)),
+			})
+		}
+
 		if len(operations) > 0 {
 			input := apigateway.UpdateRestApiInput{
 				PatchOperations: operations,
@@ -530,6 +591,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			_, err := conn.UpdateRestApi(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s): %s", d.Id(), err)
+			}
+
+			err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 			}
 		}
 
@@ -560,6 +626,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) specification: %s", d.Id(), err)
 				}
 
+				err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
+				}
+
 				// Using PutRestApi with mode overwrite will remove any configuration
 				// that was done previously. Reconcile these changes by having
 				// any Terraform configured values overwrite imported configuration.
@@ -573,6 +644,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
+					}
+
+					err = waitRestAPIAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to become available: %s", d.Id(), err)
 					}
 				}
 			}
@@ -598,6 +674,11 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway REST API (%s): %s", d.Id(), err)
+	}
+
+	err = waitRestAPIDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway REST API (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return diags
@@ -685,6 +766,14 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
+	if v, ok := d.GetOk("endpoint_access_mode"); ok && resourceRestAPIAttrConfigured(d, "endpoint_access_mode") && types.EndpointAccessMode(v.(string)) != output.EndpointAccessMode {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/endpointAccessMode"),
+			Value: aws.String(v.(string)),
+		})
+	}
+
 	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
 	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		endpointConfiguration := expandEndpointConfiguration(v.([]any)[0].(map[string]any))
@@ -747,7 +836,10 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk(names.AttrPolicy); ok {
+	// Only re-apply policy after OpenAPI import when policy was configured
+	// explicitly. For Optional+Computed policy, GetOk can be true for a
+	// value that was read from the prior API state.
+	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIAttrConfigured(d, names.AttrPolicy) {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 
@@ -759,7 +851,81 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		}
 	}
 
+	if v, ok := d.GetOk("security_policy"); ok && resourceRestAPIAttrConfigured(d, "security_policy") && types.SecurityPolicy(v.(string)) != output.SecurityPolicy {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/securityPolicy"),
+			Value: aws.String(v.(string)),
+		})
+	}
+
 	return operations
+}
+
+func waitRestAPIAvailable(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ApiStatusPending, types.ApiStatusUpdating),
+		Target:  enum.Slice(types.ApiStatusAvailable),
+		Refresh: statusRestAPI(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	out, ok := outputRaw.(*apigateway.GetRestApiOutput)
+	if !ok {
+		return err
+	}
+
+	if out.ApiStatus == types.ApiStatusFailed {
+		retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
+	}
+
+	return err
+}
+
+func waitRestAPIDeleted(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ApiStatusAvailable, types.ApiStatusPending, types.ApiStatusUpdating),
+		Target:  []string{},
+		Refresh: statusRestAPI(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	out, ok := outputRaw.(*apigateway.GetRestApiOutput)
+	if !ok {
+		return err
+	}
+
+	if out.ApiStatus == types.ApiStatusFailed {
+		retry.SetLastError(err, errors.New(aws.ToString(out.ApiStatusMessage)))
+	}
+
+	return err
+}
+
+func statusRestAPI(conn *apigateway.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findRestAPIByID(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.ApiStatus), nil
+	}
+}
+
+func resourceRestAPIAttrConfigured(d *schema.ResourceData, attr string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.Type().IsObjectType() || !rawConfig.Type().HasAttribute(attr) {
+		return false
+	}
+
+	return !rawConfig.GetAttr(attr).IsNull()
 }
 
 // escapeJSONPointer escapes string per RFC 6901
