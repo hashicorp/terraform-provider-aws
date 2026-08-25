@@ -272,7 +272,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"keys":          acctest.ListOfStringsVariable("customer_id", "priority", "score"),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "channel", "score"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, t, resourceName, &m),
@@ -289,7 +289,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrKey:  knownvalue.StringExact("priority"),
+							names.AttrKey:  knownvalue.StringExact("channel"),
 							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -304,7 +304,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"keys":          acctest.ListOfStringsVariable("priority", "score"),
+					"keys":          acctest.ListOfStringsVariable("channel", "score"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, t, resourceName, &m),
@@ -317,7 +317,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrKey:  knownvalue.StringExact("priority"),
+							names.AttrKey:  knownvalue.StringExact("channel"),
 							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
