@@ -29,7 +29,7 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceRegistrationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
 				),
 			},
@@ -50,7 +50,7 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamespaceRegistrationConfig_cluster(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
 				),
 			},
