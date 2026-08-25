@@ -4,6 +4,7 @@
 resource "aws_ecs_cluster" "test" {
   name = var.rName
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
