@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,10 +35,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -115,11 +117,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 					setvalidator.SizeBetween(1, 10),
 				},
 				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplaceIf(
-						requiresReplaceIfIndexedKeyRemoved,
-						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
-						"Removing or changing an existing indexed key requires replacement; new keys are added in place.",
-					),
+					tfsetplanmodifier.RequiresReplaceIfElementsDeleted,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -329,23 +327,24 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		// the keys that are not already present. Removals force replacement (see the schema plan modifier).
 		newKeys, d := new.IndexedKeys.ToSlice(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		oldKeys, d := old.IndexedKeys.ToSlice(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		existing := make(map[string]struct{}, len(oldKeys))
-		for _, k := range oldKeys {
-			existing[indexedKeyIdentity(k)] = struct{}{}
-		}
-		for _, k := range newKeys {
-			if _, ok := existing[indexedKeyIdentity(k)]; !ok {
-				input.AddIndexedKeys = append(input.AddIndexedKeys, awstypes.IndexedKey{
-					Key:  k.Key.ValueStringPointer(),
-					Type: k.Type.ValueEnum(),
-				})
-			}
+		if addKeys, _, _ := intflex.DiffSlices(oldKeys, newKeys, func(a, b *indexedKeyModel) bool {
+			return a != nil && b != nil && a.Key.Equal(b.Key) && a.Type.Equal(b.Type)
+		}); len(addKeys) > 0 {
+			input.AddIndexedKeys = tfslices.ApplyToAll(addKeys, func(v *indexedKeyModel) awstypes.IndexedKey {
+				return awstypes.IndexedKey{
+					Key:  fwflex.StringFromFramework(ctx, v.Key),
+					Type: v.Type.ValueEnum(),
+				}
+			})
 		}
 
 		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
@@ -540,45 +539,6 @@ type indexedKeyModel struct {
 	Type fwtypes.StringEnum[awstypes.MetadataValueType] `tfsdk:"type"`
 }
 
-func indexedKeyIdentity(m *indexedKeyModel) string {
-	return m.Key.ValueString() + "|" + m.Type.ValueString()
-}
-
-// requiresReplaceIfIndexedKeyRemoved forces replacement only when an existing indexed key is removed
-// or changed. Indexed keys can only be added via UpdateMemory (previously indexed keys cannot be
-// removed), so a plan that is a superset of the prior keys is applied in place.
-func requiresReplaceIfIndexedKeyRemoved(ctx context.Context, request planmodifier.SetRequest, response *setplanmodifier.RequiresReplaceIfFuncResponse) {
-	if request.StateValue.IsNull() || request.StateValue.IsUnknown() || request.PlanValue.IsUnknown() {
-		return
-	}
-
-	var stateVal, planVal fwtypes.SetNestedObjectValueOf[indexedKeyModel]
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, request.Path, &stateVal))
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, request.Path, &planVal))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	stateKeys, d := stateVal.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
-	planKeys, d := planVal.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	planned := make(map[string]struct{}, len(planKeys))
-	for _, k := range planKeys {
-		planned[indexedKeyIdentity(k)] = struct{}{}
-	}
-	for _, k := range stateKeys {
-		if _, ok := planned[indexedKeyIdentity(k)]; !ok {
-			response.RequiresReplace = true
-			return
-		}
-	}
-}
-
 type streamDeliveryResourcesModel struct {
 	Resources fwtypes.ListNestedObjectValueOf[streamDeliveryResourceModel] `tfsdk:"resource"`
 }
@@ -607,9 +567,10 @@ func (m *streamDeliveryResourceModel) Flatten(ctx context.Context, v any) diag.D
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("stream delivery resource flatten: %T", v),
+			fmt.Sprintf("streamDeliveryResourceModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -629,6 +590,7 @@ func (m streamDeliveryResourceModel) Expand(ctx context.Context) (any, diag.Diag
 		}
 		return &r, diags
 	}
+
 	return nil, diags
 }
 
