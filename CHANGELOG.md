@@ -2,6 +2,8 @@
 
 NOTES:
 
+* resource/aws_db_instance: When `manage_master_user_password` is enabled, the managed secret's automatic rotation can now be disabled using `aws_secretsmanager_secret_rotation` with `rotation_enabled = false` ([#49659](https://github.com/hashicorp/terraform-provider-aws/issues/49659))
+* resource/aws_rds_cluster: When `manage_master_user_password` is enabled, the managed secret's automatic rotation can now be disabled using `aws_secretsmanager_secret_rotation` with `rotation_enabled = false` ([#49659](https://github.com/hashicorp/terraform-provider-aws/issues/49659))
 * resource/aws_savingsplans_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49264](https://github.com/hashicorp/terraform-provider-aws/issues/49264))
 
 FEATURES:
@@ -29,6 +31,8 @@ ENHANCEMENTS:
 * resource/aws_elasticache_replication_group: Add `auth_token_wo` and `auth_token_wo_version` write-only arguments ([#49268](https://github.com/hashicorp/terraform-provider-aws/issues/49268))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `tag_propagation_configuration` configuration block to `rule.destination.destination_logs_configuration`, and `tag_propagation_status` and `tag_propagation_failure_reason` attributes ([#49656](https://github.com/hashicorp/terraform-provider-aws/issues/49656))
 * resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
+* resource/aws_secretsmanager_secret_rotation: `rotation_enabled` is now configurable (previously read-only) and can be set to `false` to disable rotation for a secret. This is particularly useful for secrets whose rotation is otherwise managed by AWS, such as an RDS master user password secret created with `manage_master_user_password` ([#49659](https://github.com/hashicorp/terraform-provider-aws/issues/49659))
+* resource/aws_secretsmanager_secret_rotation: `rotation_rules` is now optional, and must be omitted when `rotation_enabled` is `false` ([#49659](https://github.com/hashicorp/terraform-provider-aws/issues/49659))
 * resource/aws_workspaces_directory: Add `workspace_access_properties.access_endpoint_config` argument ([#49668](https://github.com/hashicorp/terraform-provider-aws/issues/49668))
 
 BUG FIXES:
