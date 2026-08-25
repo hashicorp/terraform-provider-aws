@@ -8,6 +8,7 @@ package ecs
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,7 +31,11 @@ import (
 
 // @SDKResource("aws_ecs_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-// @ArnFormat("cluster/{name}")
+// @IdentityAttribute("name")
+// @ArnFormat("cluster/{name}", attribute="arn")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.Cluster")
+// @Testing(preIdentityVersion="v6.61.0")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -332,6 +338,20 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
+	}
+
+	if arn.IsARN(d.Id()) {
+		a, err := arn.Parse(d.Id())
+		if err != nil {
+			return nil, err
+		}
+		d.Set(names.AttrName, strings.TrimPrefix(a.Resource, "cluster/"))
+
+		return []*schema.ResourceData{d}, nil
+	}
+
 	d.Set(names.AttrName, d.Id())
 
 	region := d.Get(names.AttrRegion).(string)
