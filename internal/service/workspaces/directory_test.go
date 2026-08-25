@@ -478,6 +478,25 @@ func testAccDirectory_workspaceAccessProperties_accessEndpointConfig(t *testing.
 				),
 			},
 			{
+				Config: testAccDirectoryConfig_accessEndpointConfigUpdate(rName, domain),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.access_endpoint_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.*", map[string]string{
+						"access_endpoint_type": "STREAMING_WSP",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.*.vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.access_endpoint_config.0.internet_fallback_protocols.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1030,7 +1049,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccDirectoryConfig_accessEndpointConfig(rName, domain string) string {
+func testAccDirectoryConfig_accessEndpointConfigBase(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
@@ -1090,7 +1109,13 @@ resource "aws_vpc_endpoint" "streaming" {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
+`, rName))
+}
 
+func testAccDirectoryConfig_accessEndpointConfig(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_accessEndpointConfigBase(rName, domain),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -1111,6 +1136,40 @@ resource "aws_workspaces_directory" "main" {
       }
 
       internet_fallback_protocols = ["PCOIP"]
+    }
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccDirectoryConfig_accessEndpointConfigUpdate(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_accessEndpointConfigBase(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_access_properties {
+    device_type_android    = "ALLOW"
+    device_type_chromeos   = "ALLOW"
+    device_type_ios        = "ALLOW"
+    device_type_linux      = "DENY"
+    device_type_osx        = "ALLOW"
+    device_type_web        = "DENY"
+    device_type_windows    = "ALLOW"
+    device_type_zeroclient = "DENY"
+
+    access_endpoint_config {
+      access_endpoints {
+        access_endpoint_type = "STREAMING_WSP"
+        vpc_endpoint_id      = aws_vpc_endpoint.streaming.id
+      }
+
+      internet_fallback_protocols = []
     }
   }
 
