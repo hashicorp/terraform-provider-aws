@@ -7,6 +7,7 @@ package arcregionswitch_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -230,7 +231,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region(), "Route53 health check integration test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -249,6 +250,58 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 
 					// Verify private hosted zone
 					resource.TestCheckResourceAttr("aws_route53_zone.private", "vpc.#", "2"),
+				),
+			},
+			{
+				// Update an attribute to exercise the Update path, which now waits
+				// for Route53 health checks to be allocated before returning. The
+				// workflow (and therefore the health check identities) is unchanged,
+				// so the same four checks must remain allocated afterward.
+				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region(), "Route53 health check integration test - updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Route53 health check integration test - updated"),
+
+					// Health checks remain allocated after the update
+					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "4"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.health_check_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.health_check_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_route53HealthCheckMultiple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test requiring VPC creation and Route53 health check setup")
+	}
+
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
+	zoneName := acctest.RandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_route53HealthCheckMultiple(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					// 4 distinct records x 2 regions = 8 health checks. All must be
+					// returned by the (now paginated) data source, and the create
+					// waiter must have observed all of them to reach steady state.
+					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "8"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.7.health_check_id"),
 				),
 			},
 		},
@@ -644,8 +697,10 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`value must be a valid ARN`),
 			},
 			{
-				Config:      testAccPlanConfig_singleRegion(rName),
-				ExpectError: regexache.MustCompile(`length greater than or equal to 2`),
+				Config: testAccPlanConfig_singleRegion(rName),
+				// Terraform wraps long diagnostic detail with newlines, so match the
+				// constraint message with wrap-tolerant whitespace.
+				ExpectError: regexache.MustCompile(`length\s+greater\s+than\s+or\s+equal\s+to\s+2`),
 			},
 		},
 	})
@@ -1727,7 +1782,7 @@ resource "aws_route53_zone" "test" {
 `, rName, primaryRegion, alternateRegion, zoneName, recordName)
 }
 
-func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion, description string) string {
 	return fmt.Sprintf(`
 # Provider configuration for secondary region
 provider "aws" {
@@ -1795,7 +1850,7 @@ resource "aws_arcregionswitch_plan" "test" {
   recovery_approach = "activeActive"
   regions           = [%[3]q, %[4]q]
   primary_region    = %[3]q
-  description       = "Route53 health check integration test"
+  description       = %[5]q
 
   workflow {
     workflow_target_action = "activate"
@@ -1920,7 +1975,107 @@ resource "aws_route53_record" "secondary" {
     ignore_changes = [health_check_id]
   }
 }
-`, rName, zoneName, primaryRegion, alternateRegion)
+`, rName, zoneName, primaryRegion, alternateRegion, description)
+}
+
+func testAccPlanConfig_route53HealthCheckMultiple(rName, zoneName, primaryRegion, alternateRegion string) string {
+	const recordCount = 4
+
+	var steps strings.Builder
+	for i := range recordCount {
+		fmt.Fprintf(&steps, `
+    step {
+      name                 = "route53-health-check-%[1]d"
+      execution_block_type = "Route53HealthCheck"
+
+      route53_health_check_config {
+        hosted_zone_id  = aws_route53_zone.private.zone_id
+        record_name     = "api-%[1]d.%[2]s"
+        timeout_minutes = 60
+      }
+    }
+`, i, zoneName)
+	}
+
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "secondary"
+  region = %[4]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "arc-region-switch.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_vpc" "primary" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "%[1]s-primary"
+  }
+}
+
+resource "aws_vpc" "secondary" {
+  provider             = aws.secondary
+  cidr_block           = "10.2.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "%[1]s-secondary"
+  }
+}
+
+resource "aws_route53_zone" "private" {
+  name = %[2]q
+
+  vpc {
+    vpc_id = aws_vpc.primary.id
+  }
+
+  vpc {
+    vpc_id     = aws_vpc.secondary.id
+    vpc_region = %[4]q
+  }
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activeActive"
+  regions           = [%[3]q, %[4]q]
+  primary_region    = %[3]q
+
+  workflow {
+    workflow_target_action = "activate"
+%[5]s
+  }
+
+  workflow {
+    workflow_target_action = "deactivate"
+%[5]s
+  }
+
+  lifecycle {
+    ignore_changes = [workflow]
+  }
+}
+
+data "aws_arcregionswitch_route53_health_checks" "test" {
+  plan_arn = aws_arcregionswitch_plan.test.arn
+}
+`, rName, zoneName, primaryRegion, alternateRegion, steps.String())
 }
 
 func testAccPlanConfig_basic(rName string) string {

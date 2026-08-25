@@ -40,14 +40,21 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "health_checks.0.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.status"),
 
 					resource.TestMatchResourceAttr(dataSourceName, "health_checks.1.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.1.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.status"),
+
+					// ListRoute53HealthChecks does not guarantee ordering, so assert
+					// the expected regions are present without pinning an index.
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "health_checks.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "health_checks.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+					}),
 				),
 			},
 		},

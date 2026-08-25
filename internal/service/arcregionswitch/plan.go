@@ -7,6 +7,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -927,6 +928,14 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// Wait for any Route53 health checks to be (re)allocated before returning, so
+	// that a subsequent read observes the health checks the updated plan expects
+	// rather than stale ones.
+	if err := waitRoute53HealthChecksAllocated(ctx, conn, planOutput, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
+		return
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, planOutput, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -1013,12 +1022,23 @@ func findRoute53HealthChecksByARN(ctx context.Context, conn *arcregionswitch.Cli
 		Arn: aws.String(planARN),
 	}
 
-	output, err := conn.ListRoute53HealthChecks(ctx, &input)
-	if err != nil {
-		return nil, smarterr.NewError(err)
+	return findRoute53HealthChecks(ctx, conn, &input)
+}
+
+func findRoute53HealthChecks(ctx context.Context, conn arcregionswitch.ListRoute53HealthChecksAPIClient, input *arcregionswitch.ListRoute53HealthChecksInput) ([]awstypes.Route53HealthCheck, error) {
+	var healthChecks []awstypes.Route53HealthCheck
+
+	pages := arcregionswitch.NewListRoute53HealthChecksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		healthChecks = append(healthChecks, page.HealthChecks...)
 	}
 
-	return output.HealthChecks, nil
+	return healthChecks, nil
 }
 
 // sortWorkflows sorts workflows by target action (activate before deactivate) for consistent ordering
@@ -2036,56 +2056,96 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 
-	// Check if plan has Route53HealthCheck steps
-	hasRoute53HealthChecks := false
-	expectedCount := 0
-	for _, workflow := range plan.Workflows {
-		for _, step := range workflow.Steps {
-			if step.ExecutionBlockType == awstypes.ExecutionBlockTypeRoute53HealthCheck {
-				hasRoute53HealthChecks = true
-				expectedCount++
-			}
-		}
-	}
-
-	// If plan has Route53 health checks, wait for them to be allocated
-	if hasRoute53HealthChecks {
-		healthCheckConf := &retry.StateChangeConf{
-			Pending: []string{"pending"},
-			Target:  []string{"allocated"},
-			Refresh: statusRoute53HealthChecks(conn, arn, expectedCount),
-			Timeout: timeout,
-		}
-
-		_, err = healthCheckConf.WaitForStateContext(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
+	if err := waitRoute53HealthChecksAllocated(ctx, conn, plan, timeout); err != nil {
+		return nil, smarterr.NewError(err)
 	}
 
 	return plan, nil
 }
 
-func statusRoute53HealthChecks(conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
+// waitRoute53HealthChecksAllocated blocks until every Route53 health check the
+// plan expects exists with an allocated ID. ARC allocates one health check per
+// (hosted zone, record name, Region) for each Route53HealthCheck execution block,
+// across each of the plan's Regions. Gating on this identity set (rather than a
+// raw count) ensures the checks that exist are the ones the plan expects, and —
+// during updates that replace checks — that stale checks satisfying the count no
+// longer mask the new ones. Returns immediately when the plan has no health
+// checks.
+func waitRoute53HealthChecksAllocated(ctx context.Context, conn *arcregionswitch.Client, plan *awstypes.Plan, timeout time.Duration) error {
+	expectedKeys := expectedRoute53HealthCheckKeys(plan)
+	if len(expectedKeys) == 0 {
+		return nil
+	}
+
+	healthCheckConf := &retry.StateChangeConf{
+		Pending: []string{"pending"},
+		Target:  []string{"allocated"},
+		Refresh: statusRoute53HealthChecks(conn, aws.ToString(plan.Arn), expectedKeys),
+		Timeout: timeout,
+	}
+
+	_, err := healthCheckConf.WaitForStateContext(ctx)
+	return smarterr.NewError(err)
+}
+
+// expectedRoute53HealthCheckKeys returns the set of health check identities the
+// plan expects, keyed by "hostedZoneID:recordName:region". ARC allocates one
+// health check per (hosted zone, record name, Region) for each Route53HealthCheck
+// execution block — including those nested inside Parallel blocks — across every
+// Region in the plan.
+func expectedRoute53HealthCheckKeys(plan *awstypes.Plan) map[string]struct{} {
+	keys := make(map[string]struct{})
+
+	var addSteps func(steps []awstypes.Step)
+	addSteps = func(steps []awstypes.Step) {
+		for _, step := range steps {
+			switch config := step.ExecutionBlockConfiguration.(type) {
+			case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+				hostedZoneID := aws.ToString(config.Value.HostedZoneId)
+				recordName := aws.ToString(config.Value.RecordName)
+				for _, region := range plan.Regions {
+					keys[route53HealthCheckKey(hostedZoneID, recordName, region)] = struct{}{}
+				}
+			case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
+				addSteps(config.Value.Steps)
+			}
+		}
+	}
+
+	for _, workflow := range plan.Workflows {
+		addSteps(workflow.Steps)
+	}
+
+	return keys
+}
+
+func route53HealthCheckKey(hostedZoneID, recordName, region string) string {
+	return fmt.Sprintf("%s:%s:%s", hostedZoneID, recordName, region)
+}
+
+func statusRoute53HealthChecks(conn *arcregionswitch.Client, arn string, expectedKeys map[string]struct{}) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		healthChecks, err := findRoute53HealthChecksByARN(ctx, conn, arn)
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}
 
-		// Wait for expected number of health checks to exist
-		if len(healthChecks) < expectedCount {
-			return healthChecks, "pending", nil
-		}
-
-		// Wait for all health check IDs to be populated
+		// Collect the identities of health checks that have been allocated an ID.
+		ready := make(map[string]struct{}, len(healthChecks))
 		for _, hc := range healthChecks {
 			if aws.ToString(hc.HealthCheckId) == "" {
+				continue
+			}
+			ready[route53HealthCheckKey(aws.ToString(hc.HostedZoneId), aws.ToString(hc.RecordName), aws.ToString(hc.Region))] = struct{}{}
+		}
+
+		// Allocated only when every expected health check is present with an ID.
+		for key := range expectedKeys {
+			if _, ok := ready[key]; !ok {
 				return healthChecks, "pending", nil
 			}
 		}
 
-		// All health checks exist with IDs populated
 		return healthChecks, "allocated", nil
 	}
 }
