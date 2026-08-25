@@ -31,6 +31,11 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 				Config: testAccNamespaceRegistrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_type", "serverless"),
+					resource.TestCheckNoResourceAttr(resourceName, "provisioned_cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "serverless_namespace_identifier", "aws_redshiftserverless_namespace.test", "namespace_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "serverless_workgroup_identifier", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
 				),
 			},
 		},
@@ -52,6 +57,11 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 				Config: testAccNamespaceRegistrationConfig_cluster(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_type", "provisioned"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned_cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "serverless_namespace_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "serverless_workgroup_identifier"),
 				),
 			},
 		},
