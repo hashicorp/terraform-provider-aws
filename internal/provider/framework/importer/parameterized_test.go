@@ -1249,7 +1249,6 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name": "a_name",
 				"type": "a_type",
 			},
-			expectedID:     "a_name,a_type",
 			expectedRegion: region,
 			expectError:    false,
 		},
@@ -1595,7 +1594,6 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"type": "a_type",
 			},
 			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			expectedID:   "a_name,a_type",
 			expectedIdentityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -1614,7 +1612,6 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"type":       "a_type",
 			},
 			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			expectedID:   "a_name,a_type",
 			expectedIdentityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -1685,7 +1682,6 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name": "a_name",
 				"type": "a_type",
 			},
-			expectedID:  "a_name,a_type",
 			expectError: false,
 		},
 	}
