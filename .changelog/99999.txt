@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_arcregionswitch_plan: Wait for all Route53 health checks to be allocated when `ListRoute53HealthChecks` results span multiple pages
+resource/aws_arcregionswitch_plan: Wait for all expected Route53 health checks to be allocated on both create and update, including when `ListRoute53HealthChecks` results span multiple pages
 ```
 
 ```release-note:bug

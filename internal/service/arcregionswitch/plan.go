@@ -2063,14 +2063,10 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 	return plan, nil
 }
 
-// waitRoute53HealthChecksAllocated blocks until every Route53 health check the
-// plan expects exists with an allocated ID. ARC allocates one health check per
-// (hosted zone, record name, Region) for each Route53HealthCheck execution block,
-// across each of the plan's Regions. Gating on this identity set (rather than a
-// raw count) ensures the checks that exist are the ones the plan expects, and —
-// during updates that replace checks — that stale checks satisfying the count no
-// longer mask the new ones. Returns immediately when the plan has no health
-// checks.
+// waitRoute53HealthChecksAllocated blocks until every health check the plan
+// expects exists with an allocated ID. Gating on identity rather than count
+// prevents stale checks from masking the new ones during an update. Returns
+// immediately when the plan has no health checks.
 func waitRoute53HealthChecksAllocated(ctx context.Context, conn *arcregionswitch.Client, plan *awstypes.Plan, timeout time.Duration) error {
 	expectedKeys := expectedRoute53HealthCheckKeys(plan)
 	if len(expectedKeys) == 0 {
@@ -2088,11 +2084,9 @@ func waitRoute53HealthChecksAllocated(ctx context.Context, conn *arcregionswitch
 	return smarterr.NewError(err)
 }
 
-// expectedRoute53HealthCheckKeys returns the set of health check identities the
-// plan expects, keyed by "hostedZoneID:recordName:region". ARC allocates one
-// health check per (hosted zone, record name, Region) for each Route53HealthCheck
-// execution block — including those nested inside Parallel blocks — across every
-// Region in the plan.
+// expectedRoute53HealthCheckKeys returns the health check identities the plan
+// expects, keyed by "hostedZoneID:recordName:region": one per Route53HealthCheck
+// execution block (including those nested in Parallel blocks) for each plan Region.
 func expectedRoute53HealthCheckKeys(plan *awstypes.Plan) map[string]struct{} {
 	keys := make(map[string]struct{})
 

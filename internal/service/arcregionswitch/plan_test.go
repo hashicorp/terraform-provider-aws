@@ -253,10 +253,8 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 				),
 			},
 			{
-				// Update an attribute to exercise the Update path, which now waits
-				// for Route53 health checks to be allocated before returning. The
-				// workflow (and therefore the health check identities) is unchanged,
-				// so the same four checks must remain allocated afterward.
+				// Exercise the Update path's health check wait. The workflow is
+				// unchanged, so the same four checks must remain allocated.
 				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region(), "Route53 health check integration test - updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
