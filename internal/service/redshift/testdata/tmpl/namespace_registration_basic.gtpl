@@ -4,7 +4,6 @@ resource "aws_redshift_namespace_registration" "test" {
   namespace_type                  = "serverless"
   serverless_namespace_identifier = aws_redshiftserverless_namespace.test.namespace_name
   serverless_workgroup_identifier = aws_redshiftserverless_workgroup.test.workgroup_name
-{{- template "tags" . }}
 }
 
 data "aws_caller_identity" "current" {}
