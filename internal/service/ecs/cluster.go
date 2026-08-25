@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -36,6 +35,7 @@ import (
 // @ArnFormat("cluster/{name}", attribute="arn")
 // @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.Cluster")
+// @Testing(importStateIdFunc="testAccClusterImportStateIdFunc")
 // @Testing(preIdentityVersion="v6.61.0")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
@@ -321,16 +321,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
-	}
-
-	if arn.IsARN(d.Id()) {
-		a, err := arn.Parse(d.Id())
-		if err != nil {
-			return nil, err
-		}
-		d.Set(names.AttrName, strings.TrimPrefix(a.Resource, "cluster/"))
-
-		return []*schema.ResourceData{d}, nil
 	}
 
 	d.Set(names.AttrName, d.Id())
