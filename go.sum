@@ -23,8 +23,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go-v2 v1.43.6 h1:RrmFcqCBxkJuf7g1axVo5krB4jM/AO8r5e5oujrgdoQ=
-github.com/aws/aws-sdk-go-v2 v1.43.6/go.mod h1:tXpPM+v0D1lndmga+HqqLDIzUFJlEeR21aspVklHF00=
+github.com/aws/aws-sdk-go-v2 v1.43.7 h1:msCzvkeYJA9ehbV8mRRmkZLo/zJg/+yDVLNtflg83hQ=
+github.com/aws/aws-sdk-go-v2 v1.43.7/go.mod h1:tXpPM+v0D1lndmga+HqqLDIzUFJlEeR21aspVklHF00=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.18 h1:LAfOuhAH331fmOjTQpAaOlH+Ftn7RzSDJ2VFwjdMMy4=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.18/go.mod h1:4e5xhuXHx1e4U9EthvbPP1r/DIMp5c2823OL8karzcM=
 github.com/aws/aws-sdk-go-v2/config v1.32.37 h1:Ljl7LOJB6ym0liuEl0+TZ3d7f5I8MEZN1Cj9PINlj/g=
@@ -35,10 +35,10 @@ github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.37 h1:b5tb+CZItBkydC7r3hTNdS
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.37/go.mod h1:ZQ+6SU9X0oz6+7MUCSswv9Mjci4eaqZr21HI2RVy/yA=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.43 h1:Fhx4uwBshQF0+jmhV/FKDM4LPj7L9iUy5n3MvLxLy00=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.43/go.mod h1:4Tyfc1eIPEyrAMysLCVkcYL1Hm/hkGWbElLo8pejHPo=
-github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.37 h1:lznzIOvvbqjfe8UAaciCRJgBgJsxuTROKlhZuXQWfv8=
-github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.37/go.mod h1:otfkzyfQeMMLZAqX59GSXTL3o22BR/l6HFaRzzbWSqA=
-github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.37 h1:zCEORWo0eU0gDjG+IyApE/2B+ZGG1m+GU7B263XV8ds=
-github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.37/go.mod h1:i6c0PEl3TNOWxRbQ++KQcVenPWS/GoQeiklKhNuqzJ8=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38 h1:MBMg0zJ6i4TkAJ0dVFLKKn2cOkY6FkicmUDM67BRr6g=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38/go.mod h1:9MWuJbyiUyj6eA7W1/zm1zuePDPSB3g+xcgRQeMWsXc=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.38 h1:lHm4jPf3k1Lz5ZWc+Vcn3MKVwym+26kWCba9FkJ4f0Y=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.38/go.mod h1:Rn+P2XR+FbyZzjmWKjg/KUZNxmGfr5oZwh5jQiE+CzI=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.38 h1:A3UAuCmx7LyUcrixBTzKJYYIUZ2yTvn6ZhT8PB+7APk=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.38/go.mod h1:1PDUYG9Z+JrbbsobsAZHjWOm9QBT/djiK3QbykTL5Z4=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.51.6 h1:FNe6xWJsJ1Va0246uB071P5su59pZqDCzmeVjM8ZlgQ=
@@ -83,8 +83,8 @@ github.com/aws/aws-sdk-go-v2/service/appstream v1.64.7 h1:NkSLvb8QV3NzNbIgjbPFol
 github.com/aws/aws-sdk-go-v2/service/appstream v1.64.7/go.mod h1:etxrKDUkIVGtsCK6J1kSaEymrZ6eiWO6SwyjfitOI7g=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.56.6 h1:uHytituDwDi5gTh+hy0vB00JmUcD6vFVx0Z4Oirnzq0=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.56.6/go.mod h1:PkDDuT1fXV2TH9J9K2iGJqbZJpFn1WBZ4U0558NA+JA=
-github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.13.5 h1:4QkwSr54dIU6usqvpvM3weoLbo5FdEZvZ+i9xWN0H7s=
-github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.13.5/go.mod h1:yVCXEfVfZdBJBzoGCgs6VUOnJzjAEAssRrSjelvSylI=
+github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.14.0 h1:YySjupnlu2gLiJhsW4R8FbIbvaavjlN4rwazQHzlfNk=
+github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.14.0/go.mod h1:MF08OalC8/oZyRxyWRhh8NCv838jyobtRuSvA8cdhzk=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.25.6 h1:1l94TC2VEDeB+KrIfgdvKvGlyE6D4lBMlSytXcGTEqs=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.25.6/go.mod h1:oqP7c1YVmky+8gRag5zfYzAIflp0CqCpmzhamboHwzQ=
 github.com/aws/aws-sdk-go-v2/service/athena v1.60.6 h1:CN9SJeHzpZA9m+LoFtrR0tIp109UhvfBNCbsczXdQok=
