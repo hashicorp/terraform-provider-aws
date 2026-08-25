@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_savingsplan_savings_plan: Mark `purchase_time` as `Optional` and `Computed`
+```
+```release-note:bug
+resource/aws_savingsplan_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
+```

@@ -115,9 +115,11 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"purchase_time": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Optional:    true,
+				Computed:    true,
 				Description: "The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ).",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"recurring_payment_amount": schema.StringAttribute{
