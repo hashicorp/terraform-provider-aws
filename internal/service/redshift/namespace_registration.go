@@ -15,12 +15,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	redshiftserverlesstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -42,9 +40,10 @@ const (
 // @IdentityAttribute("serverless_namespace_identifier", optional="true")
 // @IdentityAttribute("serverless_workgroup_identifier", optional="true")
 // @IdentityAttribute("provisioned_cluster_identifier", optional="true")
-// @ImportIDHandler("namespaceRegistrationImportID", setIDAttribute=true)
+// @ImportIDHandler("namespaceRegistrationImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(identityTest=false)
+// @Testing(importStateIdFunc="testAccNamespaceRegistrationImportStateIdFunc")
 func newNamespaceRegistrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &namespaceRegistrationResource{}, nil
 }
@@ -323,8 +322,7 @@ type namespaceRegistrationResourceModel struct {
 }
 
 var (
-	_ inttypes.ImportIDParser           = namespaceRegistrationImportID{}
-	_ inttypes.FrameworkImportIDCreator = namespaceRegistrationImportID{}
+	_ inttypes.ImportIDParser = namespaceRegistrationImportID{}
 )
 
 type namespaceRegistrationImportID struct{}
@@ -354,37 +352,4 @@ func (namespaceRegistrationImportID) Parse(id string) (string, map[string]any, e
 	}
 
 	return "", nil, fmt.Errorf("id %q should be in format <consumer-id>,<cluster-id> or <consumer-id>,<namespace-id>,<workgroup-id>", id)
-}
-
-func (namespaceRegistrationImportID) Create(ctx context.Context, state tfsdk.State) string {
-	var namespaceType types.String
-	state.GetAttribute(ctx, path.Root("namespace_type"), &namespaceType)
-
-	if namespaceType.ValueString() == "serverless" {
-		parts := make([]string, 3)
-		var attrVal types.String
-
-		state.GetAttribute(ctx, path.Root("consumer_identifier"), &attrVal)
-		parts[0] = attrVal.ValueString()
-
-		state.GetAttribute(ctx, path.Root("serverless_namespace_identifier"), &attrVal)
-		parts[1] = attrVal.ValueString()
-
-		state.GetAttribute(ctx, path.Root("serverless_workgroup_identifier"), &attrVal)
-		parts[2] = attrVal.ValueString()
-
-		return strings.Join(parts, ",")
-	}
-
-	// Provisioned
-	parts := make([]string, 2)
-	var attrVal types.String
-
-	state.GetAttribute(ctx, path.Root("consumer_identifier"), &attrVal)
-	parts[0] = attrVal.ValueString()
-
-	state.GetAttribute(ctx, path.Root("provisioned_cluster_identifier"), &attrVal)
-	parts[1] = attrVal.ValueString()
-
-	return strings.Join(parts, ",")
 }
