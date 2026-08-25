@@ -6,6 +6,7 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -657,17 +658,18 @@ func testSecretValueIsCurrent(ctx context.Context, t *testing.T, rName string) r
 		output, err := conn.DescribeSecret(ctx, input)
 		if err != nil {
 			return err
-		} else {
-			// Ensure that the current version of the secret is in the AWSCURRENT stage
-			for _, stage := range output.VersionIdsToStages {
-				if stage[0] == "AWSCURRENT" {
-					return nil
-				} else {
-					return fmt.Errorf("Secret version is not in AWSCURRENT stage: %s", stage[0])
-				}
-			}
-			return nil
 		}
+
+		// Ensure a version of the secret is in the AWSCURRENT stage. A secret can have
+		// multiple versions (AWSCURRENT, AWSPREVIOUS, AWSPENDING), and map iteration
+		// order is not deterministic, so check all versions rather than the first.
+		for _, stages := range output.VersionIdsToStages {
+			if slices.Contains(stages, "AWSCURRENT") {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("no secret version in AWSCURRENT stage: %v", output.VersionIdsToStages)
 	}
 }
 
