@@ -260,6 +260,30 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### Disabling Master Password Rotation
+
+When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`.
+
+Referencing `aws_db_instance.default.master_user_secret[0].secret_arn` (as in the example below) ensures the rotation change is applied after the instance is available. Avoid hardcoding the secret ARN, which would remove that ordering.
+
+```terraform
+resource "aws_db_instance" "default" {
+  allocated_storage           = 10
+  db_name                     = "mydb"
+  engine                      = "mysql"
+  engine_version              = "8.0"
+  instance_class              = "db.t3.micro"
+  manage_master_user_password = true
+  username                    = "foo"
+  parameter_group_name        = "default.mysql8.0"
+}
+
+resource "aws_secretsmanager_secret_rotation" "default" {
+  secret_id        = aws_db_instance.default.master_user_secret[0].secret_arn
+  rotation_enabled = false
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
