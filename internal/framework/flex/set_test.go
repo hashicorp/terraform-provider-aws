@@ -14,14 +14,41 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func TestDiffSets(t *testing.T) {
+func TestSetDifference(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		a, b     types.Set
-		expected types.Set
+		a, b       types.Set
+		expected   types.Set
+		wantErrors int
 	}
 	tests := map[string]testCase{
+		"a unknown b non-empty": {
+			a: types.SetUnknown(types.StringType),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
+		"a non-empty b unknown": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			b:          types.SetUnknown(types.StringType),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
+		"mismatched element types": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			b: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(2),
+			}),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
 		"both null treated as empty": {
 			a:        types.SetNull(types.StringType),
 			b:        types.SetNull(types.StringType),
@@ -105,7 +132,11 @@ func TestDiffSets(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := flex.DiffSets(context.Background(), test.a, test.b)
+			got, diags := flex.SetDifference(context.Background(), test.a, test.b)
+
+			if got := diags.ErrorsCount(); got != test.wantErrors {
+				t.Errorf("expected %d error(s), got %d: %s", test.wantErrors, got, diags)
+			}
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

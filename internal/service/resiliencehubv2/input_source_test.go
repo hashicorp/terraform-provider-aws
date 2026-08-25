@@ -279,7 +279,7 @@ func TestAccResilienceHubV2InputSource_resourceTagsShuffled(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/InputSource/resource_tag_shuffle/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"keys":          config.ListVariable(acctest.ListOfStringVariables(keys...)...),
+					"keys":          acctest.ListOfStringsVariable(keys...),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
@@ -322,7 +322,7 @@ func TestAccResilienceHubV2InputSource_resourceTagsShuffled(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/InputSource/resource_tag_shuffle/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"keys":          config.ListVariable(acctest.ListOfStringVariables(keysShuffled...)...),
+					"keys":          acctest.ListOfStringsVariable(keys...),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
