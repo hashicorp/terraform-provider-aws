@@ -1002,7 +1002,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 			},
 			{
 				Config:      testAccGatewayTargetConfig_credentialProviderLambda(rName, testAccCredentialProvider_empty()),
-				ExpectError: regexache.MustCompile("Invalid Credential Provider Configuration|At least one credential provider must be configured"),
+				ExpectError: regexache.MustCompile("Invalid Attribute Combination|At least one attribute out of"),
 			},
 		},
 	})
