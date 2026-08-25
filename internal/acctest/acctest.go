@@ -1488,7 +1488,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	_, err := conn.CreateDirectory(ctx, &input)
 
-	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") ||
+		errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD is no longer open to new customers") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
