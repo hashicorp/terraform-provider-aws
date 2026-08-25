@@ -702,7 +702,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"enabled": schema.ListAttribute{
+												names.AttrEnabled: schema.ListAttribute{
 													CustomType:  fwtypes.ListOfStringType,
 													ElementType: types.StringType,
 													Optional:    true,
