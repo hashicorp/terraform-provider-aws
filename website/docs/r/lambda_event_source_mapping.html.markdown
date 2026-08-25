@@ -314,7 +314,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_processing_result` - Result of the last AWS Lambda invocation of your Lambda function.
 * `state` - State of the event source mapping.
 * `state_transition_reason` - Reason the event source mapping is in its current state.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - UUID of the created event source mapping.
 
 ## Timeouts
