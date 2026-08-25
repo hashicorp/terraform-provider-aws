@@ -313,8 +313,8 @@ func (r *savingsPlanResource) ImportState(ctx context.Context, req resource.Impo
 
 func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
-		Target:  enum.Slice(awstypes.SavingsPlanStateActive),
+		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending),
+		Target:  enum.Slice(awstypes.SavingsPlanStateQueued, awstypes.SavingsPlanStateActive),
 		Refresh: statusSavingsPlan(conn, id),
 		Timeout: timeout,
 	}
