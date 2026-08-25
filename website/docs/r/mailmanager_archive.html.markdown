@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_timestamp` - Timestamp of when the archive was created.
 * `id` - Identifier of the archive.
 * `last_updated_timestamp` - Timestamp of when the archive was updated.
-* `retention_actual` - Effective retention policy applied, including the default (`SIX_MONTHS`) when no `retention` block is configured. Contains a single object with attribute `retention_period`.
+* `retention_actual` - Effective retention policy for the archive, including the default (`SIX_MONTHS`) when no `retention` block is configured. Has the same structure as the [`retention` Block](#retention-block).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
