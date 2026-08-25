@@ -129,7 +129,7 @@ Use the resource name without the `aws_` prefix in the commit message scope when
 - **Check both check blocks.** A target may appear in `ignore_targets` under `check "schema_docs"` AND `check "import_section"` (or others). Remove from all.
 - **Don't touch `ignore_contents_check`** unless the user explicitly asks — those are structural exceptions.
 - **Preserve file structure.** Don't rewrite entire doc files. Make minimal, targeted edits.
-- **Nested blocks.** When ss reports "block X.Y is not documented", the doc needs a subsection under the parent block's section. Use `` ### `y` Block `` nested contextually after the parent.
+- **Nested blocks.** When ss reports "block X.Y is not documented", the doc needs a subsection under the parent block's section. Default to `` ### `y` Block `` (just the child name) nested contextually after the parent. If the child name collides with another block of the same name elsewhere in the file (e.g. the same nested block name reused under two different parents), use the dotted path instead: `` ### `x.y` Block ``, with a matching dotted anchor. There is no single correct form — prefer the shorter undotted name, but use dotted paths when needed to keep headings unique. Be consistent within a file: don't mix dotted and undotted for the same block across the doc.
 
 ## Example session
 
