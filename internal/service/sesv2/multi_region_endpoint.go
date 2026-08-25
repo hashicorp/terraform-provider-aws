@@ -142,7 +142,7 @@ func (r *multiRegionEndpointResource) Create(ctx context.Context, req resource.C
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, endpoint, &data))
-	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(r.Meta(), ctx, data.EndpointName.ValueString()))
+	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(ctx, r.Meta(), data.EndpointName.ValueString()))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
 
@@ -167,7 +167,7 @@ func (r *multiRegionEndpointResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
-	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(r.Meta(), ctx, data.EndpointName.ValueString()))
+	data.ARN = fwflex.StringValueToFramework(ctx, multiRegionEndpointARN(ctx, r.Meta(), data.EndpointName.ValueString()))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
@@ -280,7 +280,7 @@ func findMultiRegionEndpointByName(ctx context.Context, conn *sesv2.Client, name
 }
 
 // Helper function to build resource ARN (required to use ListTagsForResource) as the same is not returned by Get/CreateMultiRegionEndpoint
-func multiRegionEndpointARN(meta *conns.AWSClient, ctx context.Context, endpointName string) string {
+func multiRegionEndpointARN(ctx context.Context, meta *conns.AWSClient, endpointName string) string {
 	return awsarn.ARN{
 		Partition: meta.Partition(ctx),
 		Service:   "ses",

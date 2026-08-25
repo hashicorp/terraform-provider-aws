@@ -72,7 +72,7 @@ func TestAccSESV2MultiRegionEndpoint_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiRegionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionEndpointConfig_tags1(rName, acctest.AlternateRegion(), acctest.CtKey1, acctest.CtValue1),
+				Config: testAccMultiRegionEndpointConfig_tags(rName, acctest.AlternateRegion(), acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiRegionEndpointExists(ctx, t, resourceName),
 				),
@@ -219,7 +219,7 @@ resource "aws_sesv2_multi_region_endpoint" "test" {
 `, rName, alternateRegion)
 }
 
-func testAccMultiRegionEndpointConfig_tags1(rName, alternateRegion, tagKey1, tagValue1 string) string {
+func testAccMultiRegionEndpointConfig_tags(rName, alternateRegion, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_multi_region_endpoint" "test" {
   endpoint_name = %[1]q
@@ -235,23 +235,4 @@ resource "aws_sesv2_multi_region_endpoint" "test" {
   }
 }
 `, rName, alternateRegion, tagKey1, tagValue1)
-}
-
-func testAccMultiRegionEndpointConfig_tags2(rName, alternateRegion, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_multi_region_endpoint" "test" {
-  endpoint_name = %[1]q
-
-  details {
-    routes_details {
-      region = %[2]q
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, alternateRegion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
