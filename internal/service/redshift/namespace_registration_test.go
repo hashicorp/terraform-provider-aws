@@ -38,6 +38,13 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "serverless_workgroup_identifier", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
 				),
 			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccNamespaceRegistrationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "consumer_identifier",
+			},
 		},
 	})
 }
@@ -63,6 +70,13 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "serverless_namespace_identifier"),
 					resource.TestCheckNoResourceAttr(resourceName, "serverless_workgroup_identifier"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccNamespaceRegistrationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "consumer_identifier",
 			},
 		},
 	})
@@ -119,6 +133,24 @@ func testAccCheckNamespaceRegistrationExists(ctx context.Context, t *testing.T, 
 		provisionedClusterIdentifier := rs.Primary.Attributes["provisioned_cluster_identifier"]
 
 		return tfredshift.FindNamespaceRegistrationByID(ctx, conn, serverlessConn, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier)
+	}
+}
+
+func testAccNamespaceRegistrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		switch rs.Primary.Attributes["namespace_type"] {
+		case "serverless":
+			return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes["consumer_identifier"], rs.Primary.Attributes["serverless_namespace_identifier"], rs.Primary.Attributes["serverless_workgroup_identifier"]), nil
+		case "provisioned":
+			return fmt.Sprintf("%s,%s", rs.Primary.Attributes["consumer_identifier"], rs.Primary.Attributes["provisioned_cluster_identifier"]), nil
+		default:
+			return "", fmt.Errorf("unexpected namespace_type: %q", rs.Primary.Attributes["namespace_type"])
+		}
 	}
 }
 
