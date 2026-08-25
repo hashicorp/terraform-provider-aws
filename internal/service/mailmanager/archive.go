@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -40,7 +42,7 @@ import (
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(importIgnore="retention")
+// @Testing(importIgnore="retention", plannableImportAction="NoOp")
 // @Testing(preCheck="testAccArchivePreCheck")
 // @Testing(serialize=true)
 // @Testing(skipEmptyTags=true, skipNullTags=true)
@@ -50,6 +52,7 @@ func newArchiveResource(_ context.Context) (resource.ResourceWithConfigure, erro
 
 const (
 	archiveCreateTimeout = 2 * time.Minute
+	archiveDeleteTimeout = 2 * time.Minute
 )
 
 type archiveResource struct {
@@ -97,8 +100,9 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"retention_actual": framework.ResourceComputedListOfObjectsAttribute[archiveRetentionModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root("retention"))),
+			names.AttrTags:     tftags.TagsAttribute(),
+			names.AttrTagsAll:  tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"retention": schema.ListNestedBlock{
@@ -154,7 +158,8 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, false))
+	retentionIsConfigured := plan.Retention.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, retentionIsConfigured))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -165,16 +170,18 @@ func (r *archiveResource) Create(ctx context.Context, req resource.CreateRequest
 func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().MailManagerClient(ctx)
 
-	var state archiveResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	var data archiveResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// When importing, all attributes other than `id` will be null.
-	isImport := state.ArchiveName.IsNull()
+	// During a read of an existing resource, `name` will be set as it is a required attribute.
+	retentionIsConfigured := data.Retention.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+	isImport := data.ArchiveName.IsNull()
 
-	archiveID := state.ArchiveId.ValueString()
+	archiveID := data.ArchiveId.ValueString()
 	out, err := findArchiveByID(ctx, conn, archiveID)
 
 	if retry.NotFound(err) {
@@ -183,16 +190,16 @@ func (r *archiveResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ArchiveId.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ArchiveId.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state, isImport))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &data, retentionIsConfigured || isImport))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -234,7 +241,8 @@ func (r *archiveResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, false))
+		retentionIsConfigured := plan.Retention.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, archiveOut, &plan, retentionIsConfigured))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -266,16 +274,62 @@ func (r *archiveResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, archiveID)
+		return
+	}
+
+	// Wait until the archive goes to PENDING_DELETION (or is gone)
+	_, err = (&retry.StateChangeConf{
+		Pending: []string{string(awstypes.ArchiveStateActive)},
+		Target:  []string{},
+		Refresh: func(ctx context.Context) (any, string, error) {
+			out, err := conn.GetArchive(ctx, &mailmanager.GetArchiveInput{
+				ArchiveId: aws.String(archiveID),
+			})
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return nil, "", nil
+			}
+			if err != nil {
+				return nil, "", err
+			}
+			if out.ArchiveState == awstypes.ArchiveStatePendingDeletion {
+				return nil, "", nil
+			}
+			return out, string(out.ArchiveState), nil
+		},
+		Timeout:    archiveDeleteTimeout,
+		Delay:      2 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}).WaitForStateContext(ctx)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, archiveID)
 	}
 }
 
-func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel, isImport bool) diag.Diagnostics {
+func (r *archiveResource) flatten(ctx context.Context, apiObject *mailmanager.GetArchiveOutput, data *archiveResourceModel, populateRetention bool) diag.Diagnostics {
 	diags := flex.Flatten(ctx, apiObject, data)
 	if diags.HasError() {
 		return diags
 	}
-	diags.Append(setRetentionFromAPI(ctx, apiObject.Retention, data, isImport)...)
+	r.flattenRetention(ctx, apiObject.Retention, data, populateRetention)
 	return diags
+}
+
+func (r *archiveResource) flattenRetention(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel, populateRetention bool) {
+	// Always populate retention_actual from the current API state.
+	if apiRetention != nil {
+		var m archiveRetentionModel
+		var mDiags diag.Diagnostics
+		mDiags.Append(m.Flatten(ctx, apiRetention)...)
+		if !mDiags.HasError() {
+			data.RetentionActual = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
+		}
+	} else {
+		data.RetentionActual = fwtypes.NewListNestedObjectValueOfNull[archiveRetentionModel](ctx)
+	}
+
+	if !populateRetention {
+		data.Retention = fwtypes.NewListNestedObjectValueOfNull[archiveRetentionModel](ctx)
+	}
 }
 
 func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (*mailmanager.GetArchiveOutput, error) {
@@ -306,31 +360,11 @@ func findArchiveByID(ctx context.Context, conn *mailmanager.Client, id string) (
 	return out, nil
 }
 
-func setRetentionFromAPI(ctx context.Context, apiRetention awstypes.ArchiveRetention, data *archiveResourceModel, isImport bool) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !isImport && (data.Retention.IsNull() || data.Retention.IsUnknown()) {
-		return diags
-	}
-
-	if apiRetention == nil {
-		data.Retention = fwtypes.NewListNestedObjectValueOfNull[archiveRetentionModel](ctx)
-		return diags
-	}
-
-	var m archiveRetentionModel
-	diags.Append(m.Flatten(ctx, apiRetention)...)
-	if diags.HasError() {
-		return diags
-	}
-	data.Retention = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &m)
-	return diags
-}
-
 type archiveResourceModel struct {
 	framework.WithRegionModel
 	ArchiveArn           types.String                                           `tfsdk:"arn"`
 	Retention            fwtypes.ListNestedObjectValueOf[archiveRetentionModel] `tfsdk:"retention" autoflex:",noflatten"`
+	RetentionActual      fwtypes.ListNestedObjectValueOf[archiveRetentionModel] `tfsdk:"retention_actual" autoflex:"-"`
 	KmsKeyArn            fwtypes.ARN                                            `tfsdk:"kms_key_arn"`
 	ArchiveId            types.String                                           `tfsdk:"id"`
 	ArchiveName          types.String                                           `tfsdk:"name"`
