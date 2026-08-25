@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_secretsmanager_secret_rotation: `rotation_enabled` is now configurable (previously read-only) and can be set to `false` to disable rotation on a secret whose rotation is otherwise managed by AWS, such as an RDS master user password secret created with `manage_master_user_password`
+resource/aws_secretsmanager_secret_rotation: `rotation_enabled` is now configurable (previously read-only) and can be set to `false` to disable rotation for a secret. This is particularly useful for secrets whose rotation is otherwise managed by AWS, such as an RDS master user password secret created with `manage_master_user_password`
 ```
 
 ```release-note:enhancement
