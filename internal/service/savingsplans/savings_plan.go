@@ -227,7 +227,8 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	id := aws.ToString(out.SavingsPlanId)
-	savingsPlan, err := waitSavingsPlanCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
+
+	savingsPlan, err := waitSavingsPlanCreated(ctx, conn, id, isFutureTime(plan.PurchaseTime), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
@@ -311,12 +312,18 @@ func (r *savingsPlanResource) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root("savings_plan_id"), req, resp)
 }
 
-func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
+func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, futureScheduled bool, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
+		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending),
 		Target:  enum.Slice(awstypes.SavingsPlanStateActive),
 		Refresh: statusSavingsPlan(conn, id),
 		Timeout: timeout,
+	}
+
+	if futureScheduled {
+		stateConf.Target = append(stateConf.Target, string(awstypes.SavingsPlanStateQueued))
+	} else {
+		stateConf.Pending = append(stateConf.Pending, string(awstypes.SavingsPlanStateQueued))
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -401,6 +408,15 @@ func findSavingsPlans(ctx context.Context, conn *savingsplans.Client, input *sav
 	}
 
 	return output, nil
+}
+
+func isFutureTime(t timetypes.RFC3339) bool {
+	tval, diags := t.ValueRFC3339Time()
+	if diags.HasError() {
+		// null or unknown values produce an error diag
+		return false
+	}
+	return tval.After(time.Now())
 }
 
 type savingsPlanResourceModel struct {
