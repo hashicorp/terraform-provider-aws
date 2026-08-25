@@ -14,6 +14,8 @@ ENHANCEMENTS:
 * data-source/aws_resiliencehubv2_service: Add `associated_system.user_journey_ids` attribute ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
 * resource/aws_bedrockagentcore_browser: Add plan-time validation of `name` ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory: Add Resource Identity support ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
+* resource/aws_bedrockagentcore_memory: Allow adding `indexed_key` entries in place instead of forcing a new resource ([#48877](https://github.com/hashicorp/terraform-provider-aws/issues/48877))
+* resource/aws_bedrockagentcore_memory: Change `indexed_key` from `List` to `Set` to ignore ordering ([#48877](https://github.com/hashicorp/terraform-provider-aws/issues/48877))
 * resource/aws_bedrockagentcore_memory_strategy: Add Resource Identity support ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory_strategy: Add `configuration.self_managed_configuration` argument in support of self-managed strategies ([#48766](https://github.com/hashicorp/terraform-provider-aws/issues/48766))
 * resource/aws_bedrockagentcore_memory_strategy: Add `memory_record_schema` argument ([#48765](https://github.com/hashicorp/terraform-provider-aws/issues/48765))
