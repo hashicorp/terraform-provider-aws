@@ -270,7 +270,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "action/aws_lambda_invoke",
     "action/aws_ses_send_email",
     "data_source/aws_account_primary_contact",
     "data_source/aws_account_regions",
@@ -540,10 +539,6 @@ check "schema_docs" {
     "data_source/aws_kms_secrets",
     "data_source/aws_lakeformation_data_lake_settings",
     "data_source/aws_lakeformation_permissions",
-    "data_source/aws_lambda_code_signing_config",
-    "data_source/aws_lambda_function",
-    "data_source/aws_lambda_function_url",
-    "data_source/aws_lambda_layer_version",
     "data_source/aws_launch_configuration",
     "data_source/aws_launch_template",
     "data_source/aws_lb_hosted_zone_id",
@@ -1464,14 +1459,6 @@ check "schema_docs" {
     "resource/aws_lakeformation_resource_lf_tag",
     "resource/aws_lakeformation_resource_lf_tags",
     "resource/aws_lakeformation_resource",
-    "resource/aws_lambda_alias",
-    "resource/aws_lambda_capacity_provider",
-    "resource/aws_lambda_code_signing_config",
-    "resource/aws_lambda_event_source_mapping",
-    "resource/aws_lambda_function_event_invoke_config",
-    "resource/aws_lambda_function_url",
-    "resource/aws_lambda_function",
-    "resource/aws_lambda_permission",
     "resource/aws_launch_configuration",
     "resource/aws_launch_template",
     "resource/aws_lb_cookie_stickiness_policy",
