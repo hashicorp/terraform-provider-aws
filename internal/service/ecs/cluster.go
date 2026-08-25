@@ -254,6 +254,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceClusterFlatten(ctx, d, cluster)...)
+}
+
+func resourceClusterFlatten(ctx context.Context, d *schema.ResourceData, cluster *awstypes.Cluster) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set(names.AttrARN, cluster.ClusterArn)
 	if cluster.Configuration != nil {
 		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
