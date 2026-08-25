@@ -27,6 +27,10 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 -> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
+~> **Note:** AWS rejects setting `master_user_authentication_type` to `iam-db-auth` together with `master_password` (or `master_password_wo`, or `manage_master_user_password`). Omit the password arguments when using `iam-db-auth`.
+
+~> **Note:** AWS requires `iam_database_authentication_enabled` to be set to `true` when `master_user_authentication_type` is `iam-db-auth`.
+
 ## Example Usage
 
 ### Aurora MySQL 2.x (MySQL 5.7)
@@ -247,6 +251,7 @@ This resource supports the following arguments:
 * `master_password` - (Optional, required unless `manage_master_user_password` is set to true, a `snapshot_identifier`, `replication_source_identifier`, or `master_password_wo` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). Cannot be set if `manage_master_user_password` is set to `true`.
 * `master_password_wo` (Optional, Write-Only required unless `manage_master_user_password` is set to true, a `snapshot_identifier`, `replication_source_identifier`, or `master_password` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). Cannot be set if `manage_master_user_password` is set to `true`.
 * `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
+* `master_user_authentication_type` - (Optional) Authentication type for the master user. Valid values are `password` and `iam-db-auth`. Only valid for RDS for PostgreSQL and Aurora PostgreSQL DB clusters.
 * `master_user_secret_kms_key_id` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB cluster. To turn off collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.

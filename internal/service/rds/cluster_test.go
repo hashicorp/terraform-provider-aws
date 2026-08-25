@@ -53,6 +53,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			"manage_master_user_password",
 			"master_password",
 			"master_password_wo",
+			"master_user_authentication_type",
 			"master_user_secret_kms_key_id",
 			"skip_final_snapshot",
 		},
@@ -2126,6 +2127,45 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_masterUserAuthenticationType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_masterUserAuthenticationType(rName, "iam-db-auth"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "master_user_authentication_type", "iam-db-auth"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_masterUserAuthenticationType(rName, names.AttrPassword),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_user_authentication_type", names.AttrPassword),
+				),
+			},
+			{
+				Config: testAccClusterConfig_masterUserAuthenticationType(rName, "iam-db-auth"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "master_user_authentication_type", "iam-db-auth"),
 				),
 			},
 		},
@@ -4392,6 +4432,28 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot         = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_masterUserAuthenticationType(rName, authType string) string {
+	// AWS rejects both a master password and a managed master password when
+	// master_user_authentication_type is "iam-db-auth".
+	var masterPassword string
+	if authType != "iam-db-auth" {
+		masterPassword = `master_password                     = "avoid-plaintext-passwords"`
+	}
+
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier = %[1]q
+  database_name      = "test"
+  engine             = %[2]q
+  master_username    = "tfacctest"
+  %[4]s
+  master_user_authentication_type     = %[3]q
+  iam_database_authentication_enabled = true
+  skip_final_snapshot                 = true
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL, authType, masterPassword)
 }
 
 func testAccClusterConfig_managedMasterPasswordKMSKey(rName string) string {

@@ -394,6 +394,11 @@ func resourceCluster() *schema.Resource {
 					Optional:     true,
 					RequiredWith: []string{"master_password_wo"},
 				},
+				"master_user_authentication_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MasterUserAuthenticationType](),
+				},
 				"master_username": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -736,6 +741,35 @@ func resourceCluster() *schema.Resource {
 				}
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Get("master_user_authentication_type").(string) != string(types.MasterUserAuthenticationTypeIamDbAuth) {
+					return nil
+				}
+				if _, ok := diff.GetOk("master_password"); ok {
+					return fmt.Errorf(`"master_password" cannot be set when "master_user_authentication_type" is %q`, types.MasterUserAuthenticationTypeIamDbAuth)
+				}
+				if diff.Get("manage_master_user_password").(bool) {
+					return fmt.Errorf(`"manage_master_user_password" cannot be set when "master_user_authentication_type" is %q`, types.MasterUserAuthenticationTypeIamDbAuth)
+				}
+				masterPasswordWO, di := flex.GetWriteOnlyStringValue(diff, cty.GetAttrPath("master_password_wo"))
+				if di.HasError() {
+					return sdkdiag.DiagnosticsError(di)
+				}
+				if masterPasswordWO != "" {
+					return fmt.Errorf(`"master_password_wo" cannot be set when "master_user_authentication_type" is %q`, types.MasterUserAuthenticationTypeIamDbAuth)
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Get("master_user_authentication_type").(string) != string(types.MasterUserAuthenticationTypeIamDbAuth) {
+					return nil
+				}
+				if !diff.Get("iam_database_authentication_enabled").(bool) {
+					return fmt.Errorf(`"iam_database_authentication_enabled" must be true when "master_user_authentication_type" is %q`, types.MasterUserAuthenticationTypeIamDbAuth)
+				}
+				return nil
+			},
 		),
 	}
 }
@@ -851,6 +885,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbClusterInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -1121,6 +1160,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbClusterInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("monitoring_interval"); ok {
 			input.MonitoringInterval = aws.Int32(int32(v.(int)))
 		}
@@ -1330,6 +1374,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			input.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_username"); ok {
@@ -1677,6 +1725,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if d.HasChange("master_user_secret_kms_key_id") {
 			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("master_user_authentication_type") {
+			if v, ok := d.GetOk("master_user_authentication_type"); ok {
+				input.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
 			}
 		}
 
@@ -2403,6 +2457,7 @@ func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DB
 	//
 	// manage_master_user_password
 	// master_password
+	// master_user_authentication_type
 	//
 	// Expose the MasterUserSecret structure as a computed attribute
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
