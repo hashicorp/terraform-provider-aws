@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -74,10 +73,9 @@ func (l *listResourceCluster) List(ctx context.Context, request list.ListRequest
 					continue
 				}
 
-				diags := resourceClusterFlatten(ctx, rd, cluster)
-				if diags.HasError() {
+				if err := resourceClusterFlatten(ctx, rd, cluster); err != nil {
 					tflog.Error(ctx, "Flatten ECS (Elastic Container) Cluster", map[string]any{
-						"diags": sdkdiag.DiagnosticsString(diags),
+						"err": err.Error(),
 					})
 					continue
 				}

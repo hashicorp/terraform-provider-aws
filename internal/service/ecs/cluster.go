@@ -7,6 +7,7 @@ package ecs
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -254,33 +255,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceClusterFlatten(ctx, d, cluster)...)
-}
-
-func resourceClusterFlatten(ctx context.Context, d *schema.ResourceData, cluster *awstypes.Cluster) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	d.Set(names.AttrARN, cluster.ClusterArn)
-	if cluster.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
-		}
-	}
-	d.Set(names.AttrName, cluster.ClusterName)
-	if cluster.ServiceConnectDefaults != nil {
-		if err := d.Set("service_connect_defaults", []any{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
-		}
-	} else {
-		d.Set("service_connect_defaults", nil)
-	}
-	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
-	}
-
-	setTagsOut(ctx, cluster.Tags)
-
-	return diags
+	return sdkdiag.AppendFromErr(diags, resourceClusterFlatten(ctx, d, cluster))
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -502,6 +477,30 @@ func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeo
 	}
 
 	return nil, err
+}
+
+func resourceClusterFlatten(ctx context.Context, d *schema.ResourceData, cluster *awstypes.Cluster) error {
+	d.Set(names.AttrARN, cluster.ClusterArn)
+	if cluster.Configuration != nil {
+		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
+			return fmt.Errorf("setting configuration: %w", err)
+		}
+	}
+	d.Set(names.AttrName, cluster.ClusterName)
+	if cluster.ServiceConnectDefaults != nil {
+		if err := d.Set("service_connect_defaults", []any{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
+			return fmt.Errorf("setting service_connect_defaults: %w", err)
+		}
+	} else {
+		d.Set("service_connect_defaults", nil)
+	}
+	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("setting setting: %w", err)
+	}
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
 }
 
 func expandClusterSettings(tfSet *schema.Set) []awstypes.ClusterSetting {
