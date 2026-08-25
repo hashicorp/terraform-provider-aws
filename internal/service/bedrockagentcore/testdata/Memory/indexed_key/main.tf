@@ -18,6 +18,7 @@ resource "aws_bedrockagentcore_memory" "test" {
 locals {
   indexed_keys = {
     "customer_id" = "STRING"
+    "priority"    = "STRING"
     "score"       = "NUMBER"
   }
 }

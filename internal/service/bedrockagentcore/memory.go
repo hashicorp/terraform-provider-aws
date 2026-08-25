@@ -40,6 +40,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -147,6 +148,11 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtLeastOneOfChildren(
+										path.MatchRelative().AtName("kinesis"),
+									),
+								},
 								Blocks: map[string]schema.Block{
 									"kinesis": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[kinesisResourceModel](ctx),
@@ -164,18 +170,19 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 												"content_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[contentConfigurationModel](ctx),
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeBetween(1, 1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															names.AttrType: schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.ContentType](),
-																Required:   true,
-															},
 															"level": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.ContentLevel](),
 																Optional:   true,
 																Computed:   true,
+															},
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ContentType](),
+																Required:   true,
 															},
 														},
 													},
