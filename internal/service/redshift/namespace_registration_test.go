@@ -66,7 +66,7 @@ func TestAccRedshiftNamespaceRegistration_basic_provisioned(t *testing.T) {
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "namespace_type", "provisioned"),
-					resource.TestCheckResourceAttrPair(resourceName, "provisioned_cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned_cluster_identifier", "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckNoResourceAttr(resourceName, "serverless_namespace_identifier"),
 					resource.TestCheckNoResourceAttr(resourceName, "serverless_workgroup_identifier"),
 				),
