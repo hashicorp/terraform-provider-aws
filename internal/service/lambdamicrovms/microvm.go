@@ -76,7 +76,6 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
-					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrEndpoint: schema.StringAttribute{
@@ -101,7 +100,6 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"ingress_network_connectors": schema.ListAttribute{
@@ -114,7 +112,6 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
-					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"maximum_duration_in_seconds": schema.Int32Attribute{
@@ -125,14 +122,10 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
-					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			"microvm_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"run_hook_payload": schema.StringAttribute{
 				Optional: true,
