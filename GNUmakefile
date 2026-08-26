@@ -1010,8 +1010,8 @@ SMOKE_IDENTITY_TESTS_S3 = \
 	TestAccS3Object_Identity_
 
 # aws_s3_account_public_access_block : SDKv2 Global Singleton
-# SMOKE_IDENTITY_TESTS_S3CONTROL = \
-# 	TestAccS3ControlAccountPublicAccessBlock_serial/PublicAccessBlock/Identity
+SMOKE_IDENTITY_TESTS_S3CONTROL = \
+	TestAccS3ControlAccountPublicAccessBlock_serial/PublicAccessBlock/Identity
 
 # aws_secretsmanager_secret_policy: SDKv2 Regional ARN (with rename)
 SMOKE_IDENTITY_TESTS_SECRETSMANAGER = \
@@ -1083,10 +1083,10 @@ smoke-identity: prereq-go ## Run Resource Identity smoke tests
 		./internal/service/s3/... \
 		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
 		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3)))' || true
-# 	@TF_ACC=1 $(GO_VER) test \
-# 		./internal/service/s3control/... \
-# 		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-# 		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3CONTROL)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/s3control/... \
+		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3CONTROL)))' || true
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/secretsmanager/... \
 		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
