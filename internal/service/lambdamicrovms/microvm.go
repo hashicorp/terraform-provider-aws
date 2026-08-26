@@ -207,6 +207,7 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLoggingModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.AlsoRequires(path.MatchRoot(names.AttrExecutionRoleARN)),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
