@@ -579,8 +579,8 @@ The `mcp` block supports exactly one of the following:
 
 The `connector` block supports the following:
 
+* `configuration` - (Required) Per-tool configurations for the connector. See [`configuration`](#configuration) below.
 * `source` - (Required) Source configuration identifying which connector to use. See [`source`](#source) below.
-* `configurations` - (Optional) Per-tool configurations for the connector. See [`configurations`](#configurations) below.
 * `enabled` - (Optional) List of tool names to enable from this connector. If omitted, all tools provided by the connector are enabled.
 
 ### `source`
@@ -588,17 +588,18 @@ The `connector` block supports the following:
 The `source` block supports the following:
 
 * `connector_id` - (Required) Identifier for the connector integration (for example, `bedrock-knowledge-bases`).
+* `version` - (Optional) Version of the connector to use (for example, `1.2.0`).
 
-### `configurations`
+### `configuration`
 
-The `configurations` block supports the following:
+The `configuration` block supports the following:
 
 * `name` - (Required) Tool or operation name (for example, `retrieve` or `webSearch`).
 * `description` - (Optional) Agent-facing description override for this tool.
 * `parameter_values` - (Optional) JSON-encoded parameters to set as fixed or default values when provisioning this tool. Free-form JSON whose schema is defined by the connector.
-* `parameter_overrides` - (Optional) Parameter overrides to control parameter visibility and descriptions. See [`parameter_overrides`](#parameter_overrides) below.
+* `parameter_override` - (Optional) Parameter overrides to control parameter visibility and descriptions. See [`parameter_override`](#parameter_override) below.
 
-### `parameter_overrides`
+### `parameter_override`
 
 The `parameter_overrides` block supports the following:
 

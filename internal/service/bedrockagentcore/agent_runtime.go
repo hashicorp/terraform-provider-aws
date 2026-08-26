@@ -534,9 +534,14 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("resource_configuration_identifier"),
+							),
+						},
 						Attributes: map[string]schema.Attribute{
 							"resource_configuration_identifier": schema.StringAttribute{
-								Required: true,
+								Optional: true,
 							},
 						},
 					},

@@ -557,6 +557,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 				CustomType: fwtypes.NewListNestedObjectTypeOf[targetConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -689,18 +690,32 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													CustomType:  fwtypes.ListOfStringType,
 													ElementType: types.StringType,
 													Optional:    true,
+													Validators: []validator.List{
+														listvalidator.SizeBetween(1, 50),
+													},
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"configurations": schema.ListNestedBlock{
+												names.AttrConfiguration: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[connectorConfigurationModel](ctx),
+													// Although the API docs say "Required: No", the API returns "ValidationException: Connector configurations must not be null".
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															names.AttrName: schema.StringAttribute{
-																Required: true,
-															},
 															names.AttrDescription: schema.StringAttribute{
 																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 2000),
+																},
+															},
+															names.AttrName: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 64),
+																},
 															},
 															"parameter_values": schema.StringAttribute{
 																CustomType: jsontypes.NormalizedType{},
@@ -708,7 +723,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 															},
 														},
 														Blocks: map[string]schema.Block{
-															"parameter_overrides": schema.ListNestedBlock{
+															"parameter_override": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[connectorParameterOverrideModel](ctx),
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
@@ -731,12 +746,20 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													CustomType: fwtypes.NewListNestedObjectTypeOf[connectorSourceModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"connector_id": schema.StringAttribute{
 																Required: true,
+															},
+															names.AttrVersion: schema.StringAttribute{
+																Optional: true,
+																Computed: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.UseStateForUnknown(),
+																},
 															},
 														},
 													},
@@ -761,6 +784,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 													CustomType: fwtypes.NewListNestedObjectTypeOf[toolSchemaModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -781,6 +805,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																			CustomType: fwtypes.NewListNestedObjectTypeOf[schemaDefinitionModel](ctx),
 																			Validators: []validator.List{
 																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
 																				listvalidator.SizeAtMost(1),
 																			},
 																			NestedObject: schemaDefinitionNestedBlock(ctx),
@@ -861,15 +886,17 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("inline_payload"),
+																path.MatchRelative().AtName("s3"),
+															),
+														},
 														Blocks: map[string]schema.Block{
 															"inline_payload": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtMost(1),
-																	listvalidator.ExactlyOneOf(
-																		path.MatchRelative().AtParent().AtName("inline_payload"),
-																		path.MatchRelative().AtParent().AtName("s3"),
-																	),
 																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
@@ -914,6 +941,12 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("inline_payload"),
+													path.MatchRelative().AtName("s3"),
+												),
+											},
 											Blocks: map[string]schema.Block{
 												"inline_payload": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
@@ -953,6 +986,12 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("inline_payload"),
+													path.MatchRelative().AtName("s3"),
+												),
+											},
 											Blocks: map[string]schema.Block{
 												"inline_payload": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[inlinePayloadModel](ctx),
@@ -1176,8 +1215,8 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 		return
 	}
 
-	planTargetType := planTargetData.GetConfigurationType(ctx)
-	stateTargetType := stateTargetData.GetConfigurationType(ctx)
+	planTargetType := planTargetData.TargetType(ctx)
+	stateTargetType := stateTargetData.TargetType(ctx)
 
 	if planTargetType != stateTargetType {
 		response.RequiresReplace = append(response.RequiresReplace, path.Root("target_configuration"))
@@ -1414,7 +1453,6 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 	switch t := v.(type) {
 	case awstypes.CredentialProviderConfiguration:
 		v, credentialProviderType := t.CredentialProvider, t.CredentialProviderType
-		var d diag.Diagnostics
 		switch t := v.(type) {
 		case *awstypes.CredentialProviderMemberApiKeyCredentialProvider:
 			switch credentialProviderType {
@@ -1424,6 +1462,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				if diags.HasError() {
 					return diags
 				}
+				var d diag.Diagnostics
 				m.APIKey, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 				smerr.AddEnrich(ctx, &diags, d)
 
@@ -1442,6 +1481,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				if diags.HasError() {
 					return diags
 				}
+				var d diag.Diagnostics
 				m.CallerIAMCredentials, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 				smerr.AddEnrich(ctx, &diags, d)
 
@@ -1451,6 +1491,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				if diags.HasError() {
 					return diags
 				}
+				var d diag.Diagnostics
 				m.GatewayIAMRole, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 				smerr.AddEnrich(ctx, &diags, d)
 
@@ -1469,6 +1510,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				if diags.HasError() {
 					return diags
 				}
+				var d diag.Diagnostics
 				m.OAuth, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 				smerr.AddEnrich(ctx, &diags, d)
 
@@ -1486,6 +1528,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 				m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &iamCredentialProviderModel{})
 
 			case awstypes.CredentialProviderTypeJwtPassthrough:
+				var d diag.Diagnostics
 				m.JWTPassthrough, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &jwtPassthroughCredentialProviderModel{})
 				smerr.AddEnrich(ctx, &diags, d)
 
@@ -1572,6 +1615,30 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 	return nil, diags
 }
 
+type gatewayAPIKeyCredentialProviderModel struct {
+	CredentialLocation      fwtypes.StringEnum[awstypes.ApiKeyCredentialLocation] `tfsdk:"credential_location"`
+	CredentialParameterName types.String                                          `tfsdk:"credential_parameter_name"`
+	CredentialPrefix        types.String                                          `tfsdk:"credential_prefix"`
+	ProviderARN             fwtypes.ARN                                           `tfsdk:"provider_arn"`
+}
+
+type iamCredentialProviderModel struct {
+	Region  types.String `tfsdk:"region"`
+	Service types.String `tfsdk:"service"`
+}
+
+type jwtPassthroughCredentialProviderModel struct {
+	// Empty struct - JWT Passthrough provider requires no configuration
+}
+
+type oauthCredentialProviderModel struct {
+	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
+	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
+	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
+	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
+	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
+}
+
 type metadataConfigurationModel struct {
 	AllowedQueryParameters fwtypes.SetOfString `tfsdk:"allowed_query_parameters"`
 	AllowedRequestHeaders  fwtypes.SetOfString `tfsdk:"allowed_request_headers"`
@@ -1594,16 +1661,15 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	case awstypes.PrivateEndpointMemberManagedVpcResource:
 		var model managedVPCResourceModel
 		model.Tags = tftags.NewMapValueNull() // Tags are not handled by AutoFlex.
-
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
-
 		// Tags are not handled by AutoFlex.
 		model.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, t.Value.Tags))
-
-		m.ManagedVPCResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.ManagedVPCResource, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.PrivateEndpointMemberSelfManagedLatticeResource:
 		var model selfManagedLatticeResourceModel
@@ -1611,48 +1677,46 @@ func (m *privateEndpointModel) Flatten(ctx context.Context, v any) diag.Diagnost
 		if diags.HasError() {
 			return diags
 		}
-		m.SelfManagedLatticeResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.SelfManagedLatticeResource, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
-			"Unsupported PrivateEndpoint Type",
-			fmt.Sprintf("private endpoint flatten: unexpected type %T", v),
+			"Unsupported Type",
+			fmt.Sprintf("privateEndpointModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
 func (m privateEndpointModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	switch {
 	case !m.ManagedVPCResource.IsNull():
-		data, d := m.ManagedVPCResource.ToPtr(ctx)
+		model, d := m.ManagedVPCResource.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.PrivateEndpointMemberManagedVpcResource
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		// Tags are not handled by AutoFlex.
-		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, data.Tags)
-
+		r.Value.Tags = fwflex.ExpandFrameworkStringValueMap(ctx, model.Tags)
 		return &r, diags
 
 	case !m.SelfManagedLatticeResource.IsNull():
-		data, d := m.SelfManagedLatticeResource.ToPtr(ctx)
+		model, d := m.SelfManagedLatticeResource.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.PrivateEndpointMemberSelfManagedLatticeResource
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1670,6 +1734,7 @@ type managedVPCResourceModel struct {
 	Tags                  tftags.Map                                         `tfsdk:"tags"`
 	VPCIdentifier         types.String                                       `tfsdk:"vpc_identifier"`
 }
+
 type selfManagedLatticeResourceModel struct {
 	ResourceConfigurationIdentifier types.String `tfsdk:"resource_configuration_identifier"`
 }
@@ -1687,10 +1752,11 @@ func (m *selfManagedLatticeResourceModel) Flatten(ctx context.Context, v any) di
 
 	default:
 		diags.AddError(
-			"Unsupported SelfManagedLatticeResource Type",
-			fmt.Sprintf("self managed lattice resource flatten: unexpected type %T", v),
+			"Unsupported Type",
+			fmt.Sprintf("selfManagedLatticeResourceModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -1711,30 +1777,30 @@ type targetConfigurationModel struct {
 	MCP  fwtypes.ListNestedObjectValueOf[mcpTargetConfigurationModel]  `tfsdk:"mcp"`
 }
 
-func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) string {
+func (m *targetConfigurationModel) TargetType(ctx context.Context) awstypes.TargetType {
 	if !m.HTTP.IsNull() {
 		httpData, _ := m.HTTP.ToPtr(ctx)
 		switch {
 		case !httpData.AgentcoreRuntime.IsNull():
-			return "http_agentcore_runtime"
+			return awstypes.TargetTypeAgentcoreRuntime
 		}
 	}
 	if !m.MCP.IsNull() {
 		mcpData, _ := m.MCP.ToPtr(ctx)
 		switch {
 		case !mcpData.Connector.IsNull():
-			return "connector"
+			return awstypes.TargetTypeConnector
 		case !mcpData.Lambda.IsNull():
-			return "lambda"
+			return awstypes.TargetTypeLambda
 		case !mcpData.MCPServer.IsNull():
-			return "mcp_server"
+			return awstypes.TargetTypeMcpServer
 		case !mcpData.OpenAPISchema.IsNull():
-			return "open_api_schema"
+			return awstypes.TargetTypeOpenApiSchema
 		case !mcpData.SmithyModel.IsNull():
-			return "smithy_model"
+			return awstypes.TargetTypeSmithyModel
 		}
 	}
-	return "unknown"
+	return ""
 }
 
 var (
@@ -1751,7 +1817,9 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 		if diags.HasError() {
 			return diags
 		}
-		m.HTTP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.HTTP, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.TargetConfigurationMemberMcp:
 		var model mcpTargetConfigurationModel
@@ -1759,14 +1827,17 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 		if diags.HasError() {
 			return diags
 		}
-		m.MCP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.MCP, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("target configuration flatten: %T", v),
+			fmt.Sprintf("targetConfigurationModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -1774,32 +1845,29 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 	var diags diag.Diagnostics
 	switch {
 	case !m.HTTP.IsNull():
-		httpConfigurationData, d := m.HTTP.ToPtr(ctx)
+		model, d := m.HTTP.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.TargetConfigurationMemberHttp
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, httpConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 
 	case !m.MCP.IsNull():
-		mcpConfigurationData, d := m.MCP.ToPtr(ctx)
+		model, d := m.MCP.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.TargetConfigurationMemberMcp
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, mcpConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		return &r, diags
 	}
 
@@ -1824,12 +1892,14 @@ func (m *httpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.
 		if diags.HasError() {
 			return diags
 		}
-		m.AgentcoreRuntime = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.AgentcoreRuntime, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
-			"Unsupported HTTP Target Configuration Type",
-			fmt.Sprintf("http configuration flatten: %T", v),
+			"Unsupported Type",
+			fmt.Sprintf("httpTargetConfigurationModel.Flatten: %T", v),
 		)
 	}
 
@@ -1840,14 +1910,13 @@ func (m httpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 	var diags diag.Diagnostics
 	switch {
 	case !m.AgentcoreRuntime.IsNull():
-		runtimeData, d := m.AgentcoreRuntime.ToPtr(ctx)
+		model, d := m.AgentcoreRuntime.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.HttpTargetConfigurationMemberAgentcoreRuntime
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, runtimeData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1855,6 +1924,11 @@ func (m httpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 	}
 
 	return nil, diags
+}
+
+type runtimeTargetConfigurationModel struct {
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
+	Qualifier types.String `tfsdk:"qualifier"`
 }
 
 type mcpTargetConfigurationModel struct {
@@ -1880,7 +1954,9 @@ func (m *mcpTargetConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 		if diags.HasError() {
 			return diags
 		}
-		m.APIGateway = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.APIGateway, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpTargetConfigurationMemberConnector:
 		var model connectorTargetConfigurationModel
@@ -2022,35 +2098,6 @@ func (m mcpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 	return nil, diags
 }
 
-type runtimeTargetConfigurationModel struct {
-	ARN       fwtypes.ARN  `tfsdk:"arn"`
-	Qualifier types.String `tfsdk:"qualifier"`
-}
-
-type gatewayAPIKeyCredentialProviderModel struct {
-	CredentialLocation      fwtypes.StringEnum[awstypes.ApiKeyCredentialLocation] `tfsdk:"credential_location"`
-	CredentialParameterName types.String                                          `tfsdk:"credential_parameter_name"`
-	CredentialPrefix        types.String                                          `tfsdk:"credential_prefix"`
-	ProviderARN             fwtypes.ARN                                           `tfsdk:"provider_arn"`
-}
-
-type iamCredentialProviderModel struct {
-	Region  types.String `tfsdk:"region"`
-	Service types.String `tfsdk:"service"`
-}
-
-type jwtPassthroughCredentialProviderModel struct {
-	// Empty struct - JWT Passthrough provider requires no configuration
-}
-
-type oauthCredentialProviderModel struct {
-	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
-	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
-	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
-	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
-	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
-}
-
 type apiGatewayTargetConfigurationModel struct {
 	ApiGatewayToolConfiguration fwtypes.ListNestedObjectValueOf[apiGatewayToolConfigurationModel] `tfsdk:"api_gateway_tool_configuration"`
 	RestApiID                   types.String                                                      `tfsdk:"rest_api_id"`
@@ -2075,19 +2122,15 @@ type apiGatewayToolOverrideModel struct {
 }
 
 type connectorTargetConfigurationModel struct {
-	Configurations fwtypes.ListNestedObjectValueOf[connectorConfigurationModel] `tfsdk:"configurations"`
+	Configurations fwtypes.ListNestedObjectValueOf[connectorConfigurationModel] `tfsdk:"configuration"`
 	Enabled        fwtypes.ListOfString                                         `tfsdk:"enabled"`
 	Source         fwtypes.ListNestedObjectValueOf[connectorSourceModel]        `tfsdk:"source"`
-}
-
-type connectorSourceModel struct {
-	ConnectorID types.String `tfsdk:"connector_id"`
 }
 
 type connectorConfigurationModel struct {
 	Description        types.String                                                     `tfsdk:"description"`
 	Name               types.String                                                     `tfsdk:"name"`
-	ParameterOverrides fwtypes.ListNestedObjectValueOf[connectorParameterOverrideModel] `tfsdk:"parameter_overrides"`
+	ParameterOverrides fwtypes.ListNestedObjectValueOf[connectorParameterOverrideModel] `tfsdk:"parameter_override"`
 	ParameterValues    jsontypes.Normalized                                             `tfsdk:"parameter_values" autoflex:"-"`
 }
 
@@ -2155,8 +2198,13 @@ type connectorParameterOverrideModel struct {
 	Visible     types.Bool   `tfsdk:"visible"`
 }
 
+type connectorSourceModel struct {
+	ConnectorID types.String `tfsdk:"connector_id"`
+	Version     types.String `tfsdk:"version"`
+}
+
 type mcpLambdaTargetConfigurationModel struct {
-	LambdaArn  fwtypes.ARN                                      `tfsdk:"lambda_arn"`
+	LambdaARN  fwtypes.ARN                                      `tfsdk:"lambda_arn"`
 	ToolSchema fwtypes.ListNestedObjectValueOf[toolSchemaModel] `tfsdk:"tool_schema"`
 }
 
@@ -2681,10 +2729,12 @@ func (m *mcpToolSchemaConfigurationModel) Flatten(ctx context.Context, v any) di
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.McpToolSchemaConfigurationMemberInlinePayload:
-		var model inlinePayloadModel
-		model.Payload = types.StringValue(t.Value)
-		m.InlinePayload = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
+		model := inlinePayloadModel{
+			Payload: fwflex.StringValueToFramework(ctx, t.Value),
+		}
+		var d diag.Diagnostics
+		m.InlinePayload, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.McpToolSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
@@ -2692,14 +2742,17 @@ func (m *mcpToolSchemaConfigurationModel) Flatten(ctx context.Context, v any) di
 		if diags.HasError() {
 			return diags
 		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("mcp tool schema configuration flatten: %T", v),
+			fmt.Sprintf("mcpToolSchemaConfigurationModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -2707,30 +2760,30 @@ func (m mcpToolSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.
 	var diags diag.Diagnostics
 	switch {
 	case !m.InlinePayload.IsNull():
-		inlinePayloadData, d := m.InlinePayload.ToPtr(ctx)
+		model, d := m.InlinePayload.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
-		var r awstypes.McpToolSchemaConfigurationMemberInlinePayload
-		r.Value = inlinePayloadData.Payload.ValueString()
+		r := awstypes.McpToolSchemaConfigurationMemberInlinePayload{
+			Value: fwflex.StringValueFromFramework(ctx, model.Payload),
+		}
 		return &r, diags
 
 	case !m.S3.IsNull():
-		s3Data, d := m.S3.ToPtr(ctx)
+		model, d := m.S3.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.McpToolSchemaConfigurationMemberS3
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3Data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 	}
+
 	return nil, diags
 }
 
@@ -2748,26 +2801,30 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ApiSchemaConfigurationMemberInlinePayload:
-		var model inlinePayloadModel
-		model.Payload = types.StringValue(t.Value)
-		m.InlinePayload = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		return diags
+		model := inlinePayloadModel{
+			Payload: fwflex.StringValueToFramework(ctx, t.Value),
+		}
+		var d diag.Diagnostics
+		m.InlinePayload, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.ApiSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
-		d := fwflex.Flatten(ctx, t.Value, &model)
-		smerr.AddEnrich(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		var d diag.Diagnostics
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("api schema configuration flatten: %T", v),
+			fmt.Sprintf("apiSchemaConfigurationModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -2775,30 +2832,30 @@ func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 	var diags diag.Diagnostics
 	switch {
 	case !m.InlinePayload.IsNull():
-		inlinePayloadApiSchemaConfigurationData, d := m.InlinePayload.ToPtr(ctx)
+		model, d := m.InlinePayload.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
-		var r awstypes.ApiSchemaConfigurationMemberInlinePayload
-		r.Value = inlinePayloadApiSchemaConfigurationData.Payload.ValueString()
+		r := awstypes.ApiSchemaConfigurationMemberInlinePayload{
+			Value: fwflex.StringValueFromFramework(ctx, model.Payload),
+		}
 		return &r, diags
 
 	case !m.S3.IsNull():
-		s3ApiSchemaConfigurationData, d := m.S3.ToPtr(ctx)
+		model, d := m.S3.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
-
 		var r awstypes.ApiSchemaConfigurationMemberS3
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3ApiSchemaConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
 		return &r, diags
 	}
+
 	return nil, diags
 }
 
