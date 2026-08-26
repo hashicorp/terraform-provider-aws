@@ -28,8 +28,8 @@ func TestAccECRLifecyclePolicy_List_basic(t *testing.T) {
 	resourceName2 := "aws_ecr_lifecycle_policy.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	repositoryName1 := tfstatecheck.StateValue()
-	repositoryName2 := tfstatecheck.StateValue()
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -48,8 +48,8 @@ func TestAccECRLifecyclePolicy_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					repositoryName1.GetStateValue(resourceName1, tfjsonpath.New("repository")),
-					repositoryName2.GetStateValue(resourceName2, tfjsonpath.New("repository")),
+					identity1.GetIdentity(resourceName1),
+					identity2.GetIdentity(resourceName2),
 				},
 			},
 
@@ -62,16 +62,13 @@ func TestAccECRLifecyclePolicy_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_ecr_lifecycle_policy.test", map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"repository":        repositoryName1.ValueCheck(),
-					}),
-					querycheck.ExpectIdentity("aws_ecr_lifecycle_policy.test", map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"repository":        repositoryName2.ValueCheck(),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_ecr_lifecycle_policy.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_ecr_lifecycle_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_ecr_lifecycle_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_ecr_lifecycle_policy.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_ecr_lifecycle_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_ecr_lifecycle_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
@@ -83,6 +80,7 @@ func TestAccECRLifecyclePolicy_List_includeResource(t *testing.T) {
 
 	resourceName1 := "aws_ecr_lifecycle_policy.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyDocument := `{"rules":[{"rulePriority":1,"description":"Expire images older than 14 days","selection":{"tagStatus":"untagged","countType":"sinceImagePushed","countUnit":"days","countNumber":14},"action":{"type":"expire"}}]}`
 
 	identity1 := tfstatecheck.Identity()
 
@@ -123,7 +121,7 @@ func TestAccECRLifecyclePolicy_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("repository"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), tfknownvalue.AccountID()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), tfknownvalue.JSONNoDiff(policyDocument)),
 					}),
 				},
 			},
