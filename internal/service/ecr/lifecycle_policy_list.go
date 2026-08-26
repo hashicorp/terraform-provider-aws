@@ -31,10 +31,6 @@ type lifecyclePolicyListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type lifecyclePolicyListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *lifecyclePolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ECRClient(ctx)
 
