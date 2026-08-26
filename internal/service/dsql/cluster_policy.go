@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -150,12 +151,16 @@ func (r *clusterPolicyResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *clusterPolicyResource) flatten(ctx context.Context, output *dsql.GetClusterPolicyOutput, data *clusterPolicyResourceModel) diag.Diagnostics {
+	return flex.Flatten(ctx, output, data)
 }
 
 func (r *clusterPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
