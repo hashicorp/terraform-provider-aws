@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_redshift_namespace_registration" "test" {
-  consumer_identifier             = format("DataCatalog/%s", data.aws_caller_identity.current.account_id)
-  namespace_type                  = "provisioned"
+  consumer_identifier            = format("DataCatalog/%s", data.aws_caller_identity.current.account_id)
+  namespace_type                 = "provisioned"
   provisioned_cluster_identifier = aws_redshift_cluster.test.cluster_identifier
 }
 
