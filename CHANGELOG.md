@@ -10,6 +10,7 @@ FEATURES:
 
 * **New List Resource:** `aws_db_instance` ([#49602](https://github.com/hashicorp/terraform-provider-aws/issues/49602))
 * **New List Resource:** `aws_dsql_cluster` ([#49657](https://github.com/hashicorp/terraform-provider-aws/issues/49657))
+* **New List Resource:** `aws_ecs_cluster` ([#49682](https://github.com/hashicorp/terraform-provider-aws/issues/49682))
 * **New List Resource:** `aws_pinpointsmsvoicev2_keyword` ([#48967](https://github.com/hashicorp/terraform-provider-aws/issues/48967))
 * **New Resource:** `aws_pinpointsmsvoicev2_keyword` ([#48967](https://github.com/hashicorp/terraform-provider-aws/issues/48967))
 
@@ -30,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_dsql_cluster: Add resource identity support ([#49657](https://github.com/hashicorp/terraform-provider-aws/issues/49657))
 * resource/aws_dx_private_virtual_interface: Add `bgp_asn_long` argument ([#49587](https://github.com/hashicorp/terraform-provider-aws/issues/49587))
 * resource/aws_dx_transit_virtual_interface: Add `bgp_asn_long` argument ([#49588](https://github.com/hashicorp/terraform-provider-aws/issues/49588))
+* resource/aws_ecs_cluster: Add resource identity support ([#49682](https://github.com/hashicorp/terraform-provider-aws/issues/49682))
 * resource/aws_elasticache_replication_group: Add `auth_token_wo` and `auth_token_wo_version` write-only arguments ([#49268](https://github.com/hashicorp/terraform-provider-aws/issues/49268))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `tag_propagation_configuration` configuration block to `rule.destination.destination_logs_configuration`, and `tag_propagation_status` and `tag_propagation_failure_reason` attributes ([#49656](https://github.com/hashicorp/terraform-provider-aws/issues/49656))
 * resource/aws_resiliencehubv2_service: Add `user_journey_ids` argument to the `associated_system` configuration block ([#49603](https://github.com/hashicorp/terraform-provider-aws/issues/49603))
