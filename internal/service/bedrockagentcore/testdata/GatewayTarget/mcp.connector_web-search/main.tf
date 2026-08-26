@@ -63,13 +63,13 @@ resource "aws_iam_role_policy" "test" {
         "Sid": "InvokeGateway",
         "Effect": "Allow",
         "Action": "bedrock-agentcore:InvokeGateway",
-        "Resource": "arn:aws:bedrock-agentcore:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:gateway/*"
+        "Resource": "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:gateway/*"
       },
       {
         "Sid": "InvokeWebSearch",
         "Effect": "Allow",
         "Action": "bedrock-agentcore:InvokeWebSearch",
-        "Resource": "arn:aws:bedrock-agentcore:${data.aws_region.current.region}:aws:tool/web-search.v1"
+        "Resource": "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.region}:aws:tool/web-search.v1"
       }
     ]
 }
