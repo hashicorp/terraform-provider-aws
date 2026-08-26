@@ -50,6 +50,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_resource_policy: Fixes error when importing by identity when using resource-scope ([#49614](https://github.com/hashicorp/terraform-provider-aws/issues/49614))
 * resource/aws_elasticache_cluster: Add plan-time validation to reject transit_encryption_enabled for Redis and Valkey engines, which are only supported on aws_elasticache_replication_group ([#49114](https://github.com/hashicorp/terraform-provider-aws/issues/49114))
 * resource/aws_resiliencehubv2_input_source: Change `resource_configuration.resource_tag` from `List` to `Set` to ignore ordering ([#49585](https://github.com/hashicorp/terraform-provider-aws/issues/49585))
+* resource/aws_s3_account_public_access_block: Fixes eventual consistency issue on creation ([#49687](https://github.com/hashicorp/terraform-provider-aws/issues/49687))
 * resource/aws_savingsplan_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49678](https://github.com/hashicorp/terraform-provider-aws/issues/49678))
 * resource/aws_savingsplan_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#49679](https://github.com/hashicorp/terraform-provider-aws/issues/49679))
 * resource/aws_savingsplan_savings_plan: Mark `purchase_time` as `Optional` and `Computed` ([#49679](https://github.com/hashicorp/terraform-provider-aws/issues/49679))
