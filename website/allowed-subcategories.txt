@@ -196,6 +196,7 @@ Parallel Computing Service
 Payment Cryptography Control Plane
 Polly
 Pricing Calculator
+Pricing Plan Manager
 Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
