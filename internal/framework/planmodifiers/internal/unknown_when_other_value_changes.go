@@ -34,7 +34,8 @@ func UnknownWhenOtherValueChanges(path path.Path) unknownWhenOtherValueChanges {
 }
 
 var (
-	_ planmodifier.List = (*unknownWhenOtherValueChanges)(nil)
+	_ planmodifier.List   = (*unknownWhenOtherValueChanges)(nil)
+	_ planmodifier.String = (*unknownWhenOtherValueChanges)(nil)
 )
 
 type unknownWhenOtherValueChanges struct {
@@ -50,6 +51,32 @@ func (m unknownWhenOtherValueChanges) MarkdownDescription(ctx context.Context) s
 }
 
 func (m unknownWhenOtherValueChanges) PlanModifyList(ctx context.Context, request planmodifier.ListRequest, response *planmodifier.ListResponse) {
+	if request.StateValue.IsNull() {
+		return
+	}
+
+	planModifyRequest := planModifierRequest{
+		Plan:           request.Plan,
+		PlanValue:      request.PlanValue,
+		State:          request.State,
+		StateValue:     request.StateValue,
+		Path:           request.Path,
+		PathExpression: request.PathExpression,
+	}
+	var planModifyResponse planModifierResponse
+
+	hasChange := m.hasChangeAt(ctx, m.path, planModifyRequest, &planModifyResponse)
+	response.Diagnostics.Append(planModifyResponse.Diagnostics...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !hasChange {
+		response.PlanValue = request.StateValue
+	}
+}
+
+func (m unknownWhenOtherValueChanges) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
 	if request.StateValue.IsNull() {
 		return
 	}
