@@ -77,6 +77,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_account_id` - The ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `port_encryption_status` - The MAC Security (MACsec) port link status of the connection.
+* `prefix_pool_size_ipv4` - The total number of inbound IPv4 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_size_ipv6` - The total number of inbound IPv6 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_unallocated_count_ipv4` - The number of inbound IPv4 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
+* `prefix_pool_unallocated_count_ipv6` - The number of inbound IPv6 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
 * `state` - State of the connection. See [CreateConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_CreateConnection.html#API_CreateConnection_ResponseSyntax) for list of possible state values.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlan_id` - The VLAN ID.
