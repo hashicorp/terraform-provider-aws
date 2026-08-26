@@ -15,6 +15,7 @@ FEATURES:
 * **New List Resource:** `aws_ecs_cluster` ([#49682](https://github.com/hashicorp/terraform-provider-aws/issues/49682))
 * **New List Resource:** `aws_pinpointsmsvoicev2_keyword` ([#48967](https://github.com/hashicorp/terraform-provider-aws/issues/48967))
 * **New Resource:** `aws_pinpointsmsvoicev2_keyword` ([#48967](https://github.com/hashicorp/terraform-provider-aws/issues/48967))
+* **New Resource:** `aws_sesv2_multi_region_endpoint` ([#49660](https://github.com/hashicorp/terraform-provider-aws/issues/49660))
 
 ENHANCEMENTS:
 
