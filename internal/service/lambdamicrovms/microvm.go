@@ -67,10 +67,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"egress_network_connectors": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
+				CustomType: fwtypes.ListOfARNType,
+				Optional:   true,
+				Computed:   true,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(0, 10),
 				},
@@ -103,10 +102,9 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"ingress_network_connectors": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
+				CustomType: fwtypes.ListOfARNType,
+				Optional:   true,
+				Computed:   true,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(0, 10),
 				},
@@ -446,13 +444,13 @@ func findMicroVM(ctx context.Context, conn *lambdamicrovms.Client, input *lambda
 
 type microVMResourceModel struct {
 	framework.WithRegionModel
-	EgressNetworkConnectors  fwtypes.ListOfString                             `tfsdk:"egress_network_connectors"`
+	EgressNetworkConnectors  fwtypes.ListOfARN                                `tfsdk:"egress_network_connectors"`
 	Endpoint                 types.String                                     `tfsdk:"endpoint"`
 	ExecutionRoleARN         fwtypes.ARN                                      `tfsdk:"execution_role_arn"`
 	IdlePolicy               fwtypes.ListNestedObjectValueOf[idlePolicyModel] `tfsdk:"idle_policy"`
 	ImageARN                 fwtypes.ARN                                      `tfsdk:"image_arn"`
 	ImageVersion             types.String                                     `tfsdk:"image_version"`
-	IngressNetworkConnectors fwtypes.ListOfString                             `tfsdk:"ingress_network_connectors"`
+	IngressNetworkConnectors fwtypes.ListOfARN                                `tfsdk:"ingress_network_connectors"`
 	Logging                  fwtypes.ListNestedObjectValueOf[loggingModel]    `tfsdk:"logging"`
 	MaximumDurationInSeconds types.Int32                                      `tfsdk:"maximum_duration_in_seconds"`
 	MicroVMID                types.String                                     `tfsdk:"microvm_id"`
