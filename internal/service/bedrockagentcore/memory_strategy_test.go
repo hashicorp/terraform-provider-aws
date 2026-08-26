@@ -47,6 +47,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -67,6 +68,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -82,12 +84,74 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic summarization with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"critical", "high", "medium", "low"}),
+										}),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue(names.AttrPriority),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeString),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("summarization_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSummarization),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{
+				Value: awstypes.SummaryMemoryStrategyInput{
+					MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+						MetadataSchema: []awstypes.MetadataSchemaEntry{
+							{
+								ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+									Value: awstypes.LlmExtractionConfig{
+										Definition:               aws.String("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+										LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+										Validation: &awstypes.ValidationMemberStringValidation{
+											Value: awstypes.StringValidation{
+												AllowedValues: []string{"critical", "high", "medium", "low"},
+											},
+										},
+									},
+								},
+								Key:  aws.String(names.AttrPriority),
+								Type: awstypes.MetadataValueTypeString,
+							},
+						},
+					},
+					Name:               aws.String("summarization_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				},
+			},
+		},
+		{
 			name: "basic semantic",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("semantic_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -102,12 +166,51 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic semantic with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.ExtractionConfigModel](ctx),
+							ExtractionType:   fwtypes.StringEnumValue(awstypes.ExtractionTypeStrictlyConsistent),
+							Key:              types.StringValue("key_001"),
+							Type:             fwtypes.StringEnumNull[awstypes.MetadataValueType](),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("semantic_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{
+				Value: awstypes.SemanticMemoryStrategyInput{
+					MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+						MetadataSchema: []awstypes.MetadataSchemaEntry{
+							{
+								ExtractionType: awstypes.ExtractionTypeStrictlyConsistent,
+								Key:            aws.String("key_001"),
+							},
+						},
+					},
+					Name:               aws.String("semantic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				},
+			},
+		},
+		{
 			name: "basic user preference",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration:           fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("user_preference_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -128,6 +231,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 				Description:            types.StringNull(),
 				MemoryExecutionRoleARN: fwtypes.ARNNull(),
 				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                   types.StringValue("episodic_builtin_001"),
 				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -154,13 +258,15 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -194,12 +300,14 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("semantic_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -237,12 +345,14 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("user_preference_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -285,7 +395,8 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
@@ -320,11 +431,118 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "self-managed",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSelfManagedConfiguration{
+						Value: awstypes.SelfManagedConfigurationInput{
+							HistoricalContextWindowSize: aws.Int32(4),
+							InvocationConfiguration: &awstypes.InvocationConfigurationInput{
+								PayloadDeliveryBucketName: aws.String("bucket001"),
+								TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+							},
+						},
+					},
+					Name: aws.String("self_managed_001"),
+				},
+			},
+		},
+		{
+			name: "self-managed with trigger_conditions",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+							MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+								MessageCount: types.Int32Value(10),
+							}),
+							TimeBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TimeBasedTriggerModel](ctx),
+							TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TokenBasedTriggerModel{
+								TokenCount: types.Int32Value(100),
+							}),
+						}),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSelfManagedConfiguration{
+						Value: awstypes.SelfManagedConfigurationInput{
+							HistoricalContextWindowSize: aws.Int32(4),
+							InvocationConfiguration: &awstypes.InvocationConfigurationInput{
+								PayloadDeliveryBucketName: aws.String("bucket001"),
+								TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+							},
+							TriggerConditions: []awstypes.TriggerConditionInput{
+								&awstypes.TriggerConditionInputMemberMessageBasedTrigger{
+									Value: awstypes.MessageBasedTriggerInput{
+										MessageCount: aws.Int32(10),
+									},
+								},
+								&awstypes.TriggerConditionInputMemberTokenBasedTrigger{
+									Value: awstypes.TokenBasedTriggerInput{
+										TokenCount: aws.Int32(100),
+									},
+								},
+							},
+						},
+					},
+					Name: aws.String("self_managed_001"),
+				},
+			},
+		},
 	}
 
 	opts := cmp.Options{
 		cmpopts.IgnoreUnexported(
 			awstypes.CustomConfigurationInputMemberEpisodicOverride{},
+			awstypes.CustomConfigurationInputMemberSelfManagedConfiguration{},
 			awstypes.CustomConfigurationInputMemberSemanticOverride{},
 			awstypes.CustomConfigurationInputMemberSummaryOverride{},
 			awstypes.CustomConfigurationInputMemberUserPreferenceOverride{},
@@ -335,22 +553,40 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.EpisodicOverrideExtractionConfigurationInput{},
 			awstypes.EpisodicOverrideReflectionConfigurationInput{},
 			awstypes.EpisodicReflectionConfigurationInput{},
+			awstypes.ExtractionConfigMemberLlmExtractionConfig{},
+			awstypes.InvocationConfigurationInput{},
+			awstypes.LlmExtractionConfig{},
+			awstypes.MemoryRecordSchema{},
 			awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{},
 			awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{},
+			awstypes.MessageBasedTriggerInput{},
+			awstypes.MetadataSchemaEntry{},
+			awstypes.NumberValidation{},
 			awstypes.SemanticMemoryStrategyInput{},
+			awstypes.SelfManagedConfigurationInput{},
 			awstypes.SummaryMemoryStrategyInput{},
 			awstypes.SemanticOverrideConfigurationInput{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
+			awstypes.StringListValidation{},
+			awstypes.StringValidation{},
 			awstypes.SummaryOverrideConfigurationInput{},
 			awstypes.SummaryOverrideConsolidationConfigurationInput{},
+			awstypes.TimeBasedTriggerInput{},
+			awstypes.TokenBasedTriggerInput{},
+			awstypes.TriggerConditionInputMemberMessageBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTimeBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTokenBasedTrigger{},
 			awstypes.UserPreferenceMemoryStrategyInput{},
+			awstypes.ValidationMemberNumberValidation{},
 			awstypes.UserPreferenceOverrideConfigurationInput{},
 			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
 			awstypes.UserPreferenceOverrideExtractionConfigurationInput{},
+			awstypes.ValidationMemberStringListValidation{},
+			awstypes.ValidationMemberStringValidation{},
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}
@@ -365,7 +601,7 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(tc.expected, out, opts...); diff != "" {
-				t.Errorf("model -> ModifyMemoryStrategyInput mismatch (-want +got):\n%s", diff)
+				t.Errorf("model -> MemoryStrategyInput mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -388,6 +624,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -405,6 +642,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -423,6 +661,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("semantic_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -440,6 +679,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("semantic_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -458,6 +698,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("user_preference_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -475,6 +716,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("user_preference_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -487,12 +729,108 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic user preference with memory_record_schema",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support ranking."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NumberValidationModel{
+											MinValue: types.Float64Value(1.0),
+											MaxValue: types.Float64Value(5.0),
+										}),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("ranking"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeNumber),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support vibes."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringListValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"cool", "creepy", "hot"}),
+											MaxItems:      types.Int32Value(2),
+										}),
+										StringValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("vibes"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeStringlist),
+						},
+					}),
+				}),
+				Name:                    types.StringValue("user_preference_builtin_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeUserPreference),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+					MetadataSchema: []awstypes.MetadataSchemaEntry{
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support ranking."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberNumberValidation{
+										Value: awstypes.NumberValidation{
+											MinValue: aws.Float64(1.0),
+											MaxValue: aws.Float64(5.0),
+										},
+									},
+								},
+							},
+							Key:  aws.String("ranking"),
+							Type: awstypes.MetadataValueTypeNumber,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support vibes."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringListValidation{
+										Value: awstypes.StringListValidation{
+											AllowedValues: []string{"cool", "creepy", "hot"},
+											MaxItems:      aws.Int32(2),
+										},
+									},
+								},
+							},
+							Key:  aws.String("vibes"),
+							Type: awstypes.MetadataValueTypeStringlist,
+						},
+					},
+				},
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+			},
+		},
+		{
 			name: "basic episodic",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
 				Description:            types.StringNull(),
 				MemoryExecutionRoleARN: fwtypes.ARNNull(),
 				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                   types.StringValue("episodic_builtin_001"),
 				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -519,6 +857,7 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				Description:            types.StringValue("description_001"),
 				MemoryExecutionRoleARN: fwtypes.ARNNull(),
 				MemoryID:               types.StringValue("memory_001"),
+				MemoryRecordSchema:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                   types.StringValue("episodic_builtin_001"),
 				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -547,13 +886,15 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("summarization_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -586,12 +927,14 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("semantic_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -632,12 +975,14 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("user_preference_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
@@ -683,11 +1028,13 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				Name:                    types.StringValue("episodic_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
@@ -725,6 +1072,106 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
 			},
 		},
+		{
+			name: "self-managed",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				Configuration: &awstypes.ModifyStrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.ModifySelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.ModifyInvocationConfigurationInput{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "self-managed with trigger_conditions",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+							MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+								MessageCount: types.Int32Value(10),
+							}),
+							TimeBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TimeBasedTriggerModel{
+								IdleSessionTimeout: types.Int32Value(600),
+							}),
+							TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TokenBasedTriggerModel](ctx),
+						}),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfUnknown[tfbedrockagentcore.TriggerConditionsModel](ctx),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringValue("memory_001"),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				Configuration: &awstypes.ModifyStrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.ModifySelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.ModifyInvocationConfigurationInput{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+						TriggerConditions: []awstypes.TriggerConditionInput{
+							&awstypes.TriggerConditionInputMemberMessageBasedTrigger{
+								Value: awstypes.MessageBasedTriggerInput{
+									MessageCount: aws.Int32(10),
+								},
+							},
+							&awstypes.TriggerConditionInputMemberTimeBasedTrigger{
+								Value: awstypes.TimeBasedTriggerInput{
+									IdleSessionTimeout: aws.Int32(600),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	opts := cmp.Options{
@@ -741,17 +1188,35 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.EpisodicOverrideExtractionConfigurationInput{},
 			awstypes.EpisodicReflectionConfigurationInput{},
 			awstypes.EpisodicOverrideReflectionConfigurationInput{},
+			awstypes.ExtractionConfigMemberLlmExtractionConfig{},
+			awstypes.LlmExtractionConfig{},
+			awstypes.MemoryRecordSchema{},
+			awstypes.MessageBasedTriggerInput{},
+			awstypes.MetadataSchemaEntry{},
 			awstypes.ModifyConsolidationConfigurationMemberCustomConsolidationConfiguration{},
 			awstypes.ModifyExtractionConfigurationMemberCustomExtractionConfiguration{},
+			awstypes.ModifyInvocationConfigurationInput{},
 			awstypes.ModifyMemoryStrategyInput{},
 			awstypes.ModifyReflectionConfigurationMemberCustomReflectionConfiguration{},
 			awstypes.ModifyReflectionConfigurationMemberEpisodicReflectionConfiguration{},
+			awstypes.ModifySelfManagedConfiguration{},
 			awstypes.ModifyStrategyConfiguration{},
+			awstypes.NumberValidation{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
+			awstypes.StringListValidation{},
+			awstypes.StringValidation{},
 			awstypes.SummaryOverrideConsolidationConfigurationInput{},
+			awstypes.TimeBasedTriggerInput{},
+			awstypes.TokenBasedTriggerInput{},
+			awstypes.TriggerConditionInputMemberMessageBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTimeBasedTrigger{},
+			awstypes.TriggerConditionInputMemberTokenBasedTrigger{},
 			awstypes.UserPreferenceOverrideConsolidationConfigurationInput{},
 			awstypes.UserPreferenceOverrideExtractionConfigurationInput{},
+			awstypes.ValidationMemberNumberValidation{},
+			awstypes.ValidationMemberStringListValidation{},
+			awstypes.ValidationMemberStringValidation{},
 		),
 		cmpopts.SortSlices(func(a, b string) bool { return a < b }),
 	}
@@ -795,6 +1260,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("summarization_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -817,6 +1283,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Description:             types.StringValue("description_001"),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("summarization_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("summarization_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -838,6 +1305,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("semantic_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("semantic_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -859,6 +1327,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("user_preference_builtin_001-YJnphM84r5"),
 				Name:                    types.StringValue("user_preference_builtin_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -888,10 +1357,153 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				Description:            types.StringNull(),
 				MemoryExecutionRoleARN: fwtypes.ARNNull(),
 				MemoryID:               types.StringNull(),
+				MemoryRecordSchema:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:       types.StringValue("episodic_builtin_001-Qw47TlFGX5"),
 				Name:                   types.StringValue("episodic_builtin_001"),
 				Namespaces:             fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:     fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
+					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				}),
+				Type: fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeEpisodic),
+			},
+		},
+		{
+			name: "basic user episodic with memory_record_schema",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Type: "EPISODIC", // Yes, really.
+					Reflection: &awstypes.ReflectionConfigurationMemberEpisodicReflectionConfiguration{
+						Value: awstypes.EpisodicReflectionConfiguration{
+							NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+						},
+					},
+				},
+				MemoryRecordSchema: &awstypes.MemoryRecordSchema{
+					MetadataSchema: []awstypes.MetadataSchemaEntry{
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringValidation{
+										Value: awstypes.StringValidation{
+											AllowedValues: []string{"critical", "high", "medium", "low"},
+										},
+									},
+								},
+							},
+							Key:  aws.String(names.AttrPriority),
+							Type: awstypes.MetadataValueTypeString,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support ranking."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberNumberValidation{
+										Value: awstypes.NumberValidation{
+											MinValue: aws.Float64(1.0),
+											MaxValue: aws.Float64(5.0),
+										},
+									},
+								},
+							},
+							Key:  aws.String("ranking"),
+							Type: awstypes.MetadataValueTypeNumber,
+						},
+						{
+							ExtractionConfig: &awstypes.ExtractionConfigMemberLlmExtractionConfig{
+								Value: awstypes.LlmExtractionConfig{
+									Definition:               aws.String("Support vibes."),
+									LlmExtractionInstruction: aws.String("LATEST_VALUE"),
+									Validation: &awstypes.ValidationMemberStringListValidation{
+										Value: awstypes.StringListValidation{
+											AllowedValues: []string{"cool", "creepy", "hot"},
+											MaxItems:      aws.Int32(2),
+										},
+									},
+								},
+							},
+							Key:  aws.String("vibes"),
+							Type: awstypes.MetadataValueTypeStringlist,
+						},
+					},
+				},
+				Name:               aws.String("episodic_builtin_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+				StrategyId:         aws.String("episodic_builtin_001-Qw47TlFGX5"),
+				Type:               awstypes.MemoryStrategyTypeEpisodic,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:          fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:            types.StringNull(),
+				MemoryExecutionRoleARN: fwtypes.ARNNull(),
+				MemoryID:               types.StringNull(),
+				MemoryRecordSchema: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MemoryRecordSchemaModel{
+					MetadataSchema: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.MetadataSchemaEntryModel{
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Issue priority level based on customer impact. Values range from critical (most severe) to low (least severe)."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"critical", "high", "medium", "low"}),
+										}),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue(names.AttrPriority),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeString),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support ranking."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NumberValidationModel{
+											MinValue: types.Float64Value(1.0),
+											MaxValue: types.Float64Value(5.0),
+										}),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringListValidationModel](ctx),
+										StringValidation:     fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("ranking"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeNumber),
+						},
+						{
+							ExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ExtractionConfigModel{
+								LLMExtractionConfig: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.LLMExtractionConfigModel{
+									Definition:               types.StringValue("Support vibes."),
+									LLMExtractionInstruction: types.StringValue("LATEST_VALUE"),
+									Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.ValidationModel{
+										NumberValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NumberValidationModel](ctx),
+										StringListValidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.StringListValidationModel{
+											AllowedValues: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"cool", "creepy", "hot"}),
+											MaxItems:      types.Int32Value(2),
+										}),
+										StringValidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.StringValidationModel](ctx),
+									}),
+								}),
+							}),
+							ExtractionType: fwtypes.StringEnumNull[awstypes.ExtractionType](),
+							Key:            types.StringValue("vibes"),
+							Type:           fwtypes.StringEnumValue(awstypes.MetadataValueTypeStringlist),
+						},
+					}),
+				}),
+				MemoryStrategyID:   types.StringValue("episodic_builtin_001-Qw47TlFGX5"),
+				Name:               types.StringValue("episodic_builtin_001"),
+				Namespaces:         fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
 				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.EpisodicReflectionConfigurationModel{
 					NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 				}),
@@ -923,13 +1535,15 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
 						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
 					}),
-					Extraction: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("summarization_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("summarization_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -975,12 +1589,188 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with no consolidation",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{
+							Value: awstypes.SemanticExtractionOverride{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with empty consolidation",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{},
+					},
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{
+							Value: awstypes.SemanticExtractionOverride{
+								AppendToPrompt: aws.String("<task>Extract</task>"),
+								ModelId:        aws.String("amazon.nova-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Extract</task>"),
+						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
+					}),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with no extraction",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{
+							Value: awstypes.SemanticConsolidationOverride{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
+				Name:                    types.StringValue("semantic_override_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "semantic override with empty extraction",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					Consolidation: &awstypes.ConsolidationConfigurationMemberCustomConsolidationConfiguration{
+						Value: &awstypes.CustomConsolidationConfigurationMemberSemanticConsolidationOverride{
+							Value: awstypes.SemanticConsolidationOverride{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Extraction: &awstypes.ExtractionConfigurationMemberCustomExtractionConfiguration{
+						Value: &awstypes.CustomExtractionConfigurationMemberSemanticExtractionOverride{},
+					},
+					Type: awstypes.OverrideTypeSemanticOverride,
+				},
+				Name:               aws.String("semantic_override_001"),
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				StrategyId:         aws.String("semantic_override_001-XJf3fg7IP1"),
+				Type:               awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSemanticOverride),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("semantic_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("semantic_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -1026,12 +1816,14 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						AppendToPrompt: types.StringValue("<task>Extract</task>"),
 						ModelID:        types.StringValue("amazon.nova-lite-v1:0"),
 					}),
-					Reflection: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
-					Type:       fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeUserPreferenceOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("user_preference_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("user_preference_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
@@ -1091,15 +1883,134 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 						ModelID:            types.StringValue("us.amazon.nova-micro-v1:0"),
 						NamespaceTemplates: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
 					}),
-					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeEpisodicOverride),
 				}),
 				Description:             types.StringNull(),
 				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
 				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
 				MemoryStrategyID:        types.StringValue("episodic_override_001-XJf3fg7IP1"),
 				Name:                    types.StringValue("episodic_override_001"),
 				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "self-managed",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.SelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.InvocationConfiguration{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+					},
+					Type: awstypes.OverrideTypeSelfManaged,
+				},
+				Name:       aws.String("self_managed_001"),
+				StrategyId: aws.String("self_managed_001-5xKsqQHSWW"),
+				Type:       awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("self_managed_001-5xKsqQHSWW"),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
+				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "self-managed with trigger_conditions",
+			input: awstypes.MemoryStrategy{
+				Configuration: &awstypes.StrategyConfiguration{
+					SelfManagedConfiguration: &awstypes.SelfManagedConfiguration{
+						HistoricalContextWindowSize: aws.Int32(4),
+						InvocationConfiguration: &awstypes.InvocationConfiguration{
+							PayloadDeliveryBucketName: aws.String("bucket001"),
+							TopicArn:                  aws.String("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						},
+						TriggerConditions: []awstypes.TriggerCondition{
+							&awstypes.TriggerConditionMemberMessageBasedTrigger{
+								Value: awstypes.MessageBasedTrigger{
+									MessageCount: aws.Int32(5),
+								},
+							},
+							&awstypes.TriggerConditionMemberTimeBasedTrigger{
+								Value: awstypes.TimeBasedTrigger{
+									IdleSessionTimeout: aws.Int32(300),
+								},
+							},
+							&awstypes.TriggerConditionMemberTokenBasedTrigger{
+								Value: awstypes.TokenBasedTrigger{
+									TokenCount: aws.Int32(100),
+								},
+							},
+						},
+					},
+					Type: awstypes.OverrideTypeSelfManaged,
+				},
+				Name:       aws.String("self_managed_001"),
+				StrategyId: aws.String("self_managed_001-5xKsqQHSWW"),
+				Type:       awstypes.MemoryStrategyTypeCustom,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Extraction:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:    fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.SelfManagedConfigurationModel{
+						HistoricalContextWindowSize: types.Int32Value(4),
+						InvocationConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.InvocationConfigurationModel{
+							PayloadDeliveryBucketName: types.StringValue("bucket001"),
+							TopicARN:                  fwtypes.ARNValue("arn:aws:sns:us-east-1:123456789012:memory_001"), //lintignore:AWSAT003,AWSAT005
+						}),
+						TriggerConditions: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.TriggerConditionsModel](ctx),
+						TriggerConditionsActual: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TriggerConditionsModel{
+							MessageBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.MessageBasedTriggerModel{
+								MessageCount: types.Int32Value(5),
+							}),
+							TimeBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TimeBasedTriggerModel{
+								IdleSessionTimeout: types.Int32Value(300),
+							}),
+							TokenBasedTrigger: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.TokenBasedTriggerModel{
+								TokenCount: types.Int32Value(100),
+							}),
+						}),
+					}),
+					Type: fwtypes.StringEnumValue(awstypes.OverrideTypeSelfManaged),
+				}),
+				Description:             types.StringNull(),
+				MemoryExecutionRoleARN:  fwtypes.ARNNull(),
+				MemoryID:                types.StringNull(),
+				MemoryRecordSchema:      fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:        types.StringValue("self_managed_001-5xKsqQHSWW"),
+				Name:                    types.StringValue("self_managed_001"),
+				Namespaces:              fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:      fwtypes.NewSetValueOfNull[types.String](ctx),
 				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
 				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
 			},
@@ -1125,7 +2036,7 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1139,7 +2050,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemoryStrategyConfig_basicNamespaceTemplates(rName, awstypes.MemoryStrategyTypeSemantic, "default"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 				),
@@ -1152,6 +2066,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1164,6 +2079,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
@@ -1177,7 +2096,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1191,7 +2110,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemoryStrategyConfig_basicNamespaceTemplates(rName, awstypes.MemoryStrategyTypeSemantic, "default"),
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceMemoryStrategy, resourceName),
@@ -1210,10 +2132,52 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_multipleStrategies(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m1, m2 awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName1 := "aws_bedrockagentcore_memory_strategy.test"
+	resourceName2 := "aws_bedrockagentcore_memory_strategy.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Two strategies of different types on the same memory: creating the
+				// second must not fail with "too many results" against the first.
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrType, string(awstypes.MemoryStrategyTypeUserPreference)),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrType, string(awstypes.MemoryStrategyTypeSummarization)),
+				),
+			},
+			{
+				// Updating one of the two strategies must not fail either, for the
+				// same reason.
+				Config: testAccMemoryStrategyConfig_multipleTypes(rName, "Summarization strategy updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName1, &m1),
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName2, &m2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrDescription, "Summarization strategy updated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1292,7 +2256,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespacesToNamespaceTemplates(t *tes
 func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplatesToNamespaces(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1371,7 +2335,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_namespaceTemplatesToNamespaces(t *tes
 func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1403,6 +2367,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Episodic strategy")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1426,6 +2391,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated episodic strategy")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1449,6 +2415,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1472,6 +2439,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1495,6 +2463,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("User preference strategy")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1523,6 +2492,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Summarization strategy")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
@@ -1547,7 +2517,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_standard(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1567,7 +2537,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			// Step 1: CUSTOM type with missing configuration block → ValidateConfig error
 			{
 				Config:      testAccMemoryStrategyConfig_customInvalid(rName),
-				ExpectError: regexache.MustCompile(`Attribute "configuration" must be configured`),
+				ExpectError: regexache.MustCompile(`Attribute configuration must be configured`),
 			},
 			// Step 2: Create CUSTOM strategy with consolidation block
 			{
@@ -1586,9 +2556,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Focus on semantic relationships"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"extraction":   knownvalue.ListSizeExact(0),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+						"extraction":                 knownvalue.ListSizeExact(0),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -1614,16 +2585,37 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
 			},
-			// Step 4: Try to remove consolidation block → should ERROR
+			// Step 4: Remove consolidation block → should replace resource
 			{
-				Config:      testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
-				ExpectError: regexache.MustCompile("Removing the previously configured \"consolidation\" block"),
+				Config: testAccMemoryStrategyConfig_customExtractionOnly(rName, awstypes.OverrideTypeSemanticOverride, "Extract semantic meaning", "us.amazon.nova-2-lite-v1:0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"append_to_prompt": knownvalue.StringExact("Extract semantic meaning"),
+							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
+						})}),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSemanticOverride),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
 			},
 			//// Step 5: Change override type → should replace resource
 			{
@@ -1646,8 +2638,9 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Extract user preferences"),
 							"model_id":         knownvalue.StringExact("us.amazon.nova-2-lite-v1:0"),
 						})}),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeUserPreferenceOverride),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeUserPreferenceOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -1655,7 +2648,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 			//// Step 6: SUMMARY_OVERRIDE with extraction block → ValidateConfig error
 			{
 				Config:      testAccMemoryStrategyConfig_custom(rName, awstypes.OverrideTypeSummaryOverride, "Summary consolidation", "amazon.nova-lite-v1:0", "Summary extraction", "us.amazon.nova-2-lite-v1:0"),
-				ExpectError: regexache.MustCompile(`Attribute "configuration\[0\].extraction" must not be configured`),
+				ExpectError: regexache.MustCompile(`Attribute configuration\[0\].extraction must not be configured`),
 			},
 			//// Step 7: SUMMARY_OVERRIDE with no extraction block → should succeed
 			{
@@ -1674,9 +2667,10 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 							"append_to_prompt": knownvalue.StringExact("Summary consolidation only"),
 							"model_id":         knownvalue.StringExact("amazon.nova-lite-v1:0"),
 						})}),
-						"extraction":   knownvalue.ListSizeExact(0),
-						"reflection":   knownvalue.ListSizeExact(0),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSummaryOverride),
+						"extraction":                 knownvalue.ListSizeExact(0),
+						"reflection":                 knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeSummaryOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
@@ -1688,7 +2682,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_custom(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1719,6 +2713,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1761,6 +2756,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1780,7 +2776,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltin(t *testing.T) {
 func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1812,6 +2808,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguratio
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1861,6 +2858,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguratio
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1884,7 +2882,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicBuiltinReflectionConfiguratio
 func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.MemoryStrategy
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory_strategy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1926,10 +2924,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 								knownvalue.StringExact("/strategy/{memoryStrategyId}/actor/{actorId}/"),
 							}),
 						})}),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1984,10 +2984,12 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 								knownvalue.StringExact("/strategy/{memoryStrategyId}/"),
 							}),
 						})}),
-						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
+						"self_managed_configuration": knownvalue.ListSizeExact(0),
+						names.AttrType:               tfknownvalue.StringExact(awstypes.OverrideTypeEpisodicOverride),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
@@ -1999,6 +3001,593 @@ func TestAccBedrockAgentCoreMemoryStrategy_episodicOverride(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction":    knownvalue.ListSizeExact(0),
+						"reflection":    knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.NotNull(),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(1),
+								"time_based_trigger":    knownvalue.ListSizeExact(1),
+								"token_based_trigger":   knownvalue.ListSizeExact(1),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+				ImportStateVerifyIgnore:              []string{"configuration.0.self_managed_configuration.0.trigger_conditions"},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:                  config.StringVariable(rName),
+					"historical_context_window_size": config.IntegerVariable(25),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"consolidation": knownvalue.ListSizeExact(0),
+						"extraction":    knownvalue.ListSizeExact(0),
+						"reflection":    knownvalue.ListSizeExact(0),
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.Int32Exact(25),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListSizeExact(0),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(1),
+								"time_based_trigger":    knownvalue.ListSizeExact(1),
+								"token_based_trigger":   knownvalue.ListSizeExact(1),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeCustom)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_selfManagedTriggerConditions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed_trigger_conditions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"message_count": config.IntegerVariable(35),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.NotNull(),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35),
+								})}),
+								"time_based_trigger":  knownvalue.ListSizeExact(0),
+								"token_based_trigger": knownvalue.ListSizeExact(0),
+							})}),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35),
+								})}),
+								"time_based_trigger":  knownvalue.ListSizeExact(1),
+								"token_based_trigger": knownvalue.ListSizeExact(1),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/self_managed_trigger_conditions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"token_count":   config.IntegerVariable(1750),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"self_managed_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"historical_context_window_size": knownvalue.NotNull(),
+							"invocation_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"payload_delivery_bucket_name": knownvalue.NotNull(),
+								names.AttrTopicARN:             knownvalue.NotNull(),
+							})}),
+							"trigger_conditions": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListSizeExact(0),
+								"time_based_trigger":    knownvalue.ListSizeExact(0),
+								"token_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"token_count": knownvalue.Int32Exact(1750),
+								})}),
+							})}),
+							"trigger_conditions_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"message_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"message_count": knownvalue.Int32Exact(35), // Retains previous configured value.
+								})}),
+								"time_based_trigger": knownvalue.ListSizeExact(1),
+								"token_based_trigger": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"token_count": knownvalue.Int32Exact(1750),
+								})}),
+							})}),
+						})}),
+						names.AttrType: tfknownvalue.StringExact(awstypes.OverrideTypeSelfManaged),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_summarizationMemoryRecordSchemaBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/summarization_memory_record_schema_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"key":           config.StringVariable("customer_id"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListSizeExact(0),
+								"extraction_type":   knownvalue.NotNull(),
+								names.AttrKey:       knownvalue.StringExact("customer_id"),
+								names.AttrType:      knownvalue.Null(),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSummarization)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/summarization_memory_record_schema_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"key":           config.StringVariable("customer_id"),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/summarization_memory_record_schema_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"key":           config.StringVariable("score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"extraction_config": knownvalue.ListSizeExact(0),
+							"extraction_type":   knownvalue.NotNull(),
+							names.AttrKey:       knownvalue.StringExact("score"),
+							names.AttrType:      knownvalue.Null(),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSummarization)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_semanticMemoryRecordSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Definition 1"),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation":      knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("critical"),
+													knownvalue.StringExact("high"),
+													knownvalue.StringExact("medium"),
+													knownvalue.StringExact("low"),
+												}),
+											})}),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact(names.AttrPriority),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSemantic)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 1"),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/semantic_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable("Definition 2"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Definition 2"),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation":      knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("critical"),
+													knownvalue.StringExact("high"),
+													knownvalue.StringExact("medium"),
+													knownvalue.StringExact("low"),
+												}),
+											})}),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact(names.AttrPriority),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeSemantic)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_userPreferenceMemoryRecordSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/user_preference_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_execution_role_arn"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_record_schema"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"metadata_schema": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Support ranking."),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"max_value": knownvalue.Float64Exact(5.0),
+												"min_value": knownvalue.Float64Exact(1.0),
+											})}),
+											"string_list_validation": knownvalue.ListSizeExact(0),
+											"string_validation":      knownvalue.ListSizeExact(0),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("ranking"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"llm_extraction_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"definition":                 knownvalue.StringExact("Support vibes."),
+										"llm_extraction_instruction": knownvalue.NotNull(),
+										"validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"number_validation": knownvalue.ListSizeExact(0),
+											"string_list_validation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"allowed_values": knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.StringExact("fun"),
+													knownvalue.StringExact("spooky"),
+													knownvalue.StringExact("chill"),
+												}),
+												"max_items": knownvalue.Int32Exact(2),
+											})}),
+											"string_validation": knownvalue.ListSizeExact(0),
+										})}),
+									})}),
+								})}),
+								"extraction_type": knownvalue.NotNull(),
+								names.AttrKey:     knownvalue.StringExact("vibes"),
+								names.AttrType:    tfknownvalue.StringExact(awstypes.MetadataValueTypeStringlist),
+							}),
+						}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory_strategy_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_s")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespaces"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_templates"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("/strategies/{memoryStrategyId}/actors/{actorId}/"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reflection_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.MemoryStrategyTypeUserPreference)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MemoryStrategy/user_preference_memory_record_schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
 			},
 		},
 	})
@@ -2105,6 +3694,19 @@ resource "aws_bedrockagentcore_memory_strategy" "test2" {
   namespace_templates       = [%[3]q]
 }
 `, rName, strategyType, duplicateNamespace))
+}
+
+func testAccMemoryStrategyConfig_multipleTypes(rName, description string) string {
+	return acctest.ConfigCompose(testAccMemoryStrategyConfig_withExecutionRole(rName, awstypes.MemoryStrategyTypeUserPreference, "User preference strategy", "preferences"), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test2" {
+  name                      = "%[1]s_summary"
+  memory_id                 = aws_bedrockagentcore_memory.test.id
+  memory_execution_role_arn = aws_bedrockagentcore_memory.test.memory_execution_role_arn
+  type                      = %[2]q
+  description               = %[3]q
+  namespace_templates       = ["{sessionId}"]
+}
+`, rName, awstypes.MemoryStrategyTypeSummarization, description))
 }
 
 func testAccMemoryStrategyConfig_custom(rName string, overrideType awstypes.OverrideType, consolidationPrompt, consolidationModel, extractionPrompt, extractionModel string) string {

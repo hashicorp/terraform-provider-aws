@@ -116,7 +116,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - (**Deprecated**) Name of the pipeline.
 * `ingest_endpoint_urls` - The list of ingestion endpoints for the pipeline, which you can send data to.
-* `pipeline_arn` - Amazon Resource Name (ARN) of the pipeline.
+* `pipeline_arn` - ARN of the pipeline.
 
 ## Timeouts
 

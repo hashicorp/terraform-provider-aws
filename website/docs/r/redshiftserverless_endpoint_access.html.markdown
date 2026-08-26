@@ -34,7 +34,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Endpoint Access.
+* `arn` - ARN of the Redshift Serverless Endpoint Access.
 * `id` - The Redshift Endpoint Access Name.
 * `address` - The DNS address of the VPC endpoint.
 * `port` - The port that Amazon Redshift Serverless listens on.

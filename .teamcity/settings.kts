@@ -42,14 +42,14 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 val defaultTerraformVersion = "1.15.8"
-
+var pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
     }
 
     if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest)
+        buildType(PullRequest(pullRequestTerraformVersion))
     }
 
     if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
@@ -118,10 +118,6 @@ project {
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
         if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-            // text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/go-mod-cache")
-            // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/go-build-cache")
-            text("TERRAFORM_CORE_VERSION", DslContext.getParameter("terraform_version", defaultTerraformVersion))
-            text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
             // set variable to false by default
             text("POST_GITHUB_COMMENT", "false")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
@@ -131,8 +127,17 @@ project {
     subProject(Services)
 }
 
-object PullRequest : BuildType({
+class PullRequest(terraformVersion: String) : BuildType({
     name = "Pull Request"
+
+    params {
+        text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+        text("TERRAFORM_CORE_VERSION", terraformVersion)
+
+        text("env.GOFLAGS", "-modcacherw")
+        text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
+        // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
@@ -162,7 +167,6 @@ object PullRequest : BuildType({
         }
         script {
             name = "Fetch Test Results"
-            // executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
@@ -172,15 +176,14 @@ object PullRequest : BuildType({
             testFormat = "json"
         }
 
-        // buildCache {
-        //     name = "terraform-provider-aws-build-cache"
-        //     use = true
-        //     publish = true
-        //     rules = """
-        //         go-mod-cache
-        //         go-build-cache
-        //     """.trimIndent()
-        // }
+        buildCache {
+            name = "terraform-provider-aws-mod-cache"
+            use = true
+            publish = true
+            rules = """
+                .cache/go-mod
+            """.trimIndent()
+        }
 
         feature {
             type = "JetBrains.SharedResources"
@@ -551,6 +554,7 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        // IAM is foundational to most other services, so run its tests first
         script {
             name = "IAM"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -572,11 +576,11 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "KMS"
+            name = "Events"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "IAM"
+            name = "KMS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
@@ -596,6 +600,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
+            name = "SSM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "Secrets Manager"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
@@ -603,6 +611,10 @@ object Sanity : BuildType({
             name = "STS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }  
+        script {
+            name = "Function"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
         script {
             name = "Report Success"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -655,10 +667,7 @@ object Performance : BuildType({
     }
 
     steps {
-        script {
-            name = "Configure Go"
-            scriptContent = File("./scripts/configure_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()

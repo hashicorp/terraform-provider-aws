@@ -880,7 +880,6 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										Required:   true,
 										Validators: []validator.String{
 											tfstringvalidator.DiscriminatorRequires(map[awstypes.ParsingStrategy]path.Expression{
-												awstypes.ParsingStrategyBedrockDataAutomation:  path.MatchRelative().AtParent().AtName("bedrock_data_automation_configuration"),
 												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
 											}),
 										},

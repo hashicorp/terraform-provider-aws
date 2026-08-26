@@ -79,7 +79,7 @@ resource "aws_ivs_recording_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS recording configuration.
+- `arn` (String) ARN of the IVS recording configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Recording Configuration using the ARN. For example:
 

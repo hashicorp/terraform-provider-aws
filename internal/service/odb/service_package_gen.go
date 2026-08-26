@@ -104,6 +104,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newDataSourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceNetwork,
 			TypeName: "aws_odb_network",
 			Name:     "Network",
@@ -161,6 +167,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newResourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_iam_role_association",
+			Name:     "IAM Role Association",
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newResourceNetwork,

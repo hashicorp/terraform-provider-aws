@@ -31,9 +31,9 @@ func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes
 	)
 }
 
-var _ bucketPropertyListHandlerSDK = bucketServerSideEncryptionConfigurationListHandler{}
+var _ bucketPropertyListHandler = bucketServerSideEncryptionConfigurationListHandler{}
 
-func newBucketServerSideEncryptionConfigurationListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+func newBucketServerSideEncryptionConfigurationListHandler(lister listResourceSDK) bucketPropertyListHandler {
 	return bucketServerSideEncryptionConfigurationListHandler{
 		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}

@@ -36,18 +36,18 @@ The following arguments are optional:
 * `root_directory` - (Optional) Root directory configuration. See [`root_directory`](#root_directory) below. Changing this value forces replacement.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### posix_user
+### `posix_user` Block
 
 * `gid` - (Required) POSIX group ID. Changing this value forces replacement.
-* `uid` - (Required) POSIX user ID. Changing this value forces replacement.
 * `secondary_gids` - (Optional) Set of secondary POSIX group IDs. Changing this value forces replacement.
+* `uid` - (Required) POSIX user ID. Changing this value forces replacement.
 
-### root_directory
+### `root_directory` Block
 
+* `creation_permissions` - (Optional) Permissions to set when creating the root directory. See [`creation_permissions`](#creation_permissions-block) below. Changing this value forces replacement.
 * `path` - (Optional) Root directory path. Changing this value forces replacement.
-* `creation_permissions` - (Optional) Permissions to set when creating the root directory. See [`creation_permissions`](#creation_permissions) below. Changing this value forces replacement.
 
-### creation_permissions
+### `creation_permissions` Block
 
 * `owner_gid` - (Required) Owner group ID. Changing this value forces replacement.
 * `owner_uid` - (Required) Owner user ID. Changing this value forces replacement.

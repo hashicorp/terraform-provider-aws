@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 )
 
-// RequiresReplaceIfEmptied returns a plan modifier requires resource replacement if:
+// RequiresReplaceIfEmptied returns a plan modifier that requires resource replacement if:
 //   - The resource is planned for update.
 //   - The plan and state values are not equal.
 //   - The state value is a non-empty list.
@@ -22,7 +22,13 @@ var RequiresReplaceIfEmptied planmodifier.List = listplanmodifier.RequiresReplac
 		return
 	}
 
-	if request.StateValue.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) > 0 && request.PlanValue.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
+	emptied, diags := fwplanmodifiers.ListEmptied(ctx, request.StateValue, request.PlanValue)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if emptied {
 		response.RequiresReplace = true
 	}
 }, requiresReplaceIfEmptiedDescription, requiresReplaceIfEmptiedDescription)

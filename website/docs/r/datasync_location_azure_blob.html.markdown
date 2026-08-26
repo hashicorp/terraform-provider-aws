@@ -48,7 +48,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the DataSync Location.
+* `arn` - ARN of the DataSync Location.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -72,9 +72,9 @@ resource "aws_datasync_location_azure_blob" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DataSync Azure Blob location.
+- `arn` (String) ARN of the DataSync Azure Blob location.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_azure_blob` using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_azure_blob` using the ARN. For example:
 
 ```terraform
 import {
@@ -83,7 +83,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datasync_location_azure_blob` using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_location_azure_blob` using the ARN. For example:
 
 ```console
 % terraform import aws_datasync_location_azure_blob.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
