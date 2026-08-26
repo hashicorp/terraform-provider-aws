@@ -36,12 +36,6 @@ type lifecyclePolicyListResourceModel struct {
 }
 
 func (l *lifecyclePolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query lifecyclePolicyListResourceModel
-	if diags := request.Config.Get(ctx, &query); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
 	conn := l.Meta().ECRClient(ctx)
 
 	tflog.Info(ctx, "Listing ECR lifecycle policies")
