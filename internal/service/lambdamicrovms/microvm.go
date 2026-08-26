@@ -169,7 +169,7 @@ func (r *microVMResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"max_idle_duration_seconds": schema.Int32Attribute{
 							Required: true,
 							Validators: []validator.Int32{
-								int32validator.AtMost(60),
+								int32validator.AtLeast(60),
 							},
 							PlanModifiers: []planmodifier.Int32{
 								int32planmodifier.RequiresReplace(),

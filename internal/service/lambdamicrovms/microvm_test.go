@@ -121,6 +121,46 @@ func TestAccLambdaMicroVMsMicroVM_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLambdaMicroVMsMicroVM_idlePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdamicrovms.GetMicrovmOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdamicrovms_microvm.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaMicroVMsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMicroVMDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/MicroVM/idle_policy/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMicroVMExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("idle_policy"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"auto_resume_enabled":        knownvalue.Bool(true),
+						"max_idle_duration_seconds":  knownvalue.Int32Exact(90),
+						"suspended_duration_seconds": knownvalue.Int32Exact(20),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccLambdaMicroVMsMicroVM_loggingCloudWatch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambdamicrovms.GetMicrovmOutput
