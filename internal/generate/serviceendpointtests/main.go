@@ -44,6 +44,7 @@ func main() {
 			"mwaa",                    // Resolver modifies URL
 			"neptunegraph",            // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography",     // Resolver modifies URL
+			"pricingplanmanager",      // No FIPS support
 			"route53profiles",         // Resolver modifies URL
 			"s3control",               // Resolver modifies URL
 			"simpledb",                // AWS SDK for Go v1

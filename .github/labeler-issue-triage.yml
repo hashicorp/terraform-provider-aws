@@ -584,6 +584,8 @@ service/polly:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_polly_'
 service/pricing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricing_'
+service/pricingplanmanager:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricingplanmanager_'
 service/proton:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_proton_'
 service/qbusiness:

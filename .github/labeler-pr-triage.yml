@@ -1841,6 +1841,12 @@ service/pricing:
           - any-glob-to-any-file:
               - 'internal/service/pricing/**/*'
               - 'website/**/pricing_*'
+service/pricingplanmanager:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/pricingplanmanager/**/*'
+              - 'website/**/pricingplanmanager_*'
 service/proton:
   - any:
       - changed-files:

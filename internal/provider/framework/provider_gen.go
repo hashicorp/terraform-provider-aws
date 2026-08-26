@@ -1563,6 +1563,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// pricingplanmanager
+
+				"pricingplanmanager": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// qbusiness
 
 				"qbusiness": schema.StringAttribute{
