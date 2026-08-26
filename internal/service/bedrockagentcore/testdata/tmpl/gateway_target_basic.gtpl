@@ -36,25 +36,10 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 
 resource "aws_bedrockagentcore_gateway" "test" {
 {{- template "region" }}
-  name     = var.rName
-  role_arn = aws_iam_role.test.arn
-
-  authorizer_type = "CUSTOM_JWT"
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test"]
-    }
-  }
-
-  protocol_configuration {
-    mcp {
-      instructions       = "Do something"
-      supported_versions = ["2025-11-25"]
-    }
-  }
-
-  protocol_type = "MCP"
+  name            = var.rName
+  role_arn        = aws_iam_role.test.arn
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
 }
 
 data "aws_iam_policy_document" "test" {
