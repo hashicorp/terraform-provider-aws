@@ -173,6 +173,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAccessPolicyResourceAsListResource,
+			TypeName: "aws_opensearchserverless_access_policy",
+			Name:     "Access Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrType, true),
+			}),
+		},
+		{
 			Factory:  newCollectionResourceAsListResource,
 			TypeName: "aws_opensearchserverless_collection",
 			Name:     "Collection",
