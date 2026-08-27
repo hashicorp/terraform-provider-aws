@@ -265,6 +265,8 @@ type CreateWebFunctionEndpointInput struct {
 	AutoDeploymentMode awstypes.AutoDeploymentMode `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []awstypes.RevisionWeight   `json:"revisionWeights,omitempty"`
 	Regions            []string                    `json:"regions,omitempty"`
+	ScalingConfig      *awstypes.ScalingConfig     `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *awstypes.ThrottleConfig    `json:"throttleConfig,omitempty"`
 
 	noSmithyDocumentSerde
 }
@@ -280,6 +282,8 @@ type CreateWebFunctionEndpointOutput struct {
 	AutoDeploymentMode awstypes.AutoDeploymentMode          `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []awstypes.RevisionWeight            `json:"revisionWeights,omitempty"`
 	Regions            []string                             `json:"regions,omitempty"`
+	ScalingConfig      *awstypes.ScalingConfig              `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *awstypes.ThrottleConfig             `json:"throttleConfig,omitempty"`
 	State              awstypes.EndpointState               `json:"state,omitempty"`
 	StateReason        *string                              `json:"stateReason,omitempty"`
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`
@@ -322,6 +326,8 @@ type GetWebFunctionEndpointOutput struct {
 	AutoDeploymentMode awstypes.AutoDeploymentMode          `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []awstypes.RevisionWeight            `json:"revisionWeights,omitempty"`
 	Regions            []string                             `json:"regions,omitempty"`
+	ScalingConfig      *awstypes.ScalingConfig              `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *awstypes.ThrottleConfig             `json:"throttleConfig,omitempty"`
 	State              awstypes.EndpointState               `json:"state,omitempty"`
 	StateReason        *string                              `json:"stateReason,omitempty"`
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`
@@ -353,6 +359,8 @@ type UpdateWebFunctionEndpointInput struct {
 	AuthType           awstypes.AuthType           `json:"authType,omitempty"`
 	AutoDeploymentMode awstypes.AutoDeploymentMode `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []awstypes.RevisionWeight   `json:"revisionWeights,omitempty"`
+	ScalingConfig      *awstypes.ScalingConfig     `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *awstypes.ThrottleConfig    `json:"throttleConfig,omitempty"`
 
 	noSmithyDocumentSerde
 }
@@ -368,6 +376,8 @@ type UpdateWebFunctionEndpointOutput struct {
 	AutoDeploymentMode awstypes.AutoDeploymentMode          `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []awstypes.RevisionWeight            `json:"revisionWeights,omitempty"`
 	Regions            []string                             `json:"regions,omitempty"`
+	ScalingConfig      *awstypes.ScalingConfig              `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *awstypes.ThrottleConfig             `json:"throttleConfig,omitempty"`
 	State              awstypes.EndpointState               `json:"state,omitempty"`
 	StateReason        *string                              `json:"stateReason,omitempty"`
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`

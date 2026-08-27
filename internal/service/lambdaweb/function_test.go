@@ -77,6 +77,10 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 						}
 						return nil
 					}),
+					// Unset scaling and throttling are not reported by the API:
+					// account-level defaults apply server-side, invisibly.
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.scaling_config.max_environments"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.throttle_config.rate_limit"),
 				),
 			},
 			{

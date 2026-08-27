@@ -34,6 +34,8 @@ func TestAccLambdaWebEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
 					resource.TestCheckResourceAttr(dataSourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, string(awstypes.EndpointStateActive)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "scaling_config.max_environments", resourceName, "scaling_config.max_environments"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "throttle_config.rate_limit", resourceName, "throttle_config.rate_limit"),
 				),
 			},
 		},

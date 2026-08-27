@@ -84,9 +84,11 @@ out yet: a service-level `testAccPreCheck` makes a cheap `ListWebFunctions`
 call and skips on the not-available signature. Run in any of the 17 available
 regions (see below).
 
-Last full run (us-east-1 primary, eu-west-1 alternate): 44 acceptance PASS,
-0 FAIL, single clean run. `make ci-quick` green (providerlint, golangci-lint
-0 issues, import-lint, semgrep 0 findings). 0 orphan resources after runs.
+Last full run (us-east-1, 2026-08-27): 45 acceptance PASS, 0 FAIL, single
+clean run. Previous full run (us-east-1 primary, eu-west-1 alternate,
+2026-08-21): 44 PASS, 0 FAIL. `make ci-quick` green (providerlint,
+golangci-lint 0 issues, import-lint, semgrep 0 findings). 0 orphan resources
+after runs.
 
 Multi-region validation (2026-08-21): `Function_basic` + `Endpoint_basic` +
 `ResourcePolicy_basic` pass in all 17 regions where the API is available:
@@ -118,6 +120,21 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
   `lambda.amazonaws.com` service principal in the key policy. `aws:SourceAccount`
   breaks it (the service does not propagate source context). Documented on the
   `kms_key_arn` attribute.
+- **`scaling_config` and `throttle_config`** (added to the API in the final
+  pre-GA model, 2026-08): endpoint-level `maxEnvironments` and `rateLimit`.
+  Modeled as Optional+Computed `ObjectAttribute`s (blocks cannot be Computed;
+  proto5 carries object attribute types fine). Live behavior: the API echoes
+  them only when explicitly set — unset endpoints report nothing and
+  account-level defaults apply invisibly. `rateLimit` accepts only quantized
+  values (0, 100-1000 step 100, 2000-10000 step 1000); the service rejects
+  anything else with a `ValidationException` listing the values.
+- **The service assigns default `telemetryConfig` to every new revision**
+  (a log group and INFO log levels; started appearing in live responses the
+  week of 2026-08-24). Revisions are immutable, so this is a server default,
+  not drift: `restoreTelemetryConfig` keeps `telemetry_config` as
+  configuration-only state (the configured value replaces the server echo on
+  create and refresh; import leaves it unset). Without it every apply fails
+  with "block count changed from 0 to 1".
 
 ## 6. Still pending (external, not code)
 

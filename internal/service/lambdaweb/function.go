@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -305,6 +306,25 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
+						// Objects rather than blocks: the service assigns
+						// account-level defaults when unset, so they must be
+						// Computed (see aws_lambdaweb_endpoint).
+						"scaling_config": schema.ObjectAttribute{
+							CustomType: fwtypes.NewObjectTypeOf[scalingConfigModel](ctx),
+							Optional:   true,
+							Computed:   true,
+							PlanModifiers: []planmodifier.Object{
+								objectplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"throttle_config": schema.ObjectAttribute{
+							CustomType: fwtypes.NewObjectTypeOf[throttleConfigModel](ctx),
+							Optional:   true,
+							Computed:   true,
+							PlanModifiers: []planmodifier.Object{
+								objectplanmodifier.UseStateForUnknown(),
+							},
+						},
 						"regions": schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
@@ -552,6 +572,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		restoreTelemetryConfig(ctx, &revModel, plan.RevisionConfig)
 		plan.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
 	}
 
@@ -626,6 +647,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	// does, so read it explicitly: otherwise revision_config is never
 	// reconciled with the service (no drift detection on code, environment
 	// variables, description or the KMS key) and cannot be populated on import.
+	priorRevisionConfig := state.RevisionConfig
 	state.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
 	if revisionID != nil {
 		rev, err := findRevisionByID(ctx, conn, name, aws.ToString(revisionID))
@@ -640,6 +662,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			if resp.Diagnostics.HasError() {
 				return
 			}
+			restoreTelemetryConfig(ctx, &revModel, priorRevisionConfig)
 			state.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
 		}
 	}
@@ -879,6 +902,38 @@ func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValue
 	return models[0].EndpointName.ValueString(), nil
 }
 
+// restoreTelemetryConfig keeps telemetry_config as configuration-only state.
+// The service assigns default telemetry (a log group and INFO log levels) to
+// every revision and reports it back, but revisions are immutable, so
+// telemetry the practitioner never wrote is a server default, not drift:
+// reading it into state breaks every apply with "block count changed from 0 to
+// 1", and a partially configured block (say, log_group only) would surface the
+// filled-in log levels as a perpetual diff. prior is the configured
+// revision_config (the plan on create, prior state on refresh); its
+// telemetry_config replaces the server's wholesale. On import there is no
+// prior, so telemetry_config is left unpopulated rather than importing the
+// server defaults.
+func restoreTelemetryConfig(ctx context.Context, revModel *revisionConfigModel, prior fwtypes.ListNestedObjectValueOf[revisionConfigModel]) {
+	desired := fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
+	if !prior.IsNull() && !prior.IsUnknown() {
+		if priorRev, d := prior.ToPtr(ctx); !d.HasError() && priorRev != nil && !priorRev.ServiceConfig.IsNull() && !priorRev.ServiceConfig.IsUnknown() {
+			if priorSvc, d := priorRev.ServiceConfig.ToPtr(ctx); !d.HasError() && priorSvc != nil && !priorSvc.TelemetryConfig.IsUnknown() {
+				desired = priorSvc.TelemetryConfig
+			}
+		}
+	}
+
+	if revModel.ServiceConfig.IsNull() || revModel.ServiceConfig.IsUnknown() {
+		return
+	}
+	svc, d := revModel.ServiceConfig.ToPtr(ctx)
+	if d.HasError() || svc == nil {
+		return
+	}
+	svc.TelemetryConfig = desired
+	revModel.ServiceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, svc)
+}
+
 type functionResourceModel struct {
 	framework.WithRegionModel
 	ARN                 types.String                                         `tfsdk:"arn"`
@@ -947,4 +1002,6 @@ type endpointConfigModel struct {
 	AuthType           fwtypes.StringEnum[awstypes.AuthType]           `tfsdk:"auth_type"`
 	AutoDeploymentMode fwtypes.StringEnum[awstypes.AutoDeploymentMode] `tfsdk:"auto_deployment_mode"`
 	Regions            fwtypes.SetOfString                             `tfsdk:"regions"`
+	ScalingConfig      fwtypes.ObjectValueOf[scalingConfigModel]       `tfsdk:"scaling_config"`
+	ThrottleConfig     fwtypes.ObjectValueOf[throttleConfigModel]      `tfsdk:"throttle_config"`
 }

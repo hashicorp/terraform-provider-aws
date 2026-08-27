@@ -46,6 +46,10 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					// Unset scaling and throttling are not reported by the API:
+					// account-level defaults apply server-side, invisibly.
+					resource.TestCheckNoResourceAttr(resourceName, "scaling_config.max_environments"),
+					resource.TestCheckNoResourceAttr(resourceName, "throttle_config.rate_limit"),
 				),
 			},
 			{
@@ -59,6 +63,52 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint lambdaweb.GetWebFunctionEndpointOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_scalingAndThrottle(rName, 4, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.max_environments", "4"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_config.rate_limit", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+			},
+			{
+				Config: testAccEndpointConfig_scalingAndThrottle(rName, 6, 200),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.max_environments", "6"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_config.rate_limit", "200"),
 				),
 			},
 		},
@@ -237,6 +287,25 @@ resource "aws_lambdaweb_endpoint" "test" {
 
 func testAccEndpointConfig_multiRegion(rName string) string {
 	return testAccEndpointConfig_typeWithRegions(rName, "MultiRegion")
+}
+
+func testAccEndpointConfig_scalingAndThrottle(rName string, maxEnvironments, rateLimit int) string {
+	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
+resource "aws_lambdaweb_endpoint" "test" {
+  function_name = aws_lambdaweb_function.test.function_name
+  endpoint_name = "extra"
+  endpoint_type = "HomeRegion"
+  auth_type     = "ApplicationManaged"
+
+  scaling_config = {
+    max_environments = %[1]d
+  }
+
+  throttle_config = {
+    rate_limit = %[2]d
+  }
+}
+`, maxEnvironments, rateLimit))
 }
 
 func testAccEndpointConfig_typeWithRegions(rName, endpointType string) string {

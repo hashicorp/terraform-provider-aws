@@ -157,7 +157,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variables, up to 32 KB across all names and values.
 * `execution_role_arn` - (Required) ARN of the IAM execution role. The trust principal must be `lambda.amazonaws.com`.
 * `max_concurrency_per_environment` - (Optional) Maximum concurrent requests per execution environment (1-128, default 64).
-* `telemetry_config` - (Optional) Telemetry configuration. [See below](#telemetry_config-block).
+* `telemetry_config` - (Optional) Telemetry configuration. The service assigns default telemetry (a log group and `INFO` log levels) to every revision; Terraform tracks this block as written, so leaving it out does not produce drift against those defaults. [See below](#telemetry_config-block).
 * `timeout_seconds` - (Optional) Request timeout in seconds (3-900, default 30).
 
 ~> **Note:** The runtime starts `index.js` and expects it to listen on `0.0.0.0:3000`. To serve an entry point with another name, set `AWS_LAMBDA_ENTRYPOINT` in `environment_variables` to that file. Without it a package whose server lives elsewhere starts nothing, and the endpoint answers an opaque `HTTP 500` with no log line explaining it.
@@ -180,6 +180,8 @@ The following arguments are optional:
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
 * `regions` - (Optional) List of Regions for the endpoint (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically.
+* `scaling_config` - (Optional) Scaling limits for the endpoint, an object (assigned with `=`, not a block) with a single `max_environments` attribute: the maximum number of concurrent execution environments, minimum 2. When unset, the service applies account-level defaults and reports no value.
+* `throttle_config` - (Optional) Request throttling for the endpoint, an object (assigned with `=`, not a block) with a single `rate_limit` attribute: the maximum request rate in requests per second, quantized (`0`, `100`-`1000` in steps of 100, `2000`-`10000` in steps of 1000). When unset, the service applies account-level defaults and reports no value.
 
 ## Attribute Reference
 
@@ -203,7 +205,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import fully populates the resource state from the API, including `revision_config` and `endpoint_config`; the first plan after import reports no changes when the configuration matches the deployed function.
+Import fully populates the resource state from the API, including `revision_config` and `endpoint_config`, with one exception: `telemetry_config`, which the service fills with defaults on every revision, is left unset. The first plan after import reports no changes when the configuration matches the deployed function and omits `telemetry_config` (add the block after importing if the revision was created with explicit telemetry settings).
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 

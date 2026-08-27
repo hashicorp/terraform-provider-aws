@@ -172,6 +172,19 @@ type RevisionConfig struct {
 	ServiceConfig *ServiceConfig `json:"serviceConfig,omitempty"`
 }
 
+// ScalingConfig caps the number of concurrent execution environments an
+// endpoint may scale to. The service assigns an account-level default when
+// unset.
+type ScalingConfig struct {
+	MaxEnvironments *int64 `json:"maxEnvironments,omitempty"`
+}
+
+// ThrottleConfig caps an endpoint's request rate, in requests per second. The
+// service assigns an account-level default when unset.
+type ThrottleConfig struct {
+	RateLimit *int64 `json:"rateLimit,omitempty"`
+}
+
 type EndpointConfig struct {
 	EndpointName       *string            `json:"endpointName,omitempty"`
 	Description        *string            `json:"description,omitempty"`
@@ -179,6 +192,8 @@ type EndpointConfig struct {
 	AuthType           AuthType           `json:"authType,omitempty"`
 	AutoDeploymentMode AutoDeploymentMode `json:"autoDeploymentMode,omitempty"`
 	Regions            []string           `json:"regions,omitempty"`
+	ScalingConfig      *ScalingConfig     `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *ThrottleConfig    `json:"throttleConfig,omitempty"`
 }
 
 type RevisionWeight struct {
@@ -191,6 +206,8 @@ type RegionalEndpoint struct {
 	DomainName         *string              `json:"domainName,omitempty"`
 	AuthType           AuthType             `json:"authType,omitempty"`
 	RevisionWeights    []RevisionWeight     `json:"revisionWeights,omitempty"`
+	ScalingConfig      *ScalingConfig       `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *ThrottleConfig      `json:"throttleConfig,omitempty"`
 	State              EndpointState        `json:"state,omitempty"`
 	StateReason        *string              `json:"stateReason,omitempty"`
 	UpdateStatus       EndpointUpdateStatus `json:"updateStatus,omitempty"`
@@ -231,6 +248,8 @@ type EndpointSummary struct {
 	AutoDeploymentMode AutoDeploymentMode `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []RevisionWeight   `json:"revisionWeights,omitempty"`
 	Regions            []string           `json:"regions,omitempty"`
+	ScalingConfig      *ScalingConfig     `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *ThrottleConfig    `json:"throttleConfig,omitempty"`
 	State              EndpointState      `json:"state,omitempty"`
 	StateReason        *string            `json:"stateReason,omitempty"`
 	CreatedAt          *string            `json:"createdAt,omitempty"`
@@ -249,6 +268,8 @@ type FunctionEndpointSummary struct {
 	AutoDeploymentMode AutoDeploymentMode   `json:"autoDeploymentMode,omitempty"`
 	RevisionWeights    []RevisionWeight     `json:"revisionWeights,omitempty"`
 	Regions            []string             `json:"regions,omitempty"`
+	ScalingConfig      *ScalingConfig       `json:"scalingConfig,omitempty"`
+	ThrottleConfig     *ThrottleConfig      `json:"throttleConfig,omitempty"`
 	State              EndpointState        `json:"state,omitempty"`
 	StateReason        *string              `json:"stateReason,omitempty"`
 	UpdateStatus       EndpointUpdateStatus `json:"updateStatus,omitempty"`

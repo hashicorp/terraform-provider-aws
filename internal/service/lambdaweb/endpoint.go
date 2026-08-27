@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -116,6 +117,27 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+			},
+			// scaling_config and throttle_config are objects rather than blocks:
+			// the service assigns account-level defaults when they are unset, so
+			// they must be Computed, and blocks cannot be Computed. Objects are
+			// carried fine by protocol version 5 (nested attribute schemas are
+			// not, hence ObjectAttribute).
+			"scaling_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[scalingConfigModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"throttle_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[throttleConfigModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"regions": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
@@ -491,7 +513,9 @@ func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		unchangedOrUnset(config.Description, state.Description) &&
 		unchangedOrUnset(config.AutoDeploymentMode.StringValue, state.AutoDeploymentMode.StringValue) &&
 		(config.RevisionWeights.IsNull() || config.RevisionWeights.Equal(state.RevisionWeights)) &&
-		(config.Regions.IsNull() || config.Regions.Equal(state.Regions))
+		(config.Regions.IsNull() || config.Regions.Equal(state.Regions)) &&
+		(config.ScalingConfig.IsNull() || config.ScalingConfig.Equal(state.ScalingConfig)) &&
+		(config.ThrottleConfig.IsNull() || config.ThrottleConfig.Equal(state.ThrottleConfig))
 
 	if unchanged {
 		// Only pin the volatile "state" attribute: writing the whole plan model
@@ -521,8 +545,10 @@ type endpointResourceModel struct {
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	ScalingConfig       fwtypes.ObjectValueOf[scalingConfigModel]            `tfsdk:"scaling_config"`
 	State               types.String                                         `tfsdk:"state"`
 	StateReason         types.String                                         `tfsdk:"state_reason"`
+	ThrottleConfig      fwtypes.ObjectValueOf[throttleConfigModel]           `tfsdk:"throttle_config"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
@@ -553,4 +579,12 @@ func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awsty
 type revisionWeightModel struct {
 	RevisionID types.String `tfsdk:"revision_id"`
 	Weight     types.Int64  `tfsdk:"weight"`
+}
+
+type scalingConfigModel struct {
+	MaxEnvironments types.Int64 `tfsdk:"max_environments"`
+}
+
+type throttleConfigModel struct {
+	RateLimit types.Int64 `tfsdk:"rate_limit"`
 }

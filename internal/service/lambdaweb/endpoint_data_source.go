@@ -63,11 +63,19 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 				Computed:    true,
 				ElementType: types.StringType,
 			},
+			"scaling_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[scalingConfigModel](ctx),
+				Computed:   true,
+			},
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 			"state_reason": schema.StringAttribute{
 				Computed: true,
+			},
+			"throttle_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[throttleConfigModel](ctx),
+				Computed:   true,
 			},
 		},
 		// A nested block rather than a nested attribute: the provider serves
@@ -141,6 +149,8 @@ type endpointDataSourceModel struct {
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	ScalingConfig       fwtypes.ObjectValueOf[scalingConfigModel]            `tfsdk:"scaling_config"`
 	State               types.String                                         `tfsdk:"state"`
 	StateReason         types.String                                         `tfsdk:"state_reason"`
+	ThrottleConfig      fwtypes.ObjectValueOf[throttleConfigModel]           `tfsdk:"throttle_config"`
 }
