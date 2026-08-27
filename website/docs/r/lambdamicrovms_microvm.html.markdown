@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Lambda MicroVMs MicroVM. Use this resource to run a MicroVM from a [MicroVM image](lambdamicrovms_image.html.markdown), which provisions a dedicated HTTPS endpoint and starts your application from the image snapshot.
 
-MicroVMs are immutable. Because the service has no update operation, changing any argument terminates the MicroVM and runs a new one.
+~> MicroVMs are immutable. Because the service has no update operation, changing any argument terminates the MicroVM and runs a new one.
 
 ## Example Usage
 
