@@ -243,7 +243,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.269.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.20.7
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.7
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.76.3
