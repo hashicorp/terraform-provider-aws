@@ -23,7 +23,7 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_iam_role" "test" {
   name = var.rName
-  
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
