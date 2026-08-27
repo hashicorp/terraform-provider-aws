@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -90,21 +90,16 @@ func (l *imageListResource) List(ctx context.Context, request list.ListRequest, 
 
 			var data imageResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.ARN = fwflex.StringValueToFramework(ctx, arn)
+
 				if request.IncludeResource {
 					result.Diagnostics.Append(l.flatten(ctx, output, &data)...)
 					if result.Diagnostics.HasError() {
 						return
 					}
-
-					setTagsOut(ctx, output.Tags)
-				} else {
-					result.Diagnostics.Append(l.flattenSummary(ctx, &item, &data)...)
-					if result.Diagnostics.HasError() {
-						return
-					}
 				}
 
-				result.DisplayName = data.Name.ValueString()
+				result.DisplayName = aws.ToString(item.Name)
 			})
 
 			if result.Diagnostics.HasError() {
@@ -125,25 +120,22 @@ type listImageModel struct {
 }
 
 func listImages(ctx context.Context, conn *lambdamicrovms.Client, input *lambdamicrovms.ListMicrovmImagesInput, optFns ...func(*lambdamicrovms.Options)) iter.Seq2[awstypes.MicrovmImageSummary, error] {
-	return func(yield func(awstypes.MicrovmImageSummary, error) bool) {
+	return tfiter.ConcatValuesWithError(listImagePages(ctx, conn, input, optFns...))
+}
+
+func listImagePages(ctx context.Context, conn *lambdamicrovms.Client, input *lambdamicrovms.ListMicrovmImagesInput, optFns ...func(*lambdamicrovms.Options)) iter.Seq2[[]awstypes.MicrovmImageSummary, error] {
+	return func(yield func([]awstypes.MicrovmImageSummary, error) bool) {
 		pages := lambdamicrovms.NewListMicrovmImagesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(awstypes.MicrovmImageSummary{}, fmt.Errorf("listing Lambda MicroVMs Images: %w", err))
+				yield(nil, fmt.Errorf("listing Lambda MicroVMs Images: %w", err))
 				return
 			}
 
-			for _, item := range page.Items {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.Items, nil) {
+				return
 			}
 		}
 	}
-}
-
-func (r *imageResource) flattenSummary(ctx context.Context, image *awstypes.MicrovmImageSummary, data *imageResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, image, data, fwflex.WithFieldNamePrefix("Image"))...)
-	return diags
 }

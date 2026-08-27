@@ -42,10 +42,14 @@ func TestAccLambdaMicroVMsImage_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_basic/"),
-				ConfigVariables: config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2)},
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkImageARN(rName+"-0")),
+
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkImageARN(rName+"-1")),
 				},
@@ -53,11 +57,15 @@ func TestAccLambdaMicroVMsImage_List_basic(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_basic/"),
-				ConfigVariables: config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2)},
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_lambdamicrovms_image.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_lambdamicrovms_image.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity2.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_lambdamicrovms_image.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_lambdamicrovms_image.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
@@ -86,17 +94,25 @@ func TestAccLambdaMicroVMsImage_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{acctest.CtKey1: config.StringVariable(acctest.CtValue1)}),
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
-				ConfigStateChecks: []statecheck.StateCheck{identity.GetIdentity(resourceName)},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity.GetIdentity(resourceName),
+				},
 			},
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(1),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{acctest.CtKey1: config.StringVariable(acctest.CtValue1)}),
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity.Checks()),
@@ -139,14 +155,28 @@ func TestAccLambdaMicroVMsImage_List_regionOverride(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/Image/list_region_override/"),
-				ConfigVariables:   config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2), "region": config.StringVariable(acctest.AlternateRegion())},
-				ConfigStateChecks: []statecheck.StateCheck{identity1.GetIdentity(resourceName1), identity2.GetIdentity(resourceName2)},
+				ConfigDirectory: config.StaticDirectory("testdata/Image/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkImageARNAlternateRegion(rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkImageARNAlternateRegion(rName+"-1")),
+				},
 			},
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_region_override/"),
-				ConfigVariables: config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2), "region": config.StringVariable(acctest.AlternateRegion())},
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity1.Checks()),
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity2.Checks()),
@@ -175,14 +205,26 @@ func TestAccLambdaMicroVMsImage_List_nameFilter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/Image/list_name_filter/"),
-				ConfigVariables:   config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2)},
-				ConfigStateChecks: []statecheck.StateCheck{identity1.GetIdentity(resourceName1), identity2.GetIdentity(resourceName2)},
+				ConfigDirectory: config.StaticDirectory("testdata/Image/list_name_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkImageARN(rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkImageARN(rName+"-1")),
+				},
 			},
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Image/list_name_filter/"),
-				ConfigVariables: config.Variables{acctest.CtRName: config.StringVariable(rName), "resource_count": config.IntegerVariable(2)},
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_image.test", identity1.Checks()),
 					tfquerycheck.ExpectNoIdentityFunc("aws_lambdamicrovms_image.test", identity2.Checks()),

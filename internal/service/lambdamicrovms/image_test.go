@@ -26,6 +26,10 @@ func checkImageARN(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNExact("lambda", "microvm-image:"+name)
 }
 
+func checkImageARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionExact("lambda", "microvm-image:"+name)
+}
+
 func TestAccLambdaMicroVMsImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambdamicrovms.GetMicrovmImageOutput

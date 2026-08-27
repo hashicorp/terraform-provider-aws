@@ -6,6 +6,7 @@ package lambdamicrovms
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -244,8 +245,6 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	setTagsOut(ctx, out.Tags)
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -291,7 +290,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Image")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -303,7 +302,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan, fwflex.WithFieldNamePrefix("Image")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, outWait, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -348,8 +347,15 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func (r *imageResource) flatten(ctx context.Context, image *lambdamicrovms.GetMicrovmImageOutput, data *imageResourceModel) diag.Diagnostics {
-	return fwflex.Flatten(ctx, image, data, fwflex.WithFieldNamePrefix("Image"))
+func (r *imageResource) flatten(ctx context.Context, image any, data *imageResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, image, data, fwflex.WithFieldNamePrefix("Image"))...)
+
+	if v, ok := image.(*lambdamicrovms.GetMicrovmImageOutput); ok {
+		setTagsOut(ctx, v.Tags)
+	}
+
+	return diags
 }
 
 func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
@@ -473,24 +479,36 @@ type codeArtifactModel struct {
 	URI types.String `tfsdk:"uri"`
 }
 
-var _ fwflex.Expander = codeArtifactModel{}
+var (
+	_ fwflex.Expander  = codeArtifactModel{}
+	_ fwflex.Flattener = &codeArtifactModel{}
+)
 
 func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	switch {
+	case !m.URI.IsNull():
+		r := awstypes.CodeArtifactMemberUri{
+			Value: fwflex.StringValueFromFramework(ctx, m.URI),
+		}
+		return &r, diags
+	}
 
-	return &awstypes.CodeArtifactMemberUri{
-		Value: m.URI.ValueString(),
-	}, diags
+	return nil, diags
 }
-
-var _ fwflex.Flattener = &codeArtifactModel{}
 
 func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch t := v.(type) {
 	case awstypes.CodeArtifactMemberUri:
-		m.URI = types.StringValue(t.Value)
+		m.URI = fwflex.StringValueToFramework(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("codeArtifactModel.Flatten: %T", v),
+		)
 	}
 
 	return diags
