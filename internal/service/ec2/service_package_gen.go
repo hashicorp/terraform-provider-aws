@@ -2194,6 +2194,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
+			Factory:  newKeyPairResourceAsListResource,
+			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "key_pair_id",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("key_name", true)),
+		},
+		{
 			Factory:  newLaunchTemplateResourceAsListResource,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
