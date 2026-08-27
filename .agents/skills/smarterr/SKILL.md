@@ -1,9 +1,30 @@
+---
+name: smarterr
+description: "Refactor error handling to use smarterr."
+---
+
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# smarterr Migration Guide
+# Skill: Smarterr
 
-**AI and Human Contributors:** Follow these exact patterns to migrate Terraform AWS Provider error handling to smarterr/smerr.
+Assume the @maintainer persona.
+
+Use this skill to refactor error handling to use smarterr (`internal/smerr`[../../../internal/smerr/]).
+
+## When to use
+
+Trigger this skill when the user:
+
+- Says "use smarterr for error handling", "migrate to smerr", or similar.
+
+## Inputs
+
+Required:
+
+- The target resource name (e.g. `aws_s3_bucket`).
+
+If the user provides a human readable name (e.g. "S3 Bucket") rather than the Terraform resource, confirm the target resource before proceeding.
 
 ## Core Concept
 
