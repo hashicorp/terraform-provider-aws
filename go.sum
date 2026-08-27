@@ -253,8 +253,8 @@ github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 h1:ZD8Iw3WQlZYoCJ
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0/go.mod h1:1TkRQZaHJfi2GSj/kQNuxQVUyKLAErm+QXF6Dvz7iOs=
 github.com/aws/aws-sdk-go-v2/service/emr v1.65.0 h1:FClfTO5QX9nHkgWwYvvj0VlsJppOjcsno/XZC0R/7tI=
 github.com/aws/aws-sdk-go-v2/service/emr v1.65.0/go.mod h1:4+cYQhte6ZMDq3/Uf3OL5tQQL8uGG4zGSlRS5cRJi1o=
-github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.45.7 h1:7M1woRM6ESbpF6/VYlKRYcnljFo0d3Jw64M2kgh9nAo=
-github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.45.7/go.mod h1:86qn2FjX38A9z4E5KZ8ngjFqu0MSyjC259DrxlBkEjI=
+github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.47.0 h1:ZqDI+NN85NFeSc7f74A0pRy1jKVI/eSM/u3Eat0wLHA=
+github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.47.0/go.mod h1:U9krmrqlEK7RIrmR2LzPjNFNYsltx/9I4W/IMl5cY7Q=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.44.7 h1:3jVtFyocrOsfCh//SdcQCntfm7ffaVREkEdMWBpNVHk=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.44.7/go.mod h1:vJ/j/k6FlaMo/VhaLfffXpzY092t1uEhvc4hyCEaHfA=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.48.7 h1:x9IprIaJG4d3C70nY8q50sa9o9vBj066x3CPOB6kAHQ=
