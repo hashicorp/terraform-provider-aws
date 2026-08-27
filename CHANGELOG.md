@@ -1,5 +1,10 @@
 ## 6.63.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+* resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+
 ## 6.62.0 (August 26, 2026)
 
 NOTES:
