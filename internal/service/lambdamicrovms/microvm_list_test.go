@@ -6,6 +6,7 @@ package lambdamicrovms_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -121,10 +123,20 @@ func TestAccLambdaMicroVMsMicroVM_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_lambdamicrovms_microvm.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_lambdamicrovms_microvm.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
 					querycheck.ExpectResourceKnownValues("aws_lambdamicrovms_microvm.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("egress_network_connectors"), knownvalue.ListSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("idle_policy"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("image_arn"), checkImageARN(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("image_version"), knownvalue.StringExact("1.0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ingress_network_connectors"), knownvalue.ListSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("maximum_duration_in_seconds"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("microvm_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("run_hook_payload"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("started_at"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.MicrovmStateRunning)),
 					}),
 				},
 			},
