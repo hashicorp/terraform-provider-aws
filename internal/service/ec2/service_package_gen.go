@@ -142,6 +142,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newApplicationStatusCheckResource,
+			TypeName: "aws_ec2_application_status_check",
+			Name:     "Application Status Check",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newApplicationStatusCheckAssociationResource,
+			TypeName: "aws_ec2_application_status_check_association",
+			Name:     "Application Status Check Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_status_check_id", true),
+				inttypes.StringIdentityAttribute(names.AttrInstanceID, false),
+				inttypes.StringIdentityAttribute("target_tag_key", false),
+				inttypes.StringIdentityAttribute("target_tag_value", false),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      applicationStatusCheckAssociationImportID{},
+			},
+		},
+		{
 			Factory:  newCapacityBlockReservationResource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",
@@ -416,6 +445,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newApplicationStatusCheckResourceAsListResource,
+			TypeName: "aws_ec2_application_status_check",
+			Name:     "Application Status Check",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newApplicationStatusCheckAssociationResourceAsListResource,
+			TypeName: "aws_ec2_application_status_check_association",
+			Name:     "Application Status Check Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_status_check_id", true),
+				inttypes.StringIdentityAttribute(names.AttrInstanceID, false),
+				inttypes.StringIdentityAttribute("target_tag_key", false),
+				inttypes.StringIdentityAttribute("target_tag_value", false),
+			}),
+		},
 		{
 			Factory:  newNetworkInsightsAccessScopeResourceAsListResource,
 			TypeName: "aws_ec2_network_insights_access_scope",

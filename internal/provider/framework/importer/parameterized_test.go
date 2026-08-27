@@ -833,6 +833,18 @@ var regionalMultipleParameterizedSchema = schema.Schema{
 	},
 }
 
+var regionalMultipleParameterizedOptionalSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			Required: true,
+		},
+		"type": schema.StringAttribute{
+			Optional: true,
+		},
+		"region": resourceattribute.Region(),
+	},
+}
+
 var regionalMultipleParameterizedWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"id": framework.IDAttributeDeprecatedNoReplacement(),
@@ -1099,6 +1111,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 	testCases := map[string]struct {
 		identityAttrValues    map[string]string
 		identitySpec          inttypes.Identity
+		useOptionalSchema     bool
 		useSchemaWithID       bool
 		useImportIDCreator    bool
 		expectedIdentityAttrs map[string]string
@@ -1123,6 +1136,28 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
+			},
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"OptionalNull": {
+			identityAttrValues: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("name", true),
+				inttypes.StringIdentityAttribute("type", false),
+			}),
+			useOptionalSchema: true,
+			expectedIdentityAttrs: map[string]string{
+				"account_id": accountID,
+				"region":     region,
+				"name":       "a_name",
+				"type":       "",
+			},
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "",
 			},
 			expectedRegion: region,
 			expectError:    false,
@@ -1268,6 +1303,9 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := new(identity.NewIdentitySchema(tc.identitySpec))
 
 			schema := regionalMultipleParameterizedSchema
+			if tc.useOptionalSchema {
+				schema = regionalMultipleParameterizedOptionalSchema
+			}
 			if tc.useSchemaWithID {
 				schema = regionalMultipleParameterizedWithIDSchema
 			}
