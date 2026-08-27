@@ -1,5 +1,15 @@
 ## 6.63.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
+* **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+
 BUG FIXES:
 
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
