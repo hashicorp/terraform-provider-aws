@@ -2,7 +2,9 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New List Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
+* **New Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
 
 ENHANCEMENTS:
