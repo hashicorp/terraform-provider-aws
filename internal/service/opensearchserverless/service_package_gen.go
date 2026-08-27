@@ -202,6 +202,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
+		{
+			Factory:  newLifecyclePolicyResourceAsListResource,
+			TypeName: "aws_opensearchserverless_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrType, true),
+			}),
+		},
 	})
 }
 
