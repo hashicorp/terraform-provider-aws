@@ -51,8 +51,8 @@ github.com/aws/aws-sdk-go-v2/service/acm v1.45.0 h1:C/LUyd2F3iFtityAYQbAYb56uP0x
 github.com/aws/aws-sdk-go-v2/service/acm v1.45.0/go.mod h1:8TFQHTFTgR7OoBHlqJr8gsHv+ePC8z4S1lcrZVPgqbM=
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.52.0 h1:AWqhWNdug3nYaJTqpljPjsUnkEc8bsRT28rVUeH8SWM=
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.52.0/go.mod h1:5j69/fq/nNJmlzHOLOvpjgKsXsugDmqDGQ/0AVY67aY=
-github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.0.3 h1:e5qr4Kv8df4kkRxavoawwK37vk4ewJajwzDFRP29xiA=
-github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.0.3/go.mod h1:9GzM39gW2wish5agWZZUeblxnblMAQNPVunOThJODyg=
+github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.1.0 h1:IqvJ8WfVY6NlaVjmUKfychulpxzq+OTllHf7w98hmVA=
+github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.1.0/go.mod h1:7bC78tt0CPPGWa8vXdciYJHg2UP8fxtoG4nduztdcPg=
 github.com/aws/aws-sdk-go-v2/service/amp v1.48.4 h1:48FvlCFkRtDQpUddfHOUWDOpcP4KmuECudCwQdN+aZM=
 github.com/aws/aws-sdk-go-v2/service/amp v1.48.4/go.mod h1:YhdCwBWt1w3IzpWkacHovS587AabvP3tyYGmSd2zGSE=
 github.com/aws/aws-sdk-go-v2/service/amplify v1.42.0 h1:Sz7k9gbqCxEf5F9O7I0mc/AGFMNCXGCFoV581uXBBSo=
