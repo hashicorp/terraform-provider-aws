@@ -994,6 +994,8 @@ SMOKE_IDENTITY_TESTS_RDS = \
 	TestAccRDSCertificate_serial/Identity
 
 # aws_redshift_namespace_registration : Framework Regional Multiple-Parameter (with optional)
+SMOKE_IDENTITY_TESTS_REDSHIFT = \
+	TestAccRedshiftNamespaceRegistration_Identity_
 
 # aws_route53_record: SDKv2 Global Multiple-Parameter (with rename), (with optional), Mutable
 SMOKE_IDENTITY_TESTS_ROUTE53 = \
@@ -1075,6 +1077,10 @@ smoke-identity: prereq-go ## Run Resource Identity smoke tests
 		./internal/service/rds/... \
 		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
 		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_RDS)))' || true
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/redshift/... \
+		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_REDSHIFT)))' || true
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/route53/... \
 		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
