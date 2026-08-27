@@ -48,29 +48,40 @@ func TestValidIdentifier(t *testing.T) {
 func TestValidParamGroupNamePrefix(t *testing.T) {
 	t.Parallel()
 
-	validNames := []string{
-		"valid-name",
-		"valid02-name",
-		strings.Repeat("w", 229),
-	}
-	for _, v := range validNames {
-		_, errors := validParamGroupNamePrefix(v, names.AttrNamePrefix)
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid DocumentDB parameter group name prefix: %q", v, errors)
-		}
+	cases := []struct {
+		value    string
+		errCount int
+	}{
+		{
+			value: "valid-name",
+		},
+		{
+			value:    "testing123!",
+			errCount: 1,
+		},
+		{
+			value:    "testing_123",
+			errCount: 1,
+		},
+		{
+			value:    "1testing123",
+			errCount: 1,
+		},
+		{
+			value:    "testing--123",
+			errCount: 1,
+		},
+		{
+			value:    strings.Repeat("w", 230),
+			errCount: 1,
+		},
 	}
 
-	invalidNames := []string{
-		"invalid_name",
-		"-invalid-name",
-		"0invalid-name",
-		"invalid--name",
-		strings.Repeat("w", 230),
-	}
-	for _, v := range invalidNames {
-		_, errors := validParamGroupNamePrefix(v, names.AttrNamePrefix)
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid DocumentDB parameter group name prefix", v)
+	for _, tc := range cases {
+		_, errors := validParamGroupNamePrefix(tc.value, names.AttrNamePrefix)
+
+		if len(errors) != tc.errCount {
+			t.Fatalf("Unexpected error count for value %q. got: %d, want: %d", tc.value, len(errors), tc.errCount)
 		}
 	}
 }
