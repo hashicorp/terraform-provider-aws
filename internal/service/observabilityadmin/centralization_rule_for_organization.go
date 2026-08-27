@@ -72,6 +72,18 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"tag_propagation_failure_reason": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"tag_propagation_status": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -178,6 +190,24 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
+															},
+														},
+													},
+												},
+												"tag_propagation_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[tagPropagationConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"destination_role_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+															"tag_conflict_resolution_strategy": schema.StringAttribute{
+																Optional:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.TagConflictResolutionStrategy](),
 															},
 														},
 													},
@@ -529,12 +559,14 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 type centralizationRuleForOrganizationResourceModel struct {
 	framework.WithRegionModel
-	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
-	RuleARN  types.String                                             `tfsdk:"rule_arn"`
-	RuleName types.String                                             `tfsdk:"rule_name"`
-	Tags     tftags.Map                                               `tfsdk:"tags"`
-	TagsAll  tftags.Map                                               `tfsdk:"tags_all"`
-	Timeouts timeouts.Value                                           `tfsdk:"timeouts"`
+	Rule                        fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
+	RuleARN                     types.String                                             `tfsdk:"rule_arn"`
+	RuleName                    types.String                                             `tfsdk:"rule_name"`
+	TagPropagationFailureReason types.String                                             `tfsdk:"tag_propagation_failure_reason"`
+	TagPropagationStatus        types.String                                             `tfsdk:"tag_propagation_status"`
+	Tags                        tftags.Map                                               `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                               `tfsdk:"tags_all"`
+	Timeouts                    timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
 type centralizationRuleModel struct {
@@ -560,6 +592,12 @@ type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
 	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
+	TagPropagationConfiguration fwtypes.ListNestedObjectValueOf[tagPropagationConfigurationModel] `tfsdk:"tag_propagation_configuration"`
+}
+
+type tagPropagationConfigurationModel struct {
+	DestinationRoleARN            fwtypes.ARN                                                `tfsdk:"destination_role_arn"`
+	TagConflictResolutionStrategy fwtypes.StringEnum[awstypes.TagConflictResolutionStrategy] `tfsdk:"tag_conflict_resolution_strategy"`
 }
 
 type sourceLogsConfigurationModel struct {

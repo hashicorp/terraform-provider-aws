@@ -22,7 +22,13 @@ var RequiresReplaceIfElementsDeleted planmodifier.Set = setplanmodifier.Requires
 		return
 	}
 
-	if diff := fwflex.DiffSets(ctx, request.StateValue, request.PlanValue); diff.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+	diff, diags := fwflex.SetDifference(ctx, request.StateValue, request.PlanValue)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		response.RequiresReplace = true
 	}
 }, requiresReplaceIfElementsDeletedDescription, requiresReplaceIfElementsDeletedDescription)

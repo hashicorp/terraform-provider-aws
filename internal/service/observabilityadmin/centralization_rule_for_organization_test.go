@@ -206,7 +206,8 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 								})}),
-								"log_group_name_configuration": knownvalue.ListSizeExact(0),
+								"log_group_name_configuration":  knownvalue.ListSizeExact(0),
+								"tag_propagation_configuration": knownvalue.ListSizeExact(0),
 							})}),
 							names.AttrRegion: knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
@@ -286,6 +287,72 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_encryptionScope(
 							AtMapKey("logs_encryption_configuration").AtSliceIndex(0).
 							AtMapKey("encryption_scope"),
 						tfknownvalue.StringExact(awstypes.EncryptionScopeEncryptedSourceOnly)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccObservabilityAdminCentralizationRuleForOrganization_tagPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_tagPropagation(rName, acctest.Region(), string(awstypes.TagConflictResolutionStrategyInSync)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("tag_propagation_configuration").AtSliceIndex(0).
+							AtMapKey("tag_conflict_resolution_strategy"),
+						tfknownvalue.StringExact(awstypes.TagConflictResolutionStrategyInSync)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_tagPropagation(rName, acctest.Region(), string(awstypes.TagConflictResolutionStrategyAddOnly)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("tag_propagation_configuration").AtSliceIndex(0).
+							AtMapKey("tag_conflict_resolution_strategy"),
+						tfknownvalue.StringExact(awstypes.TagConflictResolutionStrategyAddOnly)),
 				},
 			},
 		},
@@ -615,6 +682,62 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
   }
 }
 `, rName, dstRegion, bkupRegion, acctest.ListOfStrings(srcRegions...))
+}
+
+func testAccCentralizationRuleForOrganizationConfig_tagPropagation(rName, region, tagConflictResolutionStrategy string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "logs.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[2]q
+      account = data.aws_caller_identity.current.account_id
+
+      destination_logs_configuration {
+        logs_encryption_configuration {
+          encryption_strategy = "AWS_OWNED"
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = "/central/$${source.accountId}/$${source.region}/$${source.logGroup}"
+        }
+
+        tag_propagation_configuration {
+          destination_role_arn             = aws_iam_role.test.arn
+          tag_conflict_resolution_strategy = %[3]q
+        }
+      }
+    }
+
+    source {
+      regions = [%[2]q]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy = "ALLOW"
+        log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
+      }
+    }
+  }
+}
+`, rName, region, tagConflictResolutionStrategy)
 }
 
 func testAccCentralizationRuleForOrganizationConfig_encryptionScope(rName, encryptionScope, region string) string {

@@ -115,9 +115,11 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"purchase_time": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Optional:    true,
+				Computed:    true,
 				Description: "The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ).",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"recurring_payment_amount": schema.StringAttribute{
@@ -313,8 +315,8 @@ func (r *savingsPlanResource) ImportState(ctx context.Context, req resource.Impo
 
 func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
-		Target:  enum.Slice(awstypes.SavingsPlanStateActive),
+		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending),
+		Target:  enum.Slice(awstypes.SavingsPlanStateQueued, awstypes.SavingsPlanStateActive),
 		Refresh: statusSavingsPlan(conn, id),
 		Timeout: timeout,
 	}

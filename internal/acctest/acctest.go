@@ -1488,7 +1488,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	_, err := conn.CreateDirectory(ctx, &input)
 
-	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") ||
+		errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD is no longer open to new customers") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -2357,7 +2358,15 @@ func ListOfStrings[E ~string](s ...E) string {
 	}), ", ")
 }
 
-func ListOfStringVariables[E ~string](s ...E) []config.Variable {
+func ListOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.ListVariable(listOfStringVariables(s...)...)
+}
+
+func SetOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.SetVariable(listOfStringVariables(s...)...)
+}
+
+func listOfStringVariables[E ~string](s ...E) []config.Variable {
 	return tfslices.ApplyToAll(s, func(e E) config.Variable {
 		return config.StringVariable(string(e))
 	})
