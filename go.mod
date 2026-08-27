@@ -192,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.46.0
-	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.16.7
+	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.26.7
