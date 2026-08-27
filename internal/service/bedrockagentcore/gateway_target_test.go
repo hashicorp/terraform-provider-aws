@@ -867,13 +867,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(
-					rName,
-					rNameRuntime,
-					rImageUri,
-					testAccCredentialProvider_gatewayIAMRole(),
-					testAccGatewayTargetSchema_block(testAccGatewayTargetSchema_inlinePayload()),
-				),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -881,10 +875,6 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.arn", "aws_bedrockagentcore_agent_runtime.test", "agent_runtime_arn"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.inline_payload.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.inline_payload.0.payload"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.agentcore_runtime.0.schema.0.s3.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1159,7 +1149,7 @@ func TestAccBedrockAgentCoreGatewayTarget_jwtPassthrough(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough(), ""),
+				Config: testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, testAccCredentialProvider_jwtPassthrough()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1889,6 +1879,95 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 								"static_query_parameters":                    knownvalue.Null(),
 								"stickiness_configuration":                   knownvalue.ListSizeExact(0),
 							})}),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPAgentCoreRuntimeBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.agentcore_runtime/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"container_uri": config.StringVariable(rImageUri),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrARN:    knownvalue.NotNull(),
+								"qualifier":      knownvalue.Null(),
+								names.AttrSchema: knownvalue.ListSizeExact(0),
+							})}),
+							"passthrough": knownvalue.ListSizeExact(0),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.agentcore_runtime/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"container_uri": config.StringVariable(rImageUri),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.agentcore_runtime/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"container_uri": config.StringVariable(rImageUri),
+					"qualifier":     config.StringVariable("1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrARN:    knownvalue.NotNull(),
+								"qualifier":      knownvalue.StringExact("1"),
+								names.AttrSchema: knownvalue.ListSizeExact(0),
+							})}),
+							"passthrough": knownvalue.ListSizeExact(0),
 						})}),
 						"mcp": knownvalue.ListSizeExact(0),
 					})})),
@@ -2780,7 +2859,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, toolOverrideSuffix))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent, schemaContent string) string {
+func testAccGatewayTargetConfig_targetConfigurationHTTPServer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -2825,33 +2904,11 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
     http {
       agentcore_runtime {
         arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
-%[3]s
       }
     }
   }
 }
-`, rName, credentialProviderContent, schemaContent))
-}
-
-func testAccGatewayTargetSchema_inlinePayload() string {
-	return `
-          inline_payload {
-            payload = jsonencode({
-              openapi = "3.0.0"
-              info = {
-                title   = "Test API"
-                version = "1.0.0"
-              }
-              paths = {}
-            })
-          }`
-}
-
-func testAccGatewayTargetSchema_block(schemaContent string) string {
-	return fmt.Sprintf(`
-        schema {
-%s
-        }`, schemaContent)
+`, rName, credentialProviderContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {
