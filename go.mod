@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/amp v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.42.7
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.48.7
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.19.7
