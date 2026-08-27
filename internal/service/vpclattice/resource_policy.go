@@ -147,7 +147,7 @@ func findResourcePolicy(ctx context.Context, conn *vpclattice.Client, input *vpc
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.Policy == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
