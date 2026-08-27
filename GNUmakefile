@@ -1039,84 +1039,51 @@ SMOKE_IDENTITY_TESTS_SSOADMIN = \
 SMOKE_IDENTITY_TESTS_UXC = \
 	TestAccUXC_serial/AccountCustomizations/Identity
 
+SMOKE_IDENTITY_TESTS = \
+	$(SMOKE_IDENTITY_TESTS_BATCH) \
+	$(SMOKE_IDENTITY_TESTS_CLOUDFRONT) \
+	$(SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE) \
+	$(SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR) \
+	$(SMOKE_IDENTITY_TESTS_IAM) \
+	$(SMOKE_IDENTITY_TESTS_LAMBDA) \
+	$(SMOKE_IDENTITY_TESTS_LOGS) \
+	$(SMOKE_IDENTITY_TESTS_OSIS) \
+	$(SMOKE_IDENTITY_TESTS_RDS) \
+	$(SMOKE_IDENTITY_TESTS_REDSHIFT) \
+	$(SMOKE_IDENTITY_TESTS_ROUTE53) \
+	$(SMOKE_IDENTITY_TESTS_S3) \
+	$(SMOKE_IDENTITY_TESTS_S3CONTROL) \
+	$(SMOKE_IDENTITY_TESTS_SECRETSMANAGER) \
+	$(SMOKE_IDENTITY_TESTS_SHIELD) \
+	$(SMOKE_IDENTITY_TESTS_SNS) \
+	$(SMOKE_IDENTITY_TESTS_SQS) \
+	$(SMOKE_IDENTITY_TESTS_SSOADMIN) \
+	$(SMOKE_IDENTITY_TESTS_UXC)
+
 smoke-identity: prereq-go ## Run Resource Identity smoke tests
 	@echo "make: Resource Identity Smoke Tests"
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/batch/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_BATCH)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/cloudfront/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_CLOUDFRONT)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/cloudfrontkeyvaluestore/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/globalaccelerator/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_IAM)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_LAMBDA)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_LOGS)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/osis/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_OSIS)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/rds/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_RDS)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/redshift/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_REDSHIFT)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/route53/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_ROUTE53)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/s3/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/s3control/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_S3CONTROL)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/secretsmanager/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SECRETSMANAGER)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/shield/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SHIELD)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/sns/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SNS)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/sqs/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SQS)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/ssoadmin/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_SSOADMIN)))' || true
-	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/uxc/... \
-		-count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS_UXC)))'
+		-count 1 -p 5 -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS)))'
 
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
