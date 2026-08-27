@@ -5,12 +5,10 @@ package lambdamicrovms_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdamicrovms "github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,10 +28,6 @@ func checkImageARN(name string) knownvalue.Check {
 
 func TestAccLambdaMicroVMsImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v lambdamicrovms.GetMicrovmImageOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
@@ -78,12 +71,8 @@ func TestAccLambdaMicroVMsImage_basic(t *testing.T) {
 }
 func TestAccLambdaMicroVMsImage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v lambdamicrovms.GetMicrovmImageOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -117,11 +106,7 @@ func TestAccLambdaMicroVMsImage_disappears(t *testing.T) {
 
 func TestAccLambdaMicroVMsImage_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v1, v2 lambdamicrovms.GetMicrovmImageOutput
+	var v lambdamicrovms.GetMicrovmImageOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdamicrovms_image.test"
 
@@ -137,15 +122,13 @@ func TestAccLambdaMicroVMsImage_update(t *testing.T) {
 			{
 				Config: testAccImageConfig_description(rName, "description one"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(ctx, t, resourceName, &v1),
+					testAccCheckImageExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description one"),
 				),
 			},
 			{
 				Config: testAccImageConfig_description(rName, "description two"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckImageExists(ctx, t, resourceName, &v2),
-					testAccCheckImageNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description two"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -168,49 +151,38 @@ func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCh
 			}
 
 			_, err := tflambdamicrovms.FindImageByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingDestroyed, tflambdamicrovms.ResNameImage, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Lambda MicroVMs Image %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckImageExists(ctx context.Context, t *testing.T, name string, v *lambdamicrovms.GetMicrovmImageOutput) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, t *testing.T, n string, v *lambdamicrovms.GetMicrovmImageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not found"))
-		}
-
-		arn := rs.Primary.Attributes[names.AttrARN]
-		if arn == "" {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaMicroVMsClient(ctx)
 
-		out, err := tflambdamicrovms.FindImageByARN(ctx, conn, arn)
+		output, err := tflambdamicrovms.FindImageByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
-			return create.Error(names.LambdaMicroVMs, create.ErrActionCheckingExistence, tflambdamicrovms.ResNameImage, rs.Primary.ID, err)
+			return err
 		}
-		*v = *out
 
-		return nil
-	}
-}
+		*v = *output
 
-func testAccCheckImageNotRecreated(before, after *lambdamicrovms.GetMicrovmImageOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeARN, afterARN := aws.ToString(before.ImageArn), aws.ToString(after.ImageArn); beforeARN != afterARN {
-			return fmt.Errorf("Lambda MicroVMs Image was recreated: ARN changed from %s to %s", beforeARN, afterARN)
-		}
 		return nil
 	}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -28,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -37,7 +38,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_lambdamicrovms_image", name="Image")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -47,16 +47,13 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 func newImageResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &imageResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
-
-const (
-	ResNameImage = "Image"
-)
 
 type imageResource struct {
 	framework.ResourceWithModel[imageResourceModel]
@@ -99,18 +96,16 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional: true,
 			},
 			"egress_network_connectors": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Optional:    true,
-				ElementType: types.StringType,
-				Computed:    true,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"environment_variables": schema.MapAttribute{
-				CustomType:  fwtypes.MapOfStringType,
-				Optional:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
 			},
 			"image_version": schema.StringAttribute{
 				Computed: true,
@@ -143,6 +138,7 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[codeArtifactModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -182,36 +178,39 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input lambdamicrovms.CreateMicrovmImageInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
-	input.ClientToken = aws.String(create.UniqueId(ctx))
-	input.Tags = getTagsIn(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateMicrovmImage(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
+	arn := aws.ToString(out.ImageArn)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	outWait, err := waitImageCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	outWait, err := waitImageCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -228,23 +227,25 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	out, err := findImageByARN(ctx, conn, state.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	out, err := findImageByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Image")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, out.Tags)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -258,7 +259,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,7 +267,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	if diff.HasChanges() {
 		var input lambdamicrovms.UpdateMicrovmImageInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Image")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
 		input.ImageIdentifier = plan.ARN.ValueStringPointer()
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
@@ -290,7 +291,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Image")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -302,7 +303,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outWait, &plan, flex.WithFieldNamePrefix("Image")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan, fwflex.WithFieldNamePrefix("Image")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -327,23 +328,22 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 	input := lambdamicrovms.DeleteMicrovmImageInput{
-		ImageIdentifier: state.ARN.ValueStringPointer(),
+		ImageIdentifier: aws.String(arn),
 	}
 
 	_, err := conn.DeleteMicrovmImage(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
-	_, err = waitImageDeleted(ctx, conn, state.ARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
+	if _, err := waitImageDeleted(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 }
@@ -443,7 +443,7 @@ func findImage(ctx context.Context, conn *lambdamicrovms.Client, input *lambdami
 
 type imageResourceModel struct {
 	framework.WithRegionModel
-	AdditionalOsCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]          `tfsdk:"additional_os_capabilities"`
+	AdditionalOSCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]          `tfsdk:"additional_os_capabilities"`
 	ARN                      types.String                                           `tfsdk:"arn"`
 	BaseImageARN             fwtypes.ARN                                            `tfsdk:"base_image_arn"`
 	BaseImageVersion         types.String                                           `tfsdk:"base_image_version"`
@@ -469,7 +469,7 @@ type codeArtifactModel struct {
 	URI types.String `tfsdk:"uri"`
 }
 
-var _ flex.Expander = codeArtifactModel{}
+var _ fwflex.Expander = codeArtifactModel{}
 
 func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -479,7 +479,7 @@ func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	}, diags
 }
 
-var _ flex.Flattener = &codeArtifactModel{}
+var _ fwflex.Flattener = &codeArtifactModel{}
 
 func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
