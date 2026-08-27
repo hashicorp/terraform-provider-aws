@@ -5,11 +5,13 @@ package lambdamicrovms
 
 import (
 	"context"
+	"log"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -18,14 +20,19 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lambdamicrovms_image", sweepImages)
+	awsv2.Register("aws_lambdamicrovms_image", sweepImages, "aws_lambdamicrovms_microvm")
 	awsv2.Register("aws_lambdamicrovms_microvm", sweepMicroVMs)
 }
 
 func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdamicrovms.ListMicrovmImagesInput{}
 	conn := client.LambdaMicroVMsClient(ctx)
+	var input lambdamicrovms.ListMicrovmImagesInput
 	var sweepResources []sweep.Sweepable
+
+	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
+		log.Printf("[WARN] Skipping Lambda MicroVMs Micro VM sweep for region: %s", region)
+		return sweepResources, nil
+	}
 
 	pages := lambdamicrovms.NewListMicrovmImagesPaginator(conn, &input)
 	for pages.HasMorePages() {
@@ -45,9 +52,14 @@ func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 }
 
 func sweepMicroVMs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := lambdamicrovms.ListMicrovmsInput{}
 	conn := client.LambdaMicroVMsClient(ctx)
+	var input lambdamicrovms.ListMicrovmsInput
 	var sweepResources []sweep.Sweepable
+
+	if region := client.Region(ctx); region == endpoints.UsWest1RegionID {
+		log.Printf("[WARN] Skipping Lambda MicroVMs Micro VM sweep for region: %s", region)
+		return sweepResources, nil
+	}
 
 	pages := lambdamicrovms.NewListMicrovmsPaginator(conn, &input)
 	for pages.HasMorePages() {
