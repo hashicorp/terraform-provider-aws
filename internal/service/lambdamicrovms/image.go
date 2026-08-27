@@ -239,7 +239,7 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Image")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -346,6 +346,10 @@ func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
+}
+
+func (r *imageResource) flatten(ctx context.Context, image *lambdamicrovms.GetMicrovmImageOutput, data *imageResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, image, data, fwflex.WithFieldNamePrefix("Image"))
 }
 
 func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
