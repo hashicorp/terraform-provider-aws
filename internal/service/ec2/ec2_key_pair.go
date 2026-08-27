@@ -30,6 +30,13 @@ import (
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("key_name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.KeyPairInfo")
+// @Testing(generator=false)
+// @Testing(idAttrDuplicates="key_name")
+// @Testing(tlsEcdsaPublicKeyPem=true)
+// @Testing(importIgnore="public_key")
+// @Testing(preIdentityVersion="v6.61.0")
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -37,10 +44,6 @@ func resourceKeyPair() *schema.Resource {
 		ReadWithoutTimeout:   resourceKeyPairRead,
 		UpdateWithoutTimeout: resourceKeyPairUpdate,
 		DeleteWithoutTimeout: resourceKeyPairDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		MigrateState:  keyPairMigrateState,
