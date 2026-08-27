@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.39
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.40
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.46
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.51.7
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/accountaccess v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.44.2
