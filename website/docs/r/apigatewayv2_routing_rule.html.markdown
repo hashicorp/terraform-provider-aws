@@ -79,7 +79,7 @@ The following arguments are optional:
 
 * `api_id` - (Required) API identifier of the target API.
 * `stage` - (Required) Name of the target stage.
-* `strip_base_path` - (Optional) Whether to strip the base path when forwarding the request to the target API. Defaults to `false`.
+* `strip_base_path` - (Optional) Whether to strip the base path when forwarding the request to the target API.
 
 ## Attribute Reference
 
