@@ -338,7 +338,7 @@ data "aws_eks_cluster" "test" {
 }
 
 func testAccClusterDataSourceConfig_kubeControllerManagerConfig(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_kubeControllerManagerConfig(rName, "10s"), `
+	return acctest.ConfigCompose(testAccClusterConfig_kubeControllerManagerConfig(rName, "10s", 12500), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }
