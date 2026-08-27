@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -902,144 +903,6 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPServer(t *testi
 	})
 }
 
-func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *testing.T) {
-	ctx := acctest.Context(t)
-	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPPassthrough(rName, `    gateway_iam_role {
-      service = "lambda"
-    }`),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.endpoint", "https://example.com/api"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.protocol_type", "MCP"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.stickiness_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.stickiness_configuration.0.identifier", "$context.header.x-session-id"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.stickiness_configuration.0.timeout", "3600"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "target_id",
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthroughSchema(t *testing.T) {
-	ctx := acctest.Context(t)
-	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, testAccGatewayTargetSchema_inlinePayload()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.inline_payload.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.inline_payload.0.payload"),
-					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.http.0.passthrough.0.schema.0.s3.#", "0"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "target_id",
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration_invalid(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			// Invalid: passthrough schema with neither inline_payload nor s3.
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, ""),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-			// Invalid: passthrough schema with both inline_payload and s3.
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-			// Invalid: AgentCore Runtime schema with neither inline_payload nor s3.
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, ""),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-			// Invalid: AgentCore Runtime schema with both inline_payload and s3.
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-			// Invalid: open_api_schema with both inline_payload and s3.
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationOpenAPISchemaRaw(rName, testAccGatewayTargetSchema_bothInlinePayloadAndS3()),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-			// Invalid: mcp_server endpoint that merely contains "https://".
-			{
-				Config:      testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "ftp://evil-https://foo"),
-				ExpectError: regexache.MustCompile(`Must start\s+with https://`),
-			},
-		},
-	})
-}
-
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
@@ -1898,6 +1761,137 @@ func TestAccBedrockAgentCoreGatewayTarget_descriptionClearing(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.passthrough/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime": knownvalue.ListSizeExact(0),
+							"passthrough": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrEndpoint: knownvalue.StringExact("https://example.com/api"),
+								"protocol_type":    tfknownvalue.StringExact(awstypes.PassthroughProtocolTypeMcp),
+								names.AttrSchema:   knownvalue.ListSizeExact(0),
+								"static_query_parameter_conflict_resolution": knownvalue.Null(),
+								"static_query_parameters":                    knownvalue.Null(),
+								"stickiness_configuration":                   knownvalue.ListSizeExact(0),
+							})}),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.passthrough/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.passthrough.stickiness_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime": knownvalue.ListSizeExact(0),
+							"passthrough": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrEndpoint: knownvalue.StringExact("https://example.com/api"),
+								"protocol_type":    tfknownvalue.StringExact(awstypes.PassthroughProtocolTypeMcp),
+								names.AttrSchema:   knownvalue.ListSizeExact(0),
+								"static_query_parameter_conflict_resolution": knownvalue.Null(),
+								"static_query_parameters":                    knownvalue.Null(),
+								"stickiness_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"composite_identifier": knownvalue.Null(),
+									names.AttrIdentifier:   knownvalue.StringExact("$context.header.x-session-id"),
+									names.AttrTimeout:      knownvalue.Null(),
+								})}),
+							})}),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/http.passthrough.schema/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"agentcore_runtime": knownvalue.ListSizeExact(0),
+							"passthrough": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrEndpoint: knownvalue.StringExact("https://example.com/api"),
+								"protocol_type":    tfknownvalue.StringExact(awstypes.PassthroughProtocolTypeMcp),
+								names.AttrSchema: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"inline_payload": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"payload": knownvalue.NotNull(),
+										})}),
+										"s3": knownvalue.ListSizeExact(0),
+									})}),
+								})}),
+								"static_query_parameter_conflict_resolution": knownvalue.Null(),
+								"static_query_parameters":                    knownvalue.Null(),
+								"stickiness_configuration":                   knownvalue.ListSizeExact(0),
+							})}),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
 				},
 			},
 		},
@@ -2839,62 +2833,6 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, credentialProviderContent, schemaContent))
 }
 
-func testAccGatewayTargetConfig_targetConfigurationHTTPPassthrough(rName, credentialProviderContent string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "gateway_assume" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["bedrock-agentcore.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "gateway" {
-  name               = "%[1]s-gateway"
-  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
-}
-
-resource "aws_bedrockagentcore_gateway" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.gateway.arn
-
-  authorizer_type = "CUSTOM_JWT"
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test"]
-    }
-  }
-}
-
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-%[2]s
-  }
-
-  target_configuration {
-    http {
-      passthrough {
-        endpoint      = "https://example.com/api"
-        protocol_type = "MCP"
-
-        stickiness_configuration {
-          identifier = "$context.header.x-session-id"
-          timeout    = 3600
-        }
-      }
-    }
-  }
-}
-`, rName, credentialProviderContent)
-}
-
 func testAccGatewayTargetSchema_inlinePayload() string {
 	return `
           inline_payload {
@@ -2909,126 +2847,11 @@ func testAccGatewayTargetSchema_inlinePayload() string {
           }`
 }
 
-func testAccGatewayTargetSchema_bothInlinePayloadAndS3() string {
-	return `
-          inline_payload {
-            payload = "{}"
-          }
-          s3 {
-            uri = "s3://test-bucket/schema.json"
-          }`
-}
-
 func testAccGatewayTargetSchema_block(schemaContent string) string {
 	return fmt.Sprintf(`
         schema {
 %s
         }`, schemaContent)
-}
-
-func testAccGatewayTargetConfig_targetConfigurationHTTPRuntimeSchema(rName, schemaContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-    gateway_iam_role {}
-  }
-
-  target_configuration {
-    http {
-      agentcore_runtime {
-        arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:123456789012:runtime/test"
-
-        schema {
-%[2]s
-        }
-      }
-    }
-  }
-}
-`, rName, schemaContent))
-}
-
-func testAccGatewayTargetConfig_targetConfigurationHTTPPassthroughSchema(rName, schemaContent string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "gateway_assume" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["bedrock-agentcore.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "gateway" {
-  name               = "%[1]s-gateway"
-  assume_role_policy = data.aws_iam_policy_document.gateway_assume.json
-}
-
-resource "aws_bedrockagentcore_gateway" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.gateway.arn
-
-  authorizer_type = "CUSTOM_JWT"
-  authorizer_configuration {
-    custom_jwt_authorizer {
-      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
-      allowed_audience = ["test"]
-    }
-  }
-}
-
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-    gateway_iam_role {
-      service = "lambda"
-    }
-  }
-
-  target_configuration {
-    http {
-      passthrough {
-        endpoint      = "https://example.com/api"
-        protocol_type = "MCP"
-
-        schema {
-%[2]s
-        }
-      }
-    }
-  }
-}
-`, rName, schemaContent)
-}
-
-func testAccGatewayTargetConfig_targetConfigurationOpenAPISchemaRaw(rName, schemaContent string) string {
-	return acctest.ConfigCompose(testAccGatewayTargetConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_gateway_target" "test" {
-  name               = %[1]q
-  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
-
-  credential_provider_configuration {
-    gateway_iam_role {
-      service = "lambda"
-    }
-  }
-
-  target_configuration {
-    mcp {
-      open_api_schema {
-%[2]s
-      }
-    }
-  }
-}
-`, rName, schemaContent))
 }
 
 func testAccGatewayTargetConfig_targetConfigurationHTTPServerIAMAuthorizer(rName, rNameRuntime, rImageUri, credentialProviderContent string) string {

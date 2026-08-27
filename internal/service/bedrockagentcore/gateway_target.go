@@ -1988,6 +1988,19 @@ func (m httpTargetConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 			return nil, diags
 		}
 		return &r, diags
+
+	case !m.Passthrough.IsNull():
+		model, d := m.Passthrough.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HttpTargetConfigurationMemberPassthrough
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	}
 
 	return nil, diags
