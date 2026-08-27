@@ -123,7 +123,7 @@ This configuration block supports the following:
     * `max` - (Optional) The maximum baseline bandwidth, in Mbps. To specify no maximum limit, omit this parameter..
 * `burstable_performance` - (Optional) Indicates whether burstable performance T instance types are `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) The CPU manufacturers to include. Default is any manufacturer.
-    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 * `excluded_instance_types` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
     If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.

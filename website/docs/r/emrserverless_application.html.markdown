@@ -179,7 +179,7 @@ This resource supports the following arguments:
 * `log_group_name` - (Optional) The name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
 * `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
 * `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. See [log_types](#log_types-arguments) for more details.
-* `encryption_key_arn` - (Optional) The AWS Key Management Service (KMS) key ARN to encrypt the logs that you store in CloudWatch Logs.
+* `encryption_key_arn` - (Optional) KMS key ARN to encrypt the logs that you store in CloudWatch Logs.
 
 ##### log_types Arguments
 

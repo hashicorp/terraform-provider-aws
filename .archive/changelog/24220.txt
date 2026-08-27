@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_function_url: Ignore `ResourceConflictException` errors caused by existing `FunctionURLAllowPublicAccess` permission statements
-```

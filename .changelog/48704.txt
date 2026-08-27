@@ -1,7 +1,3 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_gateway_target: Add `passthrough` HTTP target configuration block, including `schema` and `stickiness_configuration` support
-```
-
-```release-note:enhancement
-resource/aws_bedrockagentcore_gateway_target: Add `schema` configuration block to `agentcore_runtime` HTTP targets
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.http.agentcore_runtime.schema` and `target_configuration.http.passthrough` configuration blocks
 ```

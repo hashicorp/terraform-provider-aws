@@ -133,7 +133,7 @@ resource "aws_sns_topic" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the SNS topic.
+- `arn` (String) ARN of the SNS topic.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Topics using the topic `arn`. For example:
 

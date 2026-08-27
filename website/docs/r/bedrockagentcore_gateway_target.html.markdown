@@ -374,8 +374,10 @@ resource "aws_bedrockagentcore_gateway_target" "runtime" {
         qualifier = "DEFAULT"
 
         schema {
-          inline_payload {
-            payload = file("${path.module}/runtime-openapi.json")
+          source {
+            inline_payload {
+              payload = file("${path.module}/runtime-openapi.json")
+            }
           }
         }
       }
@@ -470,72 +472,72 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the gateway target.
 * `gateway_identifier` - (Required) Identifier of the gateway that this target belongs to.
-* `target_configuration` - (Required) Configuration for the target endpoint. See [`target_configuration`](#target_configuration) below.
+* `name` - (Required) Name of the gateway target.
+* `target_configuration` - (Required) Configuration for the target endpoint. See [`target_configuration` Block](#target_configuration-block) below.
 
 The following arguments are optional:
 
-* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
+* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration` Block](#credential_provider_configuration-block) below.
 * `description` - (Optional) Description of the gateway target.
-* `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
-* `private_endpoint` - (Optional) Configuration for private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through Amazon VPC Lattice and never traverses the public internet. See [`private_endpoint`](#private_endpoint) below.
+* `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration` Block](#metadata_configuration-block) below.
+* `private_endpoint` - (Optional) Configuration for private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through Amazon VPC Lattice and never traverses the public internet. See [`private_endpoint` Block](#private_endpoint-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `credential_provider_configuration`
+### `credential_provider_configuration` Block
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
-* `caller_iam_credentials` - (Optional) Caller IAM credentials-based authentication configuration. See [`caller_iam_credentials`](#caller_iam_credentials) below.
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role`](#gateway_iam_role) below.
+* `api_key` - (Optional) API key-based authentication configuration. See [`api_key` Block](#api_key-block) below.
+* `caller_iam_credentials` - (Optional) Caller IAM credentials-based authentication configuration. See [`caller_iam_credentials` Block](#caller_iam_credentials-block) below.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. See [`gateway_iam_role` Block](#gateway_iam_role-block) below.
 * `jwt_passthrough` - (Optional) JWT passthrough-based authentication configuration. This is an empty configuration block.
-* `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
+* `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth` Block](#oauth-block) below.
 
-### `api_key`
+### `api_key` Block
 
 The `api_key` block supports the following:
 
-* `provider_arn` - (Required) ARN of the OIDC provider for API key authentication.
 * `credential_location` - (Optional) Location where the API key credential is provided. Valid values: `HEADER`, `QUERY_PARAMETER`.
 * `credential_parameter_name` - (Optional) Name of the parameter containing the API key credential.
 * `credential_prefix` - (Optional) Prefix to add to the API key credential value.
+* `provider_arn` - (Required) ARN of the OIDC provider for API key authentication.
 
-### `caller_iam_credentials`
+### `caller_iam_credentials` Block
 
 The `caller_iam_credentials` block supports the following:
 
-* `service` - (Required) The service name for the credentials.
-* `region` - (Optional) The AWS region for the credentials.
+* `region` - (Optional) AWS region for the credentials.
+* `service` - (Required) Service name for the credentials.
 
-### `oauth`
+### `oauth` Block
 
 The `oauth` block supports the following:
 
-* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
-* `grant_type` - (Optional) The OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
-* `default_return_url` - (Optional) The URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
-* `scopes` - (Optional) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
+* `default_return_url` - (Optional) URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
+* `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
+* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
+* `scopes` - (Optional) Set of OAuth scopes to request.
 
-### `gateway_iam_role`
+### `gateway_iam_role` Block
 
 The `gateway_iam_role` block supports the following:
 
 * `region` - (Optional) AWS Region used for SigV4 signing of upstream requests. Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.
-* `service` - (Optional) The target AWS service name used for SigV4 signing of upstream requests. Required when calling SigV4-protected endpoints such as another Bedrock AgentCore Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication, in which case the block can be empty (`gateway_iam_role {}`).
+* `service` - (Optional) Target AWS service name used for SigV4 signing of upstream requests. Required when calling SigV4-protected endpoints such as another Bedrock AgentCore Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication, in which case the block can be empty (`gateway_iam_role {}`).
 
-### `metadata_configuration`
+### `metadata_configuration` Block
 
 The `metadata_configuration` block supports the following:
 
-* `allowed_query_parameters` - (Optional) A set of URL query parameters that are allowed to be propagated from incoming gateway URL to the target. Maximum of 10 parameters.
-* `allowed_request_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from incoming client requests to the target. Maximum of 10 headers.
-* `allowed_response_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from the target response back to the client. Maximum of 10 headers.
+* `allowed_query_parameters` - (Optional) Set of URL query parameters that are allowed to be propagated from incoming gateway URL to the target. Maximum of 10 parameters.
+* `allowed_request_headers` - (Optional) Set of HTTP headers that are allowed to be propagated from incoming client requests to the target. Maximum of 10 headers.
+* `allowed_response_headers` - (Optional) Set of HTTP headers that are allowed to be propagated from the target response back to the client. Maximum of 10 headers.
 
 ~> **Note:** Header names must contain only alphanumeric characters, hyphens, and underscores. A large number of standard HTTP headers are restricted and cannot be configured for propagation, including authentication, content negotiation, caching, security, CORS, and connection management headers. Headers starting with `X-Amzn-` are prohibited except for `X-Amzn-Bedrock-AgentCore-Runtime-Custom-*` headers. These restrictions are enforced by schema validation. For the full list of restricted headers, see the [AWS documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-headers.html).
 
-### `private_endpoint`
+### `private_endpoint` Block
 
 The optional `private_endpoint` block configures private connectivity from AgentCore Gateway to a resource inside your VPC. Traffic is routed through [Amazon VPC Lattice](https://docs.aws.amazon.com/vpc-lattice/latest/ug/what-is-vpc-lattice.html) and never traverses the public internet.
 
@@ -543,66 +545,109 @@ Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be
 
 ~> **Note:** Gateway targets configured with `private_endpoint` cannot use `NO_AUTH` as the inbound authorizer type on the parent gateway unless an interceptor Lambda is also configured.
 
-* `managed_vpc_resource` - (Optional) AWS creates and manages the VPC Lattice resource gateway and resource configuration on your behalf using a service-linked role. See [`managed_vpc_resource`](#managed_vpc_resource) below.
-* `self_managed_lattice_resource` - (Optional) Use an existing VPC Lattice resource configuration that you manage yourself. Useful for cross-account setups or advanced Lattice configurations. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+* `managed_vpc_resource` - (Optional) AWS creates and manages the VPC Lattice resource gateway and resource configuration on your behalf using a service-linked role. See [`managed_vpc_resource` Block](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Use an existing VPC Lattice resource configuration that you manage yourself. Useful for cross-account setups or advanced Lattice configurations. See [`self_managed_lattice_resource` Block](#self_managed_lattice_resource-block) below.
 
-### `managed_vpc_resource`
+### `managed_vpc_resource` Block
 
 The `managed_vpc_resource` block supports the following:
 
-* `vpc_identifier` - (Required) ID of the VPC that contains the private resource.
-* `subnet_ids` - (Required) Set of subnet IDs inside the VPC where Lattice ENIs are placed.
 * `endpoint_ip_address_type` - (Required) IP address type for the resource configuration endpoint. Valid values: `IPV4`, `IPV6`.
-* `security_group_ids` - (Optional) Set of security group IDs (up to 5) to associate with the Lattice resource gateway. Defaults to the VPC default security group.
 * `routing_domain` - (Optional) Intermediate domain (e.g. a VPCE or ALB DNS name) to use instead of the actual target domain. Useful when the MCP server uses a private TLS certificate — place an ALB with a public ACM cert in front and set this to the ALB DNS name.
+* `security_group_ids` - (Optional) Set of security group IDs (up to 5) to associate with the Lattice resource gateway. Defaults to the VPC default security group.
+* `subnet_ids` - (Required) Set of subnet IDs inside the VPC where Lattice ENIs are placed.
 * `tags` - (Optional) Map of tags to apply to the managed Lattice resource gateway.
+* `vpc_identifier` - (Required) ID of the VPC that contains the private resource.
 
-### `self_managed_lattice_resource`
+### `self_managed_lattice_resource` Block
 
 The `self_managed_lattice_resource` block supports the following:
 
 * `resource_configuration_identifier` - (Required) ARN or ID of the VPC Lattice resource configuration.
 
-### `target_configuration`
+### `target_configuration` Block
 
 The `target_configuration` block supports exactly one of the following:
 
-* `mcp` - (Optional) Model Context Protocol (MCP) configuration. See [`mcp`](#mcp) below.
-* `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent. See [`http`](#http) below.
+* `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent. See [`http` Block](#http-block) below.
+* `mcp` - (Optional) Model Context Protocol (MCP) configuration. See [`mcp` Block](#mcp-block) below.
 
-### `mcp`
+### `http` Block
+
+The `http` block supports exactly one of the following:
+
+* `agentcore_runtime` - (Optional) AgentCore Runtime target configuration. See [`agentcore_runtime` Block](#agentcore_runtime-block) below.
+* `passthrough` - (Optional) Passthrough target configuration that forwards requests to an external HTTPS endpoint. See [`passthrough` Block](#passthrough-block) below.
+
+~> **Note:** HTTP targets can only be attached to gateways that do not have a `protocol_type` set. They are not supported on MCP-protocol gateways.
+
+### `agentcore_runtime` Block
+
+The `agentcore_runtime` block supports:
+
+* `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
+* `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
+* `schema` - (Optional) API schema configuration that defines the structure of the runtime target's API. See [`schema` Block](#schema-block) below.
+
+### `schema` Block
+
+The `schema` block supports the following:
+
+* `source` - (Required) Configuration for API schema. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
+
+### `passthrough` Block
+
+The `passthrough` block supports:
+
+* `endpoint` - (Required) HTTPS endpoint that the gateway forwards requests to for this passthrough target. Must start with `https://`.
+* `protocol_type` - (Required) Application protocol the passthrough target implements. Valid values: `MCP`, `A2A`, `INFERENCE`, `CUSTOM`.
+* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
+* `static_query_parameter_conflict_resolution` - (Optional) Controls precedence when a client request supplies a query parameter whose name matches a configured static query parameter. Valid values: `CLIENT_OVERRIDE`, `STATIC_OVERRIDE`.
+* `static_query_parameters` - (Optional) Map of static query parameters that the gateway always appends to the outbound URL when forwarding requests to the target.
+* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
+
+### `stickiness_configuration`
+
+The `stickiness_configuration` block supports the following:
+
+* `composite_identifier` - (Optional) Additional headers to include in session affinity routing.
+* `identifier` - (Required) Expression identifying where to extract the session identifier from the request (for example, `$context.header.x-session-id`).
+* `timeout` - (Optional) Session stickiness timeout, in seconds. Valid values range from 1 to 86400.
+
+### `mcp` Block
 
 The `mcp` block supports exactly one of the following:
 
-* `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway`](#api_gateway) below.
-* `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
-* `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
-* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
-* `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
+* `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway` Block](#api_gateway-block) below.
+* `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`connector` Block](#connector-block) below.
+* `lambda` - (Optional) Lambda function target configuration. See [`lambda` Block](#lambda-block) below.
+* `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server` Block](#mcp_server-block) below.
+* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
+* `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
 
-### `api_gateway`
+### `api_gateway` Block
 
 The `api_gateway` block supports the following:
 
-* `api_gateway_tool_configuration` - (Required) Configuration for API Gateway tools. See [`api_gateway_tool_configuration`](#api_gateway_tool_configuration) below.
+* `api_gateway_tool_configuration` - (Required) Configuration for API Gateway tools. See [`api_gateway_tool_configuration` Block](#api_gateway_tool_configuration-block) below.
 * `rest_api_id` - (Required) ID of the API Gateway REST API to invoke.
 * `stage` - (Required) Stage name of the REST API to add as a target.
 
-### `api_gateway_tool_configuration`
+### `api_gateway_tool_configuration` Block
 
 The `api_gateway_tool_configuration` block supports the following:
 
-* `tool_filter` - (Required) Repeatable block of path and method patterns to expose as tools. See [`tool_filter`](#tool_filter) below.
-* `tool_override` - (Required) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override`](#tool_override) below.
+* `tool_filter` - (Required) Repeatable block of path and method patterns to expose as tools. See [`tool_filter` Block](#tool_filter-block) below.
+* `tool_override` - (Required) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override` Block](#tool_override-block) below.
 
-### `tool_filter`
+### `tool_filter` Block
 
 The `tool_filter` block supports the following:
 
 * `filter_path` - (Required) Resource path to match in the REST API. Supports exact paths (for example, `/pets`) or wildcard paths (for example, `/pets/*` to match all paths under `/pets`). Must match existing paths in the REST API.
 * `methods` - (Required) List of HTTP methods to filter for. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
 
-### `tool_override`
+### `tool_override` Block
 
 The `tool_override` block supports the following:
 
@@ -611,126 +656,134 @@ The `tool_override` block supports the following:
 * `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
-### `lambda`
+### `connector` Block
+
+The `connector` block supports the following:
+
+* `configuration` - (Required) Per-tool configurations for the connector. See [`configuration` Block](#configuration-block) below.
+* `enabled` - (Optional) List of tool names to enable from this connector. If omitted, all tools provided by the connector are enabled.
+* `source` - (Required) Source configuration identifying which connector to use. See [`source` Block](#source-block) below.
+
+### `configuration` Block
+
+The `configuration` block supports the following:
+
+* `description` - (Optional) Agent-facing description override for this tool.
+* `name` - (Required) Tool or operation name (for example, `retrieve` or `webSearch`).
+* `parameter_override` - (Optional) Parameter overrides to control parameter visibility and descriptions. See [`parameter_override` Block](#parameter_override-block) below.
+* `parameter_values` - (Optional) JSON-encoded parameters to set as fixed or default values when provisioning this tool. Free-form JSON whose schema is defined by the connector.
+
+### `parameter_override` Block
+
+The `parameter_overrides` block supports the following:
+
+* `path` - (Required) JSON Pointer path identifying the parameter (for example, `/numberOfResults` or `/filter`).
+* `description` - (Optional) Agent-facing description override for this parameter.
+* `visible` - (Optional) Whether this parameter is visible to the agent. If not specified, uses the service default.
+
+### `source` Block
+
+The `source` block supports the following:
+
+* `connector_id` - (Required) Identifier for the connector integration (for example, `bedrock-knowledge-bases`).
+* `version` - (Optional) Version of the connector to use (for example, `1.2.0`).
+
+### `lambda` Block
 
 The `lambda` block supports the following:
 
 * `lambda_arn` - (Required) ARN of the Lambda function to invoke.
-* `tool_schema` - (Required) Schema definition for the tool. See [`tool_schema`](#tool_schema) below.
+* `tool_schema` - (Required) Schema definition for the tool. See [`tool_schema` Block](#tool_schema-block) below.
 
-### `tool_schema`
+### `tool_schema` Block
 
 The `tool_schema` block supports exactly one of the following:
 
-* `inline_payload` - (Optional) Inline tool definition. See [`inline_payload`](#inline_payload) below.
-* `s3` - (Optional) S3-based tool definition. See [`s3`](#s3) below.
+* `inline_payload` - (Optional) Inline tool definition. See [`inline_payload` Block](#inline_payload-block) below.
+* `s3` - (Optional) S3-based tool definition. See [`s3` Block](#s3-block) below.
 
-### `inline_payload`
+### `inline_payload` Block
 
 The `inline_payload` block supports the following:
 
-* `name` - (Required) Name of the tool.
 * `description` - (Required) Description of what the tool does.
-* `input_schema` - (Required) Schema for the tool's input. See [`schema_definition`](#schema_definition) below.
-* `output_schema` - (Optional) Schema for the tool's output. See [`schema_definition`](#schema_definition) below.
+* `input_schema` - (Required) Schema for the tool's input. See [`schema_definition` Block](#schema_definition-block) below.
+* `name` - (Required) Name of the tool.
+* `output_schema` - (Optional) Schema for the tool's output. See [`schema_definition` Block](#schema_definition-block) below.
 
-### `s3`
+### `s3` Block
 
 The `s3` block supports the following:
 
-* `uri` - (Optional) S3 URI where the tool schema is stored.
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the tool schema is stored.
 
-### `mcp_server`
+### `mcp_server` Block
 
 The `mcp_server` block supports the following:
 
 * `endpoint` - (Required) Endpoint for the MCP server target configuration.
 * `listing_mode` - (Optional) Listing mode for the MCP server target. Valid values are `DEFAULT` and `DYNAMIC`. MCP resources for `DEFAULT` targets are cached at the control plane for faster access, while resources for `DYNAMIC` targets are retrieved dynamically when listing tools.
+* `mcp_tool_schema` - (Optional) Tool schema configuration for the MCP server target. Supported only when the credential provider is configured with an authorization code grant type. When set, dynamic tool discovery and synchronization are disabled. See [`mcp_tool_schema` Block](#mcp_tool_schema-block) below.
+* `resource_priority` - (Optional) Priority for resolving MCP server targets with shared resource URIs. Lower values take precedence. Defaults to `1000` when not set.
 
-### `http`
+### `mcp_tool_schema` Block
 
-The `http` block supports exactly one of the following:
+The `mcp_tool_schema` block supports exactly one of the following:
 
-* `agentcore_runtime` - (Optional) AgentCore Runtime target configuration. See [`agentcore_runtime`](#agentcore_runtime) below.
-* `passthrough` - (Optional) Passthrough target configuration that forwards requests to an external HTTPS endpoint. See [`passthrough`](#passthrough) below.
+* `inline_payload` - (Optional) Inline tool schema payload. The `inline_payload` block requires a `payload` (string) containing the MCP tool schema definition.
+* `s3` - (Optional) S3 location of the tool schema. See [`s3` Block](#s3-block) below.
 
-~> **Note:** HTTP targets can only be attached to gateways that do not have a `protocol_type` set. They are not supported on MCP-protocol gateways.
-
-### `agentcore_runtime`
-
-The `agentcore_runtime` block supports the following:
-
-* `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
-* `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
-* `schema` - (Optional) API schema configuration that defines the structure of the runtime target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
-
-### `passthrough`
-
-The `passthrough` block supports the following:
-
-* `endpoint` - (Required) HTTPS endpoint that the gateway forwards requests to for this passthrough target. Must start with `https://`.
-* `protocol_type` - (Required) Application protocol the passthrough target implements. Valid values: `MCP`, `A2A`, `INFERENCE`, `CUSTOM`.
-* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
-* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
-
-### `stickiness_configuration`
-
-The `stickiness_configuration` block supports the following:
-
-* `identifier` - (Required) Expression identifying where to extract the session identifier from the request (for example, `$context.header.x-session-id`).
-* `timeout` - (Optional) Session stickiness timeout, in seconds. Valid values range from 1 to 86400.
-
-### `api_schema_configuration`
+### `api_schema_configuration` Block
 
 The `api_schema_configuration` block supports exactly one of the following:
 
-* `inline_payload` - (Optional) Inline schema payload. See [`inline_payload`](#inline_payload) below.
-* `s3` - (Optional) S3-based schema configuration. See [`s3`](#s3) below.
+* `inline_payload` - (Optional) Inline schema payload. See [`inline_payload` Block](#inline_payload-block) below.
+* `s3` - (Optional) S3-based schema configuration. See [`s3` Block](#s3-block) below.
 
-### `inline_payload` (API Schema)
+### `inline_payload` Block
 
-The `inline_payload` block for API schemas supports the following:
+The `inline_payload` block supports the following:
 
-* `payload` - (Required) The inline schema payload content.
+* `payload` - (Required) Inline schema payload content.
 
-### `s3` (API Schema)
+### `s3` Block
 
-The `s3` block for API schemas supports the following:
+The `s3` block supports the following:
 
-* `uri` - (Optional) S3 URI where the schema is stored.
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
 
-### `schema_definition`
+### `schema_definition` Block
 
 The `schema_definition` block supports the following:
 
-* `type` - (Required) Data type of the schema. Valid values: `string`, `number`, `integer`, `boolean`, `array`, `object`.
 * `description` - (Optional) Description of the schema element.
-* `items` - (Optional) Schema definition for array items. Can only be used when `type` is `array`. See [`items`](#items) below.
-* `property` - (Optional) Set of property definitions for object types. Can only be used when `type` is `object`. See [`property`](#property) below.
+* `items` - (Optional) Schema definition for array items. Can only be used when `type` is `array`. See [`items` Block](#items-block) below.
+* `property` - (Optional) Set of property definitions for object types. Can only be used when `type` is `object`. See [`property` Block](#property-block) below.
+* `type` - (Required) Data type of the schema. Valid values: `string`, `number`, `integer`, `boolean`, `array`, `object`.
 
-### `items`
+### `items` Block
 
 The `items` block supports the following:
 
-* `type` - (Required) Data type of the array items.
 * `description` - (Optional) Description of the array items.
 * `items` - (Optional) Nested items definition for arrays of arrays.
-* `property` - (Optional) Set of property definitions for arrays of objects. See [`property`](#property) below.
+* `property` - (Optional) Set of property definitions for arrays of objects. See [`property` Block](#property-block) below.
+* `type` - (Required) Data type of the array items.
 
-### `property`
+### `property` Block
 
 The `property` block supports the following:
 
-* `name` - (Required) Name of the property.
-* `type` - (Required) Data type of the property.
 * `description` - (Optional) Description of the property.
 * `required` - (Optional) Whether this property is required. Defaults to `false`.
+* `items` - (Optional) Items definition for array properties. See [`items` Block](#items-block) above.
 * `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
 * `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
-* `items` - (Optional) Items definition for array properties. See [`items`](#items) above.
 * `property` - (Optional) Set of nested property definitions for object properties.
+* `type` - (Required) Data type of the property.
 
 ## Attribute Reference
 
@@ -748,7 +801,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Gateway Target using the gateway identifier and target ID separated by a comma. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_gateway_target.example
+  identity = {
+    gateway_identifier = "GATEWAY1234567890"
+    target_id          = "TARGET0987654321"
+  }
+}
+
+resource "aws_bedrockagentcore_gateway_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `gateway_identifier` (String) Gateway identifier.
+* `target_id` (String) Gateway target ID.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import gateway targets using `gateway_identifier` and `target_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
@@ -757,7 +838,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore Gateway Target using the gateway identifier and target ID separated by a comma. For example:
+Using `terraform import`, import gateway targets using `gateway_identifier` and `target_id` separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_bedrockagentcore_gateway_target.example GATEWAY1234567890,TARGET0987654321

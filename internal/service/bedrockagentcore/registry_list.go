@@ -12,10 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,6 +34,12 @@ var _ list.ListResource = &registryListResource{}
 type registryListResource struct {
 	registryResource
 	framework.WithList
+}
+
+func (l *registryListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
+	}
 }
 
 func (l *registryListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -56,20 +65,30 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 			registryID := aws.ToString(item.RegistryId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.RegistryArn))
 
-			output, err := findRegistryByID(ctx, conn, registryID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			var output *bedrockagentcorecontrol.GetRegistryOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findRegistryByID(ctx, conn, registryID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
 			}
 
 			result := request.NewListResult(ctx)
 
 			var data registryResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
-				if result.Diagnostics.HasError() {
-					return
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				} else {
+					data.RegistryID = fwflex.StringValueToFramework(ctx, registryID)
 				}
 
 				result.DisplayName = aws.ToString(item.Name)

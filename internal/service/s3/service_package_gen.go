@@ -43,6 +43,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newBucketsDataSource,
+			TypeName: "aws_s3_buckets",
+			Name:     "Buckets",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDirectoryBucketsDataSource,
 			TypeName: "aws_s3_directory_buckets",
 			Name:     "Directory Buckets",
@@ -434,6 +440,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.WithVersion(1),
 			),
+		},
+		{
+			Factory:  newBucketNotificationResourceAsListResource,
+			TypeName: "aws_s3_bucket_notification",
+			Name:     "Bucket Notification",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true)),
 		},
 		{
 			Factory:  newBucketOwnershipControlsResourceAsListResource,

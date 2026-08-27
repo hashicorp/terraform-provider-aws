@@ -38,15 +38,15 @@ resource "aws_appmesh_mesh" "simple" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `spec` - (Optional) Service mesh specification to apply. See [`spec` Block](#spec-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `spec` Block
 
 * `egress_filter` - (Optional) Egress filter rules for the service mesh. See [`egress_filter` Block](#egress_filter-block) for details.
-* `service_discovery` - (Optional) The service discovery information for the service mesh. See [`service_discovery` Block](#service_discovery-block) for details.
+* `service_discovery` - (Optional) Service discovery information for the service mesh. See [`service_discovery` Block](#service_discovery-block) for details.
 
 ### `egress_filter` Block
 
@@ -54,15 +54,15 @@ This resource supports the following arguments:
 
 ### `service_discovery` Block
 
-* `ip_preference` - (Optional) The IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
+* `ip_preference` - (Optional) IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the service mesh.
 * `arn` - ARN of the service mesh.
 * `created_date` - Creation date of the service mesh.
+* `id` - ID of the service mesh.
 * `last_updated_date` - Last update date of the service mesh.
 * `mesh_owner` - AWS account ID of the service mesh's owner.
 * `resource_owner` - Resource owner's AWS account ID.

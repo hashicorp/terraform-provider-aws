@@ -120,7 +120,7 @@ This resource supports the following arguments:
 * `event_source_arn` - (Required) ARN of the event bus associated with the archive. Only events from this event bus are sent to the archive.
 * `description` - (Optional) Description for the archive.
 * `event_pattern` - (Optional) Event pattern to use to filter events sent to the archive. By default, it attempts to archive every event received in the `event_source_arn`.
-* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this archive. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this archive. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 * `retention_days` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
 
 ## Attribute Reference
@@ -131,17 +131,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge archive using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_archive.imported_event_archive.test
-  id = "order-archive"
+  to = aws_cloudwatch_event_archive.example
+  identity = {
+    name = "example-archive"
+  }
+}
+
+resource "aws_cloudwatch_event_archive" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import an EventBridge archive using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the archive.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Archives using `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_archive.example
+  id = "example-archive"
+}
+```
+
+Using `terraform import`, import Archives using `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+% terraform import aws_cloudwatch_event_archive.example example-archive
 ```

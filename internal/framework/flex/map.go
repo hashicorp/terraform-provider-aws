@@ -28,6 +28,14 @@ func ExpandFrameworkStringValueMap(ctx context.Context, v basetypes.MapValuable)
 	return output
 }
 
+func ExpandFrameworkStringValueListMap(ctx context.Context, v basetypes.MapValuable) map[string][]string {
+	var output map[string][]string
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
 // FlattenFrameworkStringValueMap converts a map of strings to a framework Map value.
 //
 // A nil map is converted to a null Map.

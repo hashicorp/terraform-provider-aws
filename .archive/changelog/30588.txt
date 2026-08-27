@@ -1,3 +1,0 @@
-``release-note:bug
-resource/aws_api_gateway_stage: `cache_cluster_size` is not updated if `cache_cluster_size` is `false`
-```
