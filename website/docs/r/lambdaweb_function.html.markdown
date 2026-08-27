@@ -10,9 +10,7 @@ description: |-
 
 Manages an AWS Lambda Web function, including an optional initial revision (code + runtime + execution configuration) and an optional endpoint.
 
-~> **Note:** Lambda Web is available in select regions. Regions active as of July 2026: `us-east-1`, `eu-west-1`. The `us-west-2` rollout is pending.
-
-~> **Note:** Tags are not currently supported: the pre-GA Lambda Web API only accepts tags at creation time and provides no APIs to read or update them, so Terraform cannot manage them without permanent drift. Tag support will be added when the GA API ships tag CRUD operations.
+~> **Note:** Lambda Web is available in select regions. As of August 2026 the API is active in 17 commercial regions, including `us-east-1` and `eu-west-1`. In regions where the service is not yet deployed, API calls fail with `AccessDeniedException`.
 
 ## Example Usage
 
@@ -205,7 +203,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-~> **Note:** `revision_config` and `endpoint_config` cannot be read back from the API, so import does not populate them. After importing, write these blocks to match the deployed function (or leave them out) — otherwise the first plan after import will propose a new revision.
+Import fully populates the resource state from the API, including `revision_config` and `endpoint_config`; the first plan after import reports no changes when the configuration matches the deployed function.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
