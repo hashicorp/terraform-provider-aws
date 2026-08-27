@@ -3,10 +3,15 @@
 
 resource "aws_key_pair" "test" {
   key_name   = var.rName
-  public_key = var.rTlsEcdsaPublicKeyPem
+  public_key = var.public_key
 }
 
-variable "rTlsEcdsaPublicKeyPem" {
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+variable "public_key" {
   type     = string
   nullable = false
 }

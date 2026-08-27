@@ -3,10 +3,15 @@
 
 resource "aws_key_pair" "test" {
   key_name   = var.rName
-  public_key = var.rTlsEcdsaPublicKeyPem
+  public_key = var.public_key
 }
 
-variable "rTlsEcdsaPublicKeyPem" {
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+variable "public_key" {
   type     = string
   nullable = false
 }
@@ -15,7 +20,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.61.0"
+      version = "6.62.0"
     }
   }
 }
