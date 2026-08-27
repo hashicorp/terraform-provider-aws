@@ -174,7 +174,7 @@ The following arguments are optional:
 
 ### `endpoint_config` Block
 
-* `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`. (`AWS_SERVICE_AUTH` was removed in V2.)
+* `auth_type` - (Required) Authentication type. Valid values: `ApplicationManaged`, `IamAuth`.
 * `auto_deployment_mode` - (Optional) Automatic deployment mode. Valid values: `LatestRevision`, `Disabled`.
 * `description` - (Optional) Description of the endpoint.
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.

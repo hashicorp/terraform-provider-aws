@@ -103,7 +103,7 @@ type S3Object struct {
 }
 
 // CodeConfig locates the function's code package. The service accepts an S3
-// object only; the initial pre-GA inline zipFile field was removed.
+// object only.
 type CodeConfig struct {
 	S3Object *S3Object `json:"s3Object,omitempty"`
 }

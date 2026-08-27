@@ -4,7 +4,7 @@ Private feature. Confidential. Pre-GA.
 
 This document is the entry point for the HashiCorp reviewer. It covers what
 the contribution adds, how to build and test it before the official SDK ships,
-and the two external items still pending. It is a private-workflow artifact:
+and the one external item still pending. It is a private-workflow artifact:
 it gets dropped from the branch before the public PR opens at GA.
 
 ## 1. What this adds
@@ -85,10 +85,8 @@ call and skips on the not-available signature. Run in any of the 17 available
 regions (see below).
 
 Last full run (us-east-1, 2026-08-27): 45 acceptance PASS, 0 FAIL, single
-clean run. Previous full run (us-east-1 primary, eu-west-1 alternate,
-2026-08-21): 44 PASS, 0 FAIL. `make ci-quick` green (providerlint,
-golangci-lint 0 issues, import-lint, semgrep 0 findings). 0 orphan resources
-after runs.
+clean run. `make ci-quick` green (providerlint, golangci-lint 0 issues,
+import-lint, semgrep 0 findings). 0 orphan resources after runs.
 
 Multi-region validation (2026-08-21): `Function_basic` + `Endpoint_basic` +
 `ResourcePolicy_basic` pass in all 17 regions where the API is available:
@@ -120,30 +118,28 @@ ap-south-1, ap-southeast-1/2. The other commercial regions return
   `lambda.amazonaws.com` service principal in the key policy. `aws:SourceAccount`
   breaks it (the service does not propagate source context). Documented on the
   `kms_key_arn` attribute.
-- **`scaling_config` and `throttle_config`** (added to the API in the final
-  pre-GA model, 2026-08): endpoint-level `maxEnvironments` and `rateLimit`.
-  Modeled as Optional+Computed `ObjectAttribute`s (blocks cannot be Computed;
-  proto5 carries object attribute types fine). Live behavior: the API echoes
-  them only when explicitly set — unset endpoints report nothing and
-  account-level defaults apply invisibly. `rateLimit` accepts only quantized
-  values (0, 100-1000 step 100, 2000-10000 step 1000); the service rejects
-  anything else with a `ValidationException` listing the values.
+- **`scaling_config` and `throttle_config`**: endpoint-level `maxEnvironments`
+  and `rateLimit`. Modeled as Optional+Computed `ObjectAttribute`s (blocks
+  cannot be Computed; proto5 carries object attribute types fine). Live
+  behavior: the API echoes them only when explicitly set — unset endpoints
+  report nothing and account-level defaults apply invisibly. `rateLimit`
+  accepts only quantized values (0, 100-1000 step 100, 2000-10000 step 1000);
+  the service rejects anything else with a `ValidationException` listing the
+  values.
 - **The service assigns default `telemetryConfig` to every new revision**
-  (a log group and INFO log levels; started appearing in live responses the
-  week of 2026-08-24). Revisions are immutable, so this is a server default,
-  not drift: `restoreTelemetryConfig` keeps `telemetry_config` as
-  configuration-only state (the configured value replaces the server echo on
-  create and refresh; import leaves it unset). Without it every apply fails
+  (a log group and INFO log levels). Revisions are immutable, so this is a
+  server default, not drift: `restoreTelemetryConfig` keeps `telemetry_config`
+  as configuration-only state (the configured value replaces the server echo
+  on create and refresh; import leaves it unset). Without it every apply fails
   with "block count changed from 0 to 1".
 
 ## 6. Still pending (external, not code)
 
 1. **Official Go v2 SDK build (Trebuchet)** for `aws-sdk-go-v2/service/lambdaweb`.
    Hard blocker for the GA swap. Requested from the Lambda Web service team.
-2. **Account allowlisting for the pre-release API** so the reviewer can run
-   acceptance in HashiCorp's own accounts:
-   - Primary: 187416307283
-   - Alternate: 067819342479
-   Requested from the service team.
+
+HashiCorp's test accounts (primary 187416307283, alternate 067819342479) are
+allowlisted for the pre-release API in us-east-1 and eu-west-1, so acceptance
+tests run there directly.
 
 Everything on the provider side is complete and verified against the shim.

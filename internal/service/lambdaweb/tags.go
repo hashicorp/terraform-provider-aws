@@ -5,10 +5,7 @@ package lambdaweb
 
 // Tagging for Lambda Web functions uses the service's own TagResource,
 // UntagResource and ListTags operations against the web function ARN
-// (arn:aws:lambda:<region>:<account>:web-function/<name>). Earlier revisions of
-// the API had no tagging operations, so this file routed tags through the
-// classic Lambda tagging API on the shared "lambda" ARN namespace; the Lambda
-// Web API now models them natively, so we call the Lambda Web client directly.
+// (arn:aws:lambda:<region>:<account>:web-function/<name>).
 
 import (
 	"context"
