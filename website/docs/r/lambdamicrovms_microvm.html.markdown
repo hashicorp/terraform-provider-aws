@@ -111,7 +111,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_lambdamicrovms_microvm.example
   identity = {
-    "microvm_id" = "mvm-01234567-abcd-ef01-2345-6789abcdef01"
+    microvm_id = "mvm-01234567-abcd-ef01-2345-6789abcdef01"
   }
 }
 
