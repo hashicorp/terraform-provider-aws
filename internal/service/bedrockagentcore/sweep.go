@@ -5,13 +5,13 @@ package bedrockagentcore
 
 import (
 	"context"
-	"log"
-	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -31,7 +31,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
-	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
+	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories, "aws_bedrockagentcore_harness")
 	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
 	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines, "aws_bedrockagentcore_policy")
 	awsv2.Register("aws_bedrockagentcore_evaluator", sweepEvaluators)
@@ -293,7 +293,9 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 
 func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
-		log.Printf("[WARN] Skipping Bedrock AgentCore Policy Engine sweep for region: %s", region)
+		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Unsupported region",
+		})
 		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput
@@ -319,7 +321,9 @@ func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 
 func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
-		log.Printf("[WARN] Skipping Bedrock AgentCore Memory sweep for region: %s", region)
+		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Unsupported region",
+		})
 		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListMemoriesInput
@@ -400,14 +404,23 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		}
 
 		for _, v := range page.Evaluators {
-			evaluatorID := aws.ToString(v.EvaluatorId)
-			if strings.HasPrefix(evaluatorID, "Builtin.") {
-				// Skip built-in evaluators, which cannot be deleted.
+			if v.EvaluatorType == awstypes.EvaluatorTypeBuiltin {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"skip_reason":  "Built-in evaluator",
+					"evaluator_id": aws.ToString(v.EvaluatorId),
+				})
+				continue
+			}
+			if v.EvaluatorType == awstypes.EvaluatorTypeThirdParty {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"skip_reason":  "Third-party evaluator",
+					"evaluator_id": aws.ToString(v.EvaluatorId),
+				})
 				continue
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluatorResource, client,
-				framework.NewAttribute("evaluator_id", evaluatorID)),
+				framework.NewAttribute("evaluator_id", aws.ToString(v.EvaluatorId))),
 			)
 		}
 	}
@@ -417,7 +430,9 @@ func sweepEvaluators(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 
 func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
-		log.Printf("[WARN] Skipping Bedrock AgentCore Policy sweep for region: %s", region)
+		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Unsupported region",
+		})
 		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 	var input bedrockagentcorecontrol.ListPolicyEnginesInput

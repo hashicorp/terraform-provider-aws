@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,6 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -53,10 +56,9 @@ import (
 // @IdentityAttribute("harness_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.Harness")
 // @Testing(generator="testAccRandomHarnessName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="harness_id")
-// @Testing(importIgnore="memory")
+// @Testing(importIgnore="environment;memory")
 func newHarnessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &harnessResource{}
 
@@ -84,8 +86,8 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN:         framework.ARNAttributeComputedOnly(),
-			names.AttrEnvironment: framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessEnvironmentProviderModel](ctx),
+			names.AttrARN:        framework.ARNAttributeComputedOnly(),
+			"environment_actual": framework.ResourceComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root(names.AttrEnvironment))),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -102,7 +104,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 40),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`),
+						`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`,
+					),
 				},
 			},
 			"max_iterations": schema.Int32Attribute{
@@ -115,6 +120,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"max_tokens": schema.Int32Attribute{
 				Optional: true,
 			},
+			"memory_actual":   framework.ResourceComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root("memory"))),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"timeout_seconds": schema.Int32Attribute{
@@ -128,6 +134,102 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			names.AttrEnvironment: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentProviderModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"agentcore_runtime_environment": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreRuntimeEnvironmentModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"agent_runtime_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"agent_runtime_id": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"agent_runtime_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"lifecycle_configuration": schema.ListAttribute{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
+										Optional:   true,
+										Computed:   true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+										ElementType: types.ObjectType{
+											AttrTypes: fwtypes.AttributeTypesMust[lifecycleConfigurationModel](ctx),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"filesystem_configuration": filesystemConfigurationSchema(ctx),
+									names.AttrNetworkConfiguration: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"network_mode": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.NetworkMode](),
+													Required:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"network_mode_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"require_service_s3_endpoint": schema.BoolAttribute{
+																Computed: true,
+																PlanModifiers: []planmodifier.Bool{
+																	boolplanmodifier.UseStateForUnknown(),
+																},
+															},
+															names.AttrSecurityGroups: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+															names.AttrSubnets: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"environment_artifact": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentArtifactModel](ctx),
 				Validators: []validator.List{
@@ -560,6 +662,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
+	environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 	memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
@@ -612,7 +715,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
 	// private_endpoint_overrides can be restored after Flatten.
 	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured, memoryIsConfigured))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -638,6 +741,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	// During a read of an existing resource, `harness_name` will be set as it is a required attribute.
 	isImport := data.HarnessName.IsNull()
 
+	environmentIsConfigured := data.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 	memoryIsConfigured := data.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
@@ -655,7 +759,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	priorAuthorizerConfiguration := data.AuthorizerConfiguration
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, memoryIsConfigured || isImport))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured || isImport, memoryIsConfigured || isImport))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -718,8 +822,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
+		environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 		memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
-		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, memoryIsConfigured))
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, environmentIsConfigured, memoryIsConfigured))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -757,7 +862,7 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
+func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateEnvironment, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
@@ -765,34 +870,49 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 		return diags
 	}
 
-	if populateMemory {
-		conn := r.Meta().BedrockAgentCoreClient(ctx)
-		diags.Append(r.flattenMemory(ctx, conn, harness, data)...)
-	}
+	r.flattenEnvironment(ctx, data, populateEnvironment)
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
 
 	return diags
 }
 
-func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) {
+	// Always populate environment_actual from the current environment state.
+	data.EnvironmentActual = data.Environment
 
-	diags.Append(fwflex.Flatten(ctx, harness.Memory, &data.Memory)...)
-	if diags.HasError() {
-		return diags
+	// If environment was not configured by the user, null it out.
+	if !populateEnvironment {
+		data.Environment = fwtypes.NewListNestedObjectValueOfNull[harnessEnvironmentProviderModel](ctx)
 	}
+}
+
+func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	memoryBlock, d := data.Memory.ToPtr(ctx)
 	diags.Append(d...)
-	if diags.HasError() || memoryBlock == nil {
-		return diags
-	}
-
-	diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
 	if diags.HasError() {
 		return diags
 	}
 
-	data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
+	if memoryBlock != nil {
+		diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
+	}
+
+	// Always populate memory_actual from the current memory state.
+	data.MemoryActual = data.Memory
+
+	// If memory was not configured by the user, null it out.
+	if !populateMemory {
+		data.Memory = fwtypes.NewListNestedObjectValueOfNull[harnessMemoryConfigurationModel](ctx)
+	}
 
 	return diags
 }
@@ -905,6 +1025,7 @@ type harnessResourceModel struct {
 	ARN                     types.String                                                         `tfsdk:"arn"`
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
 	Environment             fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment"`
+	EnvironmentActual       fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment_actual" autoflex:"-"`
 	EnvironmentArtifact     fwtypes.ListNestedObjectValueOf[harnessEnvironmentArtifactModel]     `tfsdk:"environment_artifact"`
 	EnvironmentVariables    fwtypes.MapOfString                                                  `tfsdk:"environment_variables"`
 	ExecutionRoleARN        fwtypes.ARN                                                          `tfsdk:"execution_role_arn"`
@@ -912,7 +1033,8 @@ type harnessResourceModel struct {
 	HarnessName             types.String                                                         `tfsdk:"harness_name"`
 	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
 	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
-	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory" autoflex:",noflatten"`
+	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
+	MemoryActual            fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory_actual" autoflex:"-"`
 	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]      `tfsdk:"model"`
 	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                   `tfsdk:"skill"`
 	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]      `tfsdk:"system_prompt"`

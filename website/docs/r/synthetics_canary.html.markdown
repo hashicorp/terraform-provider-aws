@@ -96,7 +96,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Canary.
+* `arn` - ARN of the Canary.
 * `engine_arn` - ARN of the Lambda function that is used as your canary's engine.
 * `id` - Name for this canary.
 * `source_location_arn` - ARN of the Lambda layer where Synthetics stores the canary script code.

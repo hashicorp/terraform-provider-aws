@@ -33,6 +33,8 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 | [breaking-changes](./.agents/skills/breaking-changes/SKILL.md) | Review a PR for possible breaking changes. |
 | [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
+| [new-list-resource](./.agents/skills/new-list-resource/SKILL.md) | Implement a new list resource. |
+| [resource-identity](./.agents/skills/resource-identity/SKILL.md) | Add resource identity to a resource. |
 | [review-pr](./.agents/skills/review-pr/SKILL.md) | Review a Terraform AWS Provider PR. Router: holds cross-cutting principles and routes to the scoped `review-*` leaf skills below based on the files a PR changes. |
 | [review-lifecycle](./.agents/skills/review-lifecycle/SKILL.md) | Review resource CRUD, errors, and AutoFlex (`internal/service/**/*.go`). |
 | [review-schema](./.agents/skills/review-schema/SKILL.md) | Review Plugin Framework schema shape (`internal/service/**/*.go`). |

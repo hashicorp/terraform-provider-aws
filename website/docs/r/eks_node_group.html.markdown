@@ -135,14 +135,14 @@ resource "aws_subnet" "example" {
 The following arguments are required:
 
 * `cluster_name` - (Required) Name of the EKS Cluster.
-* `node_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
+* `node_role_arn` - (Required) ARN of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. See [`scaling_config`](#scaling_config-configuration-block) below for details.
 * `subnet_ids` - (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
+* `ami_type` - (Optional) Type of AMI associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
 * `capacity_type` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `disk_size` - (Optional) Disk size in GiB for worker nodes. Defaults to `50` for Windows, `20` all other node groups. Terraform will only perform drift detection if a configuration value is provided.
 * `force_update_version` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
@@ -222,7 +222,7 @@ Including a `warm_pool_config` block enables the warm pool for the node group. T
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
+* `arn` - ARN of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `resources` - List of objects containing information about underlying resources.
     * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.

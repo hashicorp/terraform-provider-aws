@@ -14,7 +14,7 @@ Terraform data source for reading an AWS Resilience Hub V2 Policy.
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_resiliencehubv2_policy" "example" {
   arn = "arn:aws:resiliencehub:us-west-2:123456789012:policy/example-policy:abc123"
 }

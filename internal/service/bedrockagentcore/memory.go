@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -22,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -38,7 +37,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfsetplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/setplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -48,8 +49,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes.Memory")
-// @Testing(generator="randomMemoryName(t)")
+// @Testing(generator="randomWithPrefixAndUnderscore(t)")
+// @Testing(preIdentityVersion="v6.60.0")
 func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &memoryResource{}
 
@@ -63,7 +66,7 @@ func newMemoryResource(_ context.Context) (resource.ResourceWithConfigure, error
 type memoryResource struct {
 	framework.ResourceWithModel[memoryResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -97,7 +100,7 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -107,21 +110,20 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"indexed_key": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[indexedKeyModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 10),
+			"indexed_key": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[indexedKeyModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 10),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Set{
+					tfsetplanmodifier.RequiresReplaceIfElementsDeleted,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\s._:/=+@-]*$`), ""),
+								validMemoryKey,
 							},
 						},
 						names.AttrType: schema.StringAttribute{
@@ -144,6 +146,11 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtLeastOneOfChildren(
+										path.MatchRelative().AtName("kinesis"),
+									),
+								},
 								Blocks: map[string]schema.Block{
 									"kinesis": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[kinesisResourceModel](ctx),
@@ -161,18 +168,19 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 												"content_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[contentConfigurationModel](ctx),
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeBetween(1, 1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															names.AttrType: schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.ContentType](),
-																Required:   true,
-															},
 															"level": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.ContentLevel](),
 																Optional:   true,
 																Computed:   true,
+															},
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ContentType](),
+																Required:   true,
 															},
 														},
 													},
@@ -319,6 +327,24 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
+
+		if !new.IndexedKeys.Equal(old.IndexedKeys) {
+			// AddIndexedKeys is additive and does not map from the indexed_key model field, so send only
+			// the keys that are not already present. Removals force replacement (see the schema plan modifier).
+			diff, d := fwflex.SetDifference(ctx, new.IndexedKeys.SetValue, old.IndexedKeys.SetValue)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if diff.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+				indexedKeySet := fwtypes.SetNestedObjectValueOf[indexedKeyModel]{SetValue: diff}
+				smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, indexedKeySet, &input.AddIndexedKeys))
+				if response.Diagnostics.HasError() {
+					return
+				}
+			}
+		}
 
 		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateMemory(ctx, &input)
@@ -498,7 +524,7 @@ type memoryResourceModel struct {
 	EncryptionKeyARN        fwtypes.ARN                                                   `tfsdk:"encryption_key_arn"`
 	EventExpiryDuration     types.Int32                                                   `tfsdk:"event_expiry_duration"`
 	ID                      types.String                                                  `tfsdk:"id"`
-	IndexedKeys             fwtypes.ListNestedObjectValueOf[indexedKeyModel]              `tfsdk:"indexed_key"`
+	IndexedKeys             fwtypes.SetNestedObjectValueOf[indexedKeyModel]               `tfsdk:"indexed_key"`
 	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
 	Name                    types.String                                                  `tfsdk:"name"`
 	StreamDeliveryResources fwtypes.ListNestedObjectValueOf[streamDeliveryResourcesModel] `tfsdk:"stream_delivery_resources"`
@@ -540,9 +566,10 @@ func (m *streamDeliveryResourceModel) Flatten(ctx context.Context, v any) diag.D
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("stream delivery resource flatten: %T", v),
+			fmt.Sprintf("streamDeliveryResourceModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
@@ -562,6 +589,7 @@ func (m streamDeliveryResourceModel) Expand(ctx context.Context) (any, diag.Diag
 		}
 		return &r, diags
 	}
+
 	return nil, diags
 }
 

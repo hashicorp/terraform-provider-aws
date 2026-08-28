@@ -115,7 +115,7 @@ This data source exports the following attributes in addition to the arguments a
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
 * `name` - Name of the Auto Scaling Group.
 * `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
-* `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
+* `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the EC2 User Guide.
 * `predicted_capacity` - Predicted capacity of the group.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
@@ -127,7 +127,7 @@ This data source exports the following attributes in addition to the arguments a
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - Termination policies for the group.
 * `traffic_source` - Traffic sources.
-    * `identifier` - Identifier of the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+    * `identifier` - Identifier of the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
     * `type` - Traffic source type.
 * `vpc_zone_identifier` - VPC ID for the group.
 * `warm_pool` - List of warm pool configuration objects.
