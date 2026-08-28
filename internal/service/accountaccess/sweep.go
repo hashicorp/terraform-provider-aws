@@ -6,6 +6,7 @@ package accountaccess
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,33 +22,21 @@ func RegisterSweepers() {
 
 func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AccountAccessClient(ctx)
+	var input accountaccess.ListApplicationsInput
 	var sweepResources []sweep.Sweepable
-	var nextToken *string
 
-	for {
-		output, err := conn.ListApplications(ctx, &accountaccess.ListApplicationsInput{
-			NextToken: nextToken,
-		})
+	pages := accountaccess.NewListApplicationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
-		for _, app := range output.Applications {
-			arn := aws.ToString(app.ApplicationArn)
-			if arn == "" {
-				continue
-			}
-			sweepResources = append(sweepResources, framework.NewSweepResource(
-				newApplicationResource, client,
-				framework.NewAttribute(names.AttrARN, arn),
-				framework.NewAttribute(names.AttrID, arn),
+		for _, v := range page.Applications {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.ApplicationArn)),
 			))
 		}
-
-		if output.NextToken == nil {
-			break
-		}
-		nextToken = output.NextToken
 	}
 
 	return sweepResources, nil
