@@ -47,6 +47,8 @@ This resource supports the following arguments:
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
 The MTU of a virtual transit interface can be either `1500` or `8500` (jumbo frames). Default is `1500`.
+* `prefix_pool_allocated_count_ipv4` - (Optional) The number of inbound IPv4 route prefixes to allocate to the virtual interface. Valid values are `0` to `1000`. If not specified, AWS applies the default allocation of `100`.
+* `prefix_pool_allocated_count_ipv6` - (Optional) The number of inbound IPv6 route prefixes to allocate to the virtual interface. Valid values are `0` to `1000`. If not specified, AWS applies the default allocation of `100`.
 * `sitelink_enabled` - (Optional) Indicates whether to enable or disable SiteLink.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

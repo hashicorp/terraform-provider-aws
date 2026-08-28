@@ -102,6 +102,14 @@ func resourceHostedTransitVirtualInterface() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrOwnerAccountID: {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -203,6 +211,8 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

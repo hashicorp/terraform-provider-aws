@@ -36,6 +36,10 @@ This data source exports the following attributes in addition to the arguments a
 * `location` - AWS Direct Connect location where the connection is located.
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
+* `prefix_pool_size_ipv4` - The total number of inbound IPv4 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_size_ipv6` - The total number of inbound IPv6 route prefixes that can be allocated across the virtual interfaces on the connection.
+* `prefix_pool_unallocated_count_ipv4` - The number of inbound IPv4 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
+* `prefix_pool_unallocated_count_ipv6` - The number of inbound IPv6 route prefixes in the connection prefix pool not yet allocated to a virtual interface.
 * `provider_name` - Name of the service provider associated with the connection.
 * `state` - State of the connection.
 * `tags` - Map of tags for the resource.
