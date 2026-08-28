@@ -14,6 +14,137 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
+func TestSetDifference(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		a, b       types.Set
+		expected   types.Set
+		wantErrors int
+	}
+	tests := map[string]testCase{
+		"a unknown b non-empty": {
+			a: types.SetUnknown(types.StringType),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
+		"a non-empty b unknown": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			b:          types.SetUnknown(types.StringType),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
+		"mismatched element types": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			b: types.SetValueMust(types.Int32Type, []attr.Value{
+				types.Int32Value(2),
+			}),
+			expected:   types.SetUnknown(types.StringType),
+			wantErrors: 1,
+		},
+		"both null treated as empty": {
+			a:        types.SetNull(types.StringType),
+			b:        types.SetNull(types.StringType),
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		"a null b non-empty": {
+			a: types.SetNull(types.StringType),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+			}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		"a non-empty b null": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("x"),
+				types.StringValue("y"),
+			}),
+			b:        types.SetNull(types.StringType),
+			expected: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y")}),
+		},
+		"disjoint sets": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+			}),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("c"),
+				types.StringValue("d"),
+			}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+			}),
+		},
+		"a subset of b": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+			}),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+				types.StringValue("c"),
+			}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		"partial overlap": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+				types.StringValue("c"),
+			}),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("b"),
+				types.StringValue("d"),
+			}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("c"),
+			}),
+		},
+		"equal sets": {
+			a: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+			}),
+			b: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"),
+				types.StringValue("b"),
+			}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		"both empty": {
+			a:        types.SetValueMust(types.StringType, []attr.Value{}),
+			b:        types.SetValueMust(types.StringType, []attr.Value{}),
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, diags := flex.SetDifference(context.Background(), test.a, test.b)
+
+			if got := diags.ErrorsCount(); got != test.wantErrors {
+				t.Errorf("expected %d error(s), got %d: %s", test.wantErrors, got, diags)
+			}
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestExpandFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 

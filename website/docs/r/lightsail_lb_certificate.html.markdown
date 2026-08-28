@@ -50,7 +50,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the lightsail certificate.
 * `created_at` - Timestamp when the instance was created.
-* `domain_validation_records` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined.
+* `domain_validation_records` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Each element contains the following attributes:
+    * `domain_name` - Domain name for the certificate validation.
+    * `resource_record_name` - Name of the DNS record to create to validate the certificate.
+    * `resource_record_type` - Type of DNS record to create to validate the certificate.
+    * `resource_record_value` - Value of the DNS record to create to validate the certificate.
 * `id` - Combination of attributes to create a unique id: `lb_name`,`name`
 * `support_code` - Support code for the certificate.
 

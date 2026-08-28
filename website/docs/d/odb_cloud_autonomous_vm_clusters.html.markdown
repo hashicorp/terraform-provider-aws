@@ -32,9 +32,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `cloud_autonomous_vm_clusters` - List of Cloud Autonomous VM Clusters. The list going to contain basic information about the cloud autonomous VM clusters.
 
-### cloud_autonomous_vm_clusters
+### `cloud_autonomous_vm_clusters` Block
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
 * `display_name` - Display name of the Autonomous VM cluster.
 * `id` - Unique identifier of the cloud autonomous vm cluster.

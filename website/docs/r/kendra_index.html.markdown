@@ -682,7 +682,7 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `group_attribute_field` - (Optional) The group attribute field. Minimum length of 1. Maximum length of 100.
 * `issuer` - (Optional) The issuer of the token. Minimum length of 1. Maximum length of 65.
 * `key_location` - (Required) The location of the key. Valid values are `URL` or `SECRET_MANAGER`
-* `secrets_manager_arn` - (Optional) The Amazon Resource Name (ARN) of the secret.
+* `secrets_manager_arn` - (Optional) ARN of the secret.
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `user_name_attribute_field` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
 
@@ -690,7 +690,7 @@ A `jwt_token_type_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Index.
+* `arn` - ARN of the Index.
 * `created_at` - The Unix datetime that the index was created.
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `id` - The identifier of the Index.

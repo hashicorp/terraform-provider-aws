@@ -30,7 +30,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the launch configuration.
-* `arn` - Amazon Resource Name of the launch configuration.
+* `arn` - ARN of the launch configuration.
 * `name` - Name of the launch configuration.
 * `image_id` - EC2 Image ID of the instance.
 * `instance_type` - Instance Type of the instance to launch.

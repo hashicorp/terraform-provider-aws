@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Add `bgp_asn_long` argument
+```
