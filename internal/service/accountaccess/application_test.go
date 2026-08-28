@@ -28,7 +28,7 @@ var (
 	checkApplicationARN = tfknownvalue.RegionalARNRegexp("account-access", regexache.MustCompile(`application/[a-zA-Z0-9-]+`))
 )
 
-func testAccAccountAccessApplication_basic(t *testing.T) {
+func testAccApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v accountaccess.GetApplicationOutput
 	resourceName := "aws_accountaccess_application.test"
@@ -36,7 +36,7 @@ func testAccAccountAccessApplication_basic(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,20 +58,23 @@ func testAccAccountAccessApplication_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_instance_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tenant_id"), knownvalue.NotNull()),
 				},
 			},
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/Application/basic/"),
-				ConfigVariables:   config.Variables{},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory:                      config.StaticDirectory("testdata/Application/basic/"),
+				ConfigVariables:                      config.Variables{},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
 }
 
-func testAccAccountAccessApplication_disappears(t *testing.T) {
+func testAccApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v accountaccess.GetApplicationOutput
 	resourceName := "aws_accountaccess_application.test"
@@ -79,7 +82,7 @@ func testAccAccountAccessApplication_disappears(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

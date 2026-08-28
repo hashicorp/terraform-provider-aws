@@ -4,6 +4,7 @@
 package accountaccess_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -28,8 +29,8 @@ func TestAccAccountAccess_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Application": {
-			acctest.CtBasic:        testAccAccountAccessApplication_basic,
-			acctest.CtDisappears:   testAccAccountAccessApplication_disappears,
+			acctest.CtBasic:        testAccApplication_basic,
+			acctest.CtDisappears:   testAccApplication_disappears,
 			"tags":                 testAccAccountAccessApplication_tagsSerial,
 			"Identity":             testAccAccountAccessApplication_identitySerial,
 			"List_basic":           testAccAccountAccessApplication_List_basic,
@@ -38,4 +39,9 @@ func TestAccAccountAccess_serial(t *testing.T) {
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	acctest.PreCheckSSOAdminInstances(ctx, t)
+	acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "account-access.amazonaws.com")
 }

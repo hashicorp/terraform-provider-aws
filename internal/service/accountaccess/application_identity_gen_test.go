@@ -42,7 +42,7 @@ func testAccAccountAccessApplication_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),

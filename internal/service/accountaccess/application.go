@@ -37,7 +37,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accountaccess;accountaccess.GetApplicationOutput")
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstances")
+// @Testing(preCheck="testAccPreCheck")
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)

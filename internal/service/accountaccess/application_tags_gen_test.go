@@ -61,7 +61,7 @@ func testAccAccountAccessApplication_tags(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -249,7 +249,7 @@ func testAccAccountAccessApplication_Tags_null(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -317,7 +317,7 @@ func testAccAccountAccessApplication_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -373,7 +373,7 @@ func testAccAccountAccessApplication_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -458,7 +458,7 @@ func testAccAccountAccessApplication_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -554,7 +554,7 @@ func testAccAccountAccessApplication_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -698,7 +698,7 @@ func testAccAccountAccessApplication_Tags_EmptyTag_OnUpdate_replace(t *testing.T
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -793,7 +793,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_providerOnly(t *testing.T)
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -980,7 +980,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_nonOverlapping(t *testing.
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1146,7 +1146,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_overlapping(t *testing.T) 
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1328,7 +1328,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_updateToProviderOnly(t *te
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1423,7 +1423,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_updateToResourceOnly(t *te
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1517,7 +1517,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_emptyResourceTag(t *testin
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1589,7 +1589,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_emptyProviderOnlyTag(t *te
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1653,7 +1653,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_nullOverlappingResourceTag
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1728,7 +1728,7 @@ func testAccAccountAccessApplication_Tags_DefaultTags_nullNonOverlappingResource
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1805,7 +1805,7 @@ func testAccAccountAccessApplication_Tags_ComputedTag_onCreate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1866,7 +1866,7 @@ func testAccAccountAccessApplication_Tags_ComputedTag_OnUpdate_add(t *testing.T)
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -1968,7 +1968,7 @@ func testAccAccountAccessApplication_Tags_ComputedTag_OnUpdate_replace(t *testin
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -2060,7 +2060,7 @@ func testAccAccountAccessApplication_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
@@ -2225,7 +2225,7 @@ func testAccAccountAccessApplication_Tags_IgnoreTags_Overlap_resourceTag(t *test
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx, t),
