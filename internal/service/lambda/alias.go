@@ -317,7 +317,7 @@ func (aliasImportID) Parse(id string) (string, map[string]any, error) {
 			}, nil
 		}
 	}
-	
+
 	idx := strings.LastIndex(id, "/")
 	if idx < 1 || idx == len(id)-1 {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", id)
