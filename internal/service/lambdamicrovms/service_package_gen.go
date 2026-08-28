@@ -57,6 +57,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newImageResourceAsListResource,
+			TypeName: "aws_lambdamicrovms_image",
+			Name:     "Image",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
 			Factory:  newMicroVMResourceAsListResource,
 			TypeName: "aws_lambdamicrovms_microvm",
 			Name:     "Micro VM",
