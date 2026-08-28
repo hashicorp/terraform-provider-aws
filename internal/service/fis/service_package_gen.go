@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newSafetyLeverStateResource,
+			TypeName: "aws_fis_safety_lever_state",
+			Name:     "Safety Lever State",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newResourceTargetAccountConfiguration,
 			TypeName: "aws_fis_target_account_configuration",
 			Name:     "Target Account Configuration",
