@@ -52,7 +52,7 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChange("prefix_pool_allocated_count_ipv4") || d.HasChange("prefix_pool_allocated_count_ipv6") {
+	if d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6") {
 		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
 			VirtualInterfaceId: aws.String(d.Id()),
 		}
