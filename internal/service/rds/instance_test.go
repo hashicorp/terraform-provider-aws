@@ -311,7 +311,7 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.4"),
 				),
 			},
 			{
@@ -8232,6 +8232,10 @@ func testAccInstanceConfig_orderableClassPostgres() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "gp2")
 }
 
+func testAccInstanceConfig_orderableClassPostgresIO1() string {
+	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "io1")
+}
+
 func testAccInstanceConfig_orderableClassPostgresGP3() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEnginePostgres, "postgresql-license", "gp3")
 }
@@ -13920,12 +13924,11 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassPostgres(),
+		testAccInstanceConfig_orderableClassPostgresIO1(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  # Dedicated log volumes do not support PG 16 instances.
   engine              = "postgres"
-  engine_version      = "15.12"
+  engine_version      = "18.3"
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
