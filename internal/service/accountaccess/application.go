@@ -201,7 +201,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *applicationResource) flatten(ctx context.Context, app *accountaccess.GetApplicationOutput, model *applicationResourceModel) diag.Diagnostics {
+func (r *applicationResource) flatten(ctx context.Context, app *accountaccess.GetApplicationOutput, model *applicationResourceModel) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	model.TenantID = fwflex.StringToFramework(ctx, app.TenantId)
