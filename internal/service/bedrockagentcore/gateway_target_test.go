@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -1564,7 +1566,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	resourceAddress := "aws_bedrockagentcore_gateway_target.test[0]"
+	resourceName := "aws_bedrockagentcore_gateway_target.test.0"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1575,21 +1578,39 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			// Create everything but the gateway target and wait for IAM propagation.
+			// Else "While waiting, unexpected state 'FAILED', wanted target 'READY, CREATE_PENDING_AUTH'. last error: Gateway service is not authorized to perform AssumeRole on Gateway role: ...".
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/mcp.connector_bedrock-knowledge-bases/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
+					"gateway_target_count": config.IntegerVariable(0),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckSleep(t, 30*time.Second),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						tfplancheck.ExpectNoResource(resourceAddress),
+					},
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/mcp.connector_bedrock-knowledge-bases/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
+					"gateway_target_count": config.IntegerVariable(1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceAddress, plancheck.ResourceActionCreate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceAddress, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"http": knownvalue.ListSizeExact(0),
 						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"api_gateway": knownvalue.ListSizeExact(0),
@@ -1617,9 +1638,10 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/mcp.connector_bedrock-knowledge-bases/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
+					"gateway_target_count": config.IntegerVariable(1),
 				},
-				ResourceName:                         resourceName,
+				ResourceName:                         resourceAddress,
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
@@ -1628,19 +1650,20 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/mcp.connector_bedrock-knowledge-bases-update/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"description":   config.StringVariable("Primary knowledge base"),
+					acctest.CtRName:        config.StringVariable(rName),
+					"gateway_target_count": config.IntegerVariable(1),
+					"description":          config.StringVariable("Primary knowledge base"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceAddress, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceAddress, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"http": knownvalue.ListSizeExact(0),
 						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"api_gateway": knownvalue.ListSizeExact(0),
