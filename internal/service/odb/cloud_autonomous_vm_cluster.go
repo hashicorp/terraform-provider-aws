@@ -46,6 +46,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_cloud_autonomous_vm_cluster", name="Cloud Autonomous Vm Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceCloudAutonomousVmCluster(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCloudAutonomousVmCluster{}
 	r.SetDefaultCreateTimeout(24 * time.Hour)

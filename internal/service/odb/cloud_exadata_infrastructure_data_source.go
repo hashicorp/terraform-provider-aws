@@ -29,6 +29,7 @@ import (
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_cloud_exadata_infrastructure", name="Cloud Exadata Infrastructure")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDataSourceCloudExadataInfrastructure(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudExadataInfrastructure{}, nil
 }
