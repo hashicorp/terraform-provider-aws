@@ -1214,7 +1214,20 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := conn.UpdateGatewayTarget(ctx, &input)
+		err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateGatewayTarget(ctx, &input)
+
+			// IAM propagation.
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "You don't have sufficient access") {
+				return tfresource.RetryableError(err)
+			}
+
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+
+			return nil
+		})
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, targetID)
 			return
