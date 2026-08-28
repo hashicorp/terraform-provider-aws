@@ -196,7 +196,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsGlobalDatabases(t *testing.T)
 					resource.TestCheckResourceAttr(dataSourceName, "supports_global_databases", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^8\.0\.mysql_aurora\..*`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^8\.4\.mysql_aurora\..*`)),
 				),
 			},
 		},
