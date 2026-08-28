@@ -17,7 +17,30 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_odb_exadb_vm_cluster", sweepExaDBVMClusters)
 	awsv2.Register("aws_odb_exascale_db_storage_vault", sweepExascaleDBStorageVaults)
+}
+
+func sweepExaDBVMClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := odb.ListExadbVmClustersInput{}
+	conn := client.ODBClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := odb.NewListExadbVmClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.ExadbVmClusters {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newExaDBVMClusterResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ExadbVmClusterId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepExascaleDBStorageVaults(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
