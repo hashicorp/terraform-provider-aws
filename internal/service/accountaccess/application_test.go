@@ -36,7 +36,6 @@ func testAccAccountAccessApplication_basic(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
@@ -80,7 +79,6 @@ func testAccAccountAccessApplication_disappears(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),

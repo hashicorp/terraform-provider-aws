@@ -36,7 +36,6 @@ func testAccAccountAccessApplication_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
@@ -83,7 +82,6 @@ func testAccAccountAccessApplication_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),

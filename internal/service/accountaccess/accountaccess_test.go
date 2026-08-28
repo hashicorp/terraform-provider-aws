@@ -4,11 +4,9 @@
 package accountaccess_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -40,34 +38,4 @@ func TestAccAccountAccess_serial(t *testing.T) {
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
-}
-
-// testAccPreCheck verifies the test environment can reach Account Access and
-// that the prerequisite IAM Identity Center instance exists in the test
-// account. IAM Identity Center is an organization-level prerequisite that the
-// test discovers rather than provisions.
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckSSOAdminInstances(ctx, t)
-
-	conn := acctest.ProviderMeta(ctx, t).AccountAccessClient(ctx)
-
-	_, err := conn.ListApplications(ctx, &accountaccess.ListApplicationsInput{})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-// testAccPrerequisitesConfig returns the IAM Identity Center instance
-// discovery shared by the inline Application acceptance configurations.
-func testAccPrerequisitesConfig(_ string) string {
-	return `
-data "aws_ssoadmin_instances" "test" {}
-
-locals {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-`
 }
