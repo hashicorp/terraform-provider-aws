@@ -12,4 +12,8 @@ var (
 	ResourceTargetAccountConfiguration = newResourceTargetAccountConfiguration
 
 	FindTargetAccountConfigurationByID = findTargetAccountConfigurationByID
+
+	ResourceSafetyLeverState = newSafetyLeverStateResource
+
+	FindSafetyLever = findSafetyLever
 )
