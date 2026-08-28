@@ -1525,7 +1525,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorWebSearch(
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"http": knownvalue.ListSizeExact(0),
+						"http":      knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
 						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"api_gateway": knownvalue.ListSizeExact(0),
 							"connector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1611,7 +1612,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceAddress, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"http": knownvalue.ListSizeExact(0),
+						"http":      knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
 						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"api_gateway": knownvalue.ListSizeExact(0),
 							"connector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1664,7 +1666,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationConnectorBedrockKno
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceAddress, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"http": knownvalue.ListSizeExact(0),
+						"http":      knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
 						"mcp": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"api_gateway": knownvalue.ListSizeExact(0),
 							"connector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1821,7 +1824,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 								"stickiness_configuration":                   knownvalue.ListSizeExact(0),
 							})}),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -1866,7 +1870,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 								})}),
 							})}),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -1903,7 +1908,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPPassthrough(t *
 								"stickiness_configuration":                   knownvalue.ListSizeExact(0),
 							})}),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -1951,7 +1957,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPAgentCoreRuntim
 							})}),
 							"passthrough": knownvalue.ListSizeExact(0),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -1992,7 +1999,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPAgentCoreRuntim
 							})}),
 							"passthrough": knownvalue.ListSizeExact(0),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -2047,7 +2055,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPAgentCoreRuntim
 							})}),
 							"passthrough": knownvalue.ListSizeExact(0),
 						})}),
-						"mcp": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
 					})})),
 				},
 			},
@@ -2094,6 +2103,96 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationHTTPAgentCoreRuntim
 								})}),
 							})}),
 							"passthrough": knownvalue.ListSizeExact(0),
+						})}),
+						"inference": knownvalue.ListSizeExact(0),
+						"mcp":       knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationInferenceConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/inference.connector/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"connector_id":  config.StringVariable("openai"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"connector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"connector_id": knownvalue.StringExact("openai"),
+								})}),
+							})}),
+							"provider": knownvalue.ListSizeExact(0),
+						})}),
+						"mcp": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/inference.connector/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"connector_id":  config.StringVariable("openai"),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGatewayTargetImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/GatewayTarget/inference.connector/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"connector_id":  config.StringVariable("anthropic"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"http": knownvalue.ListSizeExact(0),
+						"inference": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"connector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"connector_id": knownvalue.StringExact("anthropic"),
+								})}),
+							})}),
+							"provider": knownvalue.ListSizeExact(0),
 						})}),
 						"mcp": knownvalue.ListSizeExact(0),
 					})})),
