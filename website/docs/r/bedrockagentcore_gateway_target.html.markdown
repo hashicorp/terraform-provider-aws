@@ -372,6 +372,14 @@ resource "aws_bedrockagentcore_gateway_target" "runtime" {
       agentcore_runtime {
         arn       = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
         qualifier = "DEFAULT"
+
+        schema {
+          source {
+            inline_payload {
+              payload = file("${path.module}/runtime-openapi.json")
+            }
+          }
+        }
       }
     }
   }
@@ -569,6 +577,7 @@ The `target_configuration` block supports exactly one of the following:
 The `http` block supports exactly one of the following:
 
 * `agentcore_runtime` - (Optional) AgentCore Runtime target configuration. See [`agentcore_runtime` Block](#agentcore_runtime-block) below.
+* `passthrough` - (Optional) Passthrough target configuration that forwards requests to an external HTTPS endpoint. See [`passthrough` Block](#passthrough-block) below.
 
 ~> **Note:** HTTP targets can only be attached to gateways that do not have a `protocol_type` set. They are not supported on MCP-protocol gateways.
 
@@ -578,6 +587,32 @@ The `agentcore_runtime` block supports:
 
 * `arn` - (Required) ARN of the AgentCore Runtime agent that the gateway routes requests to.
 * `qualifier` - (Optional) Runtime qualifier identifying a specific endpoint version. Defaults to `DEFAULT` when not set.
+* `schema` - (Optional) API schema configuration that defines the structure of the runtime target's API. See [`schema` Block](#schema-block) below.
+
+### `schema` Block
+
+The `schema` block supports the following:
+
+* `source` - (Required) Configuration for API schema. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
+
+### `passthrough` Block
+
+The `passthrough` block supports:
+
+* `endpoint` - (Required) HTTPS endpoint that the gateway forwards requests to for this passthrough target. Must start with `https://`.
+* `protocol_type` - (Required) Application protocol the passthrough target implements. Valid values: `MCP`, `A2A`, `INFERENCE`, `CUSTOM`.
+* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
+* `static_query_parameter_conflict_resolution` - (Optional) Controls precedence when a client request supplies a query parameter whose name matches a configured static query parameter. Valid values: `CLIENT_OVERRIDE`, `STATIC_OVERRIDE`.
+* `static_query_parameters` - (Optional) Map of static query parameters that the gateway always appends to the outbound URL when forwarding requests to the target.
+* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
+
+### `stickiness_configuration` Block
+
+The `stickiness_configuration` block supports the following:
+
+* `composite_identifier` - (Optional) Additional headers to include in session affinity routing.
+* `identifier` - (Required) Expression identifying where to extract the session identifier from the request (for example, `$context.header.x-session-id`).
+* `timeout` - (Optional) Session stickiness timeout, in seconds. Valid values range from 1 to 86400.
 
 ### `mcp` Block
 
@@ -587,7 +622,7 @@ The `mcp` block supports exactly one of the following:
 * `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`connector` Block](#connector-block) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda` Block](#lambda-block) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server` Block](#mcp_server-block) below.
-* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`open_api_schema` Block](#open_api_schema-block) below.
+* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
 * `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
 
 ### `api_gateway` Block
@@ -699,22 +734,22 @@ The `mcp_tool_schema` block supports exactly one of the following:
 * `inline_payload` - (Optional) Inline tool schema payload. The `inline_payload` block requires a `payload` (string) containing the MCP tool schema definition.
 * `s3` - (Optional) S3 location of the tool schema. See [`s3` Block](#s3-block) below.
 
-### `open_api_schema` Block
+### `api_schema_configuration` Block
 
-The `open_api_schema` block supports exactly one of the following:
+The `api_schema_configuration` block supports exactly one of the following:
 
 * `inline_payload` - (Optional) Inline schema payload. See [`inline_payload` Block](#inline_payload-block) below.
 * `s3` - (Optional) S3-based schema configuration. See [`s3` Block](#s3-block) below.
 
-### `inline_payload` (API Schema) Block
+### `inline_payload` Block
 
-The `inline_payload` block for API schemas supports the following:
+The `inline_payload` block supports the following:
 
 * `payload` - (Required) Inline schema payload content.
 
-### `s3` (API Schema) Block
+### `s3` Block
 
-The `s3` block for API schemas supports the following:
+The `s3` block supports the following:
 
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
 * `uri` - (Optional) S3 URI where the schema is stored.
