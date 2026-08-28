@@ -28,7 +28,7 @@ fi
 # Create temporary files
 TEMP_FILE=$(mktemp)
 TEMP_ENTRIES=$(mktemp)
-trap "rm -f $TEMP_FILE $TEMP_ENTRIES" EXIT
+trap 'rm -f $TEMP_FILE $TEMP_ENTRIES' EXIT
 
 # Process the file line by line
 IN_SECTION=false
@@ -39,7 +39,7 @@ while IFS= read -r line; do
         # If we have accumulated entries, sort and output them
         if [[ -s "$TEMP_ENTRIES" ]]; then
             sort -f "$TEMP_ENTRIES" >> "$TEMP_FILE"
-            > "$TEMP_ENTRIES"  # Clear the temp file
+            truncate -s 0 "$TEMP_ENTRIES"  # Clear the temp file
         fi
 
         # Output the header
@@ -56,7 +56,7 @@ while IFS= read -r line; do
         # If we have accumulated entries, sort and output them
         if [[ -s "$TEMP_ENTRIES" ]]; then
             sort -f "$TEMP_ENTRIES" >> "$TEMP_FILE"
-            > "$TEMP_ENTRIES"  # Clear the temp file
+            truncate -s 0 "$TEMP_ENTRIES"  # Clear the temp file
             IN_SECTION=false
         fi
 
