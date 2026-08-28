@@ -634,7 +634,7 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.tags.IgnoreElasticbeanstalk()
+			got := testCase.tags.ignoreElasticbeanstalk()
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})
