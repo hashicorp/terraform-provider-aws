@@ -25,7 +25,6 @@ import (
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_cloud_autonomous_vm_cluster", name="Cloud Autonomous Vm Cluster")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newDataSourceCloudAutonomousVmCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudAutonomousVmCluster{}, nil
 }

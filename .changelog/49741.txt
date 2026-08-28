@@ -2,6 +2,10 @@
 aws_odb_exascale_db_storage_vault
 ```
 
+```release-note:new-resource
+aws_odb_exadb_vm_cluster
+```
+
 ```release-note:new-data-source
 aws_odb_exascale_db_storage_vault
 ```

@@ -41,7 +41,6 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_network_peering_connection", name="Network Peering Connection")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newResourceNetworkPeeringConnection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetworkPeeringConnection{}
 

@@ -41,7 +41,6 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_cloud_exadata_infrastructure", name="Cloud Exadata Infrastructure")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newResourceCloudExadataInfrastructure(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCloudExadataInfrastructure{}
 

@@ -23,7 +23,6 @@ import (
 
 // @FrameworkDataSource("aws_odb_exascale_db_storage_vault", name="Exascale DB Storage Vault")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newExascaleDBStorageVaultDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &exascaleDBStorageVaultDataSource{}, nil
 }

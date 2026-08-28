@@ -45,7 +45,6 @@ import (
 
 // @FrameworkResource("aws_odb_network", name="Network")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func newResourceNetwork(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetwork{}
 	r.SetDefaultCreateTimeout(24 * time.Hour)
