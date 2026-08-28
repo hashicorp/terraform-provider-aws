@@ -606,7 +606,7 @@ The `passthrough` block supports:
 * `static_query_parameters` - (Optional) Map of static query parameters that the gateway always appends to the outbound URL when forwarding requests to the target.
 * `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
 
-### `stickiness_configuration`
+### `stickiness_configuration` Block
 
 The `stickiness_configuration` block supports the following:
 
