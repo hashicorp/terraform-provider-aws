@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -24,20 +25,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_alias", name="Alias")
+// @IdentityAttribute("function_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("aliasImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetAliasOutput")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceAliasImport,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(15 * time.Minute),
@@ -193,20 +196,6 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())
-	}
-
-	functionName := idParts[0]
-	alias := idParts[1]
-
-	d.Set("function_name", functionName)
-	d.Set(names.AttrName, alias)
-	return []*schema.ResourceData{d}, nil
-}
-
 func findAliasByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, aliasName string) (*lambda.GetAliasOutput, error) {
 	input := &lambda.GetAliasInput{
 		FunctionName: aws.String(functionName),
@@ -307,4 +296,36 @@ func suppressEquivalentFunctionNameOrARN(k, old, new string, d *schema.ResourceD
 	oldFunctionName, oldFunctionNameErr := getFunctionNameFromARN(old)
 	newFunctionName, newFunctionNameErr := getFunctionNameFromARN(new)
 	return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
+}
+
+var _ inttypes.SDKv2ImportID = aliasImportID{}
+
+type aliasImportID struct{}
+
+func (aliasImportID) Create(d *schema.ResourceData) string {
+	return d.Get("function_name").(string) + "/" + d.Get(names.AttrName).(string)
+}
+
+func (aliasImportID) Parse(id string) (string, map[string]any, error) {
+	if arn.IsARN(id) {
+		functionName, fnErr := getFunctionNameFromARN(id)
+		aliasName, qualErr := getQualifierFromAliasOrVersionARN(id)
+		if fnErr == nil && qualErr == nil {
+			return id, map[string]any{
+				"function_name": functionName,
+				names.AttrName:  aliasName,
+			}, nil
+		}
+	}
+	
+	idx := strings.LastIndex(id, "/")
+	if idx < 1 || idx == len(id)-1 {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", id)
+	}
+	functionName := id[:idx]
+	aliasName := id[idx+1:]
+	return id, map[string]any{
+		"function_name": functionName,
+		names.AttrName:  aliasName,
+	}, nil
 }
