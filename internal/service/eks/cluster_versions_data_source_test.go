@@ -142,6 +142,7 @@ func TestAccEKSClusterVersionsDataSource_controlPlaneComponentConfig(t *testing.
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_api_server_config.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_scheduler_config.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_controller_manager_config.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_versions.0.control_plane_component_config.0.kube_controller_manager_config.0.pod_gc_controller_config.#", "1"),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "cluster_versions.0.control_plane_scaling_tiers.#", 0),
 				),
 			},
