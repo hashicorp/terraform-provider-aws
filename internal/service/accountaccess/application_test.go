@@ -5,46 +5,65 @@ package accountaccess_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccountaccess "github.com/hashicorp/terraform-provider-aws/internal/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	checkApplicationARN = tfknownvalue.RegionalARNRegexp("account-access", regexache.MustCompile(`application/[a-zA-Z0-9-]+`))
+)
+
 func testAccAccountAccessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v accountaccess.GetApplicationOutput
 	resourceName := "aws_accountaccess_application.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Application/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkApplicationARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_application_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_instance_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory:   config.StaticDirectory("testdata/Application/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -55,22 +74,22 @@ func testAccAccountAccessApplication_basic(t *testing.T) {
 
 func testAccAccountAccessApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v accountaccess.GetApplicationOutput
 	resourceName := "aws_accountaccess_application.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountAccessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Application/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfaccountaccess.ResourceApplication, resourceName),
@@ -98,7 +117,7 @@ func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.
 				continue
 			}
 
-			_, err := tfaccountaccess.FindApplicationByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfaccountaccess.FindApplicationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if retry.NotFound(err) {
 				continue
 			}
@@ -106,7 +125,7 @@ func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("Account Access Application %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Account Access Application %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
@@ -119,13 +138,10 @@ func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, 
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return errors.New("No Account Access Application ID is set")
-		}
 
 		conn := acctest.ProviderMeta(ctx, t).AccountAccessClient(ctx)
 
-		output, err := tfaccountaccess.FindApplicationByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfaccountaccess.FindApplicationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return err
 		}
@@ -134,12 +150,4 @@ func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, 
 
 		return nil
 	}
-}
-
-func testAccApplicationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPrerequisitesConfig(rName), `
-resource "aws_accountaccess_application" "test" {
-  identity_center_instance_arn = local.instance_arn
-}
-`)
 }

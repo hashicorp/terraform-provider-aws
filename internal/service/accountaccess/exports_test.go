@@ -3,5 +3,8 @@
 
 package accountaccess
 
-// ResourceApplication is exported for use in tests only.
-var ResourceApplication = newApplicationResource
+var (
+	ResourceApplication = newApplicationResource
+
+	FindApplicationByARN = findApplicationByARN
+)

@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// isNotFoundError reports whether err indicates that an Application does not
-// exist.
-func isNotFoundError(err error) bool {
+func isResourceNotFoundError(err error) bool {
 	return errs.IsA[*awstypes.ResourceNotFoundException](err)
 }

@@ -53,13 +53,9 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Application. Used as the resource ID.
-* `created_at` - Date and time, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339), when the Application was created.
-* `id` - ARN of the Application. Same as `arn`.
 * `identity_center_application_arn` - ARN of the IAM Identity Center Application that Account Access provisioned for this resource.
-* `status` - Current lifecycle status. One of `CREATE_IN_PROGRESS`, `ACTIVE`, `DELETE_IN_PROGRESS`, `CREATE_FAILED`, `DELETE_FAILED`.
 * `tags_all` - Map of tags assigned to the Application, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `tenant_id` - Internal tenant identifier returned by the service.
-* `updated_at` - Date and time, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339), when the Application was last updated.
 
 ## Timeouts
 
