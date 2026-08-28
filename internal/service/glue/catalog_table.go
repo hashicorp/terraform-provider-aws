@@ -737,9 +737,9 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("target_table", nil)
 	}
 	if table.ViewDefinition != nil {
-		// Glue does not echo back ValidationConnection, ViewOriginalText, or
-		// ViewExpandedText for validated ATHENA views — GetTable returns them as
-		// null. Preserve user supplied values.
+		// Preserve user-supplied values that Glue does not echo back. For
+		// validated ATHENA views, status details contain the submitted SQL while
+		// ViewOriginalText contains an engine-generated Presto representation.
 		var priorRepresentations []any
 		if v, ok := d.GetOk("view_definition"); ok {
 			vdList := v.([]any)
@@ -750,7 +750,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 		}
-		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations)}); err != nil {
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations, table.Status)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
 		}
 	} else {
@@ -900,9 +900,10 @@ func catalogTableParseResourceID(id string) (string, string, string, error) {
 
 func findTableByThreePartKey(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
 	input := glue.GetTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		Name:         aws.String(name),
+		CatalogId:            aws.String(catalogID),
+		DatabaseName:         aws.String(dbName),
+		IncludeStatusDetails: aws.Bool(true),
+		Name:                 aws.String(name),
 	}
 
 	return findTable(ctx, conn, &input)
@@ -1924,7 +1925,7 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	return apiObjects
 }
 
-func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentations []any) map[string]any {
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentations []any, status *awstypes.TableStatus) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1948,7 +1949,7 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentati
 	}
 
 	if v := apiObject.Representations; len(v) > 0 {
-		tfMap["representations"] = flattenViewRepresentations(v, priorRepresentations)
+		tfMap["representations"] = flattenViewRepresentations(v, priorRepresentations, status)
 	}
 
 	tfMap["view_version_id"] = apiObject.ViewVersionId
@@ -1961,10 +1962,10 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentati
 }
 
 // flattenViewRepresentations flattens API representations, falling back to
-// prior state values for fields Glue does not echo back on GetTable
-// (ValidationConnection, ViewOriginalText, ViewExpandedText). Matching is by
-// dialect so the merge is order-independent.
-func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior []any) []any {
+// prior state values for fields Glue does not echo back on GetTable. Matching
+// prior state and successful validation details by dialect makes the merge
+// order-independent.
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior []any, status *awstypes.TableStatus) []any {
 	// Build a lookup of prior state representations keyed by dialect string.
 	priorByDialect := make(map[string]map[string]any, len(prior))
 	for _, raw := range prior {
@@ -1977,16 +1978,53 @@ func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior 
 
 	tfList := make([]any, len(apiObjects))
 	for i, v := range apiObjects {
-		tfList[i] = flattenViewRepresentation(v, priorByDialect[string(v.Dialect)])
+		priorRepresentation := priorByDialect[string(v.Dialect)]
+		if v.Dialect == awstypes.ViewDialectAthena && isPrestoViewOriginalText(aws.ToString(v.ViewOriginalText)) {
+			if text := successfulViewValidationText(v, status); text != "" {
+				v.ViewOriginalText = aws.String(text)
+			} else if priorRepresentation != nil {
+				if priorText, ok := priorRepresentation["view_original_text"].(string); ok && priorText != "" {
+					v.ViewOriginalText = nil
+				}
+			}
+		}
+		tfList[i] = flattenViewRepresentation(v, priorRepresentation)
 	}
 	return tfList
 }
 
-// flattenViewRepresentation flattens one API representation. For the three
-// fields Glue strips on validated views (ValidationConnection,
-// ViewOriginalText, ViewExpandedText), the API value takes precedence when
-// non-empty; otherwise the prior state value is preserved so state stays
-// consistent with what the user configured.
+func isPrestoViewOriginalText(v string) bool {
+	return strings.HasPrefix(strings.TrimSpace(v), "/* Presto View:")
+}
+
+func successfulViewValidationText(representation awstypes.ViewRepresentation, status *awstypes.TableStatus) string {
+	if status == nil || status.State != awstypes.ResourceStateSuccess || status.Details == nil {
+		return ""
+	}
+
+	for _, validation := range status.Details.ViewValidations {
+		if validation.Dialect != representation.Dialect {
+			continue
+		}
+		validationVersion := aws.ToString(validation.DialectVersion)
+		representationVersion := aws.ToString(representation.DialectVersion)
+		if validationVersion != "" && representationVersion != "" && validationVersion != representationVersion {
+			continue
+		}
+		if validation.State != "" && validation.State != awstypes.ResourceStateSuccess {
+			continue
+		}
+		if v := aws.ToString(validation.ViewValidationText); v != "" {
+			return v
+		}
+	}
+
+	return ""
+}
+
+// flattenViewRepresentation flattens one API representation. For fields Glue
+// strips on validated views, the API value takes precedence when non-empty;
+// otherwise the prior state value is preserved.
 func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[string]any) map[string]any {
 	tfMap := make(map[string]any)
 
@@ -1998,7 +2036,6 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[
 		tfMap["dialect_version"] = v
 	}
 
-	// Glue does not store these fields back for validated ATHENA views.
 	// Use the API value when present; fall back to prior state otherwise.
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
 		tfMap["validation_connection"] = v
