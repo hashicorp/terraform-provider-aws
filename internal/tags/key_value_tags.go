@@ -127,8 +127,8 @@ func (dc *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
 	return dc.Tags.ContainsAll(tags)
 }
 
-// IgnoreServerlessApplicationRepository returns non-AWS and non-AccountAccess tag keys.
-func (tags KeyValueTags) ignoreAccountAccess() KeyValueTags {
+// IgnoreAccountAccess returns non-AWS and non-AccountAccess tag keys.
+func (tags KeyValueTags) IgnoreAccountAccess() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
@@ -171,8 +171,8 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 	return result
 }
 
-// ignoreElasticbeanstalk returns non-AWS and non-Elasticbeanstalk tag keys.
-func (tags KeyValueTags) ignoreElasticbeanstalk() KeyValueTags {
+// IgnoreElasticbeanstalk returns non-AWS and non-Elasticbeanstalk tag keys.
+func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
@@ -218,8 +218,8 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 	return result
 }
 
-// ignoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
-func (tags KeyValueTags) ignoreServerlessApplicationRepository() KeyValueTags {
+// IgnoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
+func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
@@ -242,11 +242,11 @@ func (tags KeyValueTags) ignoreServerlessApplicationRepository() KeyValueTags {
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
 	case names.AccountAccess:
-		return tags.ignoreAccountAccess()
+		return tags.IgnoreAccountAccess()
 	case names.ElasticBeanstalk:
-		return tags.ignoreElasticbeanstalk()
+		return tags.IgnoreElasticbeanstalk()
 	case names.ServerlessRepo:
-		return tags.ignoreServerlessApplicationRepository()
+		return tags.IgnoreServerlessApplicationRepository()
 	default:
 		return tags.IgnoreAWS()
 	}
