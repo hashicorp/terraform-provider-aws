@@ -92,6 +92,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_lifecycle_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_maintenance_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", names.AttrName),
@@ -643,6 +644,53 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyNegativeValues(t *test
 	})
 }
 
+func TestAccAutoScalingGroup_instanceLifecyclePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_instanceLifecyclePolicy(rName, "retain"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "retain"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			// To validate updating the terminate_hook_abandon argument
+			{
+				Config: testAccGroupConfig_instanceLifecyclePolicy(rName, "terminate"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.0.retention_triggers.0.terminate_hook_abandon", "terminate"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			// The policy cannot be cleared via the API, so removing the block retains the
+			// last applied value (Optional + Computed) rather than producing a perpetual diff.
+			{
+				Config: testAccGroupConfig_simple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle_policy.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.AutoScalingGroup
@@ -966,6 +1014,43 @@ func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
 					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-only"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_availabilityZoneDistributionReservationsThenBalanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, "reservations-then-balanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "reservations-then-balanced"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "capacity-reservations-first"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_ids.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, "balanced-best-effort"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
 				),
 			},
 		},
@@ -4473,6 +4558,23 @@ resource "aws_autoscaling_group" "test" {
 `, rName, min_percentage, max_percentage))
 }
 
+func testAccGroupConfig_instanceLifecyclePolicy(rName, terminateHookAbandon string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+  instance_lifecycle_policy {
+    retention_triggers {
+      terminate_hook_abandon = %[2]q
+    }
+  }
+  launch_configuration = aws_launch_configuration.test.name
+}
+`, rName, terminateHookAbandon))
+}
+
 func testAccGroupConfig_nameGenerated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), `
 resource "aws_autoscaling_group" "test" {
@@ -5094,6 +5196,49 @@ resource "aws_autoscaling_group" "test" {
 
   availability_zone_distribution {
     capacity_distribution_strategy = %[2]q
+  }
+}
+`, rName, capacityDistributionStrategy))
+}
+
+func testAccGroupConfig_availabilityZoneDistributionWithCapacityReservation(rName, capacityDistributionStrategy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_ec2_capacity_reservation" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+
+  availability_zone_distribution {
+    capacity_distribution_strategy = %[2]q
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = "capacity-reservations-first"
+
+    capacity_reservation_target {
+      capacity_reservation_ids = [aws_ec2_capacity_reservation.test.id]
+    }
   }
 }
 `, rName, capacityDistributionStrategy))

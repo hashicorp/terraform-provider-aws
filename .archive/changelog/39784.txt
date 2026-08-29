@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Fix validation error when optional attribute in `on_demand_throughput` is excluded
-```

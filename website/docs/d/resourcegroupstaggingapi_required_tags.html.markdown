@@ -30,7 +30,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `required_tags` - List of required tag configurations. See [`required_tags`](#required_tags) below.
 
-### `required_tags`
+### `required_tags` Block
 
 * `cloud_formation_resource_types` - CloudFormation resource types assigned the required tag keys.
 * `reporting_tag_keys` - Tag keys marked as required in the `report_required_tag_for` block of the effective tag policy.

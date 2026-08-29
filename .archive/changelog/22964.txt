@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_catalog_database: Add support `create_table_default_permission` argument
-```

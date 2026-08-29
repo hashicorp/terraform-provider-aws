@@ -48,6 +48,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the virtual interface.
 * `jumbo_frame_capable` - Indicates whether jumbo frames (9001 MTU) are supported.
 * `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
+* `prefix_pool_allocated_count_ipv4` - The number of inbound IPv4 route prefixes allocated to the virtual interface.
+* `prefix_pool_allocated_count_ipv6` - The number of inbound IPv6 route prefixes allocated to the virtual interface.
 
 ## Timeouts
 

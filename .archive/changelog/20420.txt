@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_appconfig_deployment: Include predefined strategies in plan time validation of `deployment_strategy_id`
-```

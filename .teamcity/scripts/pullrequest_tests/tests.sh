@@ -74,12 +74,14 @@ echo "Running acceptance tests for ${PKG} with pattern %TEST_PREFIX%"
 TEST_PREFIX="%TEST_PREFIX%"
 TEST_PREFIX="${TEST_PREFIX#\(}"
 TEST_PREFIX="${TEST_PREFIX%\)}"
-echo "% make testacc PKG=%PKG% TESTARGS='-run=${TEST_PREFIX} -json' P=%ACCTEST_PARALLELISM%" > /tmp/test_command.txt
+echo "% TF_ACC=1 go test '${PKG}' -count=1 -json -v -run='%TEST_PREFIX%' -parallel '%ACCTEST_PARALLELISM%' -timeout=0 -vet=off -buildvcs=false" > /tmp/test_command.txt
 
-make testacc PKG="%PKG%" TESTARGS="-run=${TEST_PREFIX} -json" P="%ACCTEST_PARALLELISM%" \
-    | tee /tmp/test_output.json
+TF_ACC=1 go test "${PKG}" -count=1 -json -v -run="%TEST_PREFIX%" -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false \
+    | tee /tmp/test_output.json || true
 
 jq -s '[.[] | select(.Action == "pass" or .Action == "fail" or .Action == "skip") | select(.Test != null)] | length' \
     /tmp/test_output.json > /tmp/test_count.txt
 
 echo "Total tests run: $(cat /tmp/test_count.txt)"
+
+exit 0

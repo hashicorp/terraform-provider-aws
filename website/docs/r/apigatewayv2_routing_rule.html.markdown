@@ -50,32 +50,32 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `priority` - (Optional) The order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
+* `priority` - (Optional) Order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `action`
+### `action` Block
 
 * `invoke_api` - (Required) Configuration to invoke a stage of a target API. Only REST APIs are supported. See below.
 
-### `condition`
+### `condition` Block
 
-* `match_base_paths` - (Optional) The base path to be matched. See below.
-* `match_headers` - (Optional) The headers to be matched. See below.
+* `match_base_paths` - (Optional) Base path to be matched. See below.
+* `match_headers` - (Optional) Headers to be matched. See below.
 
-### `match_base_paths`
+### `match_base_paths` Block
 
 * `any_of` - (Required) List of strings of the case sensitive base path to be matched.
 
-### `match_headers`
+### `match_headers` Block
 
 * `any_of` - (Required) Configuration of the headers to be matched. There is a match if any of the header name and header value globs are matched. See below.
 
-### `any_of`
+### `any_of` Block
 
-* `header` - (Required) The case insensitive header name to be matched. The header name must be less than 40 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?-!#$%&'.^_`|~.
-* `value_glob` - (Required) The case sensitive header glob value to be matched against entire header value. The header glob value must be less than 128 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: \*?-!#$%&'.^_`|~. Wildcard matching is supported for header glob values but must be for \*prefix-match, suffix-match*, or \*infix*-match.
+* `header` - (Required) Case insensitive header name to be matched. The header name must be less than 40 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?-!#$%&'.^_`|~.
+* `value_glob` - (Required) Case sensitive header glob value to be matched against entire header value. The header glob value must be less than 128 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: \*?-!#$%&'.^_`|~. Wildcard matching is supported for header glob values but must be for \*prefix-match, suffix-match*, or \*infix*-match.
 
-### `invoke_api`
+### `invoke_api` Block
 
 * `api_id` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
 * `stage` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
