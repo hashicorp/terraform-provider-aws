@@ -7,6 +7,8 @@ package dynamodb
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -77,6 +79,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	}
 }
 
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newGlobalSecondaryIndexResourceAsListResource,
+			TypeName: "aws_dynamodb_global_secondary_index",
+			Name:     "Global Secondary Index",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("index_name", true),
+			}),
+		},
+	})
+}
+
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
@@ -125,7 +142,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -148,6 +165,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_dynamodb_table_item",
 			Name:     "Table Item",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("hash_key_value", true),
+				inttypes.StringIdentityAttribute("range_key_value", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      tableItemImportID{},
+			},
 		},
 		{
 			Factory:  resourceTableReplica,
@@ -165,6 +193,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newTableResourceAsListResource,
+			TypeName: "aws_dynamodb_table",
+			Name:     "Table",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
+			Factory:  newTableItemResourceAsListResource,
+			TypeName: "aws_dynamodb_table_item",
+			Name:     "Table Item",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("hash_key_value", true),
+				inttypes.StringIdentityAttribute("range_key_value", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

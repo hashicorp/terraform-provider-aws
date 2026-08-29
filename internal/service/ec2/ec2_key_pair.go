@@ -30,6 +30,10 @@ import (
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("key_name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.KeyPairInfo")
+// @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v6.62.0")
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,61 +42,59 @@ func resourceKeyPair() *schema.Resource {
 		UpdateWithoutTimeout: resourceKeyPairUpdate,
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaVersion: 1,
 		MigrateState:  keyPairMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{"key_name_prefix"},
-			},
-			"key_name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
-				ConflictsWith: []string{"key_name"},
-			},
-			"key_pair_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return strings.TrimSpace(v)
-					default:
-						return ""
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255),
+					ConflictsWith: []string{"key_name_prefix"},
+				},
+				"key_name_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
+					ConflictsWith: []string{"key_name"},
+				},
+				"key_pair_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						switch v := v.(type) {
+						case string:
+							return strings.TrimSpace(v)
+						default:
+							return ""
+						}
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -136,14 +138,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, keyPairARN(ctx, c, d.Id()))
-	d.Set("fingerprint", keyPair.KeyFingerprint)
-	d.Set("key_name", keyPair.KeyName)
-	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
-	d.Set("key_pair_id", keyPair.KeyPairId)
-	d.Set("key_type", keyPair.KeyType)
-
-	setTagsOut(ctx, keyPair.Tags)
+	resourceKeyPairFlatten(ctx, c, keyPair, d)
 
 	return diags
 }
@@ -192,4 +187,15 @@ func openSSHPublicKeysEqual(v1, v2 string) bool {
 }
 func keyPairARN(ctx context.Context, c *conns.AWSClient, keyName string) string {
 	return c.RegionalARN(ctx, names.EC2, "key-pair/"+keyName)
+}
+
+func resourceKeyPairFlatten(ctx context.Context, c *conns.AWSClient, keyPair *awstypes.KeyPairInfo, d *schema.ResourceData) {
+	d.Set(names.AttrARN, keyPairARN(ctx, c, d.Id()))
+	d.Set("fingerprint", keyPair.KeyFingerprint)
+	d.Set("key_name", keyPair.KeyName)
+	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
+	d.Set("key_pair_id", keyPair.KeyPairId)
+	d.Set("key_type", keyPair.KeyType)
+
+	setTagsOut(ctx, keyPair.Tags)
 }

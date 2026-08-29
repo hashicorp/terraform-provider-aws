@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_directory_service_radius_settings
-```
-
-```release-note:enhancement
-data-source/aws_directory_service_directory: Add `radius_settings` attribute
-```

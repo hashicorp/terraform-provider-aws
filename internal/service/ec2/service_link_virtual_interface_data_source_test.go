@@ -26,7 +26,7 @@ func TestAccEC2ServiceLinkVirtualInterfaceDataSource_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^slvif-`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ec2", regexache.MustCompile(`service-link-virtual-interface/slvif-.+`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrOutpostARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_lag_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "vlan"),
 				),
@@ -49,7 +49,7 @@ func TestAccEC2ServiceLinkVirtualInterfaceDataSource_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^slvif-`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ec2", regexache.MustCompile(`service-link-virtual-interface/slvif-.+`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrOutpostARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "outpost_lag_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "vlan"),
 				),

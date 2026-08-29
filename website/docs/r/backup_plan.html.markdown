@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 `copy_action` supports the following attributes:
 
-* `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
+* `destination_vault_arn` - (Required) ARN that uniquely identifies the destination backup vault for the copied backup.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 
 ### Lifecycle Arguments
@@ -111,17 +111,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_backup_plan.example
+  identity = {
+    id = "abc123"
+  }
+}
+
+resource "aws_backup_plan" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Backup Plan ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Plan using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_backup_plan.test
-  id = "<id>"
+  to = aws_backup_plan.example
+  id = "abc123"
 }
 ```
 
 Using `terraform import`, import Backup Plan using the `id`. For example:
 
 ```console
-% terraform import aws_backup_plan.test <id>
+% terraform import aws_backup_plan.example abc123
 ```

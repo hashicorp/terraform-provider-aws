@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecs_account_setting_default: Add support for `fargateTaskRetirementWaitPeriod` value in `Name` argument
-```

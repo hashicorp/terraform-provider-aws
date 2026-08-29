@@ -29,62 +29,64 @@ func dataSourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServerCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(0, 128),
+				},
 
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
-			},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
+				},
 
-			"path_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"path_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
 
-			"latest": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+				"latest": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"upload_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"upload_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"certificate_body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"certificate_body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

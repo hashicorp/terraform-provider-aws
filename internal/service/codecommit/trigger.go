@@ -32,57 +32,59 @@ func resourceTrigger() *schema.Resource {
 		ReadWithoutTimeout:   resourceTriggerRead,
 		DeleteWithoutTimeout: resourceTriggerDelete,
 
-		Schema: map[string]*schema.Schema{
-			"configuration_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRepositoryName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"trigger": {
-				Type:     schema.TypeSet,
-				ForceNew: true,
-				Required: true,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"branches": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"custom_data": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrDestinationARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"events": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.RepositoryTriggerEventEnum](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"configuration_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRepositoryName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"trigger": {
+					Type:     schema.TypeSet,
+					ForceNew: true,
+					Required: true,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"branches": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							"custom_data": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrDestinationARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"events": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.RepositoryTriggerEventEnum](),
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

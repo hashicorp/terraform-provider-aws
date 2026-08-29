@@ -62,316 +62,318 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allow_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"aqua_configuration_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AquaConfigurationStatus](),
-				Deprecated:       "aqua_configuration_status is deprecated. This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					return true
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_version_upgrade": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automated_snapshot_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"availability_zone_relocation_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			"cluster_namespace_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"node_role": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"public_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"aqua_configuration_status": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AquaConfigurationStatus](),
+					Deprecated:       "aqua_configuration_status is deprecated. This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+					DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+						return true
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automated_snapshot_retention_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					ValidateFunc: validation.IntAtMost(35),
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"availability_zone_relocation_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+						validation.StringMatch(regexache.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+					),
+				},
+				"cluster_namespace_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_nodes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_role": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"public_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cluster_public_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_revision_number": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"cluster_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cluster_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1.0",
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_$]+$`), "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
-					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
-				),
-			},
-			"default_iam_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elastic_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrEncrypted: {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				Default:      "true",
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrFinalSnapshotIdentifier: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-				),
-			},
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
+				"cluster_parameter_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cluster_public_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_revision_number": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"cluster_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cluster_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "1.0",
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z_$]+$`), "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
+						validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
+					),
+				},
+				"default_iam_role_arn": {
 					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"maintenance_track_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "current",
-			},
-			"manage_master_password": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"master_password", "master_password_wo"},
-			},
-			"manual_snapshot_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      -1,
-				ValidateFunc: validation.IntBetween(-1, 3653),
-			},
-			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(8, 64),
-					validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
-					validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
-					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
-					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
-				),
-				ConflictsWith: []string{"manage_master_password", "master_password_wo"},
-			},
-			"master_password_wo": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				WriteOnly: true,
-				Sensitive: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(8, 64),
-					validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
-					validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
-					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
-					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
-				),
-				ConflictsWith: []string{"manage_master_password", "master_password"},
-				RequiredWith:  []string{"master_password_wo_version"},
-			},
-			"master_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"master_password_wo"},
-			},
-			"master_password_secret_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_password_secret_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidKMSKeyID,
-			},
-			"master_username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.@+-]*$`),
-						"must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"number_of_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-			},
-			"owner_account": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrPort: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      5439,
-				ValidateFunc: validation.IntBetween(1115, 65535),
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val any) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"snapshot_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"snapshot_identifier"},
-			},
-			"snapshot_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"snapshot_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"snapshot_arn"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"elastic_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrEncrypted: {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					Default:      "true",
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enhanced_vpc_routing": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrFinalSnapshotIdentifier: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+					),
+				},
+				"iam_roles": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"maintenance_track_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "current",
+				},
+				"manage_master_password": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"master_password", "master_password_wo"},
+				},
+				"manual_snapshot_retention_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      -1,
+					ValidateFunc: validation.IntBetween(-1, 3653),
+				},
+				"master_password": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(8, 64),
+						validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
+						validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
+						validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
+						validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+					),
+					ConflictsWith: []string{"manage_master_password", "master_password_wo"},
+				},
+				"master_password_wo": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					WriteOnly: true,
+					Sensitive: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(8, 64),
+						validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
+						validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
+						validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
+						validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+					),
+					ConflictsWith: []string{"manage_master_password", "master_password"},
+					RequiredWith:  []string{"master_password_wo_version"},
+				},
+				"master_password_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"master_password_wo"},
+				},
+				"master_password_secret_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_password_secret_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidKMSKeyID,
+				},
+				"master_username": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.@+-]*$`),
+							"must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"number_of_nodes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  1,
+				},
+				"owner_account": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrPort: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      5439,
+					ValidateFunc: validation.IntBetween(1115, 65535),
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(val any) string {
+						if val == nil {
+							return ""
+						}
+						return strings.ToLower(val.(string))
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"skip_final_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"snapshot_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"snapshot_identifier"},
+				},
+				"snapshot_cluster_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"snapshot_identifier": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"snapshot_arn"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(

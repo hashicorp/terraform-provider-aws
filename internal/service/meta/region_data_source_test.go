@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -108,7 +109,8 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(acctest.Region())),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
@@ -130,7 +132,8 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.EuWest1RegionID)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.EuWest1RegionID)),
 				},
 			},
@@ -152,7 +155,8 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.ApNortheast1RegionID)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.ApNortheast1RegionID)),
 				},
 			},
@@ -174,7 +178,8 @@ func TestAccMetaRegionDataSource_name(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.UsWest1RegionID)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.UsWest1RegionID)),
 				},
 			},
@@ -196,7 +201,8 @@ func TestAccMetaRegionDataSource_endpointAndRegion(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.ApSoutheast2RegionID)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.ApSoutheast2RegionID)),
 				},
 			},
@@ -218,7 +224,8 @@ func TestAccMetaRegionDataSource_region(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(endpoints.UsGovEast1RegionID)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), dataSourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(endpoints.UsGovEast1RegionID)),
 				},
 			},

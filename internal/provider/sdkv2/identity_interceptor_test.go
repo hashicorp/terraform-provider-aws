@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestIdentityInterceptor(t *testing.T) {
+func TestIdentityInterceptor_Create(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
@@ -98,12 +98,13 @@ func TestIdentityInterceptor(t *testing.T) {
 	}
 }
 
-func TestIdentityInterceptor_Read_Removed(t *testing.T) {
+func TestIdentityInterceptor_Read(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
 	region := "us-west-2" //lintignore:AWSAT003
-	name := "a_name"
+	attributeName := "attr_name"
+	identityName := "id_name"
 
 	resourceSchema := map[string]*schema.Schema{
 		"name": {
@@ -117,47 +118,183 @@ func TestIdentityInterceptor_Read_Removed(t *testing.T) {
 		"region": sdkv2.RegionOptionalComputed(),
 	}
 
-	identitySpec := regionalSingleParameterizedIdentitySpec("name")
-	identitySchema := identity.NewIdentitySchema(identitySpec)
+	client := mockClient{
+		accountID: accountID,
+		region:    region,
+	}
 
-	invocation := newIdentityInterceptor(&identitySpec)
-	interceptor := invocation.interceptor.(identityInterceptor)
+	testCases := map[string]struct {
+		id             string
+		identityValues map[string]string
+		expectedName   string
+	}{
+		"existing resource": {
+			id: "some_id",
+			identityValues: map[string]string{
+				names.AttrAccountID: accountID,
+				names.AttrRegion:    region,
+				"name":              identityName,
+			},
+			expectedName: identityName,
+		},
+		"removed from state": {
+			id: "",
+			identityValues: map[string]string{
+				names.AttrAccountID: accountID,
+				names.AttrRegion:    region,
+				"name":              identityName,
+			},
+			expectedName: identityName,
+		},
+		"for import": {
+			id:             "some_id",
+			identityValues: nil,
+			expectedName:   attributeName,
+		},
+	}
+
+	for tname, tc := range testCases {
+		t.Run(tname, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+
+			identitySpec := regionalSingleParameterizedIdentitySpec("name")
+			identitySchema := identity.NewIdentitySchema(identitySpec)
+
+			invocation := newIdentityInterceptor(&identitySpec)
+			interceptor := invocation.interceptor.(identityInterceptor)
+
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, tc.identityValues)
+			d.SetId(tc.id)
+			d.Set("name", attributeName)
+			d.Set("region", region)
+			d.Set("type", "some_type")
+
+			opts := crudInterceptorOptions{
+				c:    client,
+				d:    d,
+				when: After,
+				why:  Read,
+			}
+
+			interceptor.run(ctx, opts)
+
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+
+			if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
+				t.Errorf("expected account ID %q, got %q", e, a)
+			}
+			if e, a := region, identity.Get(names.AttrRegion); e != a {
+				t.Errorf("expected region %q, got %q", e, a)
+			}
+			if e, a := tc.expectedName, identity.Get("name"); e != a {
+				t.Errorf("expected name %q, got %q", e, a)
+			}
+		})
+	}
+}
+
+func TestIdentityInterceptor_Read_MutableIdentity(t *testing.T) {
+	t.Parallel()
+
+	accountID := "123456789012"
+	region := "us-west-2" //lintignore:AWSAT003
+	attributeName := "attr_name"
+	identityName := "id_name"
+
+	resourceSchema := map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"region": sdkv2.RegionOptionalComputed(),
+	}
 
 	client := mockClient{
 		accountID: accountID,
 		region:    region,
 	}
 
-	ctx := t.Context()
-
-	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
-	d.SetId("")
-	d.Set("name", name)
-	d.Set("region", region)
-	d.Set("type", "some_type")
-
-	opts := crudInterceptorOptions{
-		c:    client,
-		d:    d,
-		when: After,
-		why:  Read,
+	testCases := map[string]struct {
+		id             string
+		identityValues map[string]string
+		expectedName   string
+	}{
+		"existing resource": {
+			id: "some_id",
+			identityValues: map[string]string{
+				names.AttrAccountID: accountID,
+				names.AttrRegion:    region,
+				"name":              identityName,
+			},
+			expectedName: attributeName,
+		},
+		"removed from state": {
+			id: "",
+			identityValues: map[string]string{
+				names.AttrAccountID: accountID,
+				names.AttrRegion:    region,
+				"name":              identityName,
+			},
+			expectedName: identityName,
+		},
+		"for import": {
+			id:             "some_id",
+			identityValues: nil,
+			expectedName:   attributeName,
+		},
 	}
 
-	interceptor.run(ctx, opts)
+	for tname, tc := range testCases {
+		t.Run(tname, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
 
-	identity, err := d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity: %v", err)
-	}
+			identitySpec := regionalSingleParameterizedIdentitySpec("name",
+				inttypes.WithMutableIdentity(),
+			)
+			identitySchema := identity.NewIdentitySchema(identitySpec)
 
-	if identity.Get(names.AttrAccountID) != "" {
-		t.Errorf("expected no account ID, got %q", identity.Get(names.AttrAccountID))
-	}
-	if identity.Get(names.AttrRegion) != "" {
-		t.Errorf("expected no region, got %q", identity.Get(names.AttrRegion))
-	}
-	if identity.Get("name") != "" {
-		t.Errorf("expected no name, got %q", identity.Get("name"))
+			invocation := newIdentityInterceptor(&identitySpec)
+			interceptor := invocation.interceptor.(identityInterceptor)
+
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, tc.identityValues)
+			d.SetId(tc.id)
+			d.Set("name", attributeName)
+			d.Set("region", region)
+			d.Set("type", "some_type")
+
+			opts := crudInterceptorOptions{
+				c:    client,
+				d:    d,
+				when: After,
+				why:  Read,
+			}
+
+			interceptor.run(ctx, opts)
+
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+
+			if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
+				t.Errorf("expected account ID %q, got %q", e, a)
+			}
+			if e, a := region, identity.Get(names.AttrRegion); e != a {
+				t.Errorf("expected region %q, got %q", e, a)
+			}
+			if e, a := tc.expectedName, identity.Get("name"); e != a {
+				t.Errorf("expected name %q, got %q", e, a)
+			}
+		})
 	}
 }
 
@@ -278,12 +415,12 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 	}
 }
 
-func regionalSingleParameterizedIdentitySpec(attrName string, opts ...inttypes.IdentityOptsFunc) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(attrName, opts...)
+func regionalSingleParameterizedIdentitySpec(name string, opts ...inttypes.IdentityOptsFunc) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true), opts...)
 }
 
-func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterizedIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 type mockClient struct {
@@ -330,7 +467,7 @@ func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-
 func TestIdentityIsFullyNull(t *testing.T) {
 	t.Parallel()
 
-	identitySpec := &inttypes.Identity{
+	defaultIdentitySpec := &inttypes.Identity{
 		Attributes: []inttypes.IdentityAttribute{
 			inttypes.StringIdentityAttribute(names.AttrAccountID, false),
 			inttypes.StringIdentityAttribute(names.AttrRegion, false),
@@ -339,25 +476,53 @@ func TestIdentityIsFullyNull(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		identityValues map[string]string
+		identitySpec   *inttypes.Identity
+		identityValues map[string]any
 		expectNull     bool
 		description    string
 	}{
 		"all_null": {
-			identityValues: map[string]string{},
+			identityValues: map[string]any{},
 			expectNull:     true,
 			description:    "All attributes null should return true",
 		},
+		"all_null_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+					inttypes.StringIdentityAttribute("string", false),
+				},
+			},
+			identityValues: map[string]any{},
+			expectNull:     true,
+			description:    "Null bool, float, and int values should return true",
+		},
 		"some_null": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "123456789012",
 				// region and bucket remain null
 			},
 			expectNull:  false,
 			description: "Some attributes set should return false",
 		},
+		"some_null_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+				},
+			},
+			identityValues: map[string]any{
+				"int": 42,
+			},
+			expectNull:  false,
+			description: "Null bool, float, and int values should return true",
+		},
 		"all_set": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "123456789012",
 				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
 				names.AttrBucket:    "test-bucket",
@@ -365,8 +530,24 @@ func TestIdentityIsFullyNull(t *testing.T) {
 			expectNull:  false,
 			description: "All attributes set should return false",
 		},
+		"all_set_non_string_values": {
+			identitySpec: &inttypes.Identity{
+				Attributes: []inttypes.IdentityAttribute{
+					inttypes.BoolIdentityAttribute("bool", false),
+					inttypes.FloatIdentityAttribute("float", false),
+					inttypes.IntIdentityAttribute("int", false),
+				},
+			},
+			identityValues: map[string]any{
+				"bool":  true,
+				"float": 3.14,
+				"int":   42,
+			},
+			expectNull:  false,
+			description: "All attributes set should return false",
+		},
 		"empty_string_values": {
-			identityValues: map[string]string{
+			identityValues: map[string]any{
 				names.AttrAccountID: "",
 				names.AttrRegion:    "",
 				names.AttrBucket:    "",
@@ -379,6 +560,11 @@ func TestIdentityIsFullyNull(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			identitySpec := defaultIdentitySpec
+			if tc.identitySpec != nil {
+				identitySpec = tc.identitySpec
+			}
 
 			resourceSchema := map[string]*schema.Schema{
 				names.AttrBucket: {Type: schema.TypeString, Required: true},
@@ -397,7 +583,7 @@ func TestIdentityIsFullyNull(t *testing.T) {
 				}
 			}
 
-			result := identityIsFullyNull(d, identitySpec)
+			result := identityIsFullyNull(identity, identitySpec)
 			if result != tc.expectNull {
 				t.Errorf("%s: expected identityIsFullyNull to return %v, got %v",
 					tc.description, tc.expectNull, result)

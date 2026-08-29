@@ -194,7 +194,7 @@ The `filters` configuration block supports the following arguments:
 * `related_findings_id` - (Optional) The solution-generated identifier for a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `related_findings_product_arn` - (Optional) The ARN of the solution that generated a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_iam_instance_profile_arn` - (Optional) The IAM profile ARN of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_image_id` - (Optional) The Amazon Machine Image (AMI) ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_image_id` - (Optional) AMI ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_key_name` - (Optional) The key name associated with the instance. See [String Filter](#string-filter-argument-reference) below for more details.
@@ -300,7 +300,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub insights using the ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  identity = {
+    arn = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+  }
+}
+
+resource "aws_securityhub_insight" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Security Hub custom insight ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub custom insights using `arn`. For example:
 
 ```terraform
 import {
@@ -309,7 +330,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub insights using the ARN. For example:
+Using `terraform import`, import Security Hub custom insights using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a

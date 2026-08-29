@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Bedrock Agents Flow.
 
+## Example Usage
+
 ### Basic Usage
 
 ```terraform
@@ -19,9 +21,7 @@ resource "aws_bedrockagent_flow" "example" {
 }
 ```
 
-## Example Usage
-
-The default definition:
+### Default definition
 
 ```terraform
 resource "aws_bedrockagent_flow" "example" {
@@ -136,12 +136,12 @@ resource "aws_bedrockagent_flow" "example" {
 The following arguments are required:
 
 * `name` - (Required) A name for the flow.
-* `execution_role_arn` - (Required) The Amazon Resource Name (ARN) of the service role with permissions to create and manage a flow. For more information, see [Create a service role for flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-permissions.html) in the Amazon Bedrock User Guide.
+* `execution_role_arn` - (Required) ARN of the service role with permissions to create and manage a flow. For more information, see [Create a service role for flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-permissions.html) in the Amazon Bedrock User Guide.
 
 The following arguments are optional:
 
 * `description` - (Optional) A description for the flow.
-* `customer_encryption_key_arn` - (Optional) The Amazon Resource Name (ARN) of the KMS key to encrypt the flow.
+* `customer_encryption_key_arn` - (Optional) ARN of the KMS key to encrypt the flow.
 * `definition` - (Optional) A definition of the nodes and connections between nodes in the flow. See [Definition](#definition) for more information.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -227,7 +227,7 @@ The `configuration` block supports the following arguments:
 
 ### Agent Node Configuration
 
-* `agent_alias_arn` - (Required) The Amazon Resource Name (ARN) of the alias of the agent to invoke.
+* `agent_alias_arn` - (Required) ARN of the alias of the agent to invoke.
 
 ### Condition Node Configuration
 
@@ -267,13 +267,13 @@ The `guardrail_configuration` block supports the following arguments:
 
 The `lambda_function` block supports the following arguments:
 
-* `lambda_arn` - (Required) The Amazon Resource Name (ARN) of the Lambda function to invoke.
+* `lambda_arn` - (Required) ARN of the Lambda function to invoke.
 
 ### Lex Node Configuration
 
 The `lex` block supports the following arguments:
 
-* `bot_alias_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Lex bot alias to invoke.
+* `bot_alias_arn` - (Required) ARN of the Amazon Lex bot alias to invoke.
 * `locale_id` - (Required) The Region to invoke the Amazon Lex bot in
 
 ### Prompt Node Configuration
@@ -294,7 +294,7 @@ The `source_configuration` block supports the following arguments:
 
 The `resource` block supports the following arguments:
 
-* `prompt_arn` - (Required) The Amazon Resource Name (ARN) of the prompt from Prompt management.
+* `prompt_arn` - (Required) ARN of the prompt from Prompt management.
 
 #### Prompt Inline Configuration
 
@@ -456,7 +456,7 @@ The `s3` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the flow.
+* `arn` - ARN of the flow.
 * `id` - The unique identifier of the flow.
 * `created_at` - The time at which the flow was created.
 * `updated_at` - The time at which the flow was last updated.

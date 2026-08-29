@@ -27,7 +27,10 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.47.0")
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
@@ -35,32 +38,30 @@ func resourceStreamConsumer() *schema.Resource {
 		UpdateWithoutTimeout: resourceStreamConsumerUpdate,
 		DeleteWithoutTimeout: resourceStreamConsumerDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStreamARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creation_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStreamARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -156,7 +157,11 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 		ConsumerARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStreamConsumer(ctx, &input)
+	return findStreamConsumerDescription(ctx, conn, &input)
+}
+
+func findStreamConsumerDescription(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamConsumerInput) (*types.ConsumerDescription, error) {
+	output, err := conn.DescribeStreamConsumer(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

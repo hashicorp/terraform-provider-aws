@@ -67,6 +67,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.security_group_ids.#", dataSourceResourceName, "vpc_config.0.security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnet_ids.#", dataSourceResourceName, "vpc_config.0.subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.public_access_cidrs.#", dataSourceResourceName, "vpc_config.0.public_access_cidrs.#"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "vpc_config.0.control_plane_egress_mode", "AWS_MANAGED"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", dataSourceResourceName, "vpc_config.0.vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "zonal_shift_config.#", "0"),
 				),
@@ -99,7 +100,7 @@ func TestAccEKSClusterDataSource_outpost(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, dataSourceResourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "identity.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.#", dataSourceResourceName, "kubernetes_network_config.#"),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.ip_family", dataSourceResourceName, "kubernetes_network_config.0.ip_family"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv6_cidr"),
@@ -212,6 +213,83 @@ func TestAccEKSClusterDataSource_controlPlaneScalingConfig(t *testing.T) {
 	})
 }
 
+func TestAccEKSClusterDataSource_kubeAPIServerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_cluster.test"
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_kubeAPIServerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "kube_api_server_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_api_server_config.0.event_ttl", dataSourceResourceName, "kube_api_server_config.0.event_ttl"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_api_server_config.0.service_node_port_range.0.min_port", dataSourceResourceName, "kube_api_server_config.0.service_node_port_range.0.min_port"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_api_server_config.0.service_node_port_range.0.max_port", dataSourceResourceName, "kube_api_server_config.0.service_node_port_range.0.max_port"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterDataSource_kubeSchedulerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_cluster.test"
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_kubeSchedulerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "kube_scheduler_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.type", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.type"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.name", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.name"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.weight", dataSourceResourceName, "kube_scheduler_config.0.node_resources_fit.0.scoring_strategy.0.resource.0.weight"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSClusterDataSource_kubeControllerManagerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_cluster.test"
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_kubeControllerManagerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "kube_controller_manager_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_controller_manager_config.0.horizontal_pod_autoscaler_controller_config.0.horizontal_pod_autoscaler_sync_period", dataSourceResourceName, "kube_controller_manager_config.0.horizontal_pod_autoscaler_controller_config.0.horizontal_pod_autoscaler_sync_period"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_controller_manager_config.0.pod_gc_controller_config.0.terminated_pod_gc_threshold", dataSourceResourceName, "kube_controller_manager_config.0.pod_gc_controller_config.0.terminated_pod_gc_threshold"),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
@@ -238,6 +316,30 @@ data "aws_eks_cluster" "test" {
 
 func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_kubeAPIServerConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_kubeAPIServerConfig(rName, "30m", 30000, 32767), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_kubeSchedulerConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_kubeSchedulerConfig(rName, "LeastAllocated"), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_kubeControllerManagerConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_kubeControllerManagerConfig(rName, "10s", 12500), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }

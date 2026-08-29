@@ -46,597 +46,602 @@ func resourceCatalogTable() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
-				),
-			},
-			"open_table_format_input": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iceberg_input": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"iceberg_table_input": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrLocation: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 2056),
-												},
-												"partition_spec": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"fields": {
-																Type:     schema.TypeList,
-																Required: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"field_id": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		names.AttrName: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 1024),
-																		},
-																		"source_id": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																		"transform": {
-																			Type:     schema.TypeString,
-																			Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					),
+				},
+				"open_table_format_input": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"iceberg_input": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"iceberg_table_input": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrLocation: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 2056),
+													},
+													"partition_spec": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"fields": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"field_id": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
+																			names.AttrName: {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 1024),
+																			},
+																			"source_id": {
+																				Type:     schema.TypeInt,
+																				Required: true,
+																			},
+																			"transform": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"spec_id": {
-																Type:     schema.TypeInt,
-																Optional: true,
+																"spec_id": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												names.AttrProperties: {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												names.AttrSchema: {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"fields": {
-																Type:     schema.TypeList,
-																Required: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"doc": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringLenBetween(0, 255),
+													names.AttrProperties: {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													names.AttrSchema: {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"fields": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"doc": {
+																				Type:         schema.TypeString,
+																				Optional:     true,
+																				ValidateFunc: validation.StringLenBetween(0, 255),
+																			},
+																			names.AttrID: {
+																				Type:     schema.TypeInt,
+																				Required: true,
+																			},
+																			"initial_default": sdkv2.JSONDocumentSchemaOptional(),
+																			names.AttrName: {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringLenBetween(1, 1024),
+																			},
+																			"required": {
+																				Type:     schema.TypeBool,
+																				Required: true,
+																			},
+																			names.AttrType:  sdkv2.JSONDocumentSchemaRequired(),
+																			"write_default": sdkv2.JSONDocumentSchemaOptional(),
 																		},
-																		names.AttrID: {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																		"initial_default": sdkv2.JSONDocumentSchemaOptional(),
-																		names.AttrName: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 1024),
-																		},
-																		"required": {
-																			Type:     schema.TypeBool,
-																			Required: true,
-																		},
-																		names.AttrType:  sdkv2.JSONDocumentSchemaRequired(),
-																		"write_default": sdkv2.JSONDocumentSchemaOptional(),
 																	},
 																},
-															},
-															"identifier_field_ids": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeInt},
-															},
-															"schema_id": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															names.AttrType: {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[awstypes.IcebergStructTypeEnum](),
+																"identifier_field_ids": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeInt},
+																},
+																"schema_id": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																names.AttrType: {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.IcebergStructTypeEnum](),
+																},
 															},
 														},
 													},
-												},
-												"sort_order": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"fields": {
-																Type:     schema.TypeList,
-																Required: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"direction": {
-																			Type:             schema.TypeString,
-																			Required:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.IcebergSortDirection](),
-																		},
-																		"null_order": {
-																			Type:             schema.TypeString,
-																			Required:         true,
-																			ValidateDiagFunc: enum.Validate[awstypes.IcebergNullOrder](),
-																		},
-																		"source_id": {
-																			Type:     schema.TypeInt,
-																			Required: true,
-																		},
-																		"transform": {
-																			Type:     schema.TypeString,
-																			Required: true,
+													"sort_order": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"fields": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"direction": {
+																				Type:             schema.TypeString,
+																				Required:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.IcebergSortDirection](),
+																			},
+																			"null_order": {
+																				Type:             schema.TypeString,
+																				Required:         true,
+																				ValidateDiagFunc: enum.Validate[awstypes.IcebergNullOrder](),
+																			},
+																			"source_id": {
+																				Type:     schema.TypeInt,
+																				Required: true,
+																			},
+																			"transform": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"order_id": {
-																Type:     schema.TypeInt,
-																Required: true,
+																"order_id": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"metadata_operation": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.MetadataOperation](),
-									},
-									names.AttrVersion: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"partition_index": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"index_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"index_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"keys": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"partition_keys": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrComment: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 131072),
-						},
-					},
-				},
-			},
-			"retention": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"storage_descriptor": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"additional_locations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"bucket_columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-						},
-						"columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrComment: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
-									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									names.AttrParameters: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrType: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 131072),
-									},
-								},
-							},
-						},
-						"compressed": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"input_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"number_of_buckets": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"output_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ser_de_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									names.AttrParameters: {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"serialization_library": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringIsNotEmpty,
-									},
-								},
-							},
-						},
-						"schema_reference": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"schema_id": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"registry_name": {
-													Type:          schema.TypeString,
-													Optional:      true,
-													ConflictsWith: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn"},
-												},
-												"schema_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-													ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
-												},
-												"schema_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
-												},
-											},
+										"metadata_operation": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.MetadataOperation](),
 										},
-									},
-									"schema_version_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_version_id", "storage_descriptor.0.schema_reference.0.schema_id"},
-									},
-									"schema_version_number": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 100000),
-									},
-								},
-							},
-						},
-						"skewed_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"skewed_column_names": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
+										names.AttrVersion: {
 											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 									},
-									"skewed_column_value_location_maps": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"skewed_column_values": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
 								},
 							},
 						},
-						"sort_columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"column": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"sort_order": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntInSlice([]int{0, 1}),
+					},
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"partition_index": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"index_name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"index_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"keys": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"partition_keys": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrComment: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 131072),
+							},
+						},
+					},
+				},
+				"retention": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"storage_descriptor": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"additional_locations": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"bucket_columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 255),
+								},
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrComment: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 255),
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										names.AttrParameters: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrType: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 131072),
+										},
 									},
 								},
 							},
-						},
-						"stored_as_sub_directories": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"table_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"target_table": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"view_definition": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"definer": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"is_protected": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"last_refresh_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LastRefreshType](),
-						},
-						"refresh_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"representations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"dialect": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.ViewDialect](),
-									},
-									"dialect_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"validation_connection": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"view_expanded_text": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 409600),
-									},
-									"view_original_text": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 409600),
+							"compressed": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"input_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"number_of_buckets": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"output_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ser_de_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										names.AttrParameters: {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"serialization_library": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
 									},
 								},
 							},
-						},
-						"sub_object_version_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-						},
-						"sub_objects": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"view_version_id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"view_version_token": {
-							Type:     schema.TypeString,
-							Optional: true,
+							"schema_reference": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"schema_id": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"registry_name": {
+														Type:          schema.TypeString,
+														Optional:      true,
+														ConflictsWith: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn"},
+													},
+													"schema_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+														ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
+													},
+													"schema_name": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
+													},
+												},
+											},
+										},
+										"schema_version_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_version_id", "storage_descriptor.0.schema_reference.0.schema_id"},
+										},
+										"schema_version_number": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 100000),
+										},
+									},
+								},
+							},
+							"skewed_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"skewed_column_names": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+										},
+										"skewed_column_value_location_maps": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"skewed_column_values": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"sort_columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"sort_order": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntInSlice([]int{0, 1}),
+										},
+									},
+								},
+							},
+							"stored_as_sub_directories": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"view_expanded_text": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 409600),
-			},
-			"view_original_text": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 409600),
-			},
+				"table_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"target_table": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"view_definition": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"definer": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"is_protected": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"last_refresh_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LastRefreshType](),
+							},
+							"refresh_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"representations": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dialect": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ViewDialect](),
+										},
+										"dialect_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"validation_connection": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"view_expanded_text": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(0, 409600),
+										},
+										"view_original_text": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(0, 409600),
+										},
+									},
+								},
+							},
+							"sub_object_version_ids": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+							},
+							"sub_objects": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"view_version_id": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"view_version_token": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"view_expanded_text": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 409600),
+				},
+				"view_original_text": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 409600),
+				},
+			}
 		},
 	}
 }
@@ -732,7 +737,20 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("target_table", nil)
 	}
 	if table.ViewDefinition != nil {
-		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition)}); err != nil {
+		// Glue does not echo back ValidationConnection, ViewOriginalText, or
+		// ViewExpandedText for validated ATHENA views — GetTable returns them as
+		// null. Preserve user supplied values.
+		var priorRepresentations []any
+		if v, ok := d.GetOk("view_definition"); ok {
+			vdList := v.([]any)
+			if len(vdList) > 0 && vdList[0] != nil {
+				vdMap := vdList[0].(map[string]any)
+				if reps, ok := vdMap["representations"].([]any); ok {
+					priorRepresentations = reps
+				}
+			}
+		}
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
 		}
 	} else {
@@ -800,6 +818,19 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 				}
 			}
 		}
+	}
+
+	// AWS Glue rejects UpdateTable on a multi-dialect view (one configured via
+	// the `view_definition` block) unless ViewUpdateAction is set; conversely,
+	// it rejects ViewUpdateAction on a legacy view (view_original_text /
+	// view_expanded_text only) with "View update action is only supported on
+	// multi-dialect views." Gate on TableInput.ViewDefinition to pick the right
+	// branch. Force=true mirrors `aws glue update-table ... --force` and is
+	// required to apply in-place updates that preserve Lake Formation grants on
+	// the view (especially in cross-account sharing).
+	if input.TableInput != nil && input.TableInput.ViewDefinition != nil {
+		input.ViewUpdateAction = awstypes.ViewUpdateActionReplace
+		input.Force = true
 	}
 
 	_, err = conn.UpdateTable(ctx, &input)
@@ -937,6 +968,31 @@ func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, d
 	return output, err
 }
 
+// viewDefinitionHasDialect returns true if view_definition.representations
+// contains at least one entry whose dialect matches the given value.
+func viewDefinitionHasDialect(d *schema.ResourceData, dialect awstypes.ViewDialect) bool {
+	v, ok := d.GetOk("view_definition")
+	if !ok {
+		return false
+	}
+	vdList := v.([]any)
+	if len(vdList) == 0 || vdList[0] == nil {
+		return false
+	}
+	reps, ok := vdList[0].(map[string]any)["representations"].([]any)
+	if !ok {
+		return false
+	}
+	for _, raw := range reps {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d == string(dialect) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 	apiObject := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
@@ -964,7 +1020,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("storage_descriptor"); ok {
+	// For validated ATHENA views, Glue forbids StorageDescriptor on both
+	// CreateTable and UpdateTable. Skip it when any representation carries
+	// dialect = ATHENA, regardless of what is in state.
+	if v, ok := d.GetOk("storage_descriptor"); ok && !viewDefinitionHasDialect(d, awstypes.ViewDialectAthena) {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
@@ -978,6 +1037,16 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
+	}
+
+	// SPARK-dialect views require a StorageDescriptor with columns on both
+	// CreateTable and UpdateTable. If the user did not supply one explicitly,
+	// synthesise a minimal descriptor so Glue accepts the request. Glue will
+	// populate the actual columns after validating the view SQL.
+	if viewDefinitionHasDialect(d, awstypes.ViewDialectSpark) && apiObject.StorageDescriptor == nil {
+		apiObject.StorageDescriptor = &awstypes.StorageDescriptor{
+			Columns: []awstypes.Column{},
+		}
 	}
 
 	if v, ok := d.GetOk("view_expanded_text"); ok {
@@ -1534,7 +1603,7 @@ func expandSchemaId(tfList []any) *awstypes.SchemaId {
 
 func flattenStorageDescriptor(apiObject *awstypes.StorageDescriptor) []any {
 	if apiObject == nil {
-		return make([]any, 0)
+		return nil
 	}
 
 	tfList := make([]any, 1)
@@ -1855,7 +1924,7 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	return apiObjects
 }
 
-func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentations []any) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1879,7 +1948,7 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	}
 
 	if v := apiObject.Representations; len(v) > 0 {
-		tfMap["representations"] = flattenViewRepresentations(v)
+		tfMap["representations"] = flattenViewRepresentations(v, priorRepresentations)
 	}
 
 	tfMap["view_version_id"] = apiObject.ViewVersionId
@@ -1891,15 +1960,34 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	return tfMap
 }
 
-func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation) []any {
+// flattenViewRepresentations flattens API representations, falling back to
+// prior state values for fields Glue does not echo back on GetTable
+// (ValidationConnection, ViewOriginalText, ViewExpandedText). Matching is by
+// dialect so the merge is order-independent.
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior []any) []any {
+	// Build a lookup of prior state representations keyed by dialect string.
+	priorByDialect := make(map[string]map[string]any, len(prior))
+	for _, raw := range prior {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d != "" {
+				priorByDialect[d] = m
+			}
+		}
+	}
+
 	tfList := make([]any, len(apiObjects))
 	for i, v := range apiObjects {
-		tfList[i] = flattenViewRepresentation(v)
+		tfList[i] = flattenViewRepresentation(v, priorByDialect[string(v.Dialect)])
 	}
 	return tfList
 }
 
-func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string]any {
+// flattenViewRepresentation flattens one API representation. For the three
+// fields Glue strips on validated views (ValidationConnection,
+// ViewOriginalText, ViewExpandedText), the API value takes precedence when
+// non-empty; otherwise the prior state value is preserved so state stays
+// consistent with what the user configured.
+func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[string]any) map[string]any {
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Dialect; v != "" {
@@ -1910,16 +1998,30 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 		tfMap["dialect_version"] = v
 	}
 
+	// Glue does not store these fields back for validated ATHENA views.
+	// Use the API value when present; fall back to prior state otherwise.
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
 		tfMap["validation_connection"] = v
+	} else if prior != nil {
+		if v, ok := prior["validation_connection"].(string); ok && v != "" {
+			tfMap["validation_connection"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewExpandedText); v != "" {
 		tfMap["view_expanded_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_expanded_text"].(string); ok && v != "" {
+			tfMap["view_expanded_text"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewOriginalText); v != "" {
 		tfMap["view_original_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_original_text"].(string); ok && v != "" {
+			tfMap["view_original_text"] = v
+		}
 	}
 
 	return tfMap

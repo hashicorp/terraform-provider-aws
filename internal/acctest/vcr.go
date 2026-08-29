@@ -36,6 +36,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
@@ -419,6 +420,46 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	}
 }
 
+// vcrConfigureWrapper returns a [ConfigureWrapper] that records or replays
+// AWS API HTTP traffic for t. It returns nil when [vcr.IsEnabled] is false,
+// which [chainConfigureWrappers] silently skips, so the wrapper is a true
+// no-op outside VCR mode.
+//
+// The provider is captured here for the within-step cache check that
+// [vcrProviderConfigureContextFunc] performs; it must be the same
+// [*schema.Provider] whose ConfigureContextFunc the wrapper is composed
+// onto, which is why this helper is built per factory invocation.
+func vcrConfigureWrapper(provider *schema.Provider, t *testing.T) ConfigureWrapper {
+	if !vcr.IsEnabled() {
+		return nil
+	}
+	return func(next schema.ConfigureContextFunc) schema.ConfigureContextFunc {
+		return vcrProviderConfigureContextFunc(provider, next, t)
+	}
+}
+
+// vcrAutoWrapDisabledTests holds the set of *testing.T values for which
+// VCR's auto-wrap path in [vcrTestCase] should be skipped because the
+// caller has already composed VCR into the test's factories via
+// [ProtoV5ProviderFactoriesWithWrappers]. Cleared on test cleanup.
+var vcrAutoWrapDisabledTests sync.Map // map[*testing.T]struct{}
+
+// disableVCRAutoWrap signals to [vcrTestCase] that t's factories already
+// include VCR wrapping, so the auto-wrap path should not double-wrap.
+// Idempotent; the cleanup is registered exactly once per t.
+func disableVCRAutoWrap(t *testing.T) {
+	if _, loaded := vcrAutoWrapDisabledTests.LoadOrStore(t, struct{}{}); !loaded {
+		t.Cleanup(func() { vcrAutoWrapDisabledTests.Delete(t) })
+	}
+}
+
+// isVCRAutoWrapDisabled reports whether [disableVCRAutoWrap] has been
+// called for t.
+func isVCRAutoWrapDisabled(t *testing.T) bool {
+	_, ok := vcrAutoWrapDisabledTests.Load(t)
+	return ok
+}
+
 // vcrTestCase configures VCR for the given TestCase, wrapping any
 // ProtoV5ProviderFactories at the test case or step level
 //
@@ -429,6 +470,13 @@ func vcrTestCase(ctx context.Context, t *testing.T, c *resource.TestCase) bool {
 
 	if c.ExternalProviders != nil {
 		return false
+	}
+
+	// If the caller built factories via ProtoV5ProviderFactoriesWithWrappers,
+	// VCR was composed transparently at construction time and the auto-wrap
+	// path here would double-wrap.
+	if isVCRAutoWrapDisabled(t) {
+		return c.ProtoV5ProviderFactories != nil || stepFactoriesPresent(c)
 	}
 
 	if c.ProtoV5ProviderFactories != nil {
@@ -447,6 +495,17 @@ func vcrTestCase(ctx context.Context, t *testing.T, c *resource.TestCase) bool {
 		}
 	}
 	return hasFactories
+}
+
+// stepFactoriesPresent reports whether any step in c declares its own
+// ProtoV5ProviderFactories.
+func stepFactoriesPresent(c *resource.TestCase) bool {
+	for i := range c.Steps {
+		if c.Steps[i].ProtoV5ProviderFactories != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled

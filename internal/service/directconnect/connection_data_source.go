@@ -27,48 +27,66 @@ func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"partner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vlan_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"partner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"prefix_pool_size_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_size_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"vlan_id": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -105,6 +123,10 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
+	d.Set("prefix_pool_size_ipv4", connection.PrefixPoolSizeIpv4)
+	d.Set("prefix_pool_size_ipv6", connection.PrefixPoolSizeIpv6)
+	d.Set("prefix_pool_unallocated_count_ipv4", connection.PrefixPoolUnallocatedCountIpv4)
+	d.Set("prefix_pool_unallocated_count_ipv6", connection.PrefixPoolUnallocatedCountIpv6)
 	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 

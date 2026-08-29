@@ -52,7 +52,7 @@ func (d *serviceLinkVirtualInterfaceDataSource) Schema(ctx context.Context, req 
 			"local_address": schema.StringAttribute{
 				Computed: true,
 			},
-			"outpost_arn": schema.StringAttribute{
+			names.AttrOutpostARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"outpost_id": schema.StringAttribute{

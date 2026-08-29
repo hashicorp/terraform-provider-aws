@@ -55,64 +55,66 @@ func resourceAuthorizer() *schema.Resource {
 				}
 				restAPIId := idParts[0]
 				authorizerId := idParts[1]
-				d.Set("rest_api_id", restAPIId)
+				d.Set(attrRestAPIID, restAPIId)
 				d.SetId(authorizerId)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorizer_credentials": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"authorizer_result_ttl_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 3600),
-				Default:      defaultAuthorizerTTL,
-			},
-			"authorizer_uri": {
-				Type:     schema.TypeString,
-				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
-			},
-			"identity_source": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "method.request.header.Authorization",
-			},
-			"identity_validation_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provider_arns": {
-				Type:     schema.TypeSet,
-				Optional: true, // provider_arns is required for authorizer COGNITO_USER_POOLS.
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorizer_credentials": {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AuthorizerTypeToken,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthorizerType](),
-			},
+				"authorizer_result_ttl_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 3600),
+					Default:      defaultAuthorizerTTL,
+				},
+				"authorizer_uri": {
+					Type:     schema.TypeString,
+					Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
+				},
+				"identity_source": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "method.request.header.Authorization",
+				},
+				"identity_validation_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provider_arns": {
+					Type:     schema.TypeSet,
+					Optional: true, // provider_arns is required for authorizer COGNITO_USER_POOLS.
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AuthorizerTypeToken,
+					ValidateDiagFunc: enum.Validate[awstypes.AuthorizerType](),
+				},
+			}
 		},
 	}
 }
@@ -126,7 +128,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := apigateway.CreateAuthorizerInput{
 		IdentitySource:               aws.String(d.Get("identity_source").(string)),
 		Name:                         aws.String(name),
-		RestApiId:                    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:                    aws.String(d.Get(attrRestAPIID).(string)),
 		Type:                         awstypes.AuthorizerType(d.Get(names.AttrType).(string)),
 		AuthorizerResultTtlInSeconds: aws.Int32(int32(d.Get("authorizer_result_ttl_in_seconds").(int))),
 	}
@@ -189,7 +191,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta an
 	c := meta.(*conns.AWSClient)
 	conn := c.APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -300,7 +302,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	input := apigateway.UpdateAuthorizerInput{
 		AuthorizerId:    aws.String(d.Id()),
 		PatchOperations: operations,
-		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 	}
 
 	_, err := conn.UpdateAuthorizer(ctx, &input)
@@ -319,7 +321,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", d.Id())
 	input := apigateway.DeleteAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(d.Get(attrRestAPIID).(string)),
 	}
 	_, err := conn.DeleteAuthorizer(ctx, &input)
 

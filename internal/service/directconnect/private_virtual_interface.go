@@ -40,92 +40,103 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 			StateContext: resourcePrivateVirtualInterfaceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
-			},
-			"amazon_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"amazon_side_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"bgp_auth_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"customer_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"dx_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"dx_gateway_id", "vpn_gateway_id"},
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"mtu": {
-				Type:         schema.TypeInt,
-				Default:      1500,
-				Optional:     true,
-				ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sitelink_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vlan": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 4094),
-			},
-			"vpn_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"dx_gateway_id", "vpn_gateway_id"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
+				},
+				"amazon_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"amazon_side_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_asn":      bgpASNAttributeSchema(false),
+				"bgp_asn_long": bgpASNAttributeSchema(true),
+				"bgp_auth_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"customer_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"dx_gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"dx_gateway_id", "vpn_gateway_id"},
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"mtu": {
+					Type:         schema.TypeInt,
+					Default:      1500,
+					Optional:     true,
+					ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+				"sitelink_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vlan": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 4094),
+				},
+				"vpn_gateway_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{"dx_gateway_id", "vpn_gateway_id"},
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -139,12 +150,14 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	asn, asnLong := expandBGPASN(d)
 
 	input := &directconnect.CreatePrivateVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterface: &awstypes.NewPrivateVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  int32(d.Get("bgp_asn").(int)),
+			Asn:                  asn,
+			AsnLong:              asnLong,
 			EnableSiteLink:       aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                  aws.Int32(int32(d.Get("mtu").(int))),
 			Tags:                 getTagsIn(ctx),
@@ -167,6 +180,14 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 	if v, ok := d.GetOk("dx_gateway_id"); ok {
 		input.NewPrivateVirtualInterface.DirectConnectGatewayId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv4"); ok {
+		input.NewPrivateVirtualInterface.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv6"); ok {
+		input.NewPrivateVirtualInterface.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("vpn_gateway_id"); ok {
@@ -216,7 +237,9 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	d.Set("bgp_asn", vif.Asn)
+	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting BGP ASN: %s", err)
+	}
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
@@ -224,6 +247,8 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
@@ -261,6 +286,10 @@ func resourcePrivateVirtualInterfaceImport(ctx context.Context, d *schema.Resour
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "private" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
+	}
+
+	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
+		return nil, fmt.Errorf("setting BGP ASN: %w", err)
 	}
 
 	return []*schema.ResourceData{d}, nil

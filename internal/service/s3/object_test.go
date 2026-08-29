@@ -199,6 +199,14 @@ func TestAccS3Object_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -223,6 +231,14 @@ func TestAccS3Object_Disappears_bucket(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1770,7 +1786,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
@@ -1835,7 +1851,7 @@ func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
@@ -1847,6 +1863,14 @@ func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_object.object", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1859,7 +1883,7 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
@@ -1889,7 +1913,7 @@ func TestAccS3Object_DirectoryBucket_kmsSSE(t *testing.T) {
 	defer os.Remove(source)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
@@ -2519,7 +2543,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_s3control_object_lambda_access_point" "test" {

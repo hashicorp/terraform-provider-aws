@@ -16,8 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_msk_cluster", sweepClusters, "aws_mskconnect_connector")
+	awsv2.Register("aws_msk_cluster", sweepClusters, "aws_mskconnect_connector", "aws_msk_replicator")
 	awsv2.Register("aws_msk_configuration", sweepConfigurations, "aws_msk_cluster")
+	awsv2.Register("aws_msk_replicator", sweepReplicators)
 }
 
 func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -74,6 +75,38 @@ func sweepConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.
 			}
 
 			r := resourceConfiguration()
+			d := r.Data(nil)
+			d.SetId(arn)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepReplicators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.KafkaClient(ctx)
+	var input kafka.ListReplicatorsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := kafka.NewListReplicatorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Replicators {
+			arn := aws.ToString(v.ReplicatorArn)
+
+			if state := v.ReplicatorState; state == types.ReplicatorStateDeleting {
+				log.Printf("[INFO] Skipping MSK Replicator %s: State=%s", arn, state)
+				continue
+			}
+
+			r := resourceReplicator()
 			d := r.Data(nil)
 			d.SetId(arn)
 

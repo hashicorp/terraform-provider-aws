@@ -9,7 +9,7 @@ on:
       timeout:
         description: The number of minutes to wait for Registry ingest
         required: true
-        default: 120
+        default: '120'
       version:
         description: |
           The version of the provider to test initialization for (without the preceding 'v'). If unset, will use the version pulled from the latest GitHub release
@@ -20,7 +20,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: read
+  contents: read # required for reading release metadata and repository state
 
 jobs:
   registry-check:
@@ -107,7 +107,7 @@ jobs:
 
       - name: Post Initial Slack Message
         id: message
-        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -190,7 +190,7 @@ jobs:
 
       - name: Update Initial Slack Message
         if: ${{ success() || failure() }}
-        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.update
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -213,7 +213,7 @@ jobs:
     steps:
       - name: Add Status Update Message in Thread
         id: thread-message
-        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -244,7 +244,7 @@ jobs:
               ]
             }
 
-      - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
         with:
           terraform_wrapper: false
 
@@ -363,7 +363,7 @@ jobs:
       - name: Update Threaded Message with Results
         if: ${{ success() || failure() }}
         id: thread-message-update
-        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.update
           token: ${{ secrets.SLACK_BOT_TOKEN }}

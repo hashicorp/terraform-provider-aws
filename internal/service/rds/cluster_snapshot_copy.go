@@ -329,7 +329,7 @@ func (r *clusterSnapshotCopyResource) Update(ctx context.Context, req resource.U
 			return
 		}
 
-		toAdd, toRemove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+		toAdd, toRemove, _ := intflex.DiffSlices(have, want, intflex.Equal)
 
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
 			AttributeName:               aws.String(dbSnapshotAttributeNameRestore),

@@ -296,8 +296,8 @@ func (r *resourceShareAssociationsExclusiveResource) syncAssociations(ctx contex
 	var diags diag.Diagnostics
 
 	// Calculate differences
-	addPrincipals, removePrincipals, _ := flex.DiffSlices(currentPrincipals, wantPrincipals, func(a, b string) bool { return a == b })
-	addResources, removeResources, _ := flex.DiffSlices(currentResources, wantResources, func(a, b string) bool { return a == b })
+	addPrincipals, removePrincipals, _ := flex.DiffSlices(currentPrincipals, wantPrincipals, flex.Equal)
+	addResources, removeResources, _ := flex.DiffSlices(currentResources, wantResources, flex.Equal)
 
 	// Remove principals no longer wanted
 	for _, principal := range removePrincipals {

@@ -23,25 +23,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_standards_subscription", name="Standards Subscription")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsSubscription")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(generator=false)
 func resourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsSubscriptionCreate,
 		ReadWithoutTimeout:   resourceStandardsSubscriptionRead,
 		DeleteWithoutTimeout: resourceStandardsSubscriptionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"standards_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"standards_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),
@@ -55,13 +64,13 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsARN := d.Get("standards_arn").(string)
-	input := &securityhub.BatchEnableStandardsInput{
+	input := securityhub.BatchEnableStandardsInput{
 		StandardsSubscriptionRequests: []types.StandardsSubscriptionRequest{{
 			StandardsArn: aws.String(standardsARN),
 		}},
 	}
 
-	output, err := conn.BatchEnableStandards(ctx, input)
+	output, err := conn.BatchEnableStandards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Standards Subscription (%s): %s", standardsARN, err)
@@ -92,6 +101,7 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscription (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, output.StandardsSubscriptionArn)
 	d.Set("standards_arn", output.StandardsArn)
 
 	return diags
@@ -102,9 +112,10 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())
-	_, err := conn.BatchDisableStandards(ctx, &securityhub.BatchDisableStandardsInput{
+	input := securityhub.BatchDisableStandardsInput{
 		StandardsSubscriptionArns: []string{d.Id()},
-	})
+	}
+	_, err := conn.BatchDisableStandards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Standard (%s): %s", d.Id(), err)
@@ -118,11 +129,11 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 }
 
 func findStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	input := &securityhub.GetEnabledStandardsInput{
+	input := securityhub.GetEnabledStandardsInput{
 		StandardsSubscriptionArns: []string{arn},
 	}
 
-	output, err := findStandardsSubscription(ctx, conn, input)
+	output, err := findStandardsSubscription(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

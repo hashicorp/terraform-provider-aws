@@ -49,13 +49,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the virtual interface.
 * `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 * `jumbo_frame_capable` - Indicates whether jumbo frames (8500 MTU) are supported.
+* `prefix_pool_allocated_count_ipv4` - The number of inbound IPv4 route prefixes allocated to the virtual interface.
+* `prefix_pool_allocated_count_ipv6` - The number of inbound IPv6 route prefixes allocated to the virtual interface.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
-- `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
 ## Import
