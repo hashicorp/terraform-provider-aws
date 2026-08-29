@@ -247,7 +247,7 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
-					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
+					// Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
 				"global_table_witness": {
 					Type:     schema.TypeList,
