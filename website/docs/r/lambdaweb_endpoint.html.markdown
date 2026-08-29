@@ -141,7 +141,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weights`. `MultiRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
+* `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weights`. `MultiRegion` and `PerRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
 * `description` - (Optional) Description of the endpoint.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `regions` - (Optional) Regions the endpoint spans (maximum 5). `MultiRegion` and `PerRegion` endpoints require at least 2 distinct regions, or none at all: the home region is added automatically. Changing this forces a new resource.
