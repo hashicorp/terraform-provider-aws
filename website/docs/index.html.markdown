@@ -299,6 +299,8 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 |Policy ARNs|`policy_arns`|N/A|`policy_arns`|
 |Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
 
+Values configured in the `assume_role_with_web_identity` block take precedence over environment variables for both token sources.
+
 ## Custom User-Agent Information
 
 By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
