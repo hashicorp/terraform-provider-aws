@@ -60,6 +60,9 @@ type oauth2CredentialProviderResource struct {
 
 func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"client_authentication_method": schema.StringAttribute{
+			Optional: true,
+		},
 		"client_credentials_wo_version": schema.Int64Attribute{
 			Optional: true,
 			Validators: []validator.Int64{
@@ -734,6 +737,7 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 }
 
 type oauth2ClientCredentialsModel struct {
+	ClientAuthenticationMethod types.String `tfsdk:"client_authentication_method"`
 	ClientCredentialsWOVersion types.Int64  `tfsdk:"client_credentials_wo_version"`
 	ClientID                   types.String `tfsdk:"client_id"`
 	ClientIDWO                 types.String `tfsdk:"client_id_wo"`

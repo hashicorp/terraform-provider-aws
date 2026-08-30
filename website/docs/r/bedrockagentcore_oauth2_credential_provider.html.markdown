@@ -42,6 +42,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
       client_id_wo                  = "auth0-client-id"
       client_secret_wo              = "auth0-client-secret"
       client_credentials_wo_version = 1
+      client_authentication_method  = "CLIENT_SECRET_BASIC"
 
       oauth_discovery {
         discovery_url = "https://dev-company.auth0.com/.well-known/openid-configuration"
@@ -115,6 +116,7 @@ The `custom_oauth2_provider_config` block supports the following:
 * `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_authentication_method` - (Optional) The authentication method for the client. Valid values are `AWS_IAM_ID_TOKEN_JWT`, `PRIVATE_KEY_JWT`, `CLIENT_SECRET_BASIC`, and `CLIENT_SECRET_POST`.
 
 **OAuth Discovery Configuration:**
 
@@ -134,6 +136,7 @@ These predefined provider blocks support the following:
 * `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
+* `client_authentication_method` - (Optional) The authentication method for the client. Valid values are `AWS_IAM_ID_TOKEN_JWT`, `PRIVATE_KEY_JWT`, `CLIENT_SECRET_BASIC`, and `CLIENT_SECRET_POST`.
 
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
 

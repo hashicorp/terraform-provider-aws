@@ -222,6 +222,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 				Config: testAccOAuth2CredentialProviderConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_authentication_method", "CLIENT_SECRET_BASIC"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -237,6 +238,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_authentication_method",
 				},
 			},
 		},
@@ -377,6 +379,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
       client_id_wo                  = "full-test-client-id"
       client_secret_wo              = "full-test-client-secret"
       client_credentials_wo_version = 1
+	  client_authentication_method  = "CLIENT_SECRET_BASIC"
 
       oauth_discovery {
         authorization_server_metadata {
