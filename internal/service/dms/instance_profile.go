@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -29,8 +28,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -311,26 +308,4 @@ type instanceProfileResourceModel struct {
 	Tags                  tftags.Map          `tfsdk:"tags"`
 	TagsAll               tftags.Map          `tfsdk:"tags_all"`
 	VpcSecurityGroups     fwtypes.SetOfString `tfsdk:"vpc_security_group_ids"`
-}
-
-func sweepInstanceProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.DMSClient(ctx)
-	var input databasemigrationservice.DescribeInstanceProfilesInput
-	var sweepResources []sweep.Sweepable
-
-	pages := databasemigrationservice.NewDescribeInstanceProfilesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.InstanceProfiles {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newInstanceProfileResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.InstanceProfileArn))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
