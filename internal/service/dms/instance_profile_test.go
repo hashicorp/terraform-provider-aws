@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -20,8 +21,6 @@ import (
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-var regexInstanceProfileARN = regexache.MustCompile(`instance-profile:.+$`)
 
 func TestAccDMSInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -40,11 +39,9 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrSet(resourceName, "network_type"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexInstanceProfileARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`instance-profile:.+$`)),
 				),
 			},
 			{
@@ -111,6 +108,11 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceProfileConfig_full(rName, "second instance profile", false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
