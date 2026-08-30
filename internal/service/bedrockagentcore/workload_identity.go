@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -34,8 +33,11 @@ import (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_workload_identity", name="Workload Identity")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="workload_identity_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetWorkloadIdentityOutput")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="name")
 // @Testing(preCheck="testAccPreCheckWorkloadIdentities")
 func newWorkloadIdentityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &workloadIdentityResource{}
@@ -44,6 +46,7 @@ func newWorkloadIdentityResource(_ context.Context) (resource.ResourceWithConfig
 
 type workloadIdentityResource struct {
 	framework.ResourceWithModel[workloadIdentityResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -187,10 +190,6 @@ func (r *workloadIdentityResource) Delete(ctx context.Context, request resource.
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
-}
-
-func (r *workloadIdentityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findWorkloadIdentityByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetWorkloadIdentityOutput, error) {
