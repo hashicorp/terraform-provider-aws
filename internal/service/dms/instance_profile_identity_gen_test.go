@@ -8,7 +8,6 @@ package dms_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +23,6 @@ import (
 func TestAccDMSInstanceProfile_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -44,7 +42,7 @@ func TestAccDMSInstanceProfile_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),

@@ -8,7 +8,6 @@ package dms_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccDMSInstanceProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -45,7 +43,7 @@ func TestAccDMSInstanceProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -89,7 +87,7 @@ func TestAccDMSInstanceProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +135,7 @@ func TestAccDMSInstanceProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +176,7 @@ func TestAccDMSInstanceProfile_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -209,7 +207,6 @@ func TestAccDMSInstanceProfile_tags(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -231,7 +228,7 @@ func TestAccDMSInstanceProfile_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -275,7 +272,6 @@ func TestAccDMSInstanceProfile_Tags_null(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -295,7 +291,7 @@ func TestAccDMSInstanceProfile_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -329,7 +325,6 @@ func TestAccDMSInstanceProfile_Tags_emptyMap(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -349,7 +344,7 @@ func TestAccDMSInstanceProfile_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -372,7 +367,7 @@ func TestAccDMSInstanceProfile_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -413,7 +408,6 @@ func TestAccDMSInstanceProfile_Tags_addOnUpdate(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -435,7 +429,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -476,7 +470,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -507,7 +501,6 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_onCreate(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -529,7 +522,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -561,7 +554,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -609,7 +602,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -650,7 +643,6 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -672,7 +664,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -703,7 +695,7 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -744,7 +736,6 @@ func TestAccDMSInstanceProfile_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -767,7 +758,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -811,7 +802,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -857,7 +848,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -897,7 +888,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -929,7 +920,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_providerOnly(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -954,7 +944,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1008,7 +998,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1061,7 +1051,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1093,7 +1083,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1118,7 +1107,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1171,7 +1160,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1228,7 +1217,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1273,7 +1262,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_overlapping(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1295,7 +1283,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToProviderOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1328,7 +1316,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1367,7 +1355,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToProviderOnly(t *testing.
 func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1390,7 +1377,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToResourceOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1418,7 +1405,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToResourceOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1460,7 +1447,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_updateToResourceOnly(t *testing.
 func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1485,7 +1471,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1530,7 +1516,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1553,7 +1538,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1592,7 +1577,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 func TestAccDMSInstanceProfile_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1617,7 +1601,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1665,7 +1649,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nullOverlappingResourceTag(t *te
 func TestAccDMSInstanceProfile_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1690,7 +1673,7 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1740,7 +1723,6 @@ func TestAccDMSInstanceProfile_Tags_DefaultTags_nullNonOverlappingResourceTag(t 
 func TestAccDMSInstanceProfile_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1760,7 +1742,7 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1799,7 +1781,6 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_onCreate(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1821,7 +1802,7 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1853,7 +1834,7 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1900,7 +1881,6 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1922,7 +1902,7 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1952,7 +1932,7 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1991,7 +1971,6 @@ func TestAccDMSInstanceProfile_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2020,7 +1999,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2048,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2118,7 +2097,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2157,7 +2136,6 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) 
 func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.InstanceProfile
 	resourceName := "aws_dms_instance_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2184,7 +2162,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2242,7 +2220,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2299,7 +2277,7 @@ func TestAccDMSInstanceProfile_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &v),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
