@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +23,6 @@ import (
 
 func TestAccDMSInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instanceProfile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_instance_profile.test"
 
@@ -37,7 +35,7 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -55,7 +53,6 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 
 func TestAccDMSInstanceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instanceProfile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_instance_profile.test"
 
@@ -68,7 +65,7 @@ func TestAccDMSInstanceProfile_disappears(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdms.ResourceInstanceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,7 +76,6 @@ func TestAccDMSInstanceProfile_disappears(t *testing.T) {
 
 func TestAccDMSInstanceProfile_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instanceProfile awstypes.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_instance_profile.test"
 
@@ -92,7 +88,7 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_full(rName, "first instance profile", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "first instance profile"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
@@ -114,7 +110,7 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, t, resourceName, &instanceProfile),
+					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "second instance profile"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
@@ -148,7 +144,7 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context, t *testing.T) resou
 	}
 }
 
-func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name string, v *awstypes.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -161,12 +157,10 @@ func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name s
 
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
-		out, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
+		_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.DMS, create.ErrActionCheckingExistence, tfdms.ResNameInstanceProfile, rs.Primary.ID, err)
 		}
-
-		*v = *out
 
 		return nil
 	}
