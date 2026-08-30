@@ -257,7 +257,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newWorkloadIdentityResource,
 			TypeName: "aws_bedrockagentcore_workload_identity",
 			Name:     "Workload Identity",
-			Region:   inttypes.ResourceRegionDefault(),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "workload_identity_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 	}
 }
