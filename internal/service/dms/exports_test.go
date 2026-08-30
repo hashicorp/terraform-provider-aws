@@ -8,6 +8,7 @@ var (
 	ResourceCertificate            = resourceCertificate
 	ResourceEndpoint               = resourceEndpoint
 	ResourceEventSubscription      = resourceEventSubscription
+	ResourceInstanceProfile        = newInstanceProfileResource
 	ResourceReplicationConfig      = resourceReplicationConfig
 	ResourceReplicationInstance    = resourceReplicationInstance
 	ResourceReplicationSubnetGroup = resourceReplicationSubnetGroup
@@ -17,6 +18,7 @@ var (
 	FindCertificateByID            = findCertificateByID
 	FindEndpointByID               = findEndpointByID
 	FindEventSubscriptionByName    = findEventSubscriptionByName
+	FindInstanceProfileByID        = findInstanceProfileByID
 	FindReplicationConfigByARN     = findReplicationConfigByARN
 	FindReplicationInstanceByID    = findReplicationInstanceByID
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
