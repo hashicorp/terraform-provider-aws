@@ -283,6 +283,11 @@ func findInstanceProfiles(ctx context.Context, conn *databasemigrationservice.Cl
 	pages := databasemigrationservice.NewDescribeInstanceProfilesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
