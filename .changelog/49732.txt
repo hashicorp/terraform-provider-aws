@@ -1,0 +1,1 @@
+enhancement: `aws_bedrockagentcore_oauth2_credential_provider` - Add `client_authentication_method` attribute
