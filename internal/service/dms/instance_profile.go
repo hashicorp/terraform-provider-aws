@@ -39,7 +39,6 @@ import (
 // @FrameworkResource("aws_dms_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.InstanceProfile")
 // @Testing(hasNoPreExistingResource=true)
 func newInstanceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &instanceProfileResource{}, nil
