@@ -6,13 +6,11 @@ package dms
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -44,13 +42,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.InstanceProfile")
 // @Testing(hasNoPreExistingResource=true)
 func newInstanceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &instanceProfileResource{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
-	return r, nil
+	return &instanceProfileResource{}, nil
 }
 
 const (
@@ -59,7 +51,6 @@ const (
 
 type instanceProfileResource struct {
 	framework.ResourceWithModel[instanceProfileResourceModel]
-	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -127,13 +118,6 @@ func (r *instanceProfileResource) Schema(ctx context.Context, req resource.Schem
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -322,7 +306,6 @@ type instanceProfileResourceModel struct {
 	SubnetGroupIdentifier types.String        `tfsdk:"subnet_group_identifier"`
 	Tags                  tftags.Map          `tfsdk:"tags"`
 	TagsAll               tftags.Map          `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value      `tfsdk:"timeouts"`
 	VpcSecurityGroups     fwtypes.SetOfString `tfsdk:"vpc_security_group_ids"`
 }
 
