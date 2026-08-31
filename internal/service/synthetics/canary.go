@@ -377,8 +377,10 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
 			if err != nil && time.Now().Before(iamwaiterStopTime) {
-				// This error synthesized from the Status object and not an AWS SDK Go error type.
-				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda"), err
+				// These errors are synthesized from the Status object and not AWS SDK Go error types.
+				// Both represent IAM propagation delays: role assumption and KMS CreateGrant permission.
+				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda") ||
+					strings.Contains(err.Error(), "KMS key is invalid for CreateGrant"), err
 			}
 
 			return false, err
