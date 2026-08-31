@@ -48,6 +48,7 @@ The following arguments are optional:
 * `name` - (Optional) Name for the instance profile. If omitted, Terraform will assign a random, unique name.
 * `network_type` - (Optional) Network type for the instance profile. Valid values are `IPV4`, `IPV6`, and `DUAL`.
 * `publicly_accessible` - (Optional) Whether the instance profile is publicly accessible. Default is `true`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_group_identifier` - (Optional) Subnet group to associate with the instance profile.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) VPC security group IDs to be used with the instance profile. The VPC security groups must work with the VPC containing the instance profile.
@@ -80,11 +81,6 @@ resource "aws_dms_instance_profile" "example" {
 #### Required
 
 * `arn` (String) ARN of the instance profile.
-
-#### Optional
-
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DMS (Database Migration) Instance Profile using the `arn`. For example:
 
