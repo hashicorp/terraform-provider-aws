@@ -14,6 +14,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* data-source/aws_dx_connection: Add `rate_limiter_status` attribute ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * data-source/aws_eks_cluster: Add `pod_gc_controller_config` attribute to the `kube_controller_manager_config` configuration block ([#49728](https://github.com/hashicorp/terraform-provider-aws/issues/49728))
 * data-source/aws_eks_cluster_versions: Add `pod_gc_controller_config` attribute to the `control_plane_component_config.kube_controller_manager_config` configuration block ([#49730](https://github.com/hashicorp/terraform-provider-aws/issues/49730))
 * resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
@@ -21,18 +22,31 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.inference` configuration block ([#48705](https://github.com/hashicorp/terraform-provider-aws/issues/48705))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
 * resource/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_connection: Add `rate_limiter_status` attribute ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_hosted_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_private_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_hosted_private_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_public_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_hosted_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_transit_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_hosted_transit_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_lag: Add `rate_limiter_status` attribute ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_private_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
+* resource/aws_dx_public_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_dx_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_transit_virtual_interface: Add `rate_limit` argument ([#48910](https://github.com/hashicorp/terraform-provider-aws/issues/48910))
 * resource/aws_eks_cluster: Add `pod_gc_controller_config` argument to the `kube_controller_manager_config` configuration block ([#49725](https://github.com/hashicorp/terraform-provider-aws/issues/49725))
 * resource/aws_key_pair: Add resource identity support ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
+* resource/aws_synthetics_canary: Add `kms_key_arn` argument ([#49406](https://github.com/hashicorp/terraform-provider-aws/issues/49406))
 
 BUG FIXES:
 
 * provider: Fix `assume_role_with_web_identity.web_identity_token` being rejected when `AWS_WEB_IDENTITY_TOKEN_FILE` is set ([#49671](https://github.com/hashicorp/terraform-provider-aws/issues/49671))
+* resource/aws_db_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
+* resource/aws_docdb_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
+* resource/aws_observabilityadmin_telemetry_rule_for_organization: Fix updates when `all_regions` is enabled ([#49743](https://github.com/hashicorp/terraform-provider-aws/issues/49743))
+* resource/aws_rds_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 
