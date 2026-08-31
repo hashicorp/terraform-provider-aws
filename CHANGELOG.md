@@ -13,9 +13,19 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* data-source/aws_eks_cluster: Add `pod_gc_controller_config` attribute to the `kube_controller_manager_config` configuration block ([#49728](https://github.com/hashicorp/terraform-provider-aws/issues/49728))
 * data-source/aws_eks_cluster_versions: Add `pod_gc_controller_config` attribute to the `control_plane_component_config.kube_controller_manager_config` configuration block ([#49730](https://github.com/hashicorp/terraform-provider-aws/issues/49730))
 * resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.http.agentcore_runtime.schema` and `target_configuration.http.passthrough` configuration blocks ([#48704](https://github.com/hashicorp/terraform-provider-aws/issues/48704))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+* resource/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_private_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_hosted_transit_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
+* resource/aws_dx_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
 * resource/aws_eks_cluster: Add `pod_gc_controller_config` argument to the `kube_controller_manager_config` configuration block ([#49725](https://github.com/hashicorp/terraform-provider-aws/issues/49725))
 * resource/aws_key_pair: Add resource identity support ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
 
