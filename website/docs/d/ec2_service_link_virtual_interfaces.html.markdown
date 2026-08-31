@@ -16,7 +16,7 @@ Provides a list of EC2 Service Link Virtual Interface IDs matching the provided 
 data "aws_ec2_service_link_virtual_interfaces" "example" {
   filter {
     name   = "outpost-arn"
-    values = [aws_outposts_outpost.example.arn]
+    values = [data.aws_outposts_outpost.example.arn]
   }
 }
 ```

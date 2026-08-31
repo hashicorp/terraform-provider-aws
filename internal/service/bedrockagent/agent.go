@@ -139,8 +139,8 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
-			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"memory_configuration":          framework.ResourceOptionalComputedSingleNestedObjectAttribute[memoryConfigurationModel](ctx),
+			"prompt_override_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[promptOverrideConfigurationModel](ctx),
 			"prepared_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,

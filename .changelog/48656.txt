@@ -1,11 +1,15 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `litellm_model_config` configuration block to `model`
+resource/aws_bedrockagentcore_harness: Change `max_tokens` to Optional and Computed
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `model.litellm_model_config` configuration block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `model.gemini_model_config.additional_params` and `model.openai_model_config.additional_params` arguments
 ```
 
 ```release-note:enhancement
 resource/aws_bedrockagentcore_harness: Add `s3`, `git`, and `aws_skills` configuration blocks to `skill` and make `skill.path` optional
-```
-
-```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `additional_params` argument to `gemini_model_config` and `openai_model_config`
 ```

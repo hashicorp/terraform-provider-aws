@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_medialive_channel: Fix setting of the `include_fec` attribute in `fec_output_settings`
-```

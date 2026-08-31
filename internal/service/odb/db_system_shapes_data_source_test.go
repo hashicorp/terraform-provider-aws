@@ -18,7 +18,7 @@ func TestAccODBDBSystemShapesListDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	dataSourceName := "data.aws_odb_db_system_shapes.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

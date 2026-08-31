@@ -8,20 +8,30 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func checkArchiveARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("events", regexache.MustCompile(`archive/`+name))
+}
+
 func TestAccEventsArchive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1 eventbridge.DescribeArchiveOutput
-	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var v eventbridge.DescribeArchiveOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -31,18 +41,32 @@ func TestAccEventsArchive_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccArchiveConfig_basic(archiveName),
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkArchiveARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("event_pattern"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("kms_key_identifier"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("retention_days"), knownvalue.Int64Exact(0)),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -51,41 +75,10 @@ func TestAccEventsArchive_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsArchive_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1 eventbridge.DescribeArchiveOutput
-	resourceName := "aws_cloudwatch_event_archive.test"
-	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccArchiveConfig_basic(archiveName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
-				),
-			},
-			{
-				Config: testAccArchiveConfig_updateAttributes(archiveName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEventsArchive_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeArchiveOutput
-	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -95,7 +88,10 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccArchiveConfig_basic(archiveName),
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceArchive(), resourceName),
@@ -108,6 +104,75 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEventsArchive_updateOptionalAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeArchiveOutput
+	resourceName := "aws_cloudwatch_event_archive.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/optional_attributes/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"description":    config.StringVariable("desc1"),
+					"retention_days": config.IntegerVariable(7),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("event_pattern"), tfknownvalue.JSONNoDiff("{\"source\":[\"company.team.service\"]}")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("retention_days"), knownvalue.Int64Exact(7)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/optional_attributes/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"description":    config.StringVariable("desc1"),
+					"retention_days": config.IntegerVariable(7),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Archive/optional_attributes/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"description":    config.StringVariable("desc2"),
+					"retention_days": config.IntegerVariable(10),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("desc2")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("event_pattern"), tfknownvalue.JSONNoDiff("{\"source\":[\"company.team.service\"]}")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("retention_days"), knownvalue.Int64Exact(10)),
 				},
 			},
 		},
@@ -244,39 +309,6 @@ func testAccCheckArchiveExists(ctx context.Context, t *testing.T, n string, v *e
 
 		return nil
 	}
-}
-
-func testAccArchiveConfig_basic(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_event_archive" "test" {
-  name             = %[1]q
-  event_source_arn = aws_cloudwatch_event_bus.test.arn
-}
-`, name)
-}
-
-func testAccArchiveConfig_updateAttributes(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_event_archive" "test" {
-  name             = %[1]q
-  event_source_arn = aws_cloudwatch_event_bus.test.arn
-  retention_days   = 7
-  description      = "test"
-  event_pattern    = <<PATTERN
-{
-  "source": ["company.team.service"]
-}
-PATTERN
-}
-`, name)
 }
 
 func testAccArchiveConfig_kmsKeyIdentifier(name, kmsKeyIdentifier string) string {

@@ -217,6 +217,22 @@ func resourceConnection() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"prefix_pool_size_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_size_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				names.AttrProviderName: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -227,6 +243,10 @@ func resourceConnection() *schema.Resource {
 					Type:     schema.TypeBool,
 					Default:  false,
 					Optional: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -302,10 +322,15 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
+	d.Set("prefix_pool_size_ipv4", connection.PrefixPoolSizeIpv4)
+	d.Set("prefix_pool_size_ipv6", connection.PrefixPoolSizeIpv6)
+	d.Set("prefix_pool_unallocated_count_ipv4", connection.PrefixPoolUnallocatedCountIpv4)
+	d.Set("prefix_pool_unallocated_count_ipv6", connection.PrefixPoolUnallocatedCountIpv6)
 	d.Set(names.AttrProviderName, connection.ProviderName)
 	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
 		d.Set("request_macsec", aws.Bool(false))
 	}
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan_id", connection.Vlan)
 
 	return diags

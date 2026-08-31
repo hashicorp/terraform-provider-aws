@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1487,7 +1488,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	_, err := conn.CreateDirectory(ctx, &input)
 
-	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") ||
+		errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD is no longer open to new customers") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -2354,4 +2356,18 @@ func ListOfStrings[E ~string](s ...E) string {
 	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
 		return strconv.Quote(string(e))
 	}), ", ")
+}
+
+func ListOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.ListVariable(listOfStringVariables(s...)...)
+}
+
+func SetOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.SetVariable(listOfStringVariables(s...)...)
+}
+
+func listOfStringVariables[E ~string](s ...E) []config.Variable {
+	return tfslices.ApplyToAll(s, func(e E) config.Variable {
+		return config.StringVariable(string(e))
+	})
 }

@@ -60,54 +60,6 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
-### With OpenAI Additional Parameters
-
-```terraform
-resource "aws_bedrockagentcore_harness" "example" {
-  harness_name       = "example_openai"
-  execution_role_arn = aws_iam_role.example.arn
-
-  model {
-    openai_model_config {
-      api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
-      model_id    = "gpt-5"
-
-      additional_params = jsonencode({
-        reasoning_effort = "high"
-      })
-    }
-  }
-
-  system_prompt {
-    text = "You are a helpful assistant."
-  }
-}
-```
-
-### With Gemini Additional Parameters
-
-```terraform
-resource "aws_bedrockagentcore_harness" "example" {
-  harness_name       = "example_gemini"
-  execution_role_arn = aws_iam_role.example.arn
-
-  model {
-    gemini_model_config {
-      api_key_arn = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
-      model_id    = "gemini-2.5-pro"
-
-      additional_params = jsonencode({
-        thinking_budget = 1024
-      })
-    }
-  }
-
-  system_prompt {
-    text = "You are a helpful assistant."
-  }
-}
-```
-
 ### With Tools and Truncation
 
 ```terraform
@@ -165,40 +117,66 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
+### With Managed Memory
+
+```terraform
+resource "aws_bedrockagentcore_harness" "example" {
+  harness_name       = "my_harness"
+  execution_role_arn = aws_iam_role.example.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  memory {
+    managed_memory_configuration {
+      event_expiry_duration = 14
+      strategies            = ["SEMANTIC", "SUMMARIZATION"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
 * `execution_role_arn` - (Required) ARN of the IAM role that the harness assumes to access AWS services.
-* `model` - (Required) Model configuration for the harness. See [`model`](#model) below.
+* `model` - (Required) Model configuration for the harness. See [`model` Block](#model-block) below.
 
 The following arguments are optional:
 
 * `allowed_tools` - (Optional) List of tool names allowed for the harness. Use `["*"]` to allow all tools.
-* `authorizer_configuration` - (Optional) Authorization configuration for authenticating requests. See [`authorizer_configuration`](#authorizer_configuration) below.
-* `environment` - (Optional) Compute environment configuration. See [`environment`](#environment) below.
-* `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact`](#environment_artifact) below.
+* `authorizer_configuration` - (Optional) Authorization configuration for authenticating requests. See [`authorizer_configuration` Block](#authorizer_configuration-block) below.
+* `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below.If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
+* `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
 * `environment_variables` - (Optional, Sensitive) Map of environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum number of tokens in the model response.
-* `memory` - (Optional) Memory configuration. See [`memory`](#memory) below.
+* `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `skill` - (Optional) Skill configurations. See [`skill`](#skill) below.
-* `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt`](#system_prompt) below.
+* `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
+* `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_seconds` - (Optional) Timeout in seconds for the harness execution.
-* `tool` - (Optional) Tool configurations. See [`tool`](#tool) below.
-* `truncation` - (Optional) Truncation configuration for conversation history. See [`truncation`](#truncation) below.
+* `tool` - (Optional) Tool configurations. See [`tool` Block](#tool-block) below.
+* `truncation` - (Optional) Truncation configuration for conversation history. See [`truncation` Block](#truncation-block) below.
 
 ### `model` Block
 
 The `model` block supports exactly one of the following:
 
-* `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config`](#bedrock_model_config) below.
-* `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config`](#openai_model_config) below.
-* `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config`](#gemini_model_config) below.
-* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config`](#litellm_model_config) below.
+* `bedrock_model_config` - (Optional) Amazon Bedrock model configuration. See [`bedrock_model_config` Block](#bedrock_model_config-block) below.
+* `gemini_model_config` - (Optional) Gemini model configuration. See [`gemini_model_config` Block](#gemini_model_config-block) below.
+* `litellm_model_config` - (Optional) LiteLLM model configuration. See [`litellm_model_config` Block](#litellm_model_config-block) below.
+* `openai_model_config` - (Optional) OpenAI model configuration. See [`openai_model_config` Block](#openai_model_config-block) below.
 
 ### `bedrock_model_config` Block
 
@@ -207,20 +185,10 @@ The `model` block supports exactly one of the following:
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p (nucleus) sampling parameter. Must be between 0 and 1.
 
-### `openai_model_config` Block
-
-* `model_id` - (Required) OpenAI model ID.
-* `api_key_arn` - (Required) ARN of the AgentCore API key credential provider.
-* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the OpenAI model provider unchanged.
-* `max_tokens` - (Optional) Maximum number of tokens to generate.
-* `temperature` - (Optional) Temperature for sampling.
-* `top_p` - (Optional) Top-p sampling parameter.
-
 ### `gemini_model_config` Block
 
 * `model_id` - (Required) Gemini model ID.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
-* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Gemini model provider unchanged.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
 * `top_p` - (Optional) Top-p sampling parameter.
@@ -234,6 +202,14 @@ The `model` block supports exactly one of the following:
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling. Must be between 0 and 2.
 * `top_p` - (Optional) Top-p sampling parameter. Must be between 0 and 1.
+
+### `openai_model_config` Block
+
+* `model_id` - (Required) OpenAI model ID.
+* `api_key_arn` - (Required) ARN of the secret containing the API key.
+* `max_tokens` - (Optional) Maximum number of tokens to generate.
+* `temperature` - (Optional) Temperature for sampling.
+* `top_p` - (Optional) Top-p sampling parameter.
 
 ### `system_prompt` Block
 
@@ -249,11 +225,11 @@ The `model` block supports exactly one of the following:
 
 The `config` block supports exactly one of the following:
 
-* `remote_mcp` - (Optional) Remote MCP server configuration. See [`remote_mcp`](#remote_mcp) below.
-* `agentcore_browser` - (Optional) AgentCore browser configuration. See [`agentcore_browser`](#agentcore_browser) below.
-* `agentcore_gateway` - (Optional) AgentCore gateway configuration. See [`agentcore_gateway`](#agentcore_gateway) below.
-* `inline_function` - (Optional) Inline function configuration. See [`inline_function`](#inline_function) below.
-* `agentcore_code_interpreter` - (Optional) AgentCore code interpreter configuration. See [`agentcore_code_interpreter`](#agentcore_code_interpreter) below.
+* `remote_mcp` - (Optional) Remote MCP server configuration. See [`remote_mcp` Block](#remote_mcp-block) below.
+* `agentcore_browser` - (Optional) AgentCore browser configuration. See [`agentcore_browser` Block](#agentcore_browser-block) below.
+* `agentcore_gateway` - (Optional) AgentCore gateway configuration. See [`agentcore_gateway` Block](#agentcore_gateway-block) below.
+* `inline_function` - (Optional) Inline function configuration. See [`inline_function` Block](#inline_function-block) below.
+* `agentcore_code_interpreter` - (Optional) AgentCore code interpreter configuration. See [`agentcore_code_interpreter` Block](#agentcore_code_interpreter-block) below.
 
 ### `remote_mcp` Block
 
@@ -267,7 +243,7 @@ The `config` block supports exactly one of the following:
 ### `agentcore_gateway` Block
 
 * `gateway_arn` - (Required) ARN of the AgentCore gateway resource.
-* `outbound_auth` - (Optional) Outbound authentication configuration. See [`outbound_auth`](#outbound_auth) below.
+* `outbound_auth` - (Optional) Outbound authentication configuration. See [`outbound_auth` Block](#outbound_auth-block) below.
 
 ### `outbound_auth` Block
 
@@ -275,7 +251,7 @@ Exactly one of the following must be specified:
 
 * `aws_iam` - (Optional) Set to `true` to use AWS IAM authentication.
 * `none` - (Optional) Set to `true` to disable authentication.
-* `oauth` - (Optional) OAuth credential provider configuration. See [`oauth`](#oauth) below.
+* `oauth` - (Optional) OAuth credential provider configuration. See [`oauth` Block](#oauth-block) below.
 
 ### `oauth` Block
 
@@ -296,31 +272,7 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-Each `skill` block specifies exactly one of the following sources:
-
-* `path` - (Optional) Filesystem path to the skill definition.
-* `s3` - (Optional) S3 source for the skill. See [`s3`](#s3) below.
-* `git` - (Optional) Git repository source for the skill. See [`git`](#git) below.
-* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills`](#aws_skills) below.
-
-### `s3` Block
-
-* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
-
-### `git` Block
-
-* `url` - (Required) HTTPS URL of the git repository.
-* `path` - (Optional) Subdirectory within the repository containing the skill.
-* `auth` - (Optional) Authentication configuration for private repositories. See [`auth`](#auth) below.
-
-### `auth` Block
-
-* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
-* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
-
-### `aws_skills` Block
-
-* `paths` - (Optional) List of glob patterns to filter allowed skills (e.g., `["core-skills/*"]`).
+* `path` - (Required) Path to the skill.
 
 ### `truncation` Block
 
@@ -331,8 +283,8 @@ Each `skill` block specifies exactly one of the following sources:
 
 The `config` block supports exactly one of the following:
 
-* `sliding_window` - (Optional) Sliding window truncation configuration. See [`sliding_window`](#sliding_window) below.
-* `summarization` - (Optional) Summarization truncation configuration. See [`summarization`](#summarization) below.
+* `sliding_window` - (Optional) Sliding window truncation configuration. See [`sliding_window` Block](#sliding_window-block) below.
+* `summarization` - (Optional) Summarization truncation configuration. See [`summarization` Block](#summarization-block) below.
 
 ### `sliding_window` Block
 
@@ -346,13 +298,19 @@ The `config` block supports exactly one of the following:
 
 ### `environment` Block
 
-* `agentcore_runtime_environment` - (Required) AgentCore runtime environment configuration. See [`agentcore_runtime_environment`](#agentcore_runtime_environment) below.
+* `agentcore_runtime_environment` - (Required) AgentCore runtime environment configuration. See [`agentcore_runtime_environment` Block](#agentcore_runtime_environment-block) below.
 
 ### `agentcore_runtime_environment` Block
 
-* `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration`](#lifecycle_configuration) below.
-* `network_configuration` - (Optional) Network configuration. See [`network_configuration`](#network_configuration) below.
-* `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration`](#filesystem_configuration) below.
+* `lifecycle_configuration` - (Optional) Lifecycle configuration. See [`lifecycle_configuration` Block](#lifecycle_configuration-block) below.
+* `network_configuration` - (Optional) Network configuration. See [`network_configuration` Block](#network_configuration-block) below.
+* `filesystem_configuration` - (Optional) Filesystem configurations. See [`filesystem_configuration` Block](#filesystem_configuration-block) below.
+
+The following attributes are exported under `agentcore_runtime_environment`:
+
+* `agent_runtime_arn` - ARN of the agent runtime the service provisions for the harness.
+* `agent_runtime_id` - ID of the agent runtime the service provisions for the harness.
+* `agent_runtime_name` - Name of the agent runtime the service derives for the harness.
 
 ### `lifecycle_configuration` Block
 
@@ -362,20 +320,21 @@ The `config` block supports exactly one of the following:
 ### `network_configuration` Block
 
 * `network_mode` - (Required) Network mode. Valid values: `PUBLIC`, `VPC`.
-* `network_mode_config` - (Optional) VPC configuration. See [`network_mode_config`](#network_mode_config) below.
+* `network_mode_config` - (Optional) VPC configuration. See [`network_mode_config` Block](#network_mode_config-block) below.
 
 ### `network_mode_config` Block
 
 * `security_groups` - (Required) Security groups for the VPC.
 * `subnets` - (Required) Subnets for the VPC.
+* `require_service_s3_endpoint` - (Optional) Whether to require an S3 endpoint for the service in the VPC.
 
 ### `filesystem_configuration` Block
 
 Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
 
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point) below.
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage` Block](#session_storage-block) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point` Block](#s3_files_access_point-block) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point` Block](#efs_access_point-block) below.
 
 ### `session_storage` Block
 
@@ -399,7 +358,7 @@ The `efs_access_point` block supports the following:
 
 ### `environment_artifact` Block
 
-* `container_configuration` - (Required) Container configuration. See [`container_configuration`](#container_configuration) below.
+* `container_configuration` - (Required) Container configuration. See [`container_configuration` Block](#container_configuration-block) below.
 
 ### `container_configuration` Block
 
@@ -409,7 +368,7 @@ The `efs_access_point` block supports the following:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer` Block](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -419,13 +378,50 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
-* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration` Block](#allowed_workload_configuration-block) below.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim` Block](#custom_claim-block) below.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint` Block](#private_endpoint-block) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides` Block](#private_endpoint_overrides-block) below.
+
+### `allowed_workload_configuration` Block
+
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment` Block](#hosting_environment-block) below.
+* `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
+
+### `hosting_environment` Block
+
+* `arn` - (Required) ARN of the hosting environment.
+
+### `private_endpoint_overrides` Block
+
+* `domain` - (Required) Domain the override applies to.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint` Block](#private_endpoint-block) below.
+
+### `private_endpoint` Block
+
+Exactly one of the following must be specified:
+
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource` Block](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource` Block](#self_managed_lattice_resource-block) below.
+
+### `managed_vpc_resource` Block
+
+* `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
+* `routing_domain` - (Optional) Routing domain for the endpoint.
+* `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `tags` - (Optional) Tags to assign to the managed VPC resource.
+
+### `self_managed_lattice_resource` Block
+
+* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 
 The `custom_claim` block supports the following:
 
-* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value` Block](#authorizing_claim_match_value-block) below.
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
@@ -434,7 +430,7 @@ The `custom_claim` block supports the following:
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
-* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value` Block](#claim_match_value-block) below.
 
 ### `claim_match_value` Block
 
@@ -445,40 +441,50 @@ The `claim_match_value` block supports the following:
 
 ### `memory` Block
 
-The `memory` block is optional and computed. If omitted, AgentCore provisions a managed memory configuration by default. When specified, it supports exactly one of the following:
+The `memory` block supports one of the following:
 
-* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration referencing an existing memory resource. See [`agentcore_memory_configuration`](#agentcore_memory_configuration) below.
-* `managed_memory_configuration` - (Optional) Configuration for a memory resource that the harness creates and manages in your account. See [`managed_memory_configuration`](#managed_memory_configuration) below.
-* `disabled` - (Optional) Set to `true` to explicitly opt out of memory.
+* `agentcore_memory_configuration` - (Optional) AgentCore memory configuration. Use this to connect to an existing AgentCore memory resource. See [`agentcore_memory_configuration` Block](#agentcore_memory_configuration-block) below.
+* `disabled` - (Optional) Explicitly disable memory for this harness. See [`disabled` Block](#disabled-block) below.
+* `managed_memory_configuration` - (Optional) Managed memory configuration. Creates and manages a memory resource automatically. See [`managed_memory_configuration` Block](#managed_memory_configuration-block) below.
 
 ### `agentcore_memory_configuration` Block
 
 * `arn` - (Required) ARN of the AgentCore memory resource.
 * `actor_id` - (Optional) Actor ID for memory sessions.
 * `messages_count` - (Optional) Number of messages to retrieve from memory.
-* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config`](#retrieval_config) below.
-
-### `managed_memory_configuration` Block
-
-* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key. Defaults to an AWS-owned key. Not updatable after creation.
-* `event_expiry_duration` - (Optional) Event retention in days. Defaults to 30.
-* `strategies` - (Optional) Strategy types to enable. Valid values: `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
+* `retrieval_config` - (Optional) Retrieval configuration parameters. See [`retrieval_config` Block](#retrieval_config-block) below.
 
 ### `retrieval_config` Block
 
 `retrieval_config` supports the following:
 
-* `map_block_key` - (Required) Key for the retrieval configuration map block.
+* `map_block_key` - (Required) Namespace path template for retrieval settings.
 * `relevance_score` - (Optional) Relevance score threshold. Valid value is between `0` and `1`.
 * `strategy_id` - (Optional) ID of the memory strategy.
 * `top_k` - (Optional) Number of top results to retrieve.
+
+### `disabled` Block
+
+The `disabled` block takes no arguments. Use this to explicitly opt out of memory for the harness.
+
+### `managed_memory_configuration` Block
+
+* `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key used to encrypt the memory. Defaults to an AWS-owned key. Cannot be changed after creation.
+* `event_expiry_duration` - (Optional, Computed) Event retention in days. Defaults to `30`.
+* `strategies` - (Optional, Computed) Set of strategy types to enable. Valid values are `SEMANTIC`, `SUMMARIZATION`, and `USER_PREFERENCE`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
+
+In addition, the following attribute is exported:
+
+* `arn` - ARN of the managed memory resource.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `harness_id` - Unique identifier of the Harness.
 * `arn` - ARN of the Harness.
+* `environment_actual` - Actual deployed environment configuration.
+* `harness_id` - Unique identifier of the Harness.
+* `memory_actual` - Actual deployed memory configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

@@ -68,7 +68,7 @@ This resource supports the following arguments:
 * `event_pattern` - (Optional) The event pattern described a JSON object. At least one of `schedule_expression` or `event_pattern` is required. See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details. **Note**: The event pattern size is 2048 by default but it is adjustable up to 4096 characters by submitting a service quota increase request. See [Amazon EventBridge quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) for details.
 * `force_destroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `description` - (Optional) The description of the rule.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
+* `role_arn` - (Optional) ARN associated with the role that is used for target invocation.
 * `is_enabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled. Defaults to `true`. Conflicts with `state`.
 * `state` - (Optional) State of the rule. Valid values are `DISABLED`, `ENABLED`, and `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`. When state is `ENABLED`, the rule is enabled for all events except those delivered by CloudTrail. To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`. Defaults to `ENABLED`. Conflicts with `is_enabled`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -80,7 +80,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the rule.
-* `arn` - The Amazon Resource Name (ARN) of the rule.
+* `arn` - ARN of the rule.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -91,8 +91,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_cloudwatch_event_rule.example
   identity = {
-    name           = "capture-console-sign-in"
-    event_bus_name = "example-event-bus"
+    name = "capture-console-sign-in"
   }
 }
 
@@ -110,7 +109,6 @@ resource "aws_cloudwatch_event_rule" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `event_bus_name` (String) Name of the event bus.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:

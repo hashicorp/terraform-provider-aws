@@ -41,6 +41,41 @@ TEST_COUNT                   ?= 1
 #   make quick-fix PKG=ses     # Fix code in SES service
 #   make quick-fix K=lambda    # Same as above, but shorter (both work)
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
+#   make t T=TestAccRole          # Same: PKG=iam is auto-detected from the test name
+
+# Auto-detect the package from the test name so `make t T=TestAccFoo_basic`
+# works without also typing PKG=<service>. Runs only when T is set and neither
+# PKG nor K is; the legacy TESTS variable is unaffected.
+#
+# T may be a regex, so we match test function names like `go test -run` does
+# (first `/`-segment, unanchored) by scanning _test.go files under internal/.
+# We grep rather than `go test -list` to avoid compiling the whole tree, and
+# scope to the test's own directory so non-service tests (e.g. internal/conns)
+# work too.
+AUTODETECT_PKG := $(and $(filter undefined,$(origin PKG)),$(filter undefined,$(origin K)),$(filter-out undefined,$(origin T)))
+ifneq ($(AUTODETECT_PKG),)
+  AUTO_DIRS := $(shell seg=$$(printf '%s' '$(T)' | cut -d/ -f1); grep -rHE '^func Test' --include='*_test.go' internal 2>/dev/null | awk -F: -v re="$$seg" '{ fn=$$2; sub("^func ","",fn); sub("[^A-Za-z0-9_].*","",fn); if (fn ~ re) { d=$$1; sub("/[^/]*$$","",d); print d } }' | sort -u)
+  ifeq ($(words $(AUTO_DIRS)),0)
+    $(error make: no test matching T='$(T)' found under internal/ (check the test name/regex). Scope it yourself with PKG=<service> or K=<service>, or use TESTS instead of T to skip autodetection)
+  else
+    AUTO_DIR := $(firstword $(AUTO_DIRS))
+    ifneq ($(words $(AUTO_DIRS)),1)
+      $(warning make: T='$(T)' matches tests in multiple packages ($(AUTO_DIRS)); using $(AUTO_DIR). Set PKG=<service> to choose another, or use TESTS to skip autodetection)
+    endif
+    AUTO_SVC := $(patsubst internal/service/%,%,$(AUTO_DIR))
+    ifeq ($(AUTO_SVC),$(AUTO_DIR))
+      # Not a service package (e.g. internal/conns): scope directly to the directory.
+      PKG_NAME := $(AUTO_DIR)
+      SVC_DIR := ./$(AUTO_DIR)
+      TEST := ./$(AUTO_DIR)/...
+      $(info make: auto-detected package $(AUTO_DIR) from T=$(T))
+    else
+      # Service package: set PKG and let the consolidation below derive the rest.
+      PKG := $(AUTO_SVC)
+      $(info make: auto-detected PKG=$(AUTO_SVC) from T=$(T))
+    endif
+  endif
+endif
 
 # Variable consolidation for backward compatibility and user convenience:
 # - PKG and K both refer to service names (e.g., 'ses', 'lambda')
@@ -138,9 +173,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -360,7 +395,14 @@ fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen: prereq-go gen-raw ## Run all Go generators (with Go version check)
+gen: prereq-go ## Run Go generators (all provider-wide, or scoped to a service with PKG=/K=<service>)
+ifneq ($(origin PKG), undefined)
+	@echo "make: Running Go generators for $(SVC_DIR)..."
+	@echo "make: If you changed anything under internal/generate, run the full make gen without PKG/K scoping"
+	$(GO_VER) generate $(SVC_DIR)/...
+else
+	@$(MAKE) gen-raw
+endif
 
 gen-raw: ## Run all Go generators
 	@echo "make: Running Go generators..."
@@ -458,7 +500,7 @@ modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment|changelog-agent).yml' || true); \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
 	if [ -n "$$disallowed_files" ]; then \
 		echo "Error: 'pull_request_target' found in disallowed files:"; \
 		echo "$$disallowed_files"; \
@@ -534,13 +576,118 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 # The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
 # The tests must pass on the earliest supported Terraform version (0.12.31).
 
+SMOKE_TESTS_IAM = \
+	TestAccIAMRole_basic \
+	TestAccIAMRole_namePrefix \
+	TestAccIAMRole_disappears \
+	TestAccIAMRole_InlinePolicy_basic \
+	TestAccIAMPolicyDocumentDataSource_basic \
+	TestAccIAMPolicyDocumentDataSource_sourceConflicting \
+	TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON \
+	TestAccIAMRolePolicyAttachment_basic \
+	TestAccIAMRolePolicyAttachment_disappears \
+	TestAccIAMRolePolicyAttachment_Disappears_role \
+	TestAccIAMPolicy_basic \
+	TestAccIAMPolicy_policy \
+	TestAccIAMPolicy_tags \
+	TestAccIAMRolePolicy_basic \
+	TestAccIAMRolePolicy_unknownsInPolicy \
+	TestAccIAMInstanceProfile_basic \
+	TestAccIAMInstanceProfile_tags \
+	TestAccIAMPolicy_List_basic \
+	TestAccIAMRole_Identity_basic
+
+SMOKE_TESTS_LOGS = \
+	TestAccLogsLogGroup_basic \
+	TestAccLogsLogGroup_multiple
+
+SMOKE_TESTS_EC2 = \
+	TestAccVPCSecurityGroup_basic \
+	TestAccVPCSecurityGroup_egressMode \
+	TestAccVPCSecurityGroup_vpcAllEgress \
+	TestAccVPCSecurityGroupRule_race \
+	TestAccVPCSecurityGroupRule_protocolChange \
+	TestAccVPCDataSource_basic \
+	TestAccVPCSubnet_basic \
+	TestAccVPC_tenancy \
+	TestAccVPCRouteTableAssociation_Subnet_basic \
+	TestAccVPCRouteTable_basic
+
+SMOKE_TESTS_ECS = \
+	TestAccECSTaskDefinition_basic \
+	TestAccECSService_basic
+
+SMOKE_TESTS_ELBV2 = \
+	TestAccELBV2TargetGroup_basic
+
+SMOKE_TESTS_EVENTS = \
+	TestAccEventsPutEventsAction_basic
+
+SMOKE_TESTS_KMS = \
+	TestAccKMSKey_basic
+
+SMOKE_TESTS_LAMBDA = \
+	TestAccLambdaFunction_basic \
+	TestAccLambdaPermission_basic \
+	TestAccLambdaCapacityProvider_List_basic
+
+SMOKE_TESTS_STAGE_2 = \
+	$(SMOKE_TESTS_EC2) \
+	$(SMOKE_TESTS_LOGS) \
+	$(SMOKE_TESTS_ECS) \
+	$(SMOKE_TESTS_ELBV2) \
+	$(SMOKE_TESTS_EVENTS) \
+	$(SMOKE_TESTS_KMS)
+
+SMOKE_TESTS_META = \
+	TestAccMetaRegionDataSource_basic \
+	TestAccMetaRegionDataSource_endpoint \
+	TestAccMetaPartitionDataSource_basic
+
+SMOKE_TESTS_ROUTE53 = \
+	TestAccRoute53Record_basic_FullName \
+	TestAccRoute53Record_basic_ShortName \
+	TestAccRoute53Record_Latency_basic \
+	TestAccRoute53ZoneDataSource_name
+
+SMOKE_TESTS_S3 = \
+	TestAccS3Bucket_Basic_basic \
+	TestAccS3Bucket_Security_corsUpdate \
+	TestAccS3BucketPublicAccessBlock_basic \
+	TestAccS3BucketPolicy_basic \
+	TestAccS3BucketACL_updateACL \
+	TestAccS3Object_basic
+
+SMOKE_TESTS_SSM = \
+	TestAccSSMParameterEphemeral_basic
+
+SMOKE_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecret_basic
+
+SMOKE_TESTS_STS = \
+	TestAccSTSCallerIdentityDataSource_basic
+
+SMOKE_TESTS_FUNCTION = \
+	TestARNParseFunction_known
+
+SMOKE_TESTS_STAGE_3 = \
+	$(SMOKE_TESTS_LAMBDA) \
+	$(SMOKE_TESTS_META) \
+	$(SMOKE_TESTS_ROUTE53) \
+	$(SMOKE_TESTS_S3) \
+	$(SMOKE_TESTS_SSM) \
+	$(SMOKE_TESTS_SECRETSMANAGER) \
+	$(SMOKE_TESTS_STS) \
+	$(SMOKE_TESTS_FUNCTION)
+
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
 	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -548,7 +695,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -558,7 +706,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$'
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -566,7 +715,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$' || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 18-$$fails1 )) ; \
 	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
@@ -577,7 +727,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/elbv2/... \
 		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$' || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 35-$$tot_fails )) ; \
@@ -590,7 +741,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
 		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$' || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
 	passes=$$(( 54-$$tot_fails )) ; \
@@ -750,10 +902,8 @@ semgrep-naming-cae: semgrep-validate ## [CI] Semgrep Checks / Naming Scan Caps/A
 
 semgrep-test: semgrep-validate ## Test Semgrep configuration files
 	@echo "make: Running Semgrep rule tests..."
-	@semgrep --quiet \
-		--test .ci/semgrep/
-	@semgrep --quiet \
-		--test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
+	@semgrep --test .ci/semgrep/
+	@semgrep --test --config .ci/semgrep-caps-aws-ec2.yml .ci/semgrep-caps-aws-ec2.go
 
 semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name Scan A-Z
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
@@ -779,6 +929,10 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+shellcheck: ## Lint shell scripts with ShellCheck
+	@echo "make: Lint shell scripts with ShellCheck..."
+	@find . -name '*.sh' -not -path './.git/*' -not -path './.teamcity/scripts/performance.sh' -exec shellcheck --severity=warning {} +
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -790,21 +944,162 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 
 smoke: sane ## Smoke tests (alias of sane)
 
+# smoke-identity runs Resource Identity smoke tests for a representative set of resource types.
+# For each resource it includes all _Identity_ tests.
+
+# aws_batch_job_queue: Framework Regional ARN
+SMOKE_IDENTITY_TESTS_BATCH = \
+	TestAccBatchJobQueue_Identity_
+
+# aws_cloudfront_key_value_store: Framework Global Single-Parameter
+SMOKE_IDENTITY_TESTS_CLOUDFRONT = \
+	TestAccCloudFrontKeyValueStore_Identity_
+
+# aws_cloudfrontkeyvaluestore_key: Framework Global Multiple-Parameter
+SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE = \
+	TestAccCloudFrontKeyValueStoreKey_Identity_
+
+# aws_globalaccelerator_cross_account_attachment: Framework Global ARN
+SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR = \
+	TestAccGlobalAcceleratorCrossAccountAttachment_Identity_
+
+# aws_iam_policy: SDKv2 Global ARN
+# aws_iam_policy_attachment: SDKv2 Global ARN (with rename)
+# aws_iam_role: SDKv2 Global Single-Parameter
+# aws_iam_role_policy: SDKv2 Global Multiple-Parameter
+SMOKE_IDENTITY_TESTS_IAM = \
+	TestAccIAMPolicy_Identity_ \
+	TestAccIAMPolicyAttachment_Identity_ \
+	TestAccIAMRole_Identity_ \
+	TestAccIAMRolePolicy_Identity_
+
+# aws_lambda_function_scaling_config: Framework Regional Multiple-Parameter
+SMOKE_IDENTITY_TESTS_LAMBDA = \
+	TestAccLambdaFunctionScalingConfig_Identity_
+
+# aws_cloudwatch_log_resource_policy: SDKv2 Regional Multiple-Parameter (with optional)
+# aws_cloudwatch_log_transformer: Framework Regional ARN (with rename)
+# aws_cloudwatch_log_storage_tier_policy: Framework Regional Singleton
+SMOKE_IDENTITY_TESTS_LOGS = \
+	TestAccLogsResourcePolicy_Identity_ \
+	TestAccLogsTransformer_Identity_ \
+	TestAccLogs_serial/StorageTierPolicy/Identity
+
+# aws_osis_pipeline: Framework Regional Single-Parameter (with rename)
+SMOKE_IDENTITY_TESTS_OSIS = \
+	TestAccOpenSearchIngestionPipeline_Identity_
+
+# aws_rds_certificate : SDKv2 Regional Singleton
+SMOKE_IDENTITY_TESTS_RDS = \
+	TestAccRDSCertificate_serial/Identity
+
+# aws_redshift_namespace_registration : Framework Regional Multiple-Parameter (with optional)
+SMOKE_IDENTITY_TESTS_REDSHIFT = \
+	TestAccRedshiftNamespaceRegistration_Identity_
+
+# aws_route53_record: SDKv2 Global Multiple-Parameter (with rename), (with optional), Mutable
+SMOKE_IDENTITY_TESTS_ROUTE53 = \
+	TestAccRoute53Record_Identity_
+
+# aws_s3_bucket: SDKv2 Regional Single-Parameter
+# aws_s3_bucket_acl: SDKv2 Identity Schema Upgrader
+# aws_s3_directory_bucket: Framework Regional Single-Parameter
+# aws_s3_object: SDKv2 Regional Multiple-Parameter
+SMOKE_IDENTITY_TESTS_S3 = \
+	TestAccS3Bucket_Identity_ \
+	TestAccS3BucketACL_Identity_ \
+	TestAccS3DirectoryBucket_Identity_ \
+	TestAccS3Object_Identity_
+
+# aws_s3_account_public_access_block : SDKv2 Global Singleton
+SMOKE_IDENTITY_TESTS_S3CONTROL = \
+	TestAccS3ControlAccountPublicAccessBlock_serial/PublicAccessBlock/Identity
+
+# aws_secretsmanager_secret_policy: SDKv2 Regional ARN (with rename)
+SMOKE_IDENTITY_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecretPolicy_Identity_
+
+# aws_shield_application_layer_automatic_response: Framework Global ARN (with rename)
+SMOKE_IDENTITY_TESTS_SHIELD = \
+	TestAccShieldApplicationLayerAutomaticResponse_Identity_
+
+# aws_sns_topic: SDKv2 Regional ARN
+SMOKE_IDENTITY_TESTS_SNS = \
+	TestAccSNSTopic_Identity_
+
+# aws_sqs_queue: SDKv2 Custom Inherent Regional
+SMOKE_IDENTITY_TESTS_SQS = \
+	TestAccSQSQueue_Identity_
+
+# aws_ssoadmin_application: Framework Global ARN format for regional resource
+SMOKE_IDENTITY_TESTS_SSOADMIN = \
+	TestAccSSOAdminApplication_Identity_
+
+# aws_uxc_account_customizations: Framework Global Singleton
+SMOKE_IDENTITY_TESTS_UXC = \
+	TestAccUXC_serial/AccountCustomizations/Identity
+
+SMOKE_IDENTITY_TESTS = \
+	$(SMOKE_IDENTITY_TESTS_BATCH) \
+	$(SMOKE_IDENTITY_TESTS_CLOUDFRONT) \
+	$(SMOKE_IDENTITY_TESTS_CLOUDFRONTKEYVALUESTORE) \
+	$(SMOKE_IDENTITY_TESTS_GLOBALACCELERATOR) \
+	$(SMOKE_IDENTITY_TESTS_IAM) \
+	$(SMOKE_IDENTITY_TESTS_LAMBDA) \
+	$(SMOKE_IDENTITY_TESTS_LOGS) \
+	$(SMOKE_IDENTITY_TESTS_OSIS) \
+	$(SMOKE_IDENTITY_TESTS_RDS) \
+	$(SMOKE_IDENTITY_TESTS_REDSHIFT) \
+	$(SMOKE_IDENTITY_TESTS_ROUTE53) \
+	$(SMOKE_IDENTITY_TESTS_S3) \
+	$(SMOKE_IDENTITY_TESTS_S3CONTROL) \
+	$(SMOKE_IDENTITY_TESTS_SECRETSMANAGER) \
+	$(SMOKE_IDENTITY_TESTS_SHIELD) \
+	$(SMOKE_IDENTITY_TESTS_SNS) \
+	$(SMOKE_IDENTITY_TESTS_SQS) \
+	$(SMOKE_IDENTITY_TESTS_SSOADMIN) \
+	$(SMOKE_IDENTITY_TESTS_UXC)
+
+smoke-identity: prereq-go ## Run Resource Identity smoke tests
+	@echo "make: Resource Identity Smoke Tests"
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/batch/... \
+		./internal/service/cloudfront/... \
+		./internal/service/cloudfrontkeyvaluestore/... \
+		./internal/service/globalaccelerator/... \
+		./internal/service/iam/... \
+		./internal/service/lambda/... \
+		./internal/service/logs/... \
+		./internal/service/osis/... \
+		./internal/service/rds/... \
+		./internal/service/redshift/... \
+		./internal/service/route53/... \
+		./internal/service/s3/... \
+		./internal/service/s3control/... \
+		./internal/service/secretsmanager/... \
+		./internal/service/shield/... \
+		./internal/service/sns/... \
+		./internal/service/sqs/... \
+		./internal/service/ssoadmin/... \
+		./internal/service/uxc/... \
+		-count 1 -p 5 -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
+		-run='$(subst $(eval) ,|,$(strip $(SMOKE_IDENTITY_TESTS)))'
+
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT) -vet=off -buildvcs=false
 
 sweeper-check: sweeper-linked sweeper-unlinked ## [CI] Provider Checks / Sweeper Linked, Unlinked
 
 sweeper-linked: ## [CI] Provider Checks / Sweeper Functions Linked
 	@echo "make: Provider Checks / Sweeper Functions Linked..." ; \
-	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
+	$(GO_VER) test -c -o ./sweeper-bin ./internal/sweep/ ; \
 	count=`strings ./sweeper-bin | \
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
 	echo "make: sweeper-linked: found $$count, expected more than 0" ; \
@@ -836,7 +1131,7 @@ swissshepherd-refresh: ## [CI] Run Swiss Shepherd checks and refresh schemas
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -844,7 +1139,7 @@ test-compile: prereq-go ## Test package compilation
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
+	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off -buildvcs=false
 
 test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -978,7 +1273,7 @@ terraform-fmt: ## [CI] Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl fi
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
-	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false 
 
 testacc-tflint: testacc-tflint-dir testacc-tflint-embedded ## [CI] Acceptance Test Linting / tflint
 
@@ -1254,9 +1549,11 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-service-naming \
 	semgrep-test \
 	semgrep-validate \
+	shellcheck \
 	skaff \
 	skaff-check-compile \
 	smoke \
+	smoke-identity \
 	sweep \
 	sweeper \
 	sweeper-check \

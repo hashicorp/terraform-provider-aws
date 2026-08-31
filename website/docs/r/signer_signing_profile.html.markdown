@@ -57,13 +57,13 @@ The `signature_validity_period` configuration block supports the following argum
 
 The `signing_material` configuration block supports the following arguments:
 
-* `certificate_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the certificates that is used to sign your code.
+* `certificate_arn` - (Required, Forces new resource) ARN of the certificates that is used to sign your code.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) for the signing profile.
+* `arn` - ARN for the signing profile.
 * `name` - The name of the target signing profile.
 * `platform_display_name` - A human-readable name for the signing platform associated with the signing profile.
 * `revocation_record` - Revocation information for a signing profile. See [`revocation_record` Block](#revocation_record-block) below for details.

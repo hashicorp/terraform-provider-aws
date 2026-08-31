@@ -19,14 +19,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,7 +42,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
@@ -53,9 +58,9 @@ import (
 // @IdentityAttribute("harness_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types;awstypes;awstypes.Harness")
 // @Testing(generator="testAccRandomHarnessName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="harness_id")
+// @Testing(importIgnore="environment;memory")
 func newHarnessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &harnessResource{}
 
@@ -83,9 +88,8 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrARN:         framework.ARNAttributeComputedOnly(),
-			names.AttrEnvironment: framework.ResourceOptionalComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"memory":              framework.ResourceOptionalComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrARN:        framework.ARNAttributeComputedOnly(),
+			"environment_actual": framework.ResourceComputedListOfObjectsAttribute[harnessEnvironmentProviderModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root(names.AttrEnvironment))),
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -102,8 +106,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 40),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`), "must begin with a letter and contain only letters, numbers, and underscores"),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`),
+						`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`,
+					),
 				},
 			},
 			"max_iterations": schema.Int32Attribute{
@@ -124,6 +130,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
+			"memory_actual":   framework.ResourceComputedListOfObjectsAttribute[harnessMemoryConfigurationModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root("memory"))),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"timeout_seconds": schema.Int32Attribute{
@@ -133,16 +140,122 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			"truncation": framework.ResourceOptionalComputedListOfObjectsAttribute[harnessTruncationConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"truncation": framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessTruncationConfigurationModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			names.AttrEnvironment: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentProviderModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("agentcore_runtime_environment"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"agentcore_runtime_environment": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreRuntimeEnvironmentModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"agent_runtime_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"agent_runtime_id": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"agent_runtime_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"lifecycle_configuration": schema.ListAttribute{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
+										Optional:   true,
+										Computed:   true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+										ElementType: types.ObjectType{
+											AttrTypes: fwtypes.AttributeTypesMust[lifecycleConfigurationModel](ctx),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"filesystem_configuration": filesystemConfigurationSchema(ctx),
+									names.AttrNetworkConfiguration: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"network_mode": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.NetworkMode](),
+													Required:   true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"network_mode_config": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"require_service_s3_endpoint": schema.BoolAttribute{
+																Computed: true,
+																PlanModifiers: []planmodifier.Bool{
+																	boolplanmodifier.UseStateForUnknown(),
+																},
+															},
+															names.AttrSecurityGroups: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+															names.AttrSubnets: schema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"environment_artifact": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentArtifactModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("container_configuration"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"container_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerConfigurationModel](ctx),
@@ -160,6 +273,108 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
+			"memory": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessMemoryConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("agentcore_memory_configuration"),
+							path.MatchRelative().AtName("disabled"),
+							path.MatchRelative().AtName("managed_memory_configuration"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"agentcore_memory_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"actor_id": schema.StringAttribute{
+										Optional: true,
+									},
+									"messages_count": schema.Int32Attribute{
+										Optional: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"retrieval_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreMemoryRetrievalConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
+												"map_block_key": schema.StringAttribute{
+													Required: true,
+												},
+												"relevance_score": schema.Float32Attribute{
+													Optional: true,
+													Validators: []validator.Float32{
+														float32validator.Between(0, 1),
+													},
+												},
+												"strategy_id": schema.StringAttribute{
+													Optional: true,
+												},
+												"top_k": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"disabled": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessDisabledMemoryConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{},
+						},
+						"managed_memory_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessManagedMemoryConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseNonNullStateForUnknown(),
+										},
+									},
+									"encryption_key_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+									"event_expiry_duration": schema.Int32Attribute{
+										Optional: true,
+										Computed: true,
+									},
+									"strategies": schema.SetAttribute{
+										Optional:    true,
+										Computed:    true,
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.HarnessManagedMemoryStrategyType](),
+										ElementType: types.StringType,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"model": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessModelConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -168,21 +383,19 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("bedrock_model_config"),
+							path.MatchRelative().AtName("gemini_model_config"),
+							path.MatchRelative().AtName("litellm_model_config"),
+							path.MatchRelative().AtName("openai_model_config"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"bedrock_model_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessBedrockModelConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								// Exactly one model config must be set. Attaching to a single
-								// block is sufficient: the validator runs even when this block
-								// is null and tallies every sibling, catching none-set (empty
-								// model {}) and multi-set (e.g. bedrock + litellm).
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("bedrock_model_config"),
-									path.MatchRelative().AtParent().AtName("gemini_model_config"),
-									path.MatchRelative().AtParent().AtName("litellm_model_config"),
-									path.MatchRelative().AtParent().AtName("openai_model_config"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -195,9 +408,6 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"model_id": schema.StringAttribute{
 										Required: true,
 									},
-									// Modeled as Float64 so AutoFlex uses the precise float32->Float64
-									// conversion (decimal.NewFromFloat32) and imports round-trip
-									// cleanly (0.7 stays 0.7, not 0.699999988...).
 									"temperature": schema.Float64Attribute{
 										Optional: true,
 										Validators: []validator.Float64{
@@ -237,9 +447,6 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"model_id": schema.StringAttribute{
 										Required: true,
 									},
-									// Modeled as Float64 so AutoFlex uses the precise float32->Float64
-									// conversion (decimal.NewFromFloat32) and imports round-trip
-									// cleanly (0.7 stays 0.7, not 0.699999988...).
 									"temperature": schema.Float64Attribute{
 										Optional: true,
 										Validators: []validator.Float64{
@@ -287,9 +494,6 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"model_id": schema.StringAttribute{
 										Required: true,
 									},
-									// Modeled as Float64 so AutoFlex uses the precise float32->Float64
-									// conversion (decimal.NewFromFloat32) and imports round-trip
-									// cleanly (0.7 stays 0.7, not 0.699999988...).
 									"temperature": schema.Float64Attribute{
 										Optional: true,
 										Validators: []validator.Float64{
@@ -329,9 +533,6 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"model_id": schema.StringAttribute{
 										Required: true,
 									},
-									// Modeled as Float64 so AutoFlex uses the precise float32->Float64
-									// conversion (decimal.NewFromFloat32) and imports round-trip
-									// cleanly (0.7 stays 0.7, not 0.699999988...).
 									"temperature": schema.Float64Attribute{
 										Optional: true,
 										Validators: []validator.Float64{
@@ -353,84 +554,14 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"skill": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillModel](ctx),
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName(names.AttrPath),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrPath: schema.StringAttribute{
 							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.LengthAtLeast(1),
-							},
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"aws_skills": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillAwsSkillsSourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"paths": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
-										Optional:   true,
-									},
-								},
-							},
-						},
-						"git": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillGitSourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrPath: schema.StringAttribute{
-										Optional: true,
-									},
-									names.AttrURL: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.LengthAtLeast(8),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^https://[^#@]+$`), "must be an HTTPS URL"),
-										},
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"auth": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillGitAuthModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"credential_arn": schema.StringAttribute{
-													CustomType: fwtypes.ARNType,
-													Required:   true,
-												},
-												names.AttrUsername: schema.StringAttribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"s3": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillS3SourceModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrURI: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.LengthAtLeast(5),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "must be an S3 URI"),
-										},
-									},
-								},
-							},
 						},
 					},
 				},
@@ -438,9 +569,14 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"system_prompt": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSystemContentBlockModel](ctx),
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("text"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						"text": schema.StringAttribute{
-							Required:  true,
+							Optional:  true,
 							Sensitive: true,
 						},
 					},
@@ -468,6 +604,15 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("agentcore_browser"),
+										path.MatchRelative().AtName("agentcore_code_interpreter"),
+										path.MatchRelative().AtName("agentcore_gateway"),
+										path.MatchRelative().AtName("inline_function"),
+										path.MatchRelative().AtName("remote_mcp"),
+									),
+								},
 								Blocks: map[string]schema.Block{
 									"agentcore_browser": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessAgentCoreBrowserConfigModel](ctx),
@@ -613,11 +758,15 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 func (r *harnessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data harnessResourceModel
+	var config, data harnessResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+	memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -658,24 +807,28 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 
 	harnessID := aws.ToString(out.Harness.HarnessId)
 
-	if _, err := waitHarnessCreated(ctx, conn, harnessID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	harness, err := waitHarnessCreated(ctx, conn, harnessID, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		// Taint the resource.
 		response.State.SetAttribute(ctx, path.Root("harness_id"), harnessID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
 		return
 	}
 
-	harness, err := findHarnessByID(ctx, conn, harnessID)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
-		return
-	}
-
-	// Set values for unknowns.
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, harness, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	// Set values for unknowns. Capture the configured authorizer first so the API-omitted
+	// private_endpoint_overrides can be restored after Flatten.
+	plannedAuthorizerConfiguration := data.AuthorizerConfiguration
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured, memoryIsConfigured))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -686,6 +839,13 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// When importing, all attributes other than `harness_id` will be null.
+	// During a read of an existing resource, `harness_name` will be set as it is a required attribute.
+	isImport := data.HarnessName.IsNull()
+
+	environmentIsConfigured := data.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+	memoryIsConfigured := data.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
@@ -701,34 +861,44 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data))
+	priorAuthorizerConfiguration := data.AuthorizerConfiguration
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &data, environmentIsConfigured || isImport, memoryIsConfigured || isImport))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.AuthorizerConfiguration = authorizerConfiguration
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *harnessResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old harnessResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	var config harnessResourceModel
+	var plan, state harnessResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		harnessID := fwflex.StringValueFromFramework(ctx, new.HarnessID)
+		harnessID := fwflex.StringValueFromFramework(ctx, plan.HarnessID)
 		var input bedrockagentcorecontrol.UpdateHarnessInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -736,19 +906,34 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
+		if !state.Memory.IsNull() && config.Memory.IsNull() {
+			// Clears configured value for memory
+			input.Memory = &awstypes.UpdatedHarnessMemoryConfiguration{
+				OptionalValue: nil,
+			}
+		}
+
 		_, err := conn.UpdateHarness(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
 			return
 		}
 
-		if _, err := waitHarnessUpdated(ctx, conn, harnessID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		harness, err := waitHarnessUpdated(ctx, conn, harnessID, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
+			return
+		}
+
+		environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+		memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, environmentIsConfigured, memoryIsConfigured))
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -780,9 +965,58 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel) diag.Diagnostics {
+func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateEnvironment, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	diags.Append(fwflex.Flatten(ctx, harness, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	r.flattenEnvironment(ctx, data, populateEnvironment)
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
+
+	return diags
+}
+
+func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessResourceModel, populateEnvironment bool) {
+	// Always populate environment_actual from the current environment state.
+	data.EnvironmentActual = data.Environment
+
+	// If environment was not configured by the user, null it out.
+	if !populateEnvironment {
+		data.Environment = fwtypes.NewListNestedObjectValueOfNull[harnessEnvironmentProviderModel](ctx)
+	}
+}
+
+func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	memoryBlock, d := data.Memory.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if memoryBlock != nil {
+		diags.Append(memoryBlock.flattenEnriched(ctx, conn)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		data.Memory = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, memoryBlock)
+	}
+
+	// Always populate memory_actual from the current memory state.
+	data.MemoryActual = data.Memory
+
+	// If memory was not configured by the user, null it out.
+	if !populateMemory {
+		data.Memory = fwtypes.NewListNestedObjectValueOfNull[harnessMemoryConfigurationModel](ctx)
+	}
+
 	return diags
 }
 
@@ -894,6 +1128,7 @@ type harnessResourceModel struct {
 	ARN                     types.String                                                         `tfsdk:"arn"`
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
 	Environment             fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment"`
+	EnvironmentActual       fwtypes.ListNestedObjectValueOf[harnessEnvironmentProviderModel]     `tfsdk:"environment_actual" autoflex:"-"`
 	EnvironmentArtifact     fwtypes.ListNestedObjectValueOf[harnessEnvironmentArtifactModel]     `tfsdk:"environment_artifact"`
 	EnvironmentVariables    fwtypes.MapOfString                                                  `tfsdk:"environment_variables"`
 	ExecutionRoleARN        fwtypes.ARN                                                          `tfsdk:"execution_role_arn"`
@@ -902,6 +1137,7 @@ type harnessResourceModel struct {
 	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
 	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
 	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
+	MemoryActual            fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory_actual" autoflex:"-"`
 	Model                   fwtypes.ListNestedObjectValueOf[harnessModelConfigurationModel]      `tfsdk:"model"`
 	Skills                  fwtypes.ListNestedObjectValueOf[harnessSkillModel]                   `tfsdk:"skill"`
 	SystemPrompt            fwtypes.ListNestedObjectValueOf[harnessSystemContentBlockModel]      `tfsdk:"system_prompt"`
@@ -918,8 +1154,8 @@ type harnessResourceModel struct {
 type harnessModelConfigurationModel struct {
 	BedrockModelConfig fwtypes.ListNestedObjectValueOf[harnessBedrockModelConfigModel] `tfsdk:"bedrock_model_config"`
 	GeminiModelConfig  fwtypes.ListNestedObjectValueOf[harnessGeminiModelConfigModel]  `tfsdk:"gemini_model_config"`
-	LiteLlmModelConfig fwtypes.ListNestedObjectValueOf[harnessLiteLLMModelConfigModel] `tfsdk:"litellm_model_config"`
-	OpenAiModelConfig  fwtypes.ListNestedObjectValueOf[harnessOpenAIModelConfigModel]  `tfsdk:"openai_model_config"`
+	LiteLLMModelConfig fwtypes.ListNestedObjectValueOf[harnessLiteLLMModelConfigModel] `tfsdk:"litellm_model_config"`
+	OpenAIModelConfig  fwtypes.ListNestedObjectValueOf[harnessOpenAIModelConfigModel]  `tfsdk:"openai_model_config"`
 }
 
 var (
@@ -936,7 +1172,10 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
-		m.BedrockModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		var d diag.Diagnostics
+		m.BedrockModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	case awstypes.HarnessModelConfigurationMemberGeminiModelConfig:
 		var data harnessGeminiModelConfigModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
@@ -946,41 +1185,44 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if t.Value.AdditionalParams != nil {
 			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
 			if err != nil {
-				diags.AddError("reading Smithy document", err.Error())
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
 			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
 		} else {
 			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
 		}
-		m.GeminiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		var d diag.Diagnostics
+		m.GeminiModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	case awstypes.HarnessModelConfigurationMemberLiteLlmModelConfig:
 		var data harnessLiteLLMModelConfigModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
 		}
-		m.LiteLlmModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		var d diag.Diagnostics
+		m.LiteLLMModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	case awstypes.HarnessModelConfigurationMemberOpenAiModelConfig:
 		var data harnessOpenAIModelConfigModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
 		}
-		if t.Value.AdditionalParams != nil {
-			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
-			if err != nil {
-				diags.AddError("reading Smithy document", err.Error())
-				return diags
-			}
-			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
-		} else {
-			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
-		}
-		m.OpenAiModelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		var d diag.Diagnostics
+		m.OpenAIModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("model configuration flatten: %T", v))
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("harnessModelConfigurationModel.Flatten: %T", v),
+		)
 	}
+
 	return diags
 }
 
@@ -988,64 +1230,46 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 	var diags diag.Diagnostics
 	switch {
 	case !m.BedrockModelConfig.IsNull():
-		data, d := m.BedrockModelConfig.ToPtr(ctx)
+		model, d := m.BedrockModelConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.HarnessModelConfigurationMemberBedrockModelConfig
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		return &r, diags
+
 	case !m.GeminiModelConfig.IsNull():
-		data, d := m.GeminiModelConfig.ToPtr(ctx)
+		model, d := m.GeminiModelConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.HarnessModelConfigurationMemberGeminiModelConfig
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		if !data.AdditionalParams.IsNull() && !data.AdditionalParams.IsUnknown() {
-			doc, err := tfsmithy.DocumentFromJSONString(data.AdditionalParams.ValueString(), document.NewLazyDocument)
-			if err != nil {
-				diags.AddError("creating Smithy document", err.Error())
-				return nil, diags
-			}
-			r.Value.AdditionalParams = doc
-		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		return &r, diags
-	case !m.LiteLlmModelConfig.IsNull():
-		data, d := m.LiteLlmModelConfig.ToPtr(ctx)
+
+	case !m.LiteLLMModelConfig.IsNull():
+		model, d := m.LiteLLMModelConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.HarnessModelConfigurationMemberLiteLlmModelConfig
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		return &r, diags
-	case !m.OpenAiModelConfig.IsNull():
-		data, d := m.OpenAiModelConfig.ToPtr(ctx)
+
+	case !m.OpenAIModelConfig.IsNull():
+		model, d := m.OpenAIModelConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.HarnessModelConfigurationMemberOpenAiModelConfig
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		if !data.AdditionalParams.IsNull() && !data.AdditionalParams.IsUnknown() {
-			doc, err := tfsmithy.DocumentFromJSONString(data.AdditionalParams.ValueString(), document.NewLazyDocument)
-			if err != nil {
-				diags.AddError("creating Smithy document", err.Error())
-				return nil, diags
-			}
-			r.Value.AdditionalParams = doc
-		}
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		return &r, diags
 	}
+
 	return nil, diags
 }
 
@@ -1058,7 +1282,7 @@ type harnessBedrockModelConfigModel struct {
 
 type harnessGeminiModelConfigModel struct {
 	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
-	ApiKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
+	APIKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
 	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
 	ModelID          types.String                           `tfsdk:"model_id"`
 	Temperature      types.Float64                          `tfsdk:"temperature"`
@@ -1066,22 +1290,22 @@ type harnessGeminiModelConfigModel struct {
 	TopK             types.Int32                            `tfsdk:"top_k"`
 }
 
-type harnessOpenAIModelConfigModel struct {
-	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
-	ApiKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
-	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
-	ModelID          types.String                           `tfsdk:"model_id"`
-	Temperature      types.Float64                          `tfsdk:"temperature"`
-	TopP             types.Float64                          `tfsdk:"top_p"`
-}
-
 type harnessLiteLLMModelConfigModel struct {
-	ApiBase     types.String  `tfsdk:"api_base"`
-	ApiKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
+	APIBase     types.String  `tfsdk:"api_base"`
+	APIKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
 	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
 	ModelID     types.String  `tfsdk:"model_id"`
 	Temperature types.Float64 `tfsdk:"temperature"`
 	TopP        types.Float64 `tfsdk:"top_p"`
+}
+
+type harnessOpenAIModelConfigModel struct {
+	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
+	APIKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
+	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
+	ModelID          types.String                           `tfsdk:"model_id"`
+	Temperature      types.Float64                          `tfsdk:"temperature"`
+	TopP             types.Float64                          `tfsdk:"top_p"`
 }
 
 // System prompt union.
@@ -1117,10 +1341,7 @@ func (m harnessSystemContentBlockModel) Expand(ctx context.Context) (any, diag.D
 // Skill union.
 
 type harnessSkillModel struct {
-	AwsSkills fwtypes.ListNestedObjectValueOf[harnessSkillAwsSkillsSourceModel] `tfsdk:"aws_skills"`
-	Git       fwtypes.ListNestedObjectValueOf[harnessSkillGitSourceModel]       `tfsdk:"git"`
-	Path      types.String                                                      `tfsdk:"path"`
-	S3        fwtypes.ListNestedObjectValueOf[harnessSkillS3SourceModel]        `tfsdk:"s3"`
+	Path types.String `tfsdk:"path"`
 }
 
 var (
@@ -1133,27 +1354,6 @@ func (m *harnessSkillModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessSkillMemberPath:
 		m.Path = fwflex.StringValueToFramework(ctx, t.Value)
-	case awstypes.HarnessSkillMemberS3:
-		var data harnessSkillS3SourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
-		if diags.HasError() {
-			return diags
-		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-	case awstypes.HarnessSkillMemberGit:
-		var data harnessSkillGitSourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
-		if diags.HasError() {
-			return diags
-		}
-		m.Git = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-	case awstypes.HarnessSkillMemberAwsSkills:
-		var data harnessSkillAwsSkillsSourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
-		if diags.HasError() {
-			return diags
-		}
-		m.AwsSkills = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("skill flatten: %T", v))
 	}
@@ -1162,57 +1362,10 @@ func (m *harnessSkillModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 
 func (m harnessSkillModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	switch {
-	case !m.Path.IsNull():
+	if !m.Path.IsNull() {
 		return &awstypes.HarnessSkillMemberPath{Value: fwflex.StringValueFromFramework(ctx, m.Path)}, diags
-	case !m.S3.IsNull():
-		data, d := m.S3.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.HarnessSkillMemberS3
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		return &r, diags
-	case !m.Git.IsNull():
-		data, d := m.Git.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.HarnessSkillMemberGit
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		return &r, diags
-	case !m.AwsSkills.IsNull():
-		data, d := m.AwsSkills.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var r awstypes.HarnessSkillMemberAwsSkills
-		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
-		return &r, diags
 	}
 	return nil, diags
-}
-
-type harnessSkillS3SourceModel struct {
-	URI types.String `tfsdk:"uri"`
-}
-
-type harnessSkillGitSourceModel struct {
-	Auth fwtypes.ListNestedObjectValueOf[harnessSkillGitAuthModel] `tfsdk:"auth"`
-	Path types.String                                              `tfsdk:"path"`
-	URL  types.String                                              `tfsdk:"url"`
-}
-
-type harnessSkillGitAuthModel struct {
-	CredentialARN fwtypes.ARN  `tfsdk:"credential_arn"`
-	Username      types.String `tfsdk:"username"`
-}
-
-type harnessSkillAwsSkillsSourceModel struct {
-	Paths fwtypes.ListOfString `tfsdk:"paths"`
 }
 
 // Tool model.
@@ -1629,7 +1782,7 @@ func (m harnessEnvironmentArtifactModel) expandToUpdatedHarnessEnvironmentArtifa
 
 type harnessMemoryConfigurationModel struct {
 	AgentCoreMemoryConfiguration fwtypes.ListNestedObjectValueOf[harnessAgentCoreMemoryConfigurationModel] `tfsdk:"agentcore_memory_configuration"`
-	Disabled                     types.Bool                                                                `tfsdk:"disabled"`
+	Disabled                     fwtypes.ListNestedObjectValueOf[harnessDisabledMemoryConfigurationModel]  `tfsdk:"disabled"`
 	ManagedMemoryConfiguration   fwtypes.ListNestedObjectValueOf[harnessManagedMemoryConfigurationModel]   `tfsdk:"managed_memory_configuration"`
 }
 
@@ -1648,6 +1801,7 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.AgentCoreMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
 	case awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
 		var data harnessManagedMemoryConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
@@ -1655,8 +1809,13 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 			return diags
 		}
 		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
 	case awstypes.HarnessMemoryConfigurationMemberDisabled:
-		m.Disabled = types.BoolValue(true)
+		m.Disabled = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &harnessDisabledMemoryConfigurationModel{})
+
+	case awstypes.UnknownUnionMember:
+		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
+
 	default:
 		diags.AddError("Unsupported Type", fmt.Sprintf("memory configuration flatten: %T", v))
 	}
@@ -1677,8 +1836,7 @@ func (m harnessMemoryConfigurationModel) ExpandTo(ctx context.Context, targetTyp
 
 func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx context.Context) (awstypes.HarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	switch {
-	case !m.AgentCoreMemoryConfiguration.IsNull():
+	if !m.AgentCoreMemoryConfiguration.IsNull() {
 		data, d := m.AgentCoreMemoryConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1687,7 +1845,8 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		var r awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
-	case !m.ManagedMemoryConfiguration.IsNull():
+	}
+	if !m.ManagedMemoryConfiguration.IsNull() {
 		data, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1696,7 +1855,8 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 		var r awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		return &r, diags
-	case !m.Disabled.IsNull() && m.Disabled.ValueBool():
+	}
+	if !m.Disabled.IsNull() {
 		return &awstypes.HarnessMemoryConfigurationMemberDisabled{}, diags
 	}
 	return nil, diags
@@ -1704,7 +1864,7 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 
 func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.AgentCoreMemoryConfiguration.IsNull() || !m.ManagedMemoryConfiguration.IsNull() || (!m.Disabled.IsNull() && m.Disabled.ValueBool()) {
+	if !m.AgentCoreMemoryConfiguration.IsNull() {
 		r, d := m.expandToHarnessMemoryConfiguration(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -1712,7 +1872,39 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 		}
 		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
 	}
+	if !m.ManagedMemoryConfiguration.IsNull() {
+		r, d := m.expandToHarnessMemoryConfiguration(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
+	}
+	if !m.Disabled.IsNull() {
+		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: &awstypes.HarnessMemoryConfigurationMemberDisabled{}}, diags
+	}
 	return &awstypes.UpdatedHarnessMemoryConfiguration{}, diags
+}
+
+func (m *harnessMemoryConfigurationModel) flattenEnriched(ctx context.Context, conn *bedrockagentcorecontrol.Client) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if !m.ManagedMemoryConfiguration.IsNull() {
+		managedMemory, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() || managedMemory == nil {
+			return diags
+		}
+
+		diags.Append(managedMemory.flattenEnriched(ctx, conn)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, managedMemory)
+	}
+
+	return diags
 }
 
 type harnessAgentCoreMemoryConfigurationModel struct {
@@ -1729,8 +1921,42 @@ type harnessAgentCoreMemoryRetrievalConfigModel struct {
 	TopK           types.Int32   `tfsdk:"top_k"`
 }
 
+type harnessDisabledMemoryConfigurationModel struct{}
+
 type harnessManagedMemoryConfigurationModel struct {
-	EncryptionKeyARN    fwtypes.ARN                                                         `tfsdk:"encryption_key_arn"`
-	EventExpiryDuration types.Int32                                                         `tfsdk:"event_expiry_duration"`
-	Strategies          fwtypes.ListOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
+	ARN                 fwtypes.ARN                                                        `tfsdk:"arn" autoflex:",noexpand"`
+	EncryptionKeyARN    fwtypes.ARN                                                        `tfsdk:"encryption_key_arn"`
+	EventExpiryDuration types.Int32                                                        `tfsdk:"event_expiry_duration"`
+	Strategies          fwtypes.SetOfStringEnum[awstypes.HarnessManagedMemoryStrategyType] `tfsdk:"strategies"`
+}
+
+func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Context, conn *bedrockagentcorecontrol.Client) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if m.ARN.IsNull() || m.ARN.IsUnknown() {
+		return diags
+	}
+
+	memory, err := findMemoryByARN(ctx, conn, m.ARN.ValueString())
+	if err != nil {
+		diags.AddError("reading managed memory", err.Error())
+		return diags
+	}
+
+	// Populate fields from the memory resource.
+	if memory.EncryptionKeyArn != nil {
+		m.EncryptionKeyARN = fwtypes.ARNValue(aws.ToString(memory.EncryptionKeyArn))
+	}
+	if memory.EventExpiryDuration != nil {
+		m.EventExpiryDuration = fwflex.Int32ToFramework(ctx, memory.EventExpiryDuration)
+	}
+	if len(memory.Strategies) > 0 {
+		elements := make([]attr.Value, 0, len(memory.Strategies))
+		for _, s := range memory.Strategies {
+			elements = append(elements, fwtypes.StringEnumValue(awstypes.HarnessManagedMemoryStrategyType(s.Type)))
+		}
+		m.Strategies = fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.HarnessManagedMemoryStrategyType]](ctx, elements)
+	}
+
+	return diags
 }
