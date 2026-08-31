@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.75.1
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/backup v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/backup v1.62.1
 	github.com/aws/aws-sdk-go-v2/service/batch v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.68.0
