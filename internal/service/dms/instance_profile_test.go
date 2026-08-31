@@ -5,7 +5,6 @@ package dms_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -137,14 +135,16 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context, t *testing.T) resou
 			}
 
 			_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
+
 			if retry.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
-				return create.Error(names.DMS, create.ErrActionCheckingDestroyed, tfdms.ResNameInstanceProfile, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.DMS, create.ErrActionCheckingDestroyed, tfdms.ResNameInstanceProfile, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("DMS Instance Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -155,21 +155,14 @@ func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name s
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, tfdms.ResNameInstanceProfile, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, tfdms.ResNameInstanceProfile, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", name)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 		_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, tfdms.ResNameInstanceProfile, rs.Primary.ID, err)
-		}
 
-		return nil
+		return err
 	}
 }
 
