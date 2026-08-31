@@ -12,7 +12,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     inference {
       provider {
-        endpoint = "https://api.anthropic.com"
+        endpoint = "https://api.anthropic.com" # nosemgrep:ci.semgrep.domain-names.domain-names-tf
 
         operation {
           path = var.path

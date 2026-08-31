@@ -12,7 +12,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   target_configuration {
     inference {
       provider {
-        endpoint = "https://api.openai.com"
+        endpoint = "https://api.openai.com" # nosemgrep:ci.semgrep.domain-names.domain-names-tf
 
         model_mapping {
           provider_prefix {
