@@ -240,7 +240,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3files v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.11.0
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.269.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.21.0
