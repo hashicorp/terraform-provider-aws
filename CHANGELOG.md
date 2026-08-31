@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_eks_cluster_versions: Add `pod_gc_controller_config` attribute to the `control_plane_component_config.kube_controller_manager_config` configuration block ([#49730](https://github.com/hashicorp/terraform-provider-aws/issues/49730))
 * resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.http.agentcore_runtime.schema` and `target_configuration.http.passthrough` configuration blocks ([#48704](https://github.com/hashicorp/terraform-provider-aws/issues/48704))
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.inference` configuration block ([#48705](https://github.com/hashicorp/terraform-provider-aws/issues/48705))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
 * resource/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
 * resource/aws_dx_hosted_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes ([#49711](https://github.com/hashicorp/terraform-provider-aws/issues/49711))
@@ -31,6 +32,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix `assume_role_with_web_identity.web_identity_token` being rejected when `AWS_WEB_IDENTITY_TOKEN_FILE` is set ([#49671](https://github.com/hashicorp/terraform-provider-aws/issues/49671))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 
