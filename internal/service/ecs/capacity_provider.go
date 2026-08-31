@@ -182,6 +182,20 @@ func resourceCapacityProvider() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"auto_repair_configuration": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"actions_status": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.AutoRepairActionsStatus](),
+										},
+									},
+								},
+							},
 							"infrastructure_optimization": {
 								Type:     schema.TypeList,
 								MaxItems: 1,
@@ -1006,6 +1020,10 @@ func expandManagedInstancesProviderCreate(configured any) *awstypes.CreateManage
 	tfMap := configured.([]any)[0].(map[string]any)
 	apiObject := &awstypes.CreateManagedInstancesProviderConfiguration{}
 
+	if v, ok := tfMap["auto_repair_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AutoRepairConfiguration = expandAutoRepairConfiguration(v)
+	}
+
 	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
 		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
 	}
@@ -1036,6 +1054,10 @@ func expandManagedInstancesProviderUpdate(configured any) *awstypes.UpdateManage
 
 	tfMap := configured.([]any)[0].(map[string]any)
 	apiObject := &awstypes.UpdateManagedInstancesProviderConfiguration{}
+
+	if v, ok := tfMap["auto_repair_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AutoRepairConfiguration = expandAutoRepairConfiguration(v)
+	}
 
 	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
 		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
@@ -1517,6 +1539,10 @@ func flattenManagedInstancesProvider(apiObject *awstypes.ManagedInstancesProvide
 		tfMap["infrastructure_optimization"] = flattenInfrastructureOptimization(apiObject.InfrastructureOptimization)
 	}
 
+	if apiObject.AutoRepairConfiguration != nil {
+		tfMap["auto_repair_configuration"] = flattenAutoRepairConfiguration(apiObject.AutoRepairConfiguration)
+	}
+
 	return []map[string]any{tfMap}
 }
 
@@ -1700,6 +1726,33 @@ func flattenInstanceRequirementsRequest(apiObject *awstypes.InstanceRequirements
 			names.AttrMin: aws.ToInt32(apiObject.VCpuCount.Min),
 			names.AttrMax: aws.ToInt32(apiObject.VCpuCount.Max),
 		}}
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func expandAutoRepairConfiguration(tfList []any) *awstypes.AutoRepairConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.AutoRepairConfiguration{}
+
+	if v, ok := tfMap["actions_status"].(string); ok && v != "" {
+		apiObject.ActionsStatus = awstypes.AutoRepairActionsStatus(v)
+	}
+
+	return apiObject
+}
+
+func flattenAutoRepairConfiguration(apiObject *awstypes.AutoRepairConfiguration) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"actions_status": string(apiObject.ActionsStatus),
 	}
 
 	return []map[string]any{tfMap}
