@@ -22,14 +22,14 @@ func TestNormalizeTelemetryRuleRegionSelection(t *testing.T) {
 		"all regions": {
 			rule: &awstypes.TelemetryRule{
 				AllRegions: aws.Bool(true),
-				Regions:    []string{"us-east-1", "us-west-2"},
+				Regions:    []string{"region-1", "region-2"},
 			},
 		},
 		"selected regions": {
 			rule: &awstypes.TelemetryRule{
-				Regions: []string{"us-east-1"},
+				Regions: []string{"region-1"},
 			},
-			wantRegions: []string{"us-east-1"},
+			wantRegions: []string{"region-1"},
 		},
 	}
 
