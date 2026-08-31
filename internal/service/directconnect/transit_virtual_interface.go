@@ -105,6 +105,18 @@ func resourceTransitVirtualInterface() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
 				"sitelink_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -160,6 +172,14 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		input.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv4"); ok {
+		input.NewTransitVirtualInterface.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("prefix_pool_allocated_count_ipv6"); ok {
+		input.NewTransitVirtualInterface.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(v.(int)))
+	}
+
 	output, err := conn.CreateTransitVirtualInterface(ctx, input)
 
 	if err != nil {
@@ -213,6 +233,8 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 

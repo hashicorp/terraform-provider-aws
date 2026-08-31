@@ -1,3 +1,29 @@
+## 6.63.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_key_pair` ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
+* **New List Resource:** `aws_lambdamicrovms_image` ([#49724](https://github.com/hashicorp/terraform-provider-aws/issues/49724))
+* **New List Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
+* **New List Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
+* **New List Resource:** `aws_opensearchserverless_access_policy` ([#49717](https://github.com/hashicorp/terraform-provider-aws/issues/49717))
+* **New List Resource:** `aws_opensearchserverless_lifecycle_policy` ([#49718](https://github.com/hashicorp/terraform-provider-aws/issues/49718))
+* **New Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
+* **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster_versions: Add `pod_gc_controller_config` attribute to the `control_plane_component_config.kube_controller_manager_config` configuration block ([#49730](https://github.com/hashicorp/terraform-provider-aws/issues/49730))
+* resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block ([#48706](https://github.com/hashicorp/terraform-provider-aws/issues/48706))
+* resource/aws_eks_cluster: Add `pod_gc_controller_config` argument to the `kube_controller_manager_config` configuration block ([#49725](https://github.com/hashicorp/terraform-provider-aws/issues/49725))
+* resource/aws_key_pair: Add resource identity support ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
+
+BUG FIXES:
+
+* resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+* resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+
 ## 6.62.0 (August 26, 2026)
 
 NOTES:
