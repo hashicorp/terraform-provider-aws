@@ -6,6 +6,7 @@ package sdkv2
 import (
 	"context"
 	"errors"
+	"maps"
 	"testing"
 	"unique"
 
@@ -57,6 +58,54 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 
 func (t *mockService) UpdateTags(context.Context, any, string, any, any) error {
 	return nil
+}
+
+func TestCalculateTagsAll(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := map[string]struct {
+		defaultTags  map[string]string
+		resourceTags map[string]string
+		want         map[string]string
+	}{
+		"system tag only": {
+			resourceTags: map[string]string{
+				"aws:autoscaling-group-123": "managed",
+			},
+			want: map[string]string{},
+		},
+		"system tag excluded while resource and default tags remain": {
+			defaultTags: map[string]string{
+				"default": "value",
+			},
+			resourceTags: map[string]string{
+				"aws:autoscaling-group-123": "managed",
+				"resource":                  "value",
+			},
+			want: map[string]string{
+				"default":  "value",
+				"resource": "value",
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := calculateTagsAll(
+				&tftags.DefaultConfig{Tags: tftags.New(ctx, testCase.defaultTags)},
+				nil,
+				"TestService",
+				tftags.New(ctx, testCase.resourceTags),
+			).Map()
+
+			if !maps.Equal(got, testCase.want) {
+				t.Errorf("tags_all = %#v, want %#v", got, testCase.want)
+			}
+		})
+	}
 }
 
 func TestTagsResourceInterceptor(t *testing.T) {

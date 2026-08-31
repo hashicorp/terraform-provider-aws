@@ -267,6 +267,10 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 	return diags
 }
 
+func calculateTagsAll(defaultConfig *tftags.DefaultConfig, ignoreConfig *tftags.IgnoreConfig, serviceName string, tags tftags.KeyValueTags) tftags.KeyValueTags {
+	return defaultConfig.MergeTags(tags).IgnoreSystem(serviceName).IgnoreConfig(ignoreConfig)
+}
+
 func setTagsAll() customizeDiffInterceptor {
 	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
@@ -283,8 +287,13 @@ func setTagsAll() customizeDiffInterceptor {
 					return nil
 				}
 
+				sp, _, _, _, _, ok := interceptors.InfoFromContext(ctx, c)
+				if !ok {
+					return nil
+				}
+
 				newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-				allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+				allTags := calculateTagsAll(c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), sp.ServicePackageName(), newTags)
 				if d.HasChange(names.AttrTags) {
 					if newTags.HasZeroValue() {
 						if err := d.SetNewComputed(names.AttrTagsAll); err != nil {
