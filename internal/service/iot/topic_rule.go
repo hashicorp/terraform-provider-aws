@@ -9,6 +9,7 @@ import (
 	"context"
 	"log"
 	"reflect"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -150,7 +151,7 @@ func resourceTopicRule() *schema.Resource {
 							"metric_timestamp": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: verify.ValidUTCTimestamp,
+								ValidateFunc: validCloudWatchMetricTimestamp,
 							},
 							"metric_unit": {
 								Type:     schema.TypeString,
@@ -361,7 +362,7 @@ func resourceTopicRule() *schema.Resource {
 										"metric_timestamp": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: verify.ValidUTCTimestamp,
+											ValidateFunc: validCloudWatchMetricTimestamp,
 										},
 										"metric_unit": {
 											Type:     schema.TypeString,
@@ -1534,6 +1535,21 @@ func expandCloudWatchLogsAction(tfList []any) *awstypes.CloudwatchLogsAction {
 	}
 
 	return apiObject
+}
+
+// validCloudWatchMetricTimestamp validates metric_timestamp as either a UTC
+// timestamp or an IoT SQL substitution template (e.g. "${timestamp()}"), the
+// latter of which is resolved by AWS at rule execution time and so can't be
+// validated statically.
+// https://docs.aws.amazon.com/iot/latest/developerguide/iot-substitution-templates.html
+func validCloudWatchMetricTimestamp(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if strings.Contains(value, "${") {
+		return ws, errors
+	}
+
+	return verify.ValidUTCTimestamp(v, k)
 }
 
 func expandCloudWatchMetricAction(tfList []any) *awstypes.CloudwatchMetricAction {

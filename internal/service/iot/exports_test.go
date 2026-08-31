@@ -41,4 +41,6 @@ var (
 	FindThingTypeByName                      = findThingTypeByName
 	FindTopicRuleDestinationByARN            = findTopicRuleDestinationByARN
 	FindTopicRuleByName                      = findTopicRuleByName
+
+	ValidCloudWatchMetricTimestamp = validCloudWatchMetricTimestamp
 )

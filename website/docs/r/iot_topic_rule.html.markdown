@@ -106,7 +106,7 @@ The `cloudwatch_metric` object takes the following arguments:
 
 * `metric_name` - (Required) The CloudWatch metric name.
 * `metric_namespace` - (Required) The CloudWatch metric namespace name.
-* `metric_timestamp` - (Optional) An optional Unix timestamp (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
+* `metric_timestamp` - (Optional) An optional Unix timestamp (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp), or an IoT SQL [substitution template](https://docs.aws.amazon.com/iot/latest/developerguide/iot-substitution-templates.html) such as `${timestamp()}`.
 * `metric_unit` - (Required) The metric unit (supported units can be found here: http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
 * `metric_value` - (Required) The CloudWatch metric value.
 * `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch metric.
