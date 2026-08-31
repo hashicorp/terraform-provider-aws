@@ -290,7 +290,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				ImportStateVerify: true,
 				// canary status can change to "stopped" after a successful run.
 				// requires exception for timeline and status
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", "status"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", names.AttrStatus},
 			},
 			{
 				Config: testAccCanaryConfig_start(rName, false),
@@ -342,7 +342,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				ImportStateVerify: true,
 				// canary status can change to "stopped" after a successful run.
 				// requires exception for timeline and status
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", "status"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", names.AttrStatus},
 			},
 			{
 				Config: testAccCanaryConfig_startZipUpdated(rName, true),
