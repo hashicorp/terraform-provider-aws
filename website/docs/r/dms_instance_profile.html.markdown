@@ -24,13 +24,13 @@ resource "aws_dms_instance_profile" "example" {
 
 ```terraform
 resource "aws_dms_instance_profile" "example" {
-  name                     = "example"
-  description              = "example instance profile"
-  network_type             = "IPV4"
-  publicly_accessible      = false
-  subnet_group_identifier  = aws_dms_replication_subnet_group.example.id
-  vpc_security_group_ids   = [aws_security_group.example.id]
-  kms_key_arn              = aws_kms_key.example.arn
+  name                    = "example"
+  description             = "example instance profile"
+  network_type            = "IPV4"
+  publicly_accessible     = false
+  subnet_group_identifier = aws_dms_replication_subnet_group.example.id
+  vpc_security_group_ids  = [aws_security_group.example.id]
+  kms_key_arn             = aws_kms_key.example.arn
 
   tags = {
     Name = "example"
