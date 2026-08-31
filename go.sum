@@ -55,8 +55,8 @@ github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.2.1 h1:ZLeHiVZ7bR8D
 github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol v1.2.1/go.mod h1:lo8ih4iuTsC+9dfPxLD3BlxHb5TBrRKFtWXxaByjKTU=
 github.com/aws/aws-sdk-go-v2/service/amp v1.50.1 h1:S9/Hy8JNniOXjmBF1qF9ozMihRrlYNCuGJzScZe6hVI=
 github.com/aws/aws-sdk-go-v2/service/amp v1.50.1/go.mod h1:q/YkOz5n3IVdPUwYGKEaO27+6a6Ebs51eLhc4QR6FqM=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.43.0 h1:7bjBHTgYAbce1CoDl6YbpE6vVmsIDJkW8XaqY3rA+uc=
-github.com/aws/aws-sdk-go-v2/service/amplify v1.43.0/go.mod h1:yFrVKZOIUuS7QmIaK23RyOESUbKPemiXs8y0WamafZo=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.44.1 h1:5UFETOnGTOmNzlRRFKRZzFpQJwezuD4quF8xQMXfisI=
+github.com/aws/aws-sdk-go-v2/service/amplify v1.44.1/go.mod h1:5Od2uJ7ONLsqzyJjesk8dgIB9i4LV/g2zdrqcFANXSU=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.43.0 h1:CayjaX6JBnuIr8jy9V925fETiriuqqJUusCc3ud9iUk=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.43.0/go.mod h1:pG85k4ITspePWd6EgP2P99/yHpNnAOpoVgBXALk/Lq0=
 github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.38.0 h1:XVz1qOZS1xESMd7lA1suGVjmlNjNH7zBkdiUWjMUsQE=
