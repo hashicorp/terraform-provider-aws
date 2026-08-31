@@ -237,7 +237,7 @@ The following arguments are optional:
 * `auth_token_wo_version` - (Optional) Integer that, when changed, triggers a re-send of `auth_token_wo` to the replication group. Requires `auth_token_wo`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
-  Defaults to `true`.
+  If this argument is not explicitly set in the configuration, AWS will set a default value of `true` and Terraform will not detect drift on this attribute.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
