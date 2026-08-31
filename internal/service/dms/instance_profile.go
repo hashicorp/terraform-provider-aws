@@ -41,10 +41,6 @@ func newInstanceProfileResource(_ context.Context) (resource.ResourceWithConfigu
 	return &instanceProfileResource{}, nil
 }
 
-const (
-	ResNameInstanceProfile = "Instance Profile"
-)
-
 type instanceProfileResource struct {
 	framework.ResourceWithModel[instanceProfileResourceModel]
 	framework.WithImportByIdentity
