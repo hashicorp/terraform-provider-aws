@@ -11,5 +11,9 @@ resource/aws_bedrockagentcore_harness: Add `model.gemini_model_config.additional
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `s3`, `git`, and `aws_skills` configuration blocks to `skill` and make `skill.path` optional
+resource/aws_bedrockagentcore_harness: Add `skill.aws_skills`, `skill.git`, and `skill.s3` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Change `skill.path` to Optional
 ```

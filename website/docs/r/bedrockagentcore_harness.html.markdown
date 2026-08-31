@@ -188,6 +188,7 @@ The `model` block supports exactly one of the following:
 ### `gemini_model_config` Block
 
 * `model_id` - (Required) Gemini model ID.
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the Gemini model provider unchanged.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
@@ -206,6 +207,7 @@ The `model` block supports exactly one of the following:
 ### `openai_model_config` Block
 
 * `model_id` - (Required) OpenAI model ID.
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the OpenAI model provider unchanged.
 * `api_key_arn` - (Required) ARN of the secret containing the API key.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.
 * `temperature` - (Optional) Temperature for sampling.
@@ -272,7 +274,25 @@ Exactly one of the following must be specified:
 
 ### `skill` Block
 
-* `path` - (Required) Path to the skill.
+* `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills` Block](#aws_skills-block) below.
+* `git` - (Optional) Git repository source for the skill. See [`git` Block](#git-block) below.
+* `path` - (Optional) Path to the skill.
+* `s3` - (Optional) S3 source for the skill. See [`s3` Block](#s3-block) below.
+
+### `git` Block
+
+* `url` - (Required) HTTPS URL of the git repository.
+* `auth` - (Optional) Authentication configuration for private repositories. See [`auth` Block](#auth-block) below.
+* `path` - (Optional) Subdirectory within the repository containing the skill.
+
+### `auth` Block
+
+* `credential_arn` - (Required) ARN of the credential in AgentCore Identity containing the password or personal access token.
+* `username` - (Optional) Username for authentication. Defaults to `oauth2` if not specified.
+
+### `s3` Block
+
+* `uri` - (Required) S3 URI of the skill source. Must begin with `s3://`.
 
 ### `truncation` Block
 

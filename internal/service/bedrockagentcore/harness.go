@@ -44,6 +44,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -556,12 +557,86 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Validators: []validator.Object{
 						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("aws_skills"),
+							path.MatchRelative().AtName("git"),
 							path.MatchRelative().AtName(names.AttrPath),
+							path.MatchRelative().AtName("s3"),
 						),
 					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrPath: schema.StringAttribute{
 							Optional: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"aws_skills": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillAWSSkillsSourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"paths": schema.ListAttribute{
+										CustomType: fwtypes.ListOfStringType,
+										Optional:   true,
+									},
+								},
+							},
+						},
+						"git": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillGitSourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrPath: schema.StringAttribute{
+										Optional: true,
+									},
+									names.AttrURL: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(8),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^https://[^#@]+$`), "must be an HTTPS URL"),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"auth": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillGitAuthModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"credential_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												names.AttrUsername: schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSkillS3SourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrURI: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											fwvalidators.S3URI(),
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1212,6 +1287,16 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if t.Value.AdditionalParams != nil {
+			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
+			if err != nil {
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
+				return diags
+			}
+			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+		} else {
+			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
 		var d diag.Diagnostics
 		m.OpenAIModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1247,6 +1332,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberGeminiModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !model.AdditionalParams.IsNull() {
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, model.AdditionalParams), document.NewLazyDocument)
+			if err != nil {
+				diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+				return nil, diags
+			}
+			r.Value.AdditionalParams = json
+		}
 		return &r, diags
 
 	case !m.LiteLLMModelConfig.IsNull():
@@ -1267,6 +1363,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberOpenAiModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !model.AdditionalParams.IsNull() {
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, model.AdditionalParams), document.NewLazyDocument)
+			if err != nil {
+				diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+				return nil, diags
+			}
+			r.Value.AdditionalParams = json
+		}
 		return &r, diags
 	}
 
@@ -1341,7 +1448,10 @@ func (m harnessSystemContentBlockModel) Expand(ctx context.Context) (any, diag.D
 // Skill union.
 
 type harnessSkillModel struct {
-	Path types.String `tfsdk:"path"`
+	AWSSkills fwtypes.ListNestedObjectValueOf[harnessSkillAWSSkillsSourceModel] `tfsdk:"aws_skills"`
+	Git       fwtypes.ListNestedObjectValueOf[harnessSkillGitSourceModel]       `tfsdk:"git"`
+	Path      types.String                                                      `tfsdk:"path"`
+	S3        fwtypes.ListNestedObjectValueOf[harnessSkillS3SourceModel]        `tfsdk:"s3"`
 }
 
 var (
@@ -1352,20 +1462,109 @@ var (
 func (m *harnessSkillModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
+	case awstypes.HarnessSkillMemberAwsSkills:
+		var data harnessSkillAWSSkillsSourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.AWSSkills, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessSkillMemberGit:
+		var data harnessSkillGitSourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Git, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	case awstypes.HarnessSkillMemberPath:
 		m.Path = fwflex.StringValueToFramework(ctx, t.Value)
+
+	case awstypes.HarnessSkillMemberS3:
+		var data harnessSkillS3SourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		smerr.AddEnrich(ctx, &diags, d)
+
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("skill flatten: %T", v))
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("harnessSkillModel.Flatten: %T", v),
+		)
 	}
+
 	return diags
 }
 
 func (m harnessSkillModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if !m.Path.IsNull() {
-		return &awstypes.HarnessSkillMemberPath{Value: fwflex.StringValueFromFramework(ctx, m.Path)}, diags
+	switch {
+	case !m.AWSSkills.IsNull():
+		model, d := m.AWSSkills.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessSkillMemberAwsSkills
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.Git.IsNull():
+		model, d := m.Git.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessSkillMemberGit
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.Path.IsNull():
+		r := awstypes.HarnessSkillMemberPath{
+			Value: fwflex.StringValueFromFramework(ctx, m.Path),
+		}
+		return &r, diags
+
+	case !m.S3.IsNull():
+		model, d := m.S3.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessSkillMemberS3
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
 	}
+
 	return nil, diags
+}
+
+type harnessSkillAWSSkillsSourceModel struct {
+	Paths fwtypes.ListOfString `tfsdk:"paths"`
+}
+
+type harnessSkillGitSourceModel struct {
+	Auth fwtypes.ListNestedObjectValueOf[harnessSkillGitAuthModel] `tfsdk:"auth"`
+	Path types.String                                              `tfsdk:"path"`
+	URL  types.String                                              `tfsdk:"url"`
+}
+
+type harnessSkillGitAuthModel struct {
+	CredentialARN fwtypes.ARN  `tfsdk:"credential_arn"`
+	Username      types.String `tfsdk:"username"`
+}
+
+type harnessSkillS3SourceModel struct {
+	URI types.String `tfsdk:"uri"`
 }
 
 // Tool model.
