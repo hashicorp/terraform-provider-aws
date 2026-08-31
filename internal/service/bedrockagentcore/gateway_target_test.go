@@ -2414,7 +2414,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationInferenceProviderAl
 									"model": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"model": knownvalue.StringExact("anthropic.claude-*"),
 									})}),
-									"path":          knownvalue.StringExact("/v1/messages"),
+									names.AttrPath:  knownvalue.StringExact("/v1/messages"),
 									"provider_path": knownvalue.Null(),
 								})}),
 							})}),
@@ -2449,7 +2449,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationInferenceProviderAl
 									"model": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 										"model": knownvalue.StringExact("anthropic.claude-*"),
 									})}),
-									"path":          knownvalue.StringExact("/v1/responses"),
+									names.AttrPath:  knownvalue.StringExact("/v1/responses"),
 									"provider_path": knownvalue.Null(),
 								})}),
 							})}),
