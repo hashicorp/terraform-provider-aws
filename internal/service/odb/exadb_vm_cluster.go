@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
@@ -44,7 +46,15 @@ import (
 // @FrameworkResource("aws_odb_exadb_vm_cluster", name="ExaDB VM Cluster")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
+// The generated region override identity test is disabled because Grid Infrastructure image IDs are regional.
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/odb/types;odbtypes;odbtypes.ExadbVmCluster")
+// @Testing(preCheckRegion="us-east-1")
+// @Testing(preCheck="testAccPreCheckExaDBVMCluster")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator="testAccRandomExaDBVMClusterDisplayName(t)")
+// @Testing(requireEnvVarValue="TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")
+// @Testing(requireEnvVarValue="TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")
 func newExaDBVMClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exaDBVMClusterResource{}
 
@@ -176,6 +186,7 @@ func (r *exaDBVMClusterResource) Schema(ctx context.Context, _ resource.SchemaRe
 				},
 				Description: "IAM service roles associated with the ExaDB VM Cluster.",
 			},
+			names.AttrID: framework.IDAttribute(),
 			"iorm_config_cache": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[exaDBVMClusterIORMConfigModel](ctx),
 				ElementType: types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[exaDBVMClusterIORMConfigModel](ctx)},
@@ -436,7 +447,6 @@ func (r *exaDBVMClusterResource) Schema(ctx context.Context, _ resource.SchemaRe
 				},
 				Description: "Total amount of VM file system storage for the ExaDB VM Cluster, in GB.",
 			},
-			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"data_collection_options": schema.ListNestedBlock{
@@ -500,18 +510,20 @@ func (r *exaDBVMClusterResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &plan))
+	id := aws.ToString(output.ExadbVmClusterId)
+	plan.ExaDBVMClusterID = types.StringValue(id)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrID), id))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	created, err := waitExaDBVMClusterCreated(ctx, conn, plan.ExaDBVMClusterID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	created, err := waitExaDBVMClusterCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ExaDBVMClusterID.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, created, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, created, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -539,7 +551,7 @@ func (r *exaDBVMClusterResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -563,42 +575,49 @@ func (r *exaDBVMClusterResource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	if diff.HasChanges() {
-		var input odb.UpdateExadbVmClusterInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...))
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.ExadbVmClusterId = state.ExaDBVMClusterID.ValueStringPointer()
+	if !diff.HasChanges() {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+		return
+	}
 
-		output, err := conn.UpdateExadbVmCluster(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ExaDBVMClusterID.String())
-			return
-		}
-		if output == nil || output.ExadbVmClusterId == nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, state.ExaDBVMClusterID.String())
-			return
-		}
+	var input odb.UpdateExadbVmClusterInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	input.ExadbVmClusterId = state.ExaDBVMClusterID.ValueStringPointer()
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &plan))
-		if response.Diagnostics.HasError() {
-			return
-		}
+	output, err := conn.UpdateExadbVmCluster(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ExaDBVMClusterID.String())
+		return
+	}
+	if output == nil || output.ExadbVmClusterId == nil {
+		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, state.ExaDBVMClusterID.String())
+		return
+	}
 
-		updated, err := waitExaDBVMClusterUpdated(ctx, conn, state.ExaDBVMClusterID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ExaDBVMClusterID.String())
-			return
-		}
+	updated, err := waitExaDBVMClusterUpdated(ctx, conn, state.ExaDBVMClusterID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ExaDBVMClusterID.String())
+		return
+	}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, updated, &plan))
-		if response.Diagnostics.HasError() {
-			return
-		}
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, updated, &plan))
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+}
+
+func (r *exaDBVMClusterResource) flatten(ctx context.Context, exaDBVMCluster *odbtypes.ExadbVmCluster, data *exaDBVMClusterResourceModel) diag.Diagnostics {
+	diags := flex.Flatten(ctx, exaDBVMCluster, data, flex.WithFieldNamePrefix("ExadbVmCluster"))
+	if exaDBVMCluster.VmFileSystemStorage != nil {
+		data.VMFileSystemStorageTotalSizeInGBs = types.Int32PointerValue(exaDBVMCluster.VmFileSystemStorage.TotalSizeInGBs)
+	}
+
+	return diags
 }
 
 func (r *exaDBVMClusterResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -677,8 +696,8 @@ func waitExaDBVMClusterCreated(ctx context.Context, conn *odb.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*odbtypes.ExadbVmCluster); ok {
-		if reason := aws.ToString(output.StatusReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
+		if err != nil && aws.ToString(output.StatusReason) != "" {
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		}
 
 		return output, smarterr.NewError(err)
@@ -702,8 +721,8 @@ func waitExaDBVMClusterUpdated(ctx context.Context, conn *odb.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*odbtypes.ExadbVmCluster); ok {
-		if reason := aws.ToString(output.StatusReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
+		if err != nil && aws.ToString(output.StatusReason) != "" {
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		}
 
 		return output, smarterr.NewError(err)
@@ -722,8 +741,8 @@ func waitExaDBVMClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*odbtypes.ExadbVmCluster); ok {
-		if reason := aws.ToString(output.StatusReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
+		if err != nil && aws.ToString(output.StatusReason) != "" {
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		}
 
 		return output, smarterr.NewError(err)

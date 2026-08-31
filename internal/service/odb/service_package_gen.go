@@ -100,6 +100,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newExaDBVMClusterDataSource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newExascaleDBStorageVaultDataSource,
 			TypeName: "aws_odb_exascale_db_storage_vault",
 			Name:     "Exascale DB Storage Vault",
@@ -180,6 +189,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newExaDBVMClusterResource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newExascaleDBStorageVaultResource,
 			TypeName: "aws_odb_exascale_db_storage_vault",
 			Name:     "Exascale DB Storage Vault",
@@ -221,6 +243,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newExaDBVMClusterResourceAsListResource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
 		{
 			Factory:  newExascaleDBStorageVaultResourceAsListResource,
 			TypeName: "aws_odb_exascale_db_storage_vault",

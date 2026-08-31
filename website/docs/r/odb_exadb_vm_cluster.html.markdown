@@ -8,25 +8,25 @@ description: |-
 
 # Resource: aws_odb_exadb_vm_cluster
 
-Manages an Oracle Database@AWS ExaDB VM Cluster.
-
-~> **NOTE:** The resource schema and lifecycle implementation are under development.
+Manages an [Oracle Database@AWS ExaDB VM Cluster](https://docs.aws.amazon.com/odb/latest/APIReference/API_CreateExadbVmCluster.html).
 
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_odb_exadb_vm_cluster" "example" {
   display_name                             = "example_exadb_vm_cluster"
-  enabled_ecpu_count                       = 4
-  exascale_db_storage_vault_id             = "<exascale-db-storage-vault-id>"
-  grid_image_id                            = "<grid-image-id>"
+  enabled_ecpu_count                       = 16
+  exascale_db_storage_vault_id             = "xsvault_0123456789"
+  grid_image_id                            = "ocid1.dbpatch.oc1.iad.exampleuniqueid"
   hostname                                 = "exadbvm1"
   node_count                               = 2
-  odb_network_id                           = "<odb-network-id>"
-  shape                                    = "<shape>"
+  odb_network_id                           = "odbnetwork_0123456789"
+  shape                                    = "ExaDbXS"
   ssh_public_keys                          = ["ssh-rsa AAAA..."]
-  total_ecpu_count                         = 4
-  vm_file_system_storage_total_size_in_gbs = 100
+  total_ecpu_count                         = 64
+  vm_file_system_storage_total_size_in_gbs = 440
 
   data_collection_options {
     is_diagnostics_events_enabled = true
@@ -93,21 +93,21 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_update_history_entry_id` - OCID of the last maintenance update history entry.
 * `listener_port` - Listener port configured for the ExaDB VM Cluster.
 * `memory_size_in_gbs` - Amount of memory allocated to the ExaDB VM Cluster, in GB.
-* `ocid` - OCID of the ExaDB VM Cluster.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the ExaDB VM Cluster.
 * `oci_url` - HTTPS URL of the ExaDB VM Cluster in OCI.
+* `ocid` - OCID of the ExaDB VM Cluster.
 * `odb_network_arn` - ARN of the ODB network associated with the ExaDB VM Cluster.
 * `percent_progress` - Progress of the current operation, expressed as a percentage.
 * `scan_dns_name` - FQDN of the SCAN IP addresses associated with the ExaDB VM Cluster.
 * `scan_dns_record_id` - OCID of the DNS record for the SCAN IP addresses.
 * `scan_ip_ids` - OCIDs of the SCAN IP addresses associated with the ExaDB VM Cluster.
-* `snapshot_file_system_storage` - Snapshot file system storage details for the ExaDB VM Cluster. See [`storage_details` Block](#storage_details-block) below.
+* `snapshot_file_system_storage` - Snapshot file system storage details for the ExaDB VM Cluster. See [`snapshot_file_system_storage` Block](#snapshot_file_system_storage-block) below.
 * `status` - Current status of the ExaDB VM Cluster.
 * `status_reason` - Additional information about the current ExaDB VM Cluster status.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `total_file_system_storage` - Total file system storage details for the ExaDB VM Cluster. See [`storage_details` Block](#storage_details-block) below.
+* `total_file_system_storage` - Total file system storage details for the ExaDB VM Cluster. See [`total_file_system_storage` Block](#total_file_system_storage-block) below.
 * `vip_ids` - OCIDs of the virtual IP addresses associated with the ExaDB VM Cluster.
-* `vm_file_system_storage` - VM file system storage details for the ExaDB VM Cluster. See [`storage_details` Block](#storage_details-block) below.
+* `vm_file_system_storage` - VM file system storage details for the ExaDB VM Cluster. See [`vm_file_system_storage` Block](#vm_file_system_storage-block) below.
 
 ### `iam_roles` Block
 
@@ -135,9 +135,21 @@ The `db_plans` block exports the following attributes:
 * `flash_cache_limit` - Flash cache limit for the database plan.
 * `share` - Relative priority of the database in the IORM plan.
 
-### `storage_details` Block
+### `snapshot_file_system_storage` Block
 
-The `snapshot_file_system_storage`, `total_file_system_storage`, and `vm_file_system_storage` blocks export the following attribute:
+The `snapshot_file_system_storage` block exports the following attribute:
+
+* `total_size_in_gbs` - Total storage size, in GB.
+
+### `total_file_system_storage` Block
+
+The `total_file_system_storage` block exports the following attribute:
+
+* `total_size_in_gbs` - Total storage size, in GB.
+
+### `vm_file_system_storage` Block
+
+The `vm_file_system_storage` block exports the following attribute:
 
 * `total_size_in_gbs` - Total storage size, in GB.
 
@@ -157,7 +169,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_odb_exadb_vm_cluster.example
   identity = {
-    id = "example"
+    id = "exadbvmcluster_0123456789"
   }
 }
 ```
@@ -170,7 +182,7 @@ import {
 
 #### Optional
 
-* `account_id` (String) AWS account where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an ExaDB VM Cluster using its ID. For example:
@@ -178,12 +190,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_odb_exadb_vm_cluster.example
-  id = "example"
+  id = "exadbvmcluster_0123456789"
 }
 ```
 
 Using `terraform import`, import an ExaDB VM Cluster using its ID. For example:
 
 ```console
-% terraform import aws_odb_exadb_vm_cluster.example example
+% terraform import aws_odb_exadb_vm_cluster.example exadbvmcluster_0123456789
 ```

@@ -7,10 +7,12 @@ package odb
 var (
 	ResourceCloudAutonomousVMCluster   = newResourceCloudAutonomousVmCluster
 	ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
+	ResourceExaDBVMCluster             = newExaDBVMClusterResource
 	ResourceExascaleDBStorageVault     = newExascaleDBStorageVaultResource
 
 	FindCloudAutonomousVmClusterByID  = findCloudAutonomousVmClusterByID
 	FindExadataInfraResourceByID      = findExadataInfraResourceByID
 	FindCloudVmClusterForResourceByID = findCloudVmClusterForResourceByID
+	FindExaDBVMClusterByID            = findExaDBVMClusterByID
 	FindExascaleDBStorageVaultByID    = findExascaleDBStorageVaultByID
 )
