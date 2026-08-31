@@ -227,6 +227,11 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) {
 	c := opts.c
 
+	sp, _, _, _, _, ok := interceptors.InfoFromContext(ctx, c)
+	if !ok {
+		return
+	}
+
 	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// If the entire plan is null, the resource is planned for destruction.
@@ -242,7 +247,7 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 		}
 
 		if planTags.IsWhollyKnown() {
-			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx))
 			opts.response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
 		} else {
 			opts.response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.Unknown)...)

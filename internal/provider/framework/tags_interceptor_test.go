@@ -5,13 +5,16 @@ package framework
 
 import (
 	"context"
+	"maps"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -67,6 +70,115 @@ func (sp mockServicePackage) SDKResources(context.Context) []*inttypes.ServicePa
 
 func (sp mockServicePackage) ServicePackageName() string {
 	return "Test"
+}
+
+type mockTagsClient struct {
+	mockRequiredTagsClient
+	defaultTags *tftags.DefaultConfig
+	ignoreTags  *tftags.IgnoreConfig
+}
+
+func (c mockTagsClient) DefaultTagsConfig(context.Context) *tftags.DefaultConfig {
+	return c.defaultTags
+}
+
+func (c mockTagsClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
+	return c.ignoreTags
+}
+
+func TestTagsResourceInterceptorModifyPlan(t *testing.T) {
+	t.Parallel()
+
+	resourceSchema := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrTagsAll: schema.MapAttribute{
+				CustomType:  tftags.MapType,
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+		},
+	}
+	tagsType := tftypes.Map{ElementType: tftypes.String}
+
+	testCases := map[string]struct {
+		defaultTags map[string]string
+		planTags    map[string]string
+		want        map[string]string
+	}{
+		"system tag only": {
+			planTags: map[string]string{
+				"aws:autoscaling-group-123": "managed",
+			},
+			want: map[string]string{},
+		},
+		"system tag excluded while resource and default tags remain": {
+			defaultTags: map[string]string{
+				"default": "value",
+			},
+			planTags: map[string]string{
+				"aws:autoscaling-group-123": "managed",
+				"resource":                  "value",
+			},
+			want: map[string]string{
+				"default":  "value",
+				"resource": "value",
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := conns.NewResourceContext(t.Context(), "Test", "test", "aws_test", "")
+			client := mockTagsClient{
+				defaultTags: &tftags.DefaultConfig{Tags: tftags.New(ctx, testCase.defaultTags)},
+			}
+			ctx = tftags.NewContext(ctx, client.DefaultTagsConfig(ctx), client.IgnoreTagsConfig(ctx), nil)
+
+			planTags := make(map[string]tftypes.Value, len(testCase.planTags))
+			for k, v := range testCase.planTags {
+				planTags[k] = tftypes.NewValue(tftypes.String, v)
+			}
+			rawPlan := tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				names.AttrTags:    tftypes.NewValue(tagsType, planTags),
+				names.AttrTagsAll: tftypes.NewValue(tagsType, tftypes.UnknownValue),
+			})
+
+			response := &resource.ModifyPlanResponse{
+				Plan: tfsdk.Plan{
+					Raw:    rawPlan,
+					Schema: resourceSchema,
+				},
+			}
+			r := resourceTransparentTagging(unique.Make(inttypes.ServicePackageResourceTags{})).(resourceModifyPlanInterceptor)
+			r.modifyPlan(ctx, interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: client,
+				request: &resource.ModifyPlanRequest{
+					Plan: tfsdk.Plan{
+						Raw:    rawPlan,
+						Schema: resourceSchema,
+					},
+				},
+				response: response,
+				when:     Before,
+			})
+			if response.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", response.Diagnostics)
+			}
+
+			var gotTagsAll tftags.Map
+			response.Diagnostics.Append(response.Plan.GetAttribute(ctx, path.Root(names.AttrTagsAll), &gotTagsAll)...)
+			if response.Diagnostics.HasError() {
+				t.Fatalf("reading planned tags_all: %s", response.Diagnostics)
+			}
+
+			if got := tftags.New(ctx, gotTagsAll).Map(); !maps.Equal(got, testCase.want) {
+				t.Errorf("planned tags_all = %#v, want %#v", got, testCase.want)
+			}
+		})
+	}
 }
 
 func Test_resourceValidateRequiredTagsInterceptor(t *testing.T) {
