@@ -819,48 +819,48 @@ func (m *detailModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	m.UseAssetType = fwtypes.NewListNestedObjectValueOfNull[domainUnitIDDetailModel](ctx)
 
 	switch t := v.(type) {
-	case *awstypes.PolicyGrantDetailMemberAddToProjectMemberPool:
+	case awstypes.PolicyGrantDetailMemberAddToProjectMemberPool:
 		m.AddToProjectMemberPool = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateAssetType:
+	case awstypes.PolicyGrantDetailMemberCreateAssetType:
 		m.CreateAssetType = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateDomainUnit:
+	case awstypes.PolicyGrantDetailMemberCreateDomainUnit:
 		m.CreateDomainUnit = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateEnvironment:
+	case awstypes.PolicyGrantDetailMemberCreateEnvironment:
 		m.CreateEnvironment = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &unitModel{})
 
-	case *awstypes.PolicyGrantDetailMemberCreateEnvironmentFromBlueprint:
+	case awstypes.PolicyGrantDetailMemberCreateEnvironmentFromBlueprint:
 		m.CreateEnvironmentFromBlueprint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &unitModel{})
 
-	case *awstypes.PolicyGrantDetailMemberCreateEnvironmentProfile:
+	case awstypes.PolicyGrantDetailMemberCreateEnvironmentProfile:
 		m.CreateEnvironmentProfile = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &domainUnitIDDetailModel{
 			DomainUnitID: fwflex.StringToFramework(ctx, t.Value.DomainUnitId),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateFormType:
+	case awstypes.PolicyGrantDetailMemberCreateFormType:
 		m.CreateFormType = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateGlossary:
+	case awstypes.PolicyGrantDetailMemberCreateGlossary:
 		m.CreateGlossary = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateProject:
+	case awstypes.PolicyGrantDetailMemberCreateProject:
 		m.CreateProject = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberCreateProjectFromProjectProfile:
+	case awstypes.PolicyGrantDetailMemberCreateProjectFromProjectProfile:
 		ppModel := &createProjectFromProjectProfileDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 			ProjectProfiles:         fwtypes.NewListValueOfNull[types.String](ctx),
@@ -870,20 +870,20 @@ func (m *detailModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 		}
 		m.CreateProjectFromProjectProfile = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, ppModel)
 
-	case *awstypes.PolicyGrantDetailMemberDelegateCreateEnvironmentProfile:
+	case awstypes.PolicyGrantDetailMemberDelegateCreateEnvironmentProfile:
 		m.DelegateCreateEnvironmentProfile = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &unitModel{})
 
-	case *awstypes.PolicyGrantDetailMemberOverrideDomainUnitOwners:
+	case awstypes.PolicyGrantDetailMemberOverrideDomainUnitOwners:
 		m.OverrideDomainUnitOwners = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberOverrideProjectOwners:
+	case awstypes.PolicyGrantDetailMemberOverrideProjectOwners:
 		m.OverrideProjectOwners = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &includeChildDomainUnitsDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(t.Value.IncludeChildDomainUnits),
 		})
 
-	case *awstypes.PolicyGrantDetailMemberUseAssetType:
+	case awstypes.PolicyGrantDetailMemberUseAssetType:
 		m.UseAssetType = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &domainUnitIDDetailModel{
 			DomainUnitID: fwflex.StringToFramework(ctx, t.Value.DomainUnitId),
 		})
@@ -993,7 +993,7 @@ func (m *principalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	m.User = fwtypes.NewListNestedObjectValueOfNull[userPrincipalModel](ctx)
 
 	switch t := v.(type) {
-	case *awstypes.PolicyGrantPrincipalMemberDomainUnit:
+	case awstypes.PolicyGrantPrincipalMemberDomainUnit:
 		duModel := &domainUnitPrincipalModel{
 			DomainUnitDesignation:     fwtypes.StringEnumValue(t.Value.DomainUnitDesignation),
 			DomainUnitIdentifier:      fwflex.StringToFramework(ctx, t.Value.DomainUnitIdentifier),
@@ -1004,7 +1004,7 @@ func (m *principalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 		}
 		m.DomainUnit = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, duModel)
 
-	case *awstypes.PolicyGrantPrincipalMemberGroup:
+	case awstypes.PolicyGrantPrincipalMemberGroup:
 		groupID := ""
 		if gm, ok := t.Value.(*awstypes.GroupPolicyGrantPrincipalMemberGroupIdentifier); ok {
 			groupID = gm.Value
@@ -1013,7 +1013,7 @@ func (m *principalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 			GroupIdentifier: types.StringValue(groupID),
 		})
 
-	case *awstypes.PolicyGrantPrincipalMemberProject:
+	case awstypes.PolicyGrantPrincipalMemberProject:
 		projModel := &projectPrincipalModel{
 			ProjectDesignation: fwtypes.StringEnumValue(t.Value.ProjectDesignation),
 			ProjectIdentifier:  fwflex.StringToFramework(ctx, t.Value.ProjectIdentifier),
@@ -1027,7 +1027,7 @@ func (m *principalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 		}
 		m.Project = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, projModel)
 
-	case *awstypes.PolicyGrantPrincipalMemberUser:
+	case awstypes.PolicyGrantPrincipalMemberUser:
 		userModel := &userPrincipalModel{
 			UserIdentifier:      types.StringNull(),
 			AllUsersGrantFilter: fwtypes.NewListNestedObjectValueOfNull[unitModel](ctx),
