@@ -180,6 +180,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d 
 	config := d.GetRawConfig()
 	siteLinkConfigured := config.IsKnown() && !config.IsNull() && isConfiguredValue(config.GetAttr("sitelink_enabled"))
 	siteLinkChanged := siteLinkConfigured && d.HasChange("sitelink_enabled")
+	prefixPoolChanged := d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6")
 
 	if siteLinkChanged {
 		if err := validateHostedPrivateVirtualInterfaceAccepterSiteLink(cty.BoolVal(d.Get("sitelink_enabled").(bool)), cty.StringVal(d.Get("vpn_gateway_id").(string))); err != nil {
@@ -193,6 +194,11 @@ func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d 
 
 		if _, err := waitHostedPrivateVirtualInterfaceAccepterAvailable(ctx, meta.(*conns.AWSClient).DirectConnectClient(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Private Virtual Interface Accepter (%s) update: %s", d.Id(), err)
+		}
+	} else if prefixPoolChanged {
+		diags = append(diags, virtualInterfaceUpdatePrefixPool(ctx, d, meta)...)
+		if diags.HasError() {
+			return diags
 		}
 	}
 
