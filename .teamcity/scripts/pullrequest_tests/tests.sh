@@ -5,12 +5,12 @@
 set -euo pipefail
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
-if [[ "%PKG%" == "" ]]; then
-	echo "PKG variable is required"
+if [[ "%SERVICE_PACKAGE%" == "" ]]; then
+	echo "SERVICE_PACKAGE variable is required"
 	exit 1
 fi
 
-PKG="./internal/service/%PKG%/..."
+PKG="./internal/service/%SERVICE_PACKAGE%/..."
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ "%TEST_PATTERN%" == "" || "%TEST_PATTERN%" == "TestAcc" ]]; then
