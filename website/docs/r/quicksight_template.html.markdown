@@ -117,17 +117,17 @@ The following arguments are optional:
 
 ### source_analysis
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) ARN of the resource.
 * `data_set_references` - (Required) A list of dataset references used as placeholders in the template. See [data_set_references](#data_set_references).
 
 ### data_set_references
 
-* `data_set_arn` - (Required) Dataset Amazon Resource Name (ARN).
+* `data_set_arn` - (Required) Dataset ARN.
 * `data_set_placeholder` - (Required) Dataset placeholder.
 
 ### source_template
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) ARN of the resource.
 
 ### definition
 
@@ -147,7 +147,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_time` - The time that the template was created.
 * `id` - A comma-delimited string joining AWS account ID and template ID.
 * `last_updated_time` - The time that the template was last updated.
-* `source_entity_arn` - Amazon Resource Name (ARN) of an analysis or template that was used to create this template.
+* `source_entity_arn` - ARN of an analysis or template that was used to create this template.
 * `status` - The template creation status.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version_number` - The version number of the template version.

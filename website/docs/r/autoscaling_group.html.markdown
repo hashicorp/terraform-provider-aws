@@ -662,7 +662,7 @@ This configuration block supports the following:
 - `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 - `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-  ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+  ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 
   ```
   Valid names:
@@ -791,7 +791,7 @@ This configuration block supports the following:
 
 ### `traffic_source` Block
 
-- `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+- `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the ARN for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 - `type` - Provides additional context for the value of Identifier.
   The following lists the valid values:
   `elb` if `identifier` is the name of a Classic Load Balancer.

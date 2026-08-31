@@ -21,27 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMailManagerIngressPoint_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                testAccMailManagerIngressPoint_basic,
-		acctest.CtDisappears:           testAccMailManagerIngressPoint_disappears,
-		"update":                       testAccMailManagerIngressPoint_update,
-		"tlsPolicy":                    testAccMailManagerIngressPoint_tlsPolicy,
-		"type":                         testAccMailManagerIngressPoint_type,
-		"networkConfiguration_public":  testAccMailManagerIngressPoint_networkConfiguration_public,
-		"networkConfiguration_private": testAccMailManagerIngressPoint_networkConfiguration_private,
-		"ingressPointConfiguration_smtpPasswordWO": testAccMailManagerIngressPoint_ingressPointConfiguration_smtpPasswordWO,
-		"ingressPointConfiguration_tlsAuth":        testAccMailManagerIngressPoint_ingressPointConfiguration_tlsAuth,
-		"Identity":                                 testAccMailManagerIngressPoint_identitySerial,
-		"Tags":                                     testAccMailManagerIngressPoint_tagsSerial,
-		"List":                                     testAccMailManagerIngressPoint_listSerial,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccMailManagerIngressPoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 

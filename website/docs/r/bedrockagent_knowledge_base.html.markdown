@@ -41,7 +41,7 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 
 ### Kendra Knowledge Base
 
-```hcl
+```terraform
 resource "aws_bedrockagent_knowledge_base" "kendra_example" {
   name     = "example-kendra-kb"
   role_arn = aws_iam_role.example.arn
@@ -57,7 +57,7 @@ resource "aws_bedrockagent_knowledge_base" "kendra_example" {
 
 ### Structured Data Store
 
-```hcl
+```terraform
 resource "aws_bedrockagent_knowledge_base" "example" {
   name     = "example-kb"
   role_arn = aws_iam_role.example.arn

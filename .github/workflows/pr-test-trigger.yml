@@ -83,7 +83,6 @@ jobs:
         id: run_tests
         env:
           PR_NUMBER: ${{ github.event.issue.number }}
-          PKGS: ${{ steps.pkgs.outputs.pkgs }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
           TCTEST_BUILD_TYPE_ID: ${{ secrets.TCTEST_BUILD_TYPE_ID }}
@@ -93,26 +92,44 @@ jobs:
           TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          parallelism=$(echo "${COMMENT_BODY}" | grep -oiP 'PARALLELISM=\d+' | head -1)
-          pattern=$(echo "${COMMENT_BODY}" | grep -oiP 'PATTERN=\K\S+' | head -1)
-          properties="PKG=${PKGS}"
-          if [[ -n "${parallelism}" ]]; then
-            parallelism_value="${parallelism#*=}"
+          # Extract PARALLELISM=<digits> — digits only, safe for arithmetic comparison.
+          parallelism_value=$(echo "${COMMENT_BODY}" | grep -oiP '(?<=PARALLELISM=)\d+' | head -1)
+
+          # Extract PATTERN and allow only characters valid in a Go test name:
+          # alphanumerics, underscores, hyphens, dots, slashes, backslashes, parentheses, and the anchors ^ and $.
+          # Any other character causes the pattern to be rejected entirely.
+          raw_pattern=$(echo "${COMMENT_BODY}" | grep -oiP '(?<=PATTERN=)\S+' | head -1)
+          if [[ -n "${raw_pattern}" ]]; then
+            if [[ ! "${raw_pattern}" =~ ^[a-zA-Z0-9_.^$/|\\()-]+$ ]]; then
+              echo "::error::PATTERN contains disallowed characters: ${raw_pattern}"
+              exit 1
+            fi
+            pattern="${raw_pattern}"
+          fi
+
+          properties=""
+          if [[ -n "${parallelism_value}" ]]; then
             if [[ "${parallelism_value}" -gt 20 ]]; then
               echo "::error::Parallelism value ${parallelism_value} exceeds maximum of 20"
               exit 1
             fi
-            properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
+            properties="ACCTEST_PARALLELISM=${parallelism_value}"
           fi
 
-          # Build tctest command with optional pattern
-          tctest_cmd="tctest pr ${PR_NUMBER}"
+          # Invoke tctest directly — no eval, no string-assembled commands.
           if [[ -n "${pattern}" ]]; then
-            tctest_cmd="${tctest_cmd} \"${pattern}\""
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" "${pattern}" --comment --reappend-split-character
+            fi
+          else
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" --comment --reappend-split-character
+            fi
           fi
-          tctest_cmd="${tctest_cmd} --properties \"${properties}\" --comment"
-
-          eval ${tctest_cmd}
 
       - name: Comment on Test Start
         if: steps.run_tests.outcome == 'success'

@@ -88,7 +88,7 @@ This resource supports the following arguments:
 
 ### vpc_config Argument Reference
 
-* `subnet_ids` - (Required) The list of subnets to connect to in the virtual private cloud (VPC). AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
+* `subnet_ids` - (Required) List of subnets to connect to in the VPC. AWS creates elastic network interfaces inside these subnets to allow communication between your Kafka Cluster and the replicator.
 * `security_groups_ids` - (Required) The AWS security groups to associate with the ENIs used by the replicator. If a security group is not specified, the default security group associated with the VPC is used.
 
 ### replication_info_list Argument Reference
