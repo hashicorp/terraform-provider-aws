@@ -285,10 +285,12 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// canary status can change to "stopped" after a successful run.
+				// requires exception for timeline and status
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", "status"},
 			},
 			{
 				Config: testAccCanaryConfig_start(rName, false),
@@ -335,10 +337,12 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// canary status can change to "stopped" after a successful run.
+				// requires exception for timeline and status
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "timeline", "status"},
 			},
 			{
 				Config: testAccCanaryConfig_startZipUpdated(rName, true),
@@ -1304,12 +1308,6 @@ resource "aws_synthetics_canary" "test" {
   runtime_version      = data.aws_synthetics_runtime_version.test.version_name
   delete_lambda        = true
   kms_key_arn          = aws_kms_key.%[2]s.arn
-
-  run_config {
-    environment_variables = {
-      test1 = "value1"
-    }
-  }
 
   schedule {
     expression = "rate(0 minute)"
