@@ -31,4 +31,6 @@ var (
 	ParseVolumeGatewayARNAndTargetNameFromARN = parseVolumeGatewayARNAndTargetNameFromARN
 	UploadBufferParseResourceID               = uploadBufferParseResourceID
 	WorkingStorageParseResourceID             = workingStorageParseResourceID
+
+	ExpandCacheAttributes = expandCacheAttributes
 )

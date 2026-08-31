@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,6 +19,51 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestExpandCacheAttributes(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		tfMap                                map[string]any
+		cacheStaleTimeoutInSecondsConfigured bool
+		wantCacheStaleTimeoutInSeconds       *int32
+	}{
+		"explicit zero configured": {
+			tfMap:                                map[string]any{"cache_stale_timeout_in_seconds": 0},
+			cacheStaleTimeoutInSecondsConfigured: true,
+			wantCacheStaleTimeoutInSeconds:       aws.Int32(0),
+		},
+		"zero value not configured": {
+			tfMap:                                map[string]any{"cache_stale_timeout_in_seconds": 0},
+			cacheStaleTimeoutInSecondsConfigured: false,
+			wantCacheStaleTimeoutInSeconds:       nil,
+		},
+		"non-zero value": {
+			tfMap:                                map[string]any{"cache_stale_timeout_in_seconds": 300},
+			cacheStaleTimeoutInSecondsConfigured: false,
+			wantCacheStaleTimeoutInSeconds:       aws.Int32(300),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfstoragegateway.ExpandCacheAttributes(tc.tfMap, tc.cacheStaleTimeoutInSecondsConfigured)
+
+			switch {
+			case tc.wantCacheStaleTimeoutInSeconds == nil:
+				if got.CacheStaleTimeoutInSeconds != nil {
+					t.Errorf("CacheStaleTimeoutInSeconds = %d, want nil", aws.ToInt32(got.CacheStaleTimeoutInSeconds))
+				}
+			case got.CacheStaleTimeoutInSeconds == nil:
+				t.Errorf("CacheStaleTimeoutInSeconds = nil, want %d", aws.ToInt32(tc.wantCacheStaleTimeoutInSeconds))
+			case aws.ToInt32(got.CacheStaleTimeoutInSeconds) != aws.ToInt32(tc.wantCacheStaleTimeoutInSeconds):
+				t.Errorf("CacheStaleTimeoutInSeconds = %d, want %d", aws.ToInt32(got.CacheStaleTimeoutInSeconds), aws.ToInt32(tc.wantCacheStaleTimeoutInSeconds))
+			}
+		})
+	}
+}
 
 func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -830,6 +876,21 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
+			},
+			{
+				// 0 disables the cache refresh and is a valid API value distinct from
+				// the attribute being unset; it must not be dropped on apply, and
+				// re-applying the same configuration must not produce a diff.
+				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, t, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
+				),
+			},
+			{
+				Config:   testAccSMBFileShareConfig_cacheAttributes(rName, 0),
+				PlanOnly: true,
 			},
 		},
 	})

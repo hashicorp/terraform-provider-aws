@@ -14,11 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -89,9 +91,12 @@ func resourceSMBFileShare() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cache_stale_timeout_in_seconds": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								ValidateFunc: validation.IntBetween(300, 2592000),
+								Type:     schema.TypeInt,
+								Optional: true,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{0}),
+									validation.IntBetween(300, 2592000),
+								),
 							},
 						},
 					},
@@ -248,7 +253,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.CacheAttributes = expandCacheAttributes(v.([]any)[0].(map[string]any))
+		input.CacheAttributes = expandCacheAttributes(v.([]any)[0].(map[string]any), cacheStaleTimeoutInSecondsConfigured(d))
 	}
 
 	if v, ok := d.GetOk("case_sensitivity"); ok {
@@ -386,7 +391,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange("cache_attributes") {
 			if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.CacheAttributes = expandCacheAttributes(v.([]any)[0].(map[string]any))
+				input.CacheAttributes = expandCacheAttributes(v.([]any)[0].(map[string]any), cacheStaleTimeoutInSecondsConfigured(d))
 			} else {
 				input.CacheAttributes = &awstypes.CacheAttributes{}
 			}
@@ -578,18 +583,34 @@ func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.Client, a
 	return nil, err
 }
 
-func expandCacheAttributes(tfMap map[string]any) *awstypes.CacheAttributes {
+func expandCacheAttributes(tfMap map[string]any, cacheStaleTimeoutInSecondsConfigured bool) *awstypes.CacheAttributes {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CacheAttributes{}
 
-	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok && v != 0 {
+	// 0 is a valid API value (disables the cache refresh), distinct from the
+	// attribute being omitted from the configuration entirely, so it can't be
+	// filtered out using the zero value alone.
+	if v, ok := tfMap["cache_stale_timeout_in_seconds"].(int); ok && (v != 0 || cacheStaleTimeoutInSecondsConfigured) {
 		apiObject.CacheStaleTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
+}
+
+// cacheStaleTimeoutInSecondsConfigured reports whether cache_stale_timeout_in_seconds
+// is present in the configuration, so that an explicit 0 can be distinguished from
+// the attribute being left unset.
+func cacheStaleTimeoutInSecondsConfigured(d *schema.ResourceData) bool {
+	path := cty.GetAttrPath("cache_attributes").IndexInt(0).GetAttr("cache_stale_timeout_in_seconds")
+	v, ok, err := tfcty.PathSafeApply(path, d.GetRawConfig())
+	if err != nil || !ok {
+		return false
+	}
+
+	return !v.IsNull()
 }
 
 func flattenCacheAttributes(apiObject *awstypes.CacheAttributes) map[string]any {
