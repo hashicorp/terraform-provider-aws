@@ -175,6 +175,7 @@ func TestAccDMSInstanceProfile_List_regionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("dms", regexache.MustCompile(`instance-profile:.+$`))),
 				},
 			},
 
@@ -190,10 +191,6 @@ func TestAccDMSInstanceProfile_List_regionOverride(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_dms_instance_profile.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					querycheck.ExpectResourceKnownValues("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					}),
 				},
 			},
 		},
