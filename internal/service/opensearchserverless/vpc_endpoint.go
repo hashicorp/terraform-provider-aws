@@ -187,7 +187,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.flatten(ctx, r.Meta(), output, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, r.Meta(), output, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -196,7 +196,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *vpcEndpointResource) flatten(ctx context.Context, meta *conns.AWSClient, output *awstypes.VpcEndpointDetail, data *vpcEndpointResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, data))
 	if diags.HasError() {
 		return diags
 	}
@@ -204,7 +204,7 @@ func (r *vpcEndpointResource) flatten(ctx context.Context, meta *conns.AWSClient
 	// Security Group IDs are not returned by the OpenSearch Serverless API and must be retrieved from the EC2 API.
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, meta.EC2Client(ctx), data.ID.ValueString())
 	if err != nil {
-		diags.AddError("reading EC2 VPC Endpoint", err.Error())
+		smerr.AddError(ctx, &diags, err, smerr.ID, data.ID.ValueString())
 		return diags
 	}
 
@@ -213,7 +213,7 @@ func (r *vpcEndpointResource) flatten(ctx context.Context, meta *conns.AWSClient
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	diags.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
 	return diags
 }
 
