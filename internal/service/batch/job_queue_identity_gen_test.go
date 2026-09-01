@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
+func TestAccBatchJobQueue_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobQueueDetail
@@ -35,7 +35,7 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &v),
+					testAccCheckJobQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "batch", "job-queue/{name}"),
@@ -109,7 +109,7 @@ func TestAccBatchJobQueue_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
+func TestAccBatchJobQueue_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_batch_job_queue.test"
@@ -230,7 +230,7 @@ func TestAccBatchJobQueue_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_Identity_ExistingResource(t *testing.T) {
+func TestAccBatchJobQueue_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobQueueDetail
@@ -243,7 +243,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -252,7 +252,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &v),
+					testAccCheckJobQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &v),
+					testAccCheckJobQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -310,7 +310,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccBatchJobQueue_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.JobQueueDetail
@@ -323,7 +323,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -337,7 +337,7 @@ func TestAccBatchJobQueue_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &v),
+					testAccCheckJobQueueExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

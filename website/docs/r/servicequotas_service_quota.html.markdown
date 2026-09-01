@@ -66,7 +66,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `adjustable` - Whether the service quota can be increased.
-* `arn` - Amazon Resource Name (ARN) of the service quota.
+* `arn` - ARN of the service quota.
 * `default_value` - Default value of the service quota.
 * `id` - Service code and quota code, separated by a front slash (`/`)
 * `quota_name` - Name of the quota.

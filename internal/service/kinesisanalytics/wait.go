@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,10 +19,10 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationDeletedTimeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: applicationDeletedTimeout,
 	}
 
@@ -39,10 +39,10 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationStartedTimeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: applicationStartedTimeout,
 	}
 
@@ -59,10 +59,10 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationStoppedTimeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: applicationStoppedTimeout,
 	}
 
@@ -79,10 +79,10 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationUpdatedTimeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: applicationUpdatedTimeout,
 	}
 

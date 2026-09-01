@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,10 +22,10 @@ const (
 )
 
 func waitUpgradeSucceeded(ctx context.Context, conn *opensearch.Client, name string, timeout time.Duration) (*opensearch.GetUpgradeStatusOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
 		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded),
-		Refresh:    statusUpgradeStatus(ctx, conn, name),
+		Refresh:    statusUpgradeStatus(conn, name),
 		Timeout:    timeout,
 		MinTimeout: domainUpgradeSuccessMinTimeout,
 		Delay:      domainUpgradeSuccessDelay,
@@ -119,10 +118,10 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 	// opensearch maintains information about the domain in multiple (at least 2) places that need
 	// to clear before it is really deleted - otherwise, requesting information about domain immediately
 	// after delete will return info about just deleted domain
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{configStatusUnknown, configStatusExists},
 		Target:                    []string{configStatusNotFound},
-		Refresh:                   domainConfigStatus(ctx, conn, domainName),
+		Refresh:                   domainConfigStatus(conn, domainName),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		ContinuousTargetOccurence: 3,

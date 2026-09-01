@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -23,39 +25,41 @@ func dataSourceBucket() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"bucket_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bucket_regional_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"bucket_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bucket_regional_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

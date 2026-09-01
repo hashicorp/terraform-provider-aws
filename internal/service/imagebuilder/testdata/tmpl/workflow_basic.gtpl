@@ -32,5 +32,5 @@ resource "aws_imagebuilder_workflow" "test" {
         booleanEquals: true
         value: "$.parameters.waitForActionAtEnd"
   EOT
-{{- template "tags" }}
+{{- template "tags" . }}
 }

@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,9 +23,9 @@ func testAccPortfolioShare_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	dataSourceName := "data.aws_caller_identity.alternate"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -34,12 +33,12 @@ func testAccPortfolioShare_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, names.AttrAccountID),
@@ -60,7 +59,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 			{
 				Config: testAccPortfolioShareConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, names.AttrAccountID),
@@ -77,9 +76,9 @@ func testAccPortfolioShare_basic(t *testing.T) {
 func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_portfolio_share.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
@@ -88,12 +87,12 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_sharePrincipals(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtTrue),
 				),
 			},
@@ -108,7 +107,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			{
 				Config: testAccPortfolioShareConfig_sharePrincipals(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 				),
 			},
@@ -120,9 +119,9 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
@@ -131,12 +130,12 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", names.AttrID),
@@ -160,9 +159,9 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 func testAccPortfolioShare_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_portfolio_share.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -170,23 +169,31 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioShareExists(ctx, resourceName),
+					testAccCheckPortfolioShareExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourcePortfolioShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_portfolio_share.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicecatalog_portfolio_share.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckPortfolioShareDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPortfolioShareDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -214,7 +221,7 @@ func testAccCheckPortfolioShareDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckPortfolioShareExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPortfolioShareExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -225,7 +232,7 @@ func testAccCheckPortfolioShareExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Service Catalog Portfolio Share ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		_, err := tfservicecatalog.FindPortfolioShare(ctx, conn,
 			rs.Primary.Attributes["portfolio_id"],

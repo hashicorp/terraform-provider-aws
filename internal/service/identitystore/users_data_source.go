@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package identitystore
 
 import (
@@ -108,6 +110,7 @@ type userModel struct {
 	Title             types.String                                       `tfsdk:"title"`
 	UserID            types.String                                       `tfsdk:"user_id"`
 	UserName          types.String                                       `tfsdk:"user_name"`
+	UserStatus        types.String                                       `tfsdk:"user_status"`
 	UserType          types.String                                       `tfsdk:"user_type"`
 }
 

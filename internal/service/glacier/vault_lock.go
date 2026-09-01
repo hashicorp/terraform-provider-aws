@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package glacier
 
 import (
@@ -37,24 +39,26 @@ func resourceVaultLock() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"complete_lock": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			"ignore_deletion_error": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequiredForceNew(),
-			"vault_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"complete_lock": {
+					Type:     schema.TypeBool,
+					Required: true,
+					ForceNew: true,
+				},
+				"ignore_deletion_error": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequiredForceNew(),
+				"vault_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }

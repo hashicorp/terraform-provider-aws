@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	fwattr "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,6 +37,9 @@ func SingleParameterized(ctx context.Context, client AWSClient, request resource
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), parameterVal)...)
+	}
 
 	if identity := response.Identity; identity != nil {
 		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), client.AccountID(ctx))...)
@@ -103,17 +107,16 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 				identityPath := path.Root(attr.Name())
 				resourcePath := path.Root(attr.ResourceAttributeName())
 
-				var parameterAttr types.String
+				var parameterAttr fwattr.Value
 				response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
 				if response.Diagnostics.HasError() {
 					return
 				}
-				parameterVal := parameterAttr.ValueString()
 
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterAttr)...)
 
 				if identity := response.Identity; identity != nil {
-					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
+					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterAttr)...)
 				}
 			}
 		}

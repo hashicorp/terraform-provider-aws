@@ -6,8 +6,8 @@ list "aws_vpc" "test" {
 
   config {
     filter {
-      name = "is-default"
-       values = ["false"]
+      name   = "is-default"
+      values = ["false"]
     }
   }
 }

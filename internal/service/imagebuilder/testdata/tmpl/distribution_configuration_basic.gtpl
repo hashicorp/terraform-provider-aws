@@ -9,7 +9,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 
     region = data.aws_region.current.name
   }
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 data "aws_region" "current" {

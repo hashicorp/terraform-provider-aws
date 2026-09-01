@@ -37,7 +37,7 @@ resource "aws_kms_external_key" "primary" {
 resource "aws_kms_replica_external_key" "replica" {
   description             = "Multi-Region replica key"
   deletion_window_in_days = 7
-  primary_key_arn         = aws_kms_external.primary.arn
+  primary_key_arn         = aws_kms_external_key.primary.arn
 
   key_material_base64 = "..." # Must be the same key material as the primary's.
 }
@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the key policy lockout safety check.
 Setting this value to true increases the risk that the KMS key becomes unmanageable. Do not set this value to true indiscriminately.
-For more information, refer to the scenario in the [Default Key Policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam) section in the _AWS Key Management Service Developer Guide_.
+For more information, refer to the scenario in the [Default Key Policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam) section in the _AWS KMS Developer Guide_.
 The default value is `false`.
 * `deletion_window_in_days` - (Optional) The waiting period, specified in number of days. After the waiting period ends, AWS KMS deletes the KMS key.
 If you specify a value, it must be between `7` and `30`, inclusive. If you do not specify a value, it defaults to `30`.
@@ -67,7 +67,7 @@ For more information about building policy documents with Terraform, see the [AW
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
+* `arn` - ARN of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
 * `expiration_model` - Whether the key material expires. Empty when pending key material import, otherwise `KEY_MATERIAL_EXPIRES` or `KEY_MATERIAL_DOES_NOT_EXPIRE`.
 * `key_id` - The key ID of the replica key. Related multi-Region keys have the same key ID.
 * `key_state` - The state of the replica key.

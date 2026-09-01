@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +20,19 @@ func testAccRotationDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	resourceName := "aws_ssmcontacts_rotation.test"
 	startTime := time.Now().UTC().AddDate(0, 0, 2).Format(time.RFC3339)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testRotationDataSourceConfig_basic(rName, startTime),
@@ -72,18 +71,18 @@ func testAccRotationDataSource_dailySettings(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	resourceName := "aws_ssmcontacts_rotation.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testRotationDataSourceConfig_dailySettings(rName),
@@ -104,18 +103,18 @@ func testAccRotationDataSource_monthlySettings(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	resourceName := "aws_ssmcontacts_rotation.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testRotationDataSourceConfig_monthlySettings(rName),

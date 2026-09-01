@@ -29,15 +29,22 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read, Update:
-			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
-				break
-			}
+			// `Id()` is empty when the resource is being removed
 			if d.Id() == "" {
 				break
 			}
+
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(identity, r.identitySpec) {
+				break
+			}
+			// Identity is fully-null on Read when Importing or when updating existing resources created without identity.
+			if why == Read && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(identity, r.identitySpec) {
+				break
 			}
 
 			for _, attr := range r.identitySpec.Attributes {
@@ -53,7 +60,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 					}
 
 				default:
-					val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+					val, ok := getAttributeIfSet(d, attr.ResourceAttributeName())
 					if !ok {
 						continue
 					}
@@ -66,13 +73,13 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case OnError:
 		switch why {
 		case Update:
-			if identityIsFullyNull(d, r.identitySpec) {
+			identity, err := d.Identity()
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			if identityIsFullyNull(identity, r.identitySpec) {
 				if d.Id() == "" {
 					break
-				}
-				identity, err := d.Identity()
-				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				for _, attr := range r.identitySpec.Attributes {
@@ -88,7 +95,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 						}
 
 					default:
-						val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+						val, ok := getAttributeIfSet(d, attr.ResourceAttributeName())
 						if !ok {
 							continue
 						}
@@ -106,15 +113,10 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 
 // identityIsFullyNull returns true if a resource supports identity and
 // all attributes are set to null values
-func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) bool {
-	identity, err := d.Identity()
-	if err != nil {
-		return false
-	}
-
+func identityIsFullyNull(identity *schema.IdentityData, identitySpec *inttypes.Identity) bool {
 	for _, attr := range identitySpec.Attributes {
-		value := identity.Get(attr.Name())
-		if value != "" {
+		_, ok := identity.GetOk(attr.Name())
+		if ok {
 			return false
 		}
 	}
@@ -122,14 +124,18 @@ func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) 
 	return true
 }
 
-func getAttributeOk(d schemaResourceData, name string) (string, bool) {
+func getAttributeIfSet(d schemaResourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
+		// check for zero value bool (false), which is a valid value
+		if _, okBool := v.(bool); okBool {
+			return v, true
+		}
 		return "", false
 	} else {
-		return v.(string), true
+		return v, true
 	}
 }
 
@@ -155,7 +161,7 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
@@ -232,7 +238,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 		// Historically, we haven't validated *any* Import ID value for Global Singletons
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.GlobalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -242,7 +248,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.RegionalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 

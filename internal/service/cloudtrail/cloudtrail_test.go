@@ -49,7 +49,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"advancedEventSelector":       testAccTrail_advancedEventSelector,
 			acctest.CtDisappears:          testAccTrail_disappears,
 			"migrateV0":                   testAccTrail_migrateV0,
-			"Identity":                    testAccCloudTrailTrail_IdentitySerial,
+			"Identity":                    testAccCloudTrailTrail_identitySerial,
 		},
 	}
 

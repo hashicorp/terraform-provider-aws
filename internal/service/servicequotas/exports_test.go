@@ -5,10 +5,12 @@ package servicequotas
 
 // Exports for use in tests only.
 var (
+	ResourceAutoManagement      = newAutoManagementResource
 	ResourceServiceQuota        = resourceServiceQuota
 	ResourceTemplate            = newTemplateResource
 	ResourceTemplateAssociation = newTemplateAssociationResource
 
+	FindAutoManagement         = findAutoManagement
 	FindTemplateAssociation    = findTemplateAssociation
 	FindTemplateByThreePartKey = findTemplateByThreePartKey
 )

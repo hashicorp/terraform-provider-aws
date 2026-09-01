@@ -28,11 +28,11 @@ func testAccAppMeshVirtualGatewayDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccAppMeshVirtualGatewayDataSource_tags,
-		"NullMap":                        testAccAppMeshVirtualGatewayDataSource_tags_NullMap,
-		"EmptyMap":                       testAccAppMeshVirtualGatewayDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualGatewayDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualGatewayDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualGatewayDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccAppMeshVirtualGatewayDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccAppMeshVirtualGatewayDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualGatewayDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualGatewayDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualGatewayDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -70,7 +70,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_NullMap(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
@@ -98,7 +98,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
@@ -126,7 +126,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
@@ -162,7 +162,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags_DefaultTags_nonOverlapping(t *t
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
@@ -204,7 +204,7 @@ func testAccAppMeshVirtualGatewayDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 	})
 }
 
-func testAccAppMeshVirtualGatewayDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshVirtualGatewayDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"

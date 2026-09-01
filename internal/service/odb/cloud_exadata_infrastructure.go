@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package odb
 
 import (
@@ -23,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -485,10 +486,10 @@ func (r *resourceCloudExadataInfrastructure) Delete(ctx context.Context, req res
 }
 
 func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:       enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:      statusCloudExadataInfrastructure(ctx, conn, id),
+		Refresh:      statusCloudExadataInfrastructure(conn, id),
 		PollInterval: 1 * time.Minute,
 		Timeout:      timeout,
 	}
@@ -501,10 +502,10 @@ func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client
 }
 
 func waitCloudExadataInfrastructureUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:       enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:      statusCloudExadataInfrastructure(ctx, conn, id),
+		Refresh:      statusCloudExadataInfrastructure(conn, id),
 		PollInterval: 1 * time.Minute,
 		Timeout:      timeout,
 	}
@@ -518,10 +519,10 @@ func waitCloudExadataInfrastructureUpdated(ctx context.Context, conn *odb.Client
 }
 
 func waitCloudExadataInfrastructureDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusCloudExadataInfrastructure(ctx, conn, id),
+		Refresh: statusCloudExadataInfrastructure(conn, id),
 		Timeout: timeout,
 	}
 
@@ -533,8 +534,8 @@ func waitCloudExadataInfrastructureDeleted(ctx context.Context, conn *odb.Client
 	return nil, err
 }
 
-func statusCloudExadataInfrastructure(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCloudExadataInfrastructure(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findExadataInfraResourceByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -556,9 +557,8 @@ func findExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id stri
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

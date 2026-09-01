@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package events
 
 import (
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,7 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_bus_policy", name="Event Bus Policy")
+// @SDKResource("aws_cloudwatch_event_bus_policy", name="Bus Policy")
+// @IdentityAttribute("event_bus_name")
+// @Testing(idAttrDuplicates="event_bus_name")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourceBusPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusPolicyPut,
@@ -32,22 +36,17 @@ func resourceBusPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBusPolicyPut,
 		DeleteWithoutTimeout: resourceBusPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("event_bus_name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		Schema: map[string]*schema.Schema{
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusName,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusName,
+					Default:      defaultEventBusName,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -67,12 +66,12 @@ func resourceBusPolicyPut(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		eventBusName = d.Id()
 	}
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		EventBusName: aws.String(eventBusName),
 		Policy:       aws.String(policy),
 	}
 
-	_, err = conn.PutPermission(ctx, input)
+	_, err = conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Event Bus (%s) Policy: %s", eventBusName, err)
@@ -109,11 +108,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Event Bus (%s) Policy: %s", d.Id(), err)
 	}
 
-	eventBusName := d.Id()
-	if eventBusName == "" {
-		eventBusName = DefaultEventBusName
-	}
-	d.Set("event_bus_name", eventBusName)
+	d.Set("event_bus_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy))
 	if err != nil {
@@ -130,10 +125,11 @@ func resourceBusPolicyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EventBridge Event Bus Policy: %s", d.Id())
-	_, err := conn.RemovePermission(ctx, &eventbridge.RemovePermissionInput{
+	input := eventbridge.RemovePermissionInput{
 		EventBusName:         aws.String(d.Id()),
 		RemoveAllPermissions: true,
-	})
+	}
+	_, err := conn.RemovePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -154,7 +150,7 @@ func findEventBusPolicyByName(ctx context.Context, conn *eventbridge.Client, nam
 	}
 
 	if aws.ToString(output.Policy) == "" {
-		return nil, &sdkretry.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output.Policy, nil

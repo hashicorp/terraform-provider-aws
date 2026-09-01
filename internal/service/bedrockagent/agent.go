@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagent
 
 import (
@@ -30,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -125,7 +126,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					int64planmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Int64{
-					int64validator.Between(60, 3600),
+					int64validator.Between(60, 5400),
 				},
 			},
 			"instruction": schema.StringAttribute{
@@ -138,8 +139,8 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
-			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"memory_configuration":          framework.ResourceOptionalComputedSingleNestedObjectAttribute[memoryConfigurationModel](ctx),
+			"prompt_override_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[promptOverrideConfigurationModel](ctx),
 			"prepared_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -188,7 +189,7 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgent(ctx, &input)
@@ -548,9 +549,8 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -565,8 +565,8 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	return output.Agent, nil
 }
 
-func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgent(conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -582,10 +582,10 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkr
 }
 
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -601,10 +601,10 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -620,10 +620,10 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -639,10 +639,10 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 }
 
 func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -658,10 +658,10 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 

@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +20,18 @@ import (
 func TestAccNetworkManagerLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_link.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
+					testAccCheckLinkExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "networkmanager", "link/{global_network_id}/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
@@ -56,21 +55,29 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 func TestAccNetworkManagerLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_link.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
+					testAccCheckLinkExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -79,18 +86,18 @@ func TestAccNetworkManagerLink_disappears(t *testing.T) {
 func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_link.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
+					testAccCheckLinkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
@@ -108,7 +115,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 			{
 				Config: testAccLinkConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
+					testAccCheckLinkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "75"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "20"),
@@ -121,9 +128,9 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 	})
 }
 
-func testAccCheckLinkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLinkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_link" {
@@ -147,7 +154,7 @@ func testAccCheckLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLinkExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLinkExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,7 +165,7 @@ func testAccCheckLinkExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No Network Manager Link ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		_, err := tfnetworkmanager.FindLinkByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput
@@ -35,7 +35,7 @@ func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccCodeStarConnectionsHost_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarconnections_host.test"
@@ -228,7 +228,7 @@ func TestAccCodeStarConnectionsHost_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput
@@ -241,7 +241,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
-		CheckDestroy: testAccCheckHostDestroy(ctx),
+		CheckDestroy: testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -250,7 +250,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +264,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -307,7 +307,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarConnectionsHost_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeStarConnectionsHost_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v codestarconnections.GetHostOutput
@@ -320,7 +320,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource_NoRefresh_NoChange
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
-		CheckDestroy: testAccCheckHostDestroy(ctx),
+		CheckDestroy: testAccCheckHostDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -334,7 +334,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource_NoRefresh_NoChange
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -349,7 +349,7 @@ func TestAccCodeStarConnectionsHost_Identity_ExistingResource_NoRefresh_NoChange
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

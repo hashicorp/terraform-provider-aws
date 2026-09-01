@@ -26,25 +26,25 @@ func testAccAppFabricAppBundle_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppFabricAppBundle_tags,
-		"null":                                      testAccAppFabricAppBundle_tags_null,
-		"EmptyMap":                                  testAccAppFabricAppBundle_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAppFabricAppBundle_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAppFabricAppBundle_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAppFabricAppBundle_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAppFabricAppBundle_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAppFabricAppBundle_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAppFabricAppBundle_Tags_null,
+		"EmptyMap":                                  testAccAppFabricAppBundle_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAppFabricAppBundle_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAppFabricAppBundle_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAppFabricAppBundle_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAppFabricAppBundle_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAppFabricAppBundle_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAppFabricAppBundle_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAppFabricAppBundle_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAppFabricAppBundle_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAppFabricAppBundle_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAppFabricAppBundle_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAppFabricAppBundle_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -63,9 +63,10 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -76,7 +77,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -118,7 +119,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -164,7 +165,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -203,7 +204,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -230,7 +231,7 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_null(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -243,9 +244,10 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -256,7 +258,7 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -296,7 +298,7 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -309,9 +311,10 @@ func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +323,7 @@ func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -350,7 +353,7 @@ func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -363,9 +366,10 @@ func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -374,7 +378,7 @@ func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -396,7 +400,7 @@ func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -433,7 +437,7 @@ func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -446,9 +450,10 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -459,7 +464,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -498,7 +503,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -525,7 +530,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -538,9 +543,10 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -551,7 +557,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -582,7 +588,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -628,7 +634,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -665,7 +671,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -678,9 +684,10 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -691,7 +698,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -721,7 +728,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -758,7 +765,7 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -771,9 +778,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -785,7 +793,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -827,7 +835,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -871,7 +879,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -909,7 +917,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -937,7 +945,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -950,9 +958,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -966,7 +975,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1018,7 +1027,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1069,7 +1078,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1097,7 +1106,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1110,9 +1119,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1126,7 +1136,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1177,7 +1187,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1232,7 +1242,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1273,7 +1283,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1286,9 +1296,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1299,7 +1310,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1331,7 +1342,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1366,7 +1377,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1379,9 +1390,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1393,7 +1405,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1420,7 +1432,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1458,7 +1470,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1471,9 +1483,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1487,7 +1500,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1528,7 +1541,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1541,9 +1554,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1555,7 +1569,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1590,7 +1604,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1603,9 +1617,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *te
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1619,7 +1634,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1663,7 +1678,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *te
 	})
 }
 
-func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1676,9 +1691,10 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1692,7 +1708,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1738,7 +1754,7 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 	})
 }
 
-func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1751,9 +1767,10 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1762,7 +1779,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1797,7 +1814,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1810,9 +1827,10 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1823,7 +1841,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1854,7 +1872,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1897,7 +1915,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -1910,9 +1928,10 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1923,7 +1942,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1952,7 +1971,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1987,7 +2006,7 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -2000,9 +2019,10 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2020,7 +2040,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2068,7 +2088,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2116,7 +2136,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2152,7 +2172,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 	})
 }
 
-func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppFabricAppBundle_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -2165,9 +2185,10 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2183,7 +2204,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2240,7 +2261,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2296,7 +2317,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &v),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

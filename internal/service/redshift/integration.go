@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package redshift
 
 import (
@@ -33,7 +35,6 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Integration")
 // @Testing(preIdentityVersion="6.19.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -177,7 +178,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Null vs. empty map handling.
-	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && len(data.AdditionalEncryptionContext.Elements()) == 0 {
+	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && data.AdditionalEncryptionContext.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 

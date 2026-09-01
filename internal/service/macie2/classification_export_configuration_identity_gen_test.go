@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccMacie2ClassificationExportConfiguration_IdentitySerial(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_Basic,
-		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_basic,
+		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -48,7 +48,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
-		CheckDestroy:             testAccCheckClassificationExportConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckClassificationExportConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -56,7 +56,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+					testAccCheckClassificationExportConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -111,7 +111,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_macie2_classification_export_configuration.test"
@@ -221,7 +221,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -233,14 +233,14 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Macie2ServiceID),
-		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+					testAccCheckClassificationExportConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -252,7 +252,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+					testAccCheckClassificationExportConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -294,7 +294,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -306,7 +306,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_No
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Macie2ServiceID),
-		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -318,7 +318,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_No
 				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+					testAccCheckClassificationExportConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -331,7 +331,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_No
 				ConfigDirectory:          config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+					testAccCheckClassificationExportConfigurationExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

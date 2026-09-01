@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -33,7 +33,7 @@ func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerRecipeExists(ctx, resourceName),
+					testAccCheckContainerRecipeExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -106,7 +106,7 @@ func TestAccImageBuilderContainerRecipe_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccImageBuilderContainerRecipe_Identity_RegionOverride(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -227,7 +227,7 @@ func TestAccImageBuilderContainerRecipe_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -239,7 +239,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckContainerRecipeDestroy(ctx),
+		CheckDestroy: testAccCheckContainerRecipeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -248,7 +248,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerRecipeExists(ctx, resourceName),
+					testAccCheckContainerRecipeExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -282,7 +282,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource(t *testing.T) 
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -294,7 +294,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_NoRefresh_NoCh
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckContainerRecipeDestroy(ctx),
+		CheckDestroy: testAccCheckContainerRecipeDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -308,7 +308,7 @@ func TestAccImageBuilderContainerRecipe_Identity_ExistingResource_NoRefresh_NoCh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContainerRecipeExists(ctx, resourceName),
+					testAccCheckContainerRecipeExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

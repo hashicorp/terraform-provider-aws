@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package redshift
 
 import (
@@ -23,7 +25,6 @@ import (
 
 // @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,
@@ -35,47 +36,49 @@ func resourceUsageLimit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"amount": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"breach_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UsageLimitBreachActionLog,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"feature_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitFeatureType](),
-			},
-			"limit_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitLimitType](),
-			},
-			"period": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.UsageLimitPeriodMonthly,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amount": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"breach_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UsageLimitBreachActionLog,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"feature_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitFeatureType](),
+				},
+				"limit_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitLimitType](),
+				},
+				"period": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.UsageLimitPeriodMonthly,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

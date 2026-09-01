@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,42 +38,44 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-				StateFunc: func(v any) string {
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"traffic_policy_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-			},
-			"traffic_policy_version": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 1000),
-			},
-			"ttl": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtMost(2147483647),
-			},
+				names.AttrHostedZoneID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+					StateFunc: func(v any) string {
+						value := strings.TrimSuffix(v.(string), ".")
+						return strings.ToLower(value)
+					},
+				},
+				"traffic_policy_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+				},
+				"traffic_policy_version": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 1000),
+				},
+				"ttl": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntAtMost(2147483647),
+				},
+			}
 		},
 	}
 }
@@ -189,9 +192,8 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	output, err := conn.GetTrafficPolicyInstance(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchTrafficPolicyInstance](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -206,8 +208,8 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	return output.TrafficPolicyInstance, nil
 }
 
-func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrafficPolicyInstanceState(conn *route53.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrafficPolicyInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -235,10 +237,10 @@ const (
 )
 
 func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Client, id string) (*awstypes.TrafficPolicyInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateCreating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -256,10 +258,10 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 }
 
 func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Client, id string) (*awstypes.TrafficPolicyInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateUpdating},
 		Target:  []string{trafficPolicyInstanceStateApplied},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 
@@ -277,10 +279,10 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 }
 
 func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Client, id string) (*awstypes.TrafficPolicyInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{trafficPolicyInstanceStateDeleting},
 		Target:  []string{},
-		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Refresh: statusTrafficPolicyInstanceState(conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}
 

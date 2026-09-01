@@ -37,13 +37,6 @@ This resource supports the following arguments:
 * `ipv6_pool` - (Optional) The  ID of an IPv6 address pool from which to allocate the IPv6 CIDR block. Conflicts with `assign_generated_ipv6_cidr_block` and `ipv6_ipam_pool_id`.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `create` - (Default `10m`)
-- `delete` - (Default `10m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -51,6 +44,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the VPC CIDR association.
 * `ip_source` - The source that allocated the IP address space. Values: `amazon`, `byoip`, `none`.
 * `ipv6_address_attribute` - Public IPv6 addresses are those advertised on the internet from AWS. Private IP addresses are not and cannot be advertised on the internet from AWS. Values: `public`, `private`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

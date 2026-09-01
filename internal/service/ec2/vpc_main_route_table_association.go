@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -32,23 +34,25 @@ func resourceMainRouteTableAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			// We use this field to record the main route table that is automatically
-			// created when the VPC is created. We need this to be able to "destroy"
-			// our main route table association, which we do by returning this route
-			// table to its original place as the Main Route Table for the VPC.
-			"original_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				// We use this field to record the main route table that is automatically
+				// created when the VPC is created. We need this to be able to "destroy"
+				// our main route table association, which we do by returning this route
+				// table to its original place as the Main Route Table for the VPC.
+				"original_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

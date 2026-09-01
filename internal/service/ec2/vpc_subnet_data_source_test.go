@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,9 +14,9 @@ import (
 
 func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
+	rInt := acctest.RandIntRange(t, 0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -28,7 +27,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ds5ResourceName := "data.aws_subnet.by_filter"
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +51,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -69,7 +68,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -86,7 +85,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -102,7 +101,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds4ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -118,7 +117,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_aaaa_record_on_launch", snResourceName, "enable_resource_name_dns_aaaa_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
-					resource.TestCheckResourceAttrPair(ds5ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
@@ -134,7 +133,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
-					resource.TestCheckResourceAttrPair(ds6ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 				),
 			},
 		},
@@ -143,10 +142,10 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rInt := acctest.RandIntRange(t, 0, 256)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -167,10 +166,10 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 256)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rInt := acctest.RandIntRange(t, 0, 256)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -190,10 +189,10 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 
 func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dsResourceName := "data.aws_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -14,14 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccEBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,16 +28,16 @@ func testAccEBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSEncryptionByDefaultDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSEncryptionByDefaultDataSource(ctx, "data.aws_ebs_encryption_by_default.current"),
+					testAccCheckEBSEncryptionByDefaultDataSource(ctx, t, "data.aws_ebs_encryption_by_default.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

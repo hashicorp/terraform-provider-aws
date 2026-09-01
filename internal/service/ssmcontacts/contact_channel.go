@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssmcontacts
 
 import (
@@ -24,7 +26,6 @@ import (
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.14.1")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,
@@ -32,42 +33,44 @@ func ResourceContactChannel() *schema.Resource {
 		UpdateWithoutTimeout: resourceContactChannelUpdate,
 		DeleteWithoutTimeout: resourceContactChannelDelete,
 
-		Schema: map[string]*schema.Schema{
-			"activation_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"contact_id": {
-				ForceNew: true,
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"delivery_address": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"simple_address": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"activation_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"contact_id": {
+					ForceNew: true,
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"delivery_address": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"simple_address": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrType: {
-				ForceNew: true,
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrType: {
+					ForceNew: true,
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

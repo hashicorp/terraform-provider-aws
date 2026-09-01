@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ram
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -33,7 +34,9 @@ func resourceSharingWithOrganization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{}
+		},
 	}
 }
 
@@ -112,7 +115,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 	}
 
 	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		return &sdkretry.NotFoundError{
+		return &retry.NotFoundError{
 			Message: fmt.Sprintf("Organization service principal (%s) not enabled", servicePrincipalName),
 		}
 	}

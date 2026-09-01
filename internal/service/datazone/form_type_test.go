@@ -11,11 +11,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -29,12 +28,12 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 	}
 
 	var formtype datazone.GetFormTypeOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_form_type.test"
 	domainName := "aws_datazone_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -42,12 +41,12 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFormTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckFormTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFormTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFormTypeExists(ctx, resourceName, &formtype),
+					testAccCheckFormTypeExists(ctx, t, resourceName, &formtype),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
@@ -65,7 +64,6 @@ func TestAccDataZoneFormType_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateIdFunc:                    testAccAuthorizerImportStateUserProfileFunc(resourceName),
-				ImportStateVerifyIgnore:              []string{"model"},
 			},
 		},
 	})
@@ -78,11 +76,11 @@ func TestAccDataZoneFormType_disappears(t *testing.T) {
 	}
 
 	var formtype datazone.GetFormTypeOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_form_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -90,23 +88,31 @@ func TestAccDataZoneFormType_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFormTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckFormTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFormTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFormTypeExists(ctx, resourceName, &formtype),
+					testAccCheckFormTypeExists(ctx, t, resourceName, &formtype),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceFormType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckFormTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFormTypeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_form_type" {
@@ -129,7 +135,7 @@ func testAccCheckFormTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFormTypeExists(ctx context.Context, name string, formtype *datazone.GetFormTypeOutput) resource.TestCheckFunc {
+func testAccCheckFormTypeExists(ctx context.Context, t *testing.T, name string, formtype *datazone.GetFormTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -140,7 +146,7 @@ func testAccCheckFormTypeExists(ctx context.Context, name string, formtype *data
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameFormType, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		resp, err := tfdatazone.FindFormTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"])
 

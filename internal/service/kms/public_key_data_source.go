@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kms
 
 import (
@@ -23,47 +25,49 @@ func dataSourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicKeyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_master_key_spec": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encryption_algorithms": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"grant_tokens": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrKeyID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateKeyOrAlias,
-			},
-			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_key_pem": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_algorithms": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_master_key_spec": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encryption_algorithms": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"grant_tokens": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrKeyID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateKeyOrAlias,
+				},
+				"key_usage": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"public_key_pem": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_algorithms": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

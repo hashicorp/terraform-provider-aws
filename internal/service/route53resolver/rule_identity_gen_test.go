@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53ResolverRule_Identity_Basic(t *testing.T) {
+func TestAccRoute53ResolverRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -35,7 +35,7 @@ func TestAccRoute53ResolverRule_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccRoute53ResolverRule_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -107,11 +107,11 @@ func TestAccRoute53ResolverRule_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverRule_Identity_RegionOverride(t *testing.T) {
+func TestAccRoute53ResolverRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -195,12 +195,12 @@ func TestAccRoute53ResolverRule_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccRoute53ResolverRule_Identity_ExistingResource(t *testing.T) {
+func TestAccRoute53ResolverRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -208,7 +208,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleDestroy(ctx),
+		CheckDestroy: testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,12 +253,12 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccRoute53ResolverRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccRoute53ResolverRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -266,7 +266,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource_NoRefresh_NoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleDestroy(ctx),
+		CheckDestroy: testAccCheckRuleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccRoute53ResolverRule_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

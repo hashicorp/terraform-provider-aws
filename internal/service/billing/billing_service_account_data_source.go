@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package billing
 
 import (
@@ -49,7 +51,6 @@ func (d *billingServiceAccountDataSource) Read(ctx context.Context, request data
 	// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
 	const serviceAccountID = "386209384616"
 	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().GlobalARNWithAccount(ctx, "iam", serviceAccountID, "root"))
-	d.Meta().GlobalARNWithAccount(ctx, "iam", serviceAccountID, "root")
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

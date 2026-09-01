@@ -55,7 +55,7 @@ func TestAccBatchSchedulingPolicyDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccBatchSchedulingPolicyDataSource_tags_NullMap(t *testing.T) {
+func TestAccBatchSchedulingPolicyDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_scheduling_policy.test"
@@ -83,7 +83,7 @@ func TestAccBatchSchedulingPolicyDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccBatchSchedulingPolicyDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccBatchSchedulingPolicyDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_scheduling_policy.test"
@@ -111,7 +111,7 @@ func TestAccBatchSchedulingPolicyDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccBatchSchedulingPolicyDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccBatchSchedulingPolicyDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_scheduling_policy.test"
@@ -147,7 +147,7 @@ func TestAccBatchSchedulingPolicyDataSource_tags_DefaultTags_nonOverlapping(t *t
 	})
 }
 
-func TestAccBatchSchedulingPolicyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccBatchSchedulingPolicyDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_scheduling_policy.test"
@@ -189,7 +189,7 @@ func TestAccBatchSchedulingPolicyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 	})
 }
 
-func TestAccBatchSchedulingPolicyDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccBatchSchedulingPolicyDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_batch_scheduling_policy.test"

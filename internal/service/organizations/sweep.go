@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -17,20 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_organizations_account", sweepAccounts,
-		"aws_organizations_delegated_administrator",
-	)
-
+	awsv2.Register("aws_organizations_account", sweepAccounts, "aws_organizations_delegated_administrator")
+	awsv2.Register("aws_organizations_aws_service_access", sweepAWSServiceAccesses)
 	awsv2.Register("aws_organizations_delegated_administrator", sweepDelegatedAdministrators)
-
-	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
-		"aws_organizations_account")
+	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits, "aws_organizations_account")
 }
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -234,6 +232,34 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 			d.SetId(aws.ToString(ou.Id))
 
 			sweepResources = append(sweepResources, newOrganizationalUnitSweeper(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAWSServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) { // nosemgrep:ci.aws-in-func-name
+	if skip, err := sweepPreCheck(ctx, client); err != nil {
+		return nil, err
+	} else if skip {
+		return nil, nil
+	}
+
+	input := organizations.ListAWSServiceAccessForOrganizationInput{}
+	conn := client.OrganizationsClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, service := range page.EnabledServicePrincipals {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAWSServiceAccessResource, client,
+				sweepfw.NewAttribute("service_principal", aws.ToString(service.ServicePrincipal))),
+			)
 		}
 	}
 

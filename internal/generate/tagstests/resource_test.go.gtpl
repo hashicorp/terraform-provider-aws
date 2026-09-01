@@ -41,10 +41,14 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ end -}}
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
 {{ end }}
 {{- end }}
 
@@ -126,25 +130,25 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             {{ template "testname" . }}_tags,
-		"null":                                      {{ template "testname" . }}_tags_null,
-		"EmptyMap":                                  {{ template "testname" . }}_tags_EmptyMap,
-		"AddOnUpdate":                               {{ template "testname" . }}_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         {{ template "testname" . }}_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  {{ template "testname" . }}_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   {{ template "testname" . }}_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      {{ template "testname" . }}_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      {{ template "testname" . }}_Tags_null,
+		"EmptyMap":                                  {{ template "testname" . }}_Tags_emptyMap,
+		"AddOnUpdate":                               {{ template "testname" . }}_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         {{ template "testname" . }}_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  {{ template "testname" . }}_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   {{ template "testname" . }}_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      {{ template "testname" . }}_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
@@ -169,7 +173,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -207,7 +214,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -225,7 +235,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -239,7 +252,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
-			},
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
@@ -268,7 +281,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -285,7 +301,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -326,7 +345,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -344,7 +366,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -375,7 +400,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -387,7 +415,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_null(t *testing.T) {
+func {{ template "testname" . }}_Tags_null(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -408,7 +436,10 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -457,7 +488,10 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBodyIgnoreKey1" . -}}
 			},
@@ -473,7 +507,10 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -489,7 +526,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
+func {{ template "testname" . }}_Tags_emptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -505,7 +542,10 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -544,7 +584,10 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBodyIgnoreKey1" . -}}
 			},
@@ -560,7 +603,10 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -576,7 +622,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
+func {{ template "testname" . }}_Tags_addOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -592,7 +638,10 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -626,7 +675,10 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -664,7 +716,10 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -673,7 +728,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_onCreate(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -694,7 +749,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -737,7 +795,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -752,7 +813,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -780,7 +844,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -789,7 +856,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -810,7 +877,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -848,7 +918,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -896,7 +969,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -913,7 +989,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -951,7 +1030,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -960,7 +1042,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func {{ template "testname" . }}_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -981,7 +1063,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1018,7 +1103,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1061,7 +1149,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1070,7 +1161,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1091,7 +1182,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1128,7 +1222,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1149,7 +1246,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1189,7 +1289,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1209,7 +1312,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1249,7 +1355,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -1269,7 +1378,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1302,7 +1414,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -1314,7 +1429,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1337,7 +1452,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1382,7 +1500,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1405,7 +1526,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1455,7 +1579,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1472,7 +1599,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1505,7 +1635,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -1517,7 +1650,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1540,7 +1673,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1583,7 +1719,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1607,7 +1746,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1656,7 +1798,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1678,7 +1823,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1721,7 +1869,10 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1730,7 +1881,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1750,7 +1901,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1790,7 +1944,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1827,7 +1984,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1836,7 +1996,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1857,7 +2017,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1892,7 +2055,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1932,7 +2098,10 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1941,7 +2110,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -1967,7 +2136,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2015,7 +2187,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2024,7 +2199,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 {{- if .SkipEmptyTags }}
 	t.Skip("Resource {{ .Name }} does not support empty tags")
 {{ end }}
@@ -2048,7 +2223,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2090,7 +2268,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2099,7 +2280,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -2125,7 +2306,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2182,7 +2366,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBodyIgnoreKey1" . -}}
 			},
@@ -2191,7 +2378,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 {{- if .SkipNullTags }}
 	t.Skip("Resource {{ .Name }} does not support null tags")
 {{ end }}
@@ -2217,7 +2404,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2276,7 +2466,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBodyIgnoreResourceKey1" . -}}
 			},
@@ -2285,7 +2478,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_onCreate(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2303,7 +2496,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2340,7 +2536,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2349,7 +2548,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2369,7 +2568,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2408,7 +2610,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2453,7 +2658,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2462,7 +2670,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func {{ template "testname" . }}_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2482,7 +2690,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2519,7 +2730,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2556,7 +2770,10 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2565,7 +2782,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2592,7 +2809,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2648,7 +2868,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2704,7 +2927,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2743,7 +2969,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -2768,7 +2994,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2861,7 +3090,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2953,7 +3185,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}

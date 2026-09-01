@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +20,18 @@ import (
 func TestAccNetworkManagerSite_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_site.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "networkmanager", "site/{global_network_id}/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
@@ -52,21 +51,29 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 func TestAccNetworkManagerSite_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_site.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceSite(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -75,18 +82,18 @@ func TestAccNetworkManagerSite_disappears(t *testing.T) {
 func TestAccNetworkManagerSite_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_site.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -99,7 +106,7 @@ func TestAccNetworkManagerSite_description(t *testing.T) {
 			{
 				Config: testAccSiteConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -110,18 +117,18 @@ func TestAccNetworkManagerSite_description(t *testing.T) {
 func TestAccNetworkManagerSite_location(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_site.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteConfig_location(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Stuart, FL"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "27.198"),
@@ -137,7 +144,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 			{
 				Config: testAccSiteConfig_locationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteExists(ctx, resourceName),
+					testAccCheckSiteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Brisbane, QLD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "-27.470"),
@@ -148,9 +155,9 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 	})
 }
 
-func testAccCheckSiteDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSiteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_site" {
@@ -174,7 +181,7 @@ func testAccCheckSiteDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSiteExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSiteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -185,7 +192,7 @@ func testAccCheckSiteExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No Network Manager Site ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		_, err := tfnetworkmanager.FindSiteByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 

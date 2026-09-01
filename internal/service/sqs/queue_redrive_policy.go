@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sqs
 
 import (
@@ -17,7 +19,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.19.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedrivePolicy,
@@ -31,13 +32,15 @@ func resourceQueueRedrivePolicy() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"queue_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 
 		CreateWithoutTimeout: h.Upsert,

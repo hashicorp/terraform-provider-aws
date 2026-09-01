@@ -50,9 +50,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 * `ids` - List of all the managed prefix list ids found.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-- `read` - (Default `20m`)

@@ -10,25 +10,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	resourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 2),
@@ -46,6 +43,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttr(dataSourceName, "warm_throughput.#", "0"),
 				),
 			},
 			{
@@ -61,15 +59,14 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 
 func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	resourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_encryption(rName, 2),
@@ -92,15 +89,14 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 
 func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	resourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName, 10240),
@@ -125,18 +121,17 @@ func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/40494
 func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	const shardCount = 1100
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckShardLimitGreaterThanOrEqual(ctx, t, shardCount)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 1100),
@@ -151,7 +146,7 @@ func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
 func testAccPreCheckShardLimitGreaterThanOrEqual(ctx context.Context, t *testing.T, n int) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
 	output, err := tfkinesis.FindLimits(ctx, conn)
 
 	if acctest.PreCheckSkipError(err) {

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package synthetics
 
 import (
@@ -45,252 +47,259 @@ func ResourceCanary() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"artifact_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_encryption": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"encryption_mode": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EncryptionMode](),
-									},
-									names.AttrKMSKeyARN: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"artifact_s3_location": {
-				Type:     schema.TypeString,
-				Required: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.TrimPrefix(new, "s3://") == old
-				},
-			},
-			"delete_lambda": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"engine_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"failure_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      31,
-				ValidateFunc: validation.IntBetween(1, 455),
-			},
-			"handler": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
-				),
-			},
-			"run_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active_tracing": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"environment_variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ephemeral_storage": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1024, 5120),
-						},
-						"memory_in_mb": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.All(
-								validation.IntDivisibleBy(64),
-								validation.IntAtLeast(960),
-							),
-						},
-						"timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Computed:     true,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(3, 14*60),
-						},
-					},
-				},
-			},
-			"runtime_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrS3Bucket: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-				RequiredWith:  []string{"s3_key"},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-				RequiredWith:  []string{names.AttrS3Bucket},
-			},
-			"s3_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-			},
-			names.AttrSchedule: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrExpression: {
-							Type:     schema.TypeString,
-							Required: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
-							},
-						},
-						"retry_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_retries": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(0, 2),
+				"artifact_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_encryption": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"encryption_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EncryptionMode](),
+										},
+										names.AttrKMSKeyARN: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"source_location_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"start_canary": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"success_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      31,
-				ValidateFunc: validation.IntBetween(1, 455),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeline": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"created": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_modified": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_started": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_stopped": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"artifact_s3_location": {
+					Type:     schema.TypeString,
+					Required: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.TrimPrefix(new, "s3://") == old
+					},
+				},
+				"delete_lambda": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"engine_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"failure_retention_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      31,
+					ValidateFunc: validation.IntBetween(1, 455),
+				},
+				"handler": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
+					),
+				},
+				"run_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active_tracing": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"environment_variables": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ephemeral_storage": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(1024, 5120),
+							},
+							"memory_in_mb": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.All(
+									validation.IntDivisibleBy(64),
+									validation.IntAtLeast(960),
+								),
+							},
+							"timeout_in_seconds": {
+								Type:         schema.TypeInt,
+								Computed:     true,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(3, 14*60),
+							},
 						},
 					},
 				},
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv6_allowed_for_dual_stack": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"runtime_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrS3Bucket: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"zip_file"},
+					RequiredWith:  []string{"s3_key"},
+				},
+				"s3_key": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"zip_file"},
+					RequiredWith:  []string{names.AttrS3Bucket},
+				},
+				"s3_version": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"zip_file"},
+				},
+				names.AttrSchedule: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"duration_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrExpression: {
+								Type:     schema.TypeString,
+								Required: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
+								},
+							},
+							"retry_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_retries": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 2),
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
-			"zip_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
-			},
+				"source_location_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"start_canary": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"success_retention_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      31,
+					ValidateFunc: validation.IntBetween(1, 455),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"timeline": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"created": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_modified": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_started": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_stopped": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ipv6_allowed_for_dual_stack": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"zip_file": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
+				},
+			}
 		},
 	}
 }
@@ -333,6 +342,10 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.VpcConfig = expandCanaryVPCConfig(v.([]any))
 	}
 
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		input.KmsKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("failure_retention_period"); ok {
 		input.FailureRetentionPeriodInDays = aws.Int32(int32(v.(int)))
 	}
@@ -364,8 +377,10 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
 			if err != nil && time.Now().Before(iamwaiterStopTime) {
-				// This error synthesized from the Status object and not an AWS SDK Go error type.
-				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda"), err
+				// These errors are synthesized from the Status object and not AWS SDK Go error types.
+				// Both represent IAM propagation delays: role assumption and KMS CreateGrant permission.
+				return strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda") ||
+					strings.Contains(err.Error(), "KMS key is invalid for CreateGrant"), err
 			}
 
 			return false, err
@@ -418,6 +433,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
+	d.Set(names.AttrKMSKeyARN, canary.KmsKeyArn)
 	d.Set(names.AttrName, canary.Name)
 	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
@@ -469,6 +485,10 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("artifact_config") {
 			input.ArtifactConfig = expandCanaryArtifactConfig(d.Get("artifact_config").([]any))
+		}
+
+		if d.HasChange(names.AttrKMSKeyARN) {
+			input.KmsKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 
 		if d.HasChange("runtime_version") {

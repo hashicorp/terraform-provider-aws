@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package observabilityadmin
 
 import (
@@ -21,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -41,6 +43,7 @@ import (
 
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
+// @Testing(tagsTest=false)
 func newCentralizationRuleForOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &centralizationRuleForOrganizationResource{}
 
@@ -67,6 +70,18 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"tag_propagation_failure_reason": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"tag_propagation_status": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -132,6 +147,23 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 														},
 													},
 												},
+												"log_group_name_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group_name_pattern": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 512),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`), ""),
+																},
+															},
+														},
+													},
+												},
 												"logs_encryption_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[logsEncryptionConfigurationModel](ctx),
 													Validators: []validator.List{
@@ -143,6 +175,14 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 																Optional:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionConflictResolutionStrategy](),
 															},
+															"encryption_scope": schema.StringAttribute{
+																Optional:   true,
+																Computed:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionScope](),
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.UseStateForUnknown(),
+																},
+															},
 															"encryption_strategy": schema.StringAttribute{
 																Required:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
@@ -150,6 +190,50 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
+															},
+														},
+													},
+												},
+												"tag_propagation_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[tagPropagationConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"destination_role_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+															"tag_conflict_resolution_strategy": schema.StringAttribute{
+																Optional:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.TagConflictResolutionStrategy](),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"destination_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[destinationMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"backup_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[metricsBackupConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrRegion: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	fwvalidators.AWSRegion(),
+																},
 															},
 														},
 													},
@@ -193,11 +277,47 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"data_source_selection_criteria": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
+													},
+												},
 												"encrypted_log_group_strategy": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.EncryptedLogGroupStrategy](),
 													Required:   true,
 												},
 												"log_group_selection_criteria": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
+													},
+												},
+											},
+										},
+									},
+									"source_metrics_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sourceMetricsConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metrics_selection_criteria": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthAtLeast(1),
@@ -256,6 +376,19 @@ func (r *centralizationRuleForOrganizationResource) Create(ctx context.Context, 
 
 	if _, err := waitCentralizationRuleForOrganizationHealthy(ctx, conn, ruleName, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	// The Create response only returns the rule ARN, so read the rule back to
+	// populate Computed attributes (e.g. encryption_scope) that the service defaults.
+	out, err := findCentralizationRuleForOrganizationByID(ctx, conn, ruleName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Centralization")))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -374,9 +507,8 @@ func findCentralizationRuleForOrganization(ctx context.Context, conn *observabil
 	output, err := conn.GetCentralizationRuleForOrganization(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -427,12 +559,14 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 type centralizationRuleForOrganizationResourceModel struct {
 	framework.WithRegionModel
-	Rule     fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
-	RuleARN  types.String                                             `tfsdk:"rule_arn"`
-	RuleName types.String                                             `tfsdk:"rule_name"`
-	Tags     tftags.Map                                               `tfsdk:"tags"`
-	TagsAll  tftags.Map                                               `tfsdk:"tags_all"`
-	Timeouts timeouts.Value                                           `tfsdk:"timeouts"`
+	Rule                        fwtypes.ListNestedObjectValueOf[centralizationRuleModel] `tfsdk:"rule"`
+	RuleARN                     types.String                                             `tfsdk:"rule_arn"`
+	RuleName                    types.String                                             `tfsdk:"rule_name"`
+	TagPropagationFailureReason types.String                                             `tfsdk:"tag_propagation_failure_reason"`
+	TagPropagationStatus        types.String                                             `tfsdk:"tag_propagation_status"`
+	Tags                        tftags.Map                                               `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                               `tfsdk:"tags_all"`
+	Timeouts                    timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
 type centralizationRuleModel struct {
@@ -441,25 +575,35 @@ type centralizationRuleModel struct {
 }
 
 type centralizationRuleDestinationModel struct {
-	Account                      types.String                                                       `tfsdk:"account"`
-	DestinationLogsConfiguration fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel] `tfsdk:"destination_logs_configuration"`
-	Region                       types.String                                                       `tfsdk:"region"`
+	Account                         types.String                                                          `tfsdk:"account"`
+	DestinationLogsConfiguration    fwtypes.ListNestedObjectValueOf[destinationLogsConfigurationModel]    `tfsdk:"destination_logs_configuration"`
+	DestinationMetricsConfiguration fwtypes.ListNestedObjectValueOf[destinationMetricsConfigurationModel] `tfsdk:"destination_metrics_configuration"`
+	Region                          types.String                                                          `tfsdk:"region"`
 }
 
 type centralizationRuleSourceModel struct {
-	Regions                 fwtypes.SetOfString                                           `tfsdk:"regions"`
-	Scope                   types.String                                                  `tfsdk:"scope"`
-	SourceLogsConfiguration fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel] `tfsdk:"source_logs_configuration"`
+	Regions                    fwtypes.SetOfString                                              `tfsdk:"regions"`
+	Scope                      types.String                                                     `tfsdk:"scope"`
+	SourceLogsConfiguration    fwtypes.ListNestedObjectValueOf[sourceLogsConfigurationModel]    `tfsdk:"source_logs_configuration"`
+	SourceMetricsConfiguration fwtypes.ListNestedObjectValueOf[sourceMetricsConfigurationModel] `tfsdk:"source_metrics_configuration"`
 }
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
+	TagPropagationConfiguration fwtypes.ListNestedObjectValueOf[tagPropagationConfigurationModel] `tfsdk:"tag_propagation_configuration"`
+}
+
+type tagPropagationConfigurationModel struct {
+	DestinationRoleARN            fwtypes.ARN                                                `tfsdk:"destination_role_arn"`
+	TagConflictResolutionStrategy fwtypes.StringEnum[awstypes.TagConflictResolutionStrategy] `tfsdk:"tag_conflict_resolution_strategy"`
 }
 
 type sourceLogsConfigurationModel struct {
-	EncryptedLogGroupStrategy fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
-	LogGroupSelectionCriteria types.String                                           `tfsdk:"log_group_selection_criteria"`
+	DataSourceSelectionCriteria types.String                                           `tfsdk:"data_source_selection_criteria"`
+	EncryptedLogGroupStrategy   fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
+	LogGroupSelectionCriteria   types.String                                           `tfsdk:"log_group_selection_criteria"`
 }
 
 type logsBackupConfigurationModel struct {
@@ -467,8 +611,25 @@ type logsBackupConfigurationModel struct {
 	Region    types.String `tfsdk:"region"`
 }
 
+type logGroupNameConfigurationModel struct {
+	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
+}
+
 type logsEncryptionConfigurationModel struct {
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
+	EncryptionScope                      fwtypes.StringEnum[awstypes.EncryptionScope]                      `tfsdk:"encryption_scope"`
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
+}
+
+type destinationMetricsConfigurationModel struct {
+	BackupConfiguration fwtypes.ListNestedObjectValueOf[metricsBackupConfigurationModel] `tfsdk:"backup_configuration"`
+}
+
+type metricsBackupConfigurationModel struct {
+	Region types.String `tfsdk:"region"`
+}
+
+type sourceMetricsConfigurationModel struct {
+	MetricsSelectionCriteria types.String `tfsdk:"metrics_selection_criteria"`
 }

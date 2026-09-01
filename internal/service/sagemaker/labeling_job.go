@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sagemaker
 
 import (
@@ -26,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -101,7 +102,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"stopping_conditions": framework.ResourceOptionalComputedListOfObjectsAttribute[labelingJobStoppingConditionsModel](ctx, 1, nil, listplanmodifier.RequiresReplace()),
+			"stopping_conditions": framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[labelingJobStoppingConditionsModel](ctx),
 			names.AttrTags:        tftags.TagsAttributeForceNew(),
 			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
 		},
@@ -643,9 +644,8 @@ func findLabelingJob(ctx context.Context, conn *sagemaker.Client, input *sagemak
 	output, err := conn.DescribeLabelingJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -660,8 +660,8 @@ func findLabelingJob(ctx context.Context, conn *sagemaker.Client, input *sagemak
 	return output, nil
 }
 
-func statusLabelingJob(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLabelingJob(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLabelingJobByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -677,10 +677,10 @@ func statusLabelingJob(ctx context.Context, conn *sagemaker.Client, name string)
 }
 
 func waitLabelingJobInitialized(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeLabelingJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LabelingJobStatusInitializing),
 		Target:  enum.Slice(awstypes.LabelingJobStatusInProgress, awstypes.LabelingJobStatusCompleted),
-		Refresh: statusLabelingJob(ctx, conn, name),
+		Refresh: statusLabelingJob(conn, name),
 		Timeout: timeout,
 	}
 

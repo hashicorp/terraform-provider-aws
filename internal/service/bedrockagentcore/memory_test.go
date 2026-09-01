@@ -6,13 +6,12 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,10 +29,10 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -41,12 +40,12 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -54,8 +53,8 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`memory/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "bedrock-agentcore", "memory/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -71,10 +70,10 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -82,12 +81,12 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceMemory, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,10 +106,10 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -118,12 +117,12 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_description(rName, "desc1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -142,7 +141,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 			{
 				Config: testAccMemoryConfig_description(rName, "desc2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -160,10 +159,10 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -171,12 +170,12 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_memoryExecutionRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -196,9 +195,185 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	})
 }
 
-func testAccCheckMemoryDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("customer_id"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Reordering indexed_key entries is a no-op: it is modeled as a set, so config order is irrelevant.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("score", "customer_id"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				// Adding an indexed key is applied in place via UpdateMemory (AddIndexedKeys), not a replacement.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "channel", "score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("customer_id"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("channel"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
+				},
+			},
+			{
+				// Removing an indexed key forces replacement: the API cannot remove previously indexed keys.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("channel", "score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("channel"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_streamDeliveryResources(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("data_stream_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("stream_delivery_resources").AtSliceIndex(0).AtMapKey("resource").AtSliceIndex(0).AtMapKey("kinesis").AtSliceIndex(0).AtMapKey("content_configuration").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("MEMORY_RECORDS")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckMemoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_memory" {
@@ -221,14 +396,14 @@ func testAccCheckMemoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMemoryExists(ctx context.Context, n string, v *awstypes.Memory) resource.TestCheckFunc {
+func testAccCheckMemoryExists(ctx context.Context, t *testing.T, n string, v *awstypes.Memory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -242,7 +417,7 @@ func testAccCheckMemoryExists(ctx context.Context, n string, v *awstypes.Memory)
 }
 
 func testAccPreCheckMemories(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListMemoriesInput{}
 
@@ -318,6 +493,51 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func randomMemoryName() string {
-	return strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+func testAccMemoryConfig_streamDeliveryResources(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 1
+}
+
+resource "aws_iam_role_policy" "test_kinesis" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords",
+        "kinesis:DescribeStream",
+        "kinesis:DescribeStreamSummary",
+        "kinesis:ListShards",
+      ]
+      Resource = aws_kinesis_stream.test.arn
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_memory" "test" {
+  name                      = %[1]q
+  event_expiry_duration     = 7
+  memory_execution_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test_kinesis]
+
+  stream_delivery_resources {
+    resource {
+      kinesis {
+        data_stream_arn = aws_kinesis_stream.test.arn
+
+        content_configuration {
+          type  = "MEMORY_RECORDS"
+          level = "METADATA_ONLY"
+        }
+      }
+    }
+  }
+}
+`, rName))
 }

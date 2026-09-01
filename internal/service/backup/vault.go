@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -16,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,9 +33,10 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
-// @Testing(importIgnore="force_destroy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(importIgnore="force_destroy", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.58.0")
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
@@ -42,46 +44,44 @@ func resourceVault() *schema.Resource {
 		UpdateWithoutTimeout: resourceVaultUpdate,
 		DeleteWithoutTimeout: resourceVaultDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must consist of letters, numbers, and hyphens."),
-				),
-			},
-			"recovery_points": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 50),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must consist of letters, numbers, and hyphens."),
+					),
+				},
+				"recovery_points": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -127,12 +127,16 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Backup Vault (%s): %s", d.Id(), err)
 	}
 
+	resourceVaultFlatten(d, output)
+
+	return diags
+}
+
+func resourceVaultFlatten(d *schema.ResourceData, output *backup.DescribeBackupVaultOutput) {
 	d.Set(names.AttrARN, output.BackupVaultArn)
 	d.Set(names.AttrKMSKeyARN, output.EncryptionKeyArn)
 	d.Set(names.AttrName, output.BackupVaultName)
 	d.Set("recovery_points", output.NumberOfRecoveryPoints)
-
-	return diags
 }
 
 func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -237,9 +241,8 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	output, err := conn.DescribeBackupVault(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -267,9 +270,8 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	output, err := conn.DescribeRecoveryPoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -284,8 +286,8 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	return output, nil
 }
 
-func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRecoveryPoint(conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
 
 		if retry.NotFound(err) {
@@ -301,10 +303,10 @@ func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultNa
 }
 
 func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),
 		Target:  []string{},
-		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),
+		Refresh: statusRecoveryPoint(conn, backupVaultName, recoveryPointARN),
 		Timeout: timeout,
 	}
 

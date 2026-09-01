@@ -15,7 +15,9 @@ var (
 	ResourceEmailIdentityFeedbackAttributes  = resourceEmailIdentityFeedbackAttributes
 	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
 	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
+	ResourceMultiRegionEndpoint              = newMultiRegionEndpointResource
 	ResourceTenant                           = newTenantResource
+	ResourceTenantResource                   = newTenantResourceAssociationResource
 
 	FindAccountSuppressionAttributes                 = findAccountSuppressionAttributes
 	FindAccountVDMAttributes                         = findAccountVDMAttributes
@@ -26,5 +28,7 @@ var (
 	FindDedicatedIPPoolByName                        = findDedicatedIPPoolByName
 	FindEmailIdentityByID                            = findEmailIdentityByID
 	FindEmailIdentityPolicyByTwoPartKey              = findEmailIdentityPolicyByTwoPartKey
+	FindMultiRegionEndpointByName                    = findMultiRegionEndpointByName
 	FindTenantByName                                 = findTenantByName
+	FindTenantResourceAssociationByID                = findTenantResourceAssociationByTwoPartKey
 )

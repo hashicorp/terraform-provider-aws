@@ -1,10 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package pinpointsmsvoicev2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,21 +17,19 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,18 +37,17 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfboolvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/boolvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	iamPropagationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &phoneNumberResource{}
 
@@ -73,6 +73,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			"force_disassociate": schema.BoolAttribute{
+				Optional: true,
+			},
 			names.AttrID: framework.IDAttribute(),
 			"iso_country_code": schema.StringAttribute{
 				Required: true,
@@ -92,6 +95,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			},
 			"monthly_leasing_price": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"number_capabilities": schema.SetAttribute{
 				CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.NumberCapability]](ctx),
@@ -111,7 +117,9 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"opt_out_list_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("Default"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"phone_number": schema.StringAttribute{
 				Computed: true,
@@ -127,10 +135,18 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NumberStatus](),
+				Computed:   true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"two_way_channel_arn": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
@@ -144,6 +160,10 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"two_way_channel_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
@@ -153,12 +173,19 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"two_way_channel_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Bool{
-					boolvalidator.AlsoRequires(
-						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
+					tfboolvalidator.AlsoRequiresWhenTrue(
+						path.MatchRelative().AtParent().AtName("two_way_channel_arn"),
 					),
 				},
+			},
+			"wait_for_active": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -187,7 +214,7 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.RequestPhoneNumber(ctx, input)
@@ -202,7 +229,9 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 	data.PhoneNumberID = fwflex.StringToFramework(ctx, output.PhoneNumberId)
 	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.PhoneNumberID) // Set 'id' so as to taint the resource.
 
-	out, err := waitPhoneNumberActive(ctx, conn, data.PhoneNumberID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	waitForActive := data.WaitForActive.ValueBool()
+
+	out, err := waitOrFindPhoneNumber(ctx, conn, data.PhoneNumberID.ValueString(), waitForActive, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) create", data.PhoneNumberID.ValueString()), err.Error())
@@ -222,7 +251,7 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 			TwoWayChannelRole:         fwflex.StringFromFramework(ctx, data.TwoWayChannelRole),
 		}
 
-		for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 			_, err := conn.UpdatePhoneNumber(ctx, input)
 
 			// IAM roles can take time to propagate in AWS.
@@ -239,7 +268,7 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 			return
 		}
 
-		out, err = waitPhoneNumberActive(ctx, conn, data.PhoneNumberID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		out, err = waitOrFindPhoneNumber(ctx, conn, data.PhoneNumberID.ValueString(), waitForActive, r.CreateTimeout(ctx, data.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) create", data.PhoneNumberID.ValueString()), err.Error())
@@ -314,7 +343,7 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+		for l := backoff.NewLoop(ctx, iamPropagationTimeout); l.Continue(ctx); {
 			_, err := conn.UpdatePhoneNumber(ctx, input)
 
 			// IAM roles can take time to propagate in AWS.
@@ -332,7 +361,7 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		out, err := waitPhoneNumberActive(ctx, conn, new.PhoneNumberID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		out, err := waitOrFindPhoneNumber(ctx, conn, new.PhoneNumberID.ValueString(), new.WaitForActive.ValueBool(), r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) update", new.PhoneNumberID.ValueString()), err.Error())
@@ -341,8 +370,10 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		new.MonthlyLeasingPrice = fwflex.StringToFramework(ctx, out.MonthlyLeasingPrice)
+		new.Status = fwtypes.StringEnumValue(out.Status)
 	} else {
 		new.MonthlyLeasingPrice = old.MonthlyLeasingPrice
+		new.Status = old.Status
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -357,9 +388,53 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	_, err := conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
-		PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
-	})
+	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
+
+	// When force_disassociate is set, clear any pool association
+	// before releasing. AWS rejects a release on an associated phone
+	// number, so disassociation must precede release.
+	if data.ForceDisassociate.ValueBool() {
+		phone, err := findPhoneNumberByID(ctx, conn, data.PhoneNumberID.ValueString())
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("describing End User Messaging SMS Phone Number (%s) to clear pool association", data.PhoneNumberID.ValueString()), err.Error())
+
+			return
+		}
+		if phone.PoolId != nil {
+			if err := disassociateOriginationIdentities(ctx, conn, aws.ToString(phone.PoolId), phone.IsoCountryCode, aws.ToString(phone.PhoneNumberArn)); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("disassociating End User Messaging SMS Phone Number (%s) from pool (%s)", data.PhoneNumberID.ValueString(), aws.ToString(phone.PoolId)), err.Error())
+
+				return
+			}
+		}
+	}
+
+	// Only retry on the "associated to pool" conflict when force_disassociate
+	// is set, because that path explicitly disassociates the phone number first
+	// and the conflict is then just AWS eventual consistency. Without
+	// force_disassociate there is nothing here that will make the association
+	// go away, so retrying just burns the delete timeout — surface the error
+	// quickly instead.
+	forceDisassociate := data.ForceDisassociate.ValueBool()
+	_, err := tfresource.RetryWhen(ctx, deadline.Remaining(),
+		func(ctx context.Context) (*pinpointsmsvoicev2.ReleasePhoneNumberOutput, error) {
+			return conn.ReleasePhoneNumber(ctx, &pinpointsmsvoicev2.ReleasePhoneNumberInput{
+				PhoneNumberId: data.PhoneNumberID.ValueStringPointer(),
+			})
+		},
+		func(err error) (bool, error) {
+			if !forceDisassociate {
+				return false, err
+			}
+			if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok && ce.Reason == awstypes.ConflictExceptionReasonPhoneNumberAssociatedToPool {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -371,7 +446,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	if _, err := waitPhoneNumberDeleted(ctx, conn, data.PhoneNumberID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitPhoneNumberDeleted(ctx, conn, data.PhoneNumberID.ValueString(), deadline.Remaining()); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for End User Messaging SMS Phone Number (%s) delete", data.PhoneNumberID.ValueString()), err.Error())
 
 		return
@@ -381,6 +456,7 @@ func (r *phoneNumberResource) Delete(ctx context.Context, request resource.Delet
 type phoneNumberResourceModel struct {
 	framework.WithRegionModel
 	DeletionProtectionEnabled types.Bool                                         `tfsdk:"deletion_protection_enabled"`
+	ForceDisassociate         types.Bool                                         `tfsdk:"force_disassociate"`
 	ISOCountryCode            types.String                                       `tfsdk:"iso_country_code"`
 	MessageType               fwtypes.StringEnum[awstypes.MessageType]           `tfsdk:"message_type"`
 	MonthlyLeasingPrice       types.String                                       `tfsdk:"monthly_leasing_price"`
@@ -392,12 +468,14 @@ type phoneNumberResourceModel struct {
 	PhoneNumberID             types.String                                       `tfsdk:"id"`
 	RegistrationID            types.String                                       `tfsdk:"registration_id"`
 	SelfManagedOptOutsEnabled types.Bool                                         `tfsdk:"self_managed_opt_outs_enabled"`
+	Status                    fwtypes.StringEnum[awstypes.NumberStatus]          `tfsdk:"status"`
 	Tags                      tftags.Map                                         `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                         `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                     `tfsdk:"timeouts"`
 	TwoWayChannelARN          types.String                                       `tfsdk:"two_way_channel_arn"`
 	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 	TwoWayChannelRole         fwtypes.ARN                                        `tfsdk:"two_way_channel_role"`
+	WaitForActive             types.Bool                                         `tfsdk:"wait_for_active" autoflex:"-"`
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PhoneNumberInformation, error) {
@@ -412,9 +490,8 @@ func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, i
 	}
 
 	if status := output.Status; status == awstypes.NumberStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -439,9 +516,8 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -455,8 +531,8 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 	return output, nil
 }
 
-func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPhoneNumber(conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -472,10 +548,10 @@ func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id 
 }
 
 func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusPending, awstypes.NumberStatusAssociating),
 		Target:  enum.Slice(awstypes.NumberStatusActive),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -488,11 +564,25 @@ func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 	return nil, err
 }
 
+// waitOrFindPhoneNumber returns the phone number once it reaches ACTIVE, or,
+// when waitForActive is false, returns the phone number's current state
+// without waiting. Carrier-gated number types (e.g. TEN_DLC, TOLL_FREE, or
+// any number submitted with a registration_id) can remain PENDING for days
+// to weeks pending carrier or registration approval, an external process
+// Terraform apply-time waits cannot reasonably span.
+func waitOrFindPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, waitForActive bool, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
+	if !waitForActive {
+		return findPhoneNumberByID(ctx, conn, id)
+	}
+
+	return waitPhoneNumberActive(ctx, conn, id, timeout)
+}
+
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 

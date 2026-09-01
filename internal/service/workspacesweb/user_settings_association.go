@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspacesweb
 
 import (
@@ -24,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_user_settings_association", name="User Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
-// @Testing(importStateIdAttribute="user_settings_arn,portal_arn")
 func newUserSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userSettingsAssociationResource{}, nil
 }

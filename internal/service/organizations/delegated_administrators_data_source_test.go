@@ -17,7 +17,7 @@ func testAccDelegatedAdministratorsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "securitylake.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

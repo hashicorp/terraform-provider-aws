@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,23 +26,23 @@ import (
 func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var truststore cloudfront.GetTrustStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
 	objectKey := "ca-bundle.pem"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -73,23 +71,23 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 func TestAccCloudFrontTrustStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var truststore cloudfront.GetTrustStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
 	objectKey := "ca-bundle.pem"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceTrustStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,23 +107,23 @@ func TestAccCloudFrontTrustStore_disappears(t *testing.T) {
 func TestAccCloudFrontTrustStore_withS3ObjectVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var truststore cloudfront.GetTrustStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
 	objectKey := "ca-bundle.pem"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_withS3ObjectVersion(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -148,24 +146,24 @@ func TestAccCloudFrontTrustStore_withS3ObjectVersion(t *testing.T) {
 func TestAccCloudFrontTrustStore_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var truststore cloudfront.GetTrustStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
 	objectKey1 := "ca-bundle_v1.pem"
 	objectKey2 := "ca-bundle_v2.pem"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(rName, objectKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -176,7 +174,7 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 			{
 				Config: testAccTrustStoreConfig_update(rName, objectKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &truststore),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -196,86 +194,9 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontTrustStore_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var truststore cloudfront.GetTrustStoreOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudfront_trust_store.test"
-	objectKey := "ca-bundle.pem"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, objectKey, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"ca_certificates_bundle_source",
-				},
-			},
-			{
-				Config: testAccTrustStoreConfig_tags2(rName, objectKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, objectKey, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTrustStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_trust_store" {
@@ -299,14 +220,14 @@ func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTrustStoreExists(ctx context.Context, n string, v *cloudfront.GetTrustStoreOutput) resource.TestCheckFunc {
+func testAccCheckTrustStoreExists(ctx context.Context, t *testing.T, n string, v *cloudfront.GetTrustStoreOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		resp, err := tfcloudfront.FindTrustStoreByID(ctx, conn, rs.Primary.ID)
 
@@ -440,61 +361,4 @@ resource "aws_cloudfront_trust_store" "test" {
   }
 }
 `, rName, key, testAccTrustStoreCertificateContent))
-}
-
-func testAccTrustStoreConfig_tags1(rName, key, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_base(rName), fmt.Sprintf(`
-resource "aws_s3_object" "test" {
-  bucket  = aws_s3_bucket.test.id
-  key     = %[2]q
-  content = <<-EOT
-%[3]s
-EOT
-}
-
-resource "aws_cloudfront_trust_store" "test" {
-  name = %[1]q
-
-  ca_certificates_bundle_source {
-    ca_certificates_bundle_s3_location {
-      bucket = aws_s3_bucket.test.id
-      key    = aws_s3_object.test.key
-      region = data.aws_region.current.name
-    }
-  }
-
-  tags = {
-    %[4]q = %[5]q
-  }
-}
-`, rName, key, testAccTrustStoreCertificateContent, tagKey1, tagValue1))
-}
-
-func testAccTrustStoreConfig_tags2(rName, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_base(rName), fmt.Sprintf(`
-resource "aws_s3_object" "test" {
-  bucket  = aws_s3_bucket.test.id
-  key     = %[2]q
-  content = <<-EOT
-%[3]s
-EOT
-}
-
-resource "aws_cloudfront_trust_store" "test" {
-  name = %[1]q
-
-  ca_certificates_bundle_source {
-    ca_certificates_bundle_s3_location {
-      bucket = aws_s3_bucket.test.id
-      key    = aws_s3_object.test.key
-      region = data.aws_region.current.name
-    }
-  }
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-}
-`, rName, key, testAccTrustStoreCertificateContent, tagKey1, tagValue1, tagKey2, tagValue2))
 }

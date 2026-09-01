@@ -7,7 +7,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   name         = var.rName
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_imagebuilder_component" "test" {

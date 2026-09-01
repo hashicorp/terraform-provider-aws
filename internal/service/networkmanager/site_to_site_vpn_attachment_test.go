@@ -12,9 +12,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,23 +26,23 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
 	coreNetworkResourceName := "aws_networkmanager_core_network.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bgpASN := acctest.RandIntRange(t, 64512, 65534)
 	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
@@ -71,26 +71,34 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bgpASN := acctest.RandIntRange(t, 64512, 65534)
 	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -100,24 +108,24 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.
 	ctx := acctest.Context(t)
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bgpASN := acctest.RandIntRange(t, 64512, 65534)
 	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
 	label := "testlabel"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
 				),
 			},
@@ -133,10 +141,10 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.SiteToSiteVpnAttachment
+	var v1, v2 awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bgpASN := acctest.RandIntRange(t, 64512, 65534)
 	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -144,38 +152,60 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *te
 	label1 := "testlabel1"
 	label2 := "testlabel2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
 				),
 			},
 			{
 				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabelRemoved(rName, bgpASN, vpnIP, label2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", ""),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *awstypes.SiteToSiteVpnAttachment) resource.TestCheckFunc {
+func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -189,9 +219,9 @@ func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {
@@ -336,6 +366,24 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `, label))
+}
+
+func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabelRemoved(rName string, bgpASN int, vpnIP, label string) string {
+	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName, bgpASN, vpnIP, label), `
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
+  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpn_connection_arn = aws_vpn_connection.test.arn
+
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
+}
+`)
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName string, bgpASN int, vpnIP, label string) string {

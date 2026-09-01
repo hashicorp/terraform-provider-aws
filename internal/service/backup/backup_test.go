@@ -5,16 +5,17 @@ package backup_test
 
 import (
 	"fmt"
+	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // randomFrameworkName returns a resource name that matches the pattern for Framework names
-func randomFrameworkName() string {
-	return fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+func randomFrameworkName(t *testing.T) string {
+	return fmt.Sprintf("tf_acc_test_%s", acctest.RandString(t, 7))
 }
 
 // randomReportPlanName returns a resource name that matches the pattern for Report Plan names
-func randomReportPlanName() string {
-	return fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+func randomReportPlanName(t *testing.T) string {
+	return fmt.Sprintf("tf_acc_test_%s", acctest.RandString(t, 7))
 }

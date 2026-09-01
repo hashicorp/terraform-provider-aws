@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -36,7 +38,6 @@ import (
 // @Testing(importStateIdFunc=testAccSecurityGroupVPCAssociationImportStateIDFunc)
 // @Testing(importStateIdAttribute="vpc_id")
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecurityGroupVPCAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupVPCAssociationResource{}
 
@@ -199,13 +200,13 @@ var _ inttypes.ImportIDParser = securityGroupVPCAssociationImportID{}
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]any, error) {
 	sgID, vpcID, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <security-group-id>"+intflex.ResourceIdSeparator+"<vpc-id>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"security_group_id": sgID,
 		names.AttrVPCID:     vpcID,
 	}

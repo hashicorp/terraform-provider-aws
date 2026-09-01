@@ -23,11 +23,11 @@ func testAccSSMContactsContactDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccSSMContactsContactDataSource_tags,
-		"NullMap":                        testAccSSMContactsContactDataSource_tags_NullMap,
-		"EmptyMap":                       testAccSSMContactsContactDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccSSMContactsContactDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccSSMContactsContactDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccSSMContactsContactDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccSSMContactsContactDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccSSMContactsContactDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccSSMContactsContactDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccSSMContactsContactDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccSSMContactsContactDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -65,7 +65,7 @@ func testAccSSMContactsContactDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsContactDataSource_tags_NullMap(t *testing.T) {
+func testAccSSMContactsContactDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_contact.test"
@@ -93,7 +93,7 @@ func testAccSSMContactsContactDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsContactDataSource_tags_EmptyMap(t *testing.T) {
+func testAccSSMContactsContactDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_contact.test"
@@ -121,7 +121,7 @@ func testAccSSMContactsContactDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsContactDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccSSMContactsContactDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_contact.test"
@@ -157,7 +157,7 @@ func testAccSSMContactsContactDataSource_tags_DefaultTags_nonOverlapping(t *test
 	})
 }
 
-func testAccSSMContactsContactDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccSSMContactsContactDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_contact.test"
@@ -199,7 +199,7 @@ func testAccSSMContactsContactDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	})
 }
 
-func testAccSSMContactsContactDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccSSMContactsContactDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_ssmcontacts_contact.test"

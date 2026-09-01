@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53recoveryreadiness
 
 import (
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -41,84 +42,86 @@ func resourceResourceSet() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_set_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResources: {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"component_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"dns_target_resource": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDomainName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hosted_zone_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_set_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"record_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"target_resource": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"nlb_resource": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrARN: {
-																Type:     schema.TypeString,
-																Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"resource_set_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_set_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResources: {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"component_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"dns_target_resource": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDomainName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hosted_zone_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_set_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"record_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"target_resource": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"nlb_resource": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrARN: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
-												},
-												"r53_resource": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrDomainName: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"record_set_id": {
-																Type:     schema.TypeString,
-																Optional: true,
+													"r53_resource": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrDomainName: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"record_set_id": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
 															},
 														},
 													},
@@ -128,23 +131,23 @@ func resourceResourceSet() *schema.Resource {
 									},
 								},
 							},
-						},
-						"readiness_scopes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"readiness_scopes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						names.AttrResourceARN: {
-							Type:     schema.TypeString,
-							Optional: true,
+							names.AttrResourceARN: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -264,9 +267,8 @@ func findResourceSetByName(ctx context.Context, conn *route53recoveryreadiness.C
 
 	output, err := conn.GetResourceSet(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {

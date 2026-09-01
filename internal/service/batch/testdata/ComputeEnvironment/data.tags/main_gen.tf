@@ -18,6 +18,14 @@ resource "aws_batch_compute_environment" "test" {
 
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "batch" {
+  service_name = "batch"
+}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "batch_service" {
   name = "${var.rName}-batch-service"
 
@@ -29,7 +37,7 @@ resource "aws_iam_role" "batch_service" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "batch.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.batch.name}"
       }
     }
   ]
@@ -53,7 +61,7 @@ resource "aws_iam_role" "ecs_instance" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
         }
     }
   ]

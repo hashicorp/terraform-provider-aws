@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -29,7 +32,6 @@ import (
 // @FrameworkResource("aws_sesv2_tenant", name="Tenant")
 // @Tags(identifierAttribute="tenant_arn")
 // @Testing(importStateIdAttribute="tenant_name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTenantResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tenantResource{}
 	return r, nil
@@ -131,11 +133,12 @@ func (r *tenantResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	conn := r.Meta().SESV2Client(ctx)
 
+	tflog.Info(ctx, "Deleting SESv2 Tenant")
+
 	name := fwflex.StringValueFromFramework(ctx, state.TenantName)
 	input := sesv2.DeleteTenantInput{
 		TenantName: aws.String(name),
 	}
-
 	_, err := conn.DeleteTenant(ctx, &input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return

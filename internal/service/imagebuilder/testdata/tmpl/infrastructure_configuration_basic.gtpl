@@ -2,7 +2,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 {{- template "region" }}
   instance_profile_name = aws_iam_instance_profile.test.name
   name                  = var.rName
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_iam_instance_profile" "test" {

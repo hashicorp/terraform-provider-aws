@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package timestreamquery
 
 import (
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -583,7 +584,7 @@ func (r *scheduledQueryResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	clientToken := id.UniqueId()
+	clientToken := create.UniqueId(ctx)
 	input.ClientToken = aws.String(clientToken)
 
 	input.Tags = getTagsIn(ctx)

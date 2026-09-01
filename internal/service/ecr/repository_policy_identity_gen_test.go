@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECRRepositoryPolicy_Identity_Basic(t *testing.T) {
+func TestAccECRRepositoryPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository_policy.test"
@@ -34,7 +34,7 @@ func TestAccECRRepositoryPolicy_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccECRRepositoryPolicy_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("repository"), compare.ValuesSame()),
@@ -109,7 +109,7 @@ func TestAccECRRepositoryPolicy_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepositoryPolicy_Identity_RegionOverride(t *testing.T) {
+func TestAccECRRepositoryPolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository_policy.test"
@@ -198,7 +198,7 @@ func TestAccECRRepositoryPolicy_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepositoryPolicy_Identity_ExistingResource(t *testing.T) {
+func TestAccECRRepositoryPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository_policy.test"
@@ -210,7 +210,7 @@ func TestAccECRRepositoryPolicy_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -219,7 +219,7 @@ func TestAccECRRepositoryPolicy_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -255,7 +255,7 @@ func TestAccECRRepositoryPolicy_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepositoryPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccECRRepositoryPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository_policy.test"
@@ -267,7 +267,7 @@ func TestAccECRRepositoryPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckRepositoryPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryPolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -281,7 +281,7 @@ func TestAccECRRepositoryPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

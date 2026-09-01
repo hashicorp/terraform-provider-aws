@@ -1,3 +1,0 @@
-```release-note:bug
- resource/aws_dynamodb_table_item: Fix to remove attribute from table item on update
- ```

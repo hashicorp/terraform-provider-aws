@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
@@ -36,7 +36,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy:             testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAssignmentConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
@@ -110,7 +110,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 	})
 }
 
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
@@ -249,7 +249,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -258,7 +258,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -273,7 +273,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -310,7 +310,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create in v6.0
 			{
@@ -319,7 +319,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -338,7 +338,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

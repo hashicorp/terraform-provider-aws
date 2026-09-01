@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,21 +19,21 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 	dataSourceName := "data.aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationDataSourceConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "rule.*", map[string]string{

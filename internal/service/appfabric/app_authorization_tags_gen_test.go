@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -25,25 +26,25 @@ func testAccAppFabricAppAuthorization_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAppFabricAppAuthorization_tags,
-		"null":                                      testAccAppFabricAppAuthorization_tags_null,
-		"EmptyMap":                                  testAccAppFabricAppAuthorization_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAppFabricAppAuthorization_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAppFabricAppAuthorization_Tags_null,
+		"EmptyMap":                                  testAccAppFabricAppAuthorization_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAppFabricAppAuthorization_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAppFabricAppAuthorization_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAppFabricAppAuthorization_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAppFabricAppAuthorization_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAppFabricAppAuthorization_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAppFabricAppAuthorization_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAppFabricAppAuthorization_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAppFabricAppAuthorization_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAppFabricAppAuthorization_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAppFabricAppAuthorization_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAppFabricAppAuthorization_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAppFabricAppAuthorization_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAppFabricAppAuthorization_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAppFabricAppAuthorization_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAppFabricAppAuthorization_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAppFabricAppAuthorization_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAppFabricAppAuthorization_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -59,9 +60,13 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +77,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -117,7 +122,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -166,7 +171,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -208,7 +213,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -238,7 +243,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -248,9 +253,13 @@ func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -261,7 +270,7 @@ func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -302,7 +311,7 @@ func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -312,9 +321,13 @@ func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -323,7 +336,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -354,7 +367,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -364,9 +377,13 @@ func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -375,7 +392,7 @@ func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -397,7 +414,7 @@ func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -437,7 +454,7 @@ func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -447,9 +464,13 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -460,7 +481,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -502,7 +523,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -532,7 +553,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -542,9 +563,13 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -555,7 +580,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -586,7 +611,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -635,7 +660,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -675,7 +700,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -685,9 +710,13 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -698,7 +727,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -728,7 +757,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -768,7 +797,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -778,9 +807,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -792,7 +825,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -837,7 +870,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -884,7 +917,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -925,7 +958,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -956,7 +989,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -966,9 +999,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -982,7 +1019,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1037,7 +1074,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1091,7 +1128,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1122,7 +1159,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1132,9 +1169,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1148,7 +1189,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1202,7 +1243,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1260,7 +1301,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1304,7 +1345,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1314,9 +1355,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1327,7 +1372,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1359,7 +1404,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1397,7 +1442,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *t
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1407,9 +1452,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1421,7 +1470,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1448,7 +1497,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1489,7 +1538,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *t
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1499,9 +1548,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1515,7 +1568,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1559,7 +1612,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag(t *testi
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1569,9 +1622,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1583,7 +1640,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1621,7 +1678,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *t
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1631,9 +1688,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTa
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1647,7 +1708,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTa
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1692,7 +1753,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTa
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1702,9 +1763,13 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourc
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1718,7 +1783,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourc
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1765,7 +1830,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourc
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1775,9 +1840,13 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1786,7 +1855,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1824,7 +1893,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1834,9 +1903,13 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1847,7 +1920,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1878,7 +1951,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1924,7 +1997,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -1934,9 +2007,13 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1947,7 +2024,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1976,7 +2053,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testi
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2014,7 +2091,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testi
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -2024,9 +2101,13 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2044,7 +2125,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2092,7 +2173,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2140,7 +2221,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2176,7 +2257,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 	})
 }
 
-func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppFabricAppAuthorization_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AppAuthorization
@@ -2186,9 +2267,13 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2204,7 +2289,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2261,7 +2346,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2317,7 +2402,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

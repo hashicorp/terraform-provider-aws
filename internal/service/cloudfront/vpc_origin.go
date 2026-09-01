@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -32,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.VpcOrigin")
+// @Testing(importIgnore="etag")
 func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcOriginResource{}
 
@@ -97,7 +100,7 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
 										Required:   true,
 									},
@@ -331,9 +334,8 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	output, err := conn.GetVpcOrigin(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -348,8 +350,8 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	return output, nil
 }
 
-func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func vpcOriginStatus(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -365,10 +367,10 @@ func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) sd
 }
 
 func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeploying},
 		Target:  []string{vpcOriginStatusDeployed},
-		Refresh: vpcOriginStatus(ctx, conn, id),
+		Refresh: vpcOriginStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -382,10 +384,10 @@ func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id stri
 }
 
 func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeployed, vpcOriginStatusDeploying},
 		Target:  []string{},
-		Refresh: vpcOriginStatus(ctx, conn, id),
+		Refresh: vpcOriginStatus(conn, id),
 		Timeout: timeout,
 	}
 

@@ -1,4 +1,9 @@
+/*
+ * Copyright IBM Corp. 2014, 2026
+ */
+
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -11,7 +16,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2024.03"
+version = "2025.11"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -36,13 +41,15 @@ val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn"
 val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
+val defaultTerraformVersion = "1.15.8"
+var pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
     }
 
     if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest)
+        buildType(PullRequest(pullRequestTerraformVersion))
     }
 
     if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
@@ -109,13 +116,28 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
+
+        if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+            // set variable to false by default
+            text("POST_GITHUB_COMMENT", "false")
+            password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
+        }
     }
 
     subProject(Services)
 }
 
-object PullRequest : BuildType({
+class PullRequest(terraformVersion: String) : BuildType({
     name = "Pull Request"
+
+    params {
+        text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
+        text("TERRAFORM_CORE_VERSION", terraformVersion)
+
+        text("env.GOFLAGS", "-modcacherw")
+        text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
+        // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
@@ -132,12 +154,37 @@ object PullRequest : BuildType({
     steps {
         ConfigureGoEnv()
         script {
+            name = "Install Terraform Core"
+            scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
+        }
+        script {
+            name = "Install Github CLI"
+            scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
+        }
+        script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
+        }
+        script {
+            name = "Fetch Test Results"
+            scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
         }
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
+        buildCache {
+            name = "terraform-provider-aws-mod-cache"
+            use = true
+            publish = true
+            rules = """
+                .cache/go-mod
+            """.trimIndent()
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
@@ -176,6 +223,12 @@ object PullRequest : BuildType({
                 firstBuildErrorOccurs = true
                 buildProbablyHanging = false
             }
+        }
+    }
+    
+    cleanup {
+        baseRule {
+            artifacts(days = 7, artifactPatterns = "+:**/*")
         }
     }
 })
@@ -493,6 +546,10 @@ object Sweeper : BuildType({
 object Sanity : BuildType({
     name = "Sanity"
 
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+    }
+
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
 
@@ -501,6 +558,7 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        // IAM is foundational to most other services, so run its tests first
         script {
             name = "IAM"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -522,11 +580,11 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "KMS"
+            name = "Events"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
-            name = "IAM"
+            name = "KMS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
@@ -546,6 +604,10 @@ object Sanity : BuildType({
             scriptContent = File("./scripts/sanity.sh").readText()
         }
         script {
+            name = "SSM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
             name = "Secrets Manager"
             scriptContent = File("./scripts/sanity.sh").readText()
         }
@@ -553,6 +615,10 @@ object Sanity : BuildType({
             name = "STS"
             scriptContent = File("./scripts/sanity.sh").readText()
         }  
+        script {
+            name = "Function"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
         script {
             name = "Report Success"
             scriptContent = File("./scripts/sanity.sh").readText()
@@ -584,6 +650,10 @@ object Sanity : BuildType({
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
@@ -605,10 +675,7 @@ object Performance : BuildType({
     }
 
     steps {
-        script {
-            name = "Configure Go"
-            scriptContent = File("./scripts/configure_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()

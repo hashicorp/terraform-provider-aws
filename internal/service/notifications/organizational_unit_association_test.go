@@ -10,12 +10,10 @@ import (
 	"testing"
 	"time"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 
 func testAccOrganizationalUnitAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_organizational_unit_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -35,7 +33,7 @@ func testAccOrganizationalUnitAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_base(rName),
@@ -46,7 +44,7 @@ func testAccOrganizationalUnitAssociation_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationalUnitAssociationExists(ctx, resourceName),
+					testAccCheckOrganizationalUnitAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -62,10 +60,10 @@ func testAccOrganizationalUnitAssociation_basic(t *testing.T) {
 
 func testAccOrganizationalUnitAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_organizational_unit_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -74,7 +72,7 @@ func testAccOrganizationalUnitAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_base(rName),
@@ -85,7 +83,7 @@ func testAccOrganizationalUnitAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationalUnitAssociationExists(ctx, resourceName),
+					testAccCheckOrganizationalUnitAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceOrganizationalUnitAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -99,9 +97,9 @@ func testAccOrganizationalUnitAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationalUnitAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notifications_organizational_unit_association" {
@@ -125,14 +123,14 @@ func testAccCheckOrganizationalUnitAssociationDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckOrganizationalUnitAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		_, err := tfnotifications.FindOrganizationalUnitAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes["organizational_unit_id"])
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package events
 
 import (
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +30,11 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_event_connection", name="Connection")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeConnectionOutput")
+// @Testing(importIgnore="auth_parameters.0.basic.0.password")
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -36,29 +42,27 @@ func resourceConnection() *schema.Resource {
 		UpdateWithoutTimeout: resourceConnectionUpdate,
 		DeleteWithoutTimeout: resourceConnectionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			connectionHttpParameters := func(parent string) *schema.Resource {
 				element := func() *schema.Resource {
 					return &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"is_value_secret": {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-							names.AttrKey: {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							names.AttrValue: {
-								Type:      schema.TypeString,
-								Optional:  true,
-								Sensitive: true,
-							},
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								"is_value_secret": {
+									Type:     schema.TypeBool,
+									Optional: true,
+									Default:  false,
+								},
+								names.AttrKey: {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								names.AttrValue: {
+									Type:      schema.TypeString,
+									Optional:  true,
+									Sensitive: true,
+								},
+							}
 						},
 					}
 				}
@@ -69,25 +73,27 @@ func resourceConnection() *schema.Resource {
 				}
 
 				return &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"body": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
-						names.AttrHeader: {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
-						"query_string": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Elem:         element(),
-							AtLeastOneOf: atLeastOneOf,
-						},
+					SchemaFunc: func() map[string]*schema.Schema {
+						return map[string]*schema.Schema{
+							"body": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+							names.AttrHeader: {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+							"query_string": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								Elem:         element(),
+								AtLeastOneOf: atLeastOneOf,
+							},
+						}
 					},
 				}
 			}
@@ -166,6 +172,33 @@ func resourceConnection() *schema.Resource {
 								Optional: true,
 								MaxItems: 1,
 								Elem:     connectionHttpParameters("auth_parameters.0.invocation_http_parameters"),
+							},
+							"connectivity_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_parameters": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"resource_association_arn": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"resource_configuration_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 							"oauth": {
 								Type:     schema.TypeList,
@@ -436,12 +469,15 @@ func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name st
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeConnection(ctx, &input)
+	return findConnection(ctx, conn, &input)
+}
+
+func findConnection(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeConnectionInput) (*eventbridge.DescribeConnectionOutput, error) {
+	output, err := conn.DescribeConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -456,8 +492,8 @@ func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name st
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnectionState(conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -474,12 +510,12 @@ func statusConnectionState(ctx context.Context, conn *eventbridge.Client, name s
 
 func waitConnectionCreated(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
 	const (
-		timeout = 2 * time.Minute
+		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateCreating, types.ConnectionStateAuthorizing),
-		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
-		Refresh: statusConnectionState(ctx, conn, name),
+		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized, types.ConnectionStateActive),
+		Refresh: statusConnectionState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -496,12 +532,12 @@ func waitConnectionCreated(ctx context.Context, conn *eventbridge.Client, name s
 
 func waitConnectionUpdated(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
 	const (
-		timeout = 2 * time.Minute
+		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateUpdating, types.ConnectionStateAuthorizing, types.ConnectionStateDeauthorizing),
-		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
-		Refresh: statusConnectionState(ctx, conn, name),
+		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized, types.ConnectionStateActive),
+		Refresh: statusConnectionState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -520,10 +556,10 @@ func waitConnectionDeleted(ctx context.Context, conn *eventbridge.Client, name s
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusConnectionState(ctx, conn, name),
+		Refresh: statusConnectionState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -558,6 +594,9 @@ func expandCreateConnectionAuthRequestParameters(tfList []any) *types.CreateConn
 		}
 		if v, ok := tfMap["invocation_http_parameters"].([]any); ok && len(v) > 0 {
 			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		}
+		if v, ok := tfMap["connectivity_parameters"].([]any); ok && len(v) > 0 {
+			apiObject.ConnectivityParameters = expandConnectivityResourceParameters(v[0].(map[string]any))
 		}
 	}
 
@@ -788,6 +827,10 @@ func flattenConnectionAuthParameters(apiObject *types.ConnectionAuthResponsePara
 		tfMap["invocation_http_parameters"] = flattenConnectionHTTPParameters(apiObject.InvocationHttpParameters, d, "auth_parameters.0.invocation_http_parameters")
 	}
 
+	if apiObject.ConnectivityParameters != nil {
+		tfMap["connectivity_parameters"] = []map[string]any{flattenDescribeConnectionConnectivityParameters(apiObject.ConnectivityParameters)}
+	}
+
 	return []map[string]any{tfMap}
 }
 
@@ -934,6 +977,9 @@ func expandUpdateConnectionAuthRequestParameters(tfList []any) *types.UpdateConn
 		}
 		if v, ok := tfMap["invocation_http_parameters"].([]any); ok && len(v) > 0 {
 			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		}
+		if v, ok := tfMap["connectivity_parameters"].([]any); ok && len(v) > 0 {
+			apiObject.ConnectivityParameters = expandConnectivityResourceParameters(v[0].(map[string]any))
 		}
 	}
 

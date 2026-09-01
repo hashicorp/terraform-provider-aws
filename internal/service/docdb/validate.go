@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validClusterIdentifier(v any, k string) (ws []string, errors []error) {
@@ -154,9 +154,9 @@ func validParamGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
-	if len(value) > 255 {
+	if len(value) > 229 {
 		errors = append(errors, fmt.Errorf(
-			"parameter group %q cannot be greater than 226 characters", k))
+			"parameter group %q cannot be greater than 229 characters", k))
 	}
 	return
 }
@@ -184,7 +184,7 @@ func validSubnetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
-	prefixMaxLength := 255 - id.UniqueIDSuffixLength
+	prefixMaxLength := 255 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

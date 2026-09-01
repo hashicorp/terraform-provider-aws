@@ -151,7 +151,7 @@ resource "aws_ivschat_logging_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat logging configuration.
+- `arn` (String) ARN of the IVS Chat logging configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
 

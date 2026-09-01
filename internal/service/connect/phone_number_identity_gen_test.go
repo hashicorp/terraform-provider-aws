@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccConnectPhoneNumber_IdentitySerial(t *testing.T) {
+func testAccConnectPhoneNumber_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccConnectPhoneNumber_Identity_Basic,
-		"ExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccConnectPhoneNumber_Identity_RegionOverride,
+		acctest.CtBasic:             testAccConnectPhoneNumber_Identity_basic,
+		"ExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccConnectPhoneNumber_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
@@ -48,7 +48,7 @@ func testAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -120,7 +120,7 @@ func testAccConnectPhoneNumber_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccConnectPhoneNumber_Identity_RegionOverride(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_connect_phone_number.test"
@@ -208,7 +208,7 @@ func testAccConnectPhoneNumber_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
@@ -221,7 +221,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy: testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy: testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -230,7 +230,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ClaimedPhoneNumberSummary
@@ -279,7 +279,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy: testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy: testAccCheckPhoneNumberDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -293,7 +293,7 @@ func testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

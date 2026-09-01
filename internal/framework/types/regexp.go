@@ -52,12 +52,9 @@ func (t regexpType) ValueFromString(_ context.Context, in types.String) (basetyp
 		return RegexpUnknown(), diags
 	}
 
-	valueString := in.ValueString()
-	if _, err := regexp.Compile(valueString); err != nil {
-		return RegexpUnknown(), diags // Must not return validation errors.
-	}
-
-	return RegexpValue(valueString), diags
+	// The ValidateAttribute method will surface errors if the value is an invalid
+	// regexp. This method simply passes the value through.
+	return RegexpValue(in.ValueString()), diags
 }
 
 func (t regexpType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

@@ -9,6 +9,7 @@ aws_vpc_ipam_organization_admin_account
 aws_fms_admin_account
 aws_ram_sharing_with_organization
 aws_s3_account_public_access_block
+aws_savingsplans_plan
 aws_servicecatalog_organizations_access
 aws_servicequotas_template
 aws_ssmincidents_replication_set
@@ -18,3 +19,4 @@ aws_default_vpc_dhcp_options
 aws_lb_target_group
 aws_spot_fleet_request
 aws_transfer_server
+aws_bedrock_use_case_for_model_access

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketNotification_Identity_Basic(t *testing.T) {
+func TestAccS3BucketNotification_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetBucketNotificationConfigurationOutput
@@ -35,7 +35,7 @@ func TestAccS3BucketNotification_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccS3BucketNotification_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
+					testAccCheckBucketNotificationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -107,7 +107,7 @@ func TestAccS3BucketNotification_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketNotification_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketNotification_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_notification.test"
@@ -195,7 +195,7 @@ func TestAccS3BucketNotification_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketNotification_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketNotification_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetBucketNotificationConfigurationOutput
@@ -208,7 +208,7 @@ func TestAccS3BucketNotification_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketNotificationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccS3BucketNotification_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
+					testAccCheckBucketNotificationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,7 +253,7 @@ func TestAccS3BucketNotification_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketNotification_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketNotification_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetBucketNotificationConfigurationOutput
@@ -266,7 +266,7 @@ func TestAccS3BucketNotification_Identity_ExistingResource_NoRefresh_NoChange(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketNotificationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketNotificationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccS3BucketNotification_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
+					testAccCheckBucketNotificationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

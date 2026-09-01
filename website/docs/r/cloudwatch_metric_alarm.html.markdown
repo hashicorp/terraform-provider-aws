@@ -111,6 +111,27 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 }
 ```
 
+### With PromQL
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "promql_alarm" {
+  alarm_name        = "high-cpu-promql"
+  alarm_description = "Alarm when average CPU exceeds 80% using PromQL"
+
+  evaluation_criteria {
+    promql_criteria {
+      query           = "avg(cpu_utilization_percent) > 80"
+      pending_period  = 300 # 5 minutes
+      recovery_period = 120 # 2 minutes
+    }
+  }
+
+  evaluation_interval = 30 # seconds
+
+  alarm_actions = [aws_sns_topic.alerts.arn]
+}
+```
+
 ```terraform
 resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   alarm_name                = "terraform-test-foobar"
@@ -206,8 +227,10 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
-* `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
-* `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
+* `comparison_operator` - (Optional) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
+* `evaluation_criteria` - (Optional) The evaluation criteria for PromQL alarms. Cannot be used with traditional metric alarm parameters.
+* `evaluation_interval` - (Optional) The frequency, in seconds, at which the alarm is evaluated. Valid values are `10`, `20`, `30`, and any multiple of `60`. Required when using `evaluation_criteria`.
+* `evaluation_periods` - (Optional) The number of periods over which data is compared to the specified threshold. Required for traditional metric alarms.
 * `metric_name` - (Optional) The name for the alarm's associated metric.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
@@ -219,12 +242,12 @@ This resource supports the following arguments:
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
 * `threshold_metric_id` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
-* `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Name (ARN).
+* `alarm_actions` - (Optional) List of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an ARN.
 * `alarm_description` - (Optional) The description for the alarm.
 * `datapoints_to_alarm` - (Optional) The number of data points that must be breaching to trigger the alarm.
 * `dimensions` - (Optional) The dimensions for the alarm's associated metric.  For the list of available dimensions see the AWS documentation [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
-* `insufficient_data_actions` - (Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Name (ARN).
-* `ok_actions` - (Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Name (ARN).
+* `insufficient_data_actions` - (Optional) List of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an ARN.
+* `ok_actions` - (Optional) List of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an ARN.
 * `unit` - (Optional) The unit for the alarm's associated metric.
 * `extended_statistic` - (Optional) The percentile statistic for the metric associated with the alarm. Specify a value between p0.0 and p100.
 * `treat_missing_data` - (Optional) Sets how this alarm is to handle missing data points. The following values are supported: `missing`, `ignore`, `breaching` and `notBreaching`. Defaults to `missing`.
@@ -239,8 +262,6 @@ See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/late
 for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
-
-### Nested fields
 
 #### `metric_query`
 
@@ -257,6 +278,16 @@ for details about valid values.
 * `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
+
+#### `evaluation_criteria`
+
+* `promql_criteria` - (Required) The PromQL criteria for the alarm evaluation.
+
+#### `promql_criteria`
+
+* `query` - (Required) The PromQL query that the alarm evaluates. The query must return a result of vector type. Each entry in the vector result represents an alarm contributor.
+* `pending_period` - (Optional) The duration, in seconds, that a contributor must be continuously breaching before it transitions to the ALARM state. Valid range: 0-86400.
+* `recovery_period` - (Optional) The duration, in seconds, that a contributor must continuously not be breaching before it transitions back to the OK state. Valid range: 0-86400.
 
 #### `metric`
 

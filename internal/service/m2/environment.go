@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package m2
 
 import (
@@ -29,8 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -46,7 +47,6 @@ import (
 // @FrameworkResource("aws_m2_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetEnvironmentOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -284,7 +284,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateEnvironment(ctx, &input)
@@ -461,9 +461,8 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	output, err := conn.GetEnvironment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -478,8 +477,8 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *m2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *m2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -495,10 +494,10 @@ func statusEnvironment(ctx context.Context, conn *m2.Client, id string) sdkretry
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleCreating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh: statusEnvironment(ctx, conn, id),
+		Refresh: statusEnvironment(conn, id),
 		Timeout: timeout,
 	}
 
@@ -514,10 +513,10 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleUpdating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh: statusEnvironment(ctx, conn, id),
+		Refresh: statusEnvironment(conn, id),
 		Timeout: timeout,
 	}
 
@@ -533,10 +532,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
 		Target:     []string{},
-		Refresh:    statusEnvironment(ctx, conn, id),
+		Refresh:    statusEnvironment(conn, id),
 		Timeout:    timeout,
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,

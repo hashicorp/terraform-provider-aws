@@ -10,10 +10,15 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,25 +29,27 @@ func testAccGraph_basic(t *testing.T) {
 	var graph awstypes.Graph
 	resourceName := "aws_detective_graph.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphDestroy(ctx),
+		CheckDestroy:             testAccCheckGraphDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/Graph/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "graph_arn", "detective", regexache.MustCompile(`graph:[a-z0-9]{32}$`)),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "graph_arn"),
+					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("graph_arn"), tfknownvalue.RegionalARNRegexp("detective", regexache.MustCompile(`graph:[a-z0-9]{32}$`))),
+				},
 			},
 		},
 	})
@@ -53,19 +60,28 @@ func testAccGraph_disappears(t *testing.T) {
 	var graph awstypes.Graph
 	resourceName := "aws_detective_graph.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphDestroy(ctx),
+		CheckDestroy:             testAccCheckGraphDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphConfig_basic(),
+				ConfigDirectory: config.StaticDirectory("testdata/Graph/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
+					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceGraph(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -76,20 +92,27 @@ func testAccGraph_tags(t *testing.T) {
 	var graph awstypes.Graph
 	resourceName := "aws_detective_graph.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphDestroy(ctx),
+		CheckDestroy:             testAccCheckGraphDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -99,27 +122,43 @@ func testAccGraph_tags(t *testing.T) {
 			{
 				Config: testAccGraphConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccGraphConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckGraphDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGraphDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_graph" {
@@ -143,14 +182,14 @@ func testAccCheckGraphDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGraphExists(ctx context.Context, n string, v *awstypes.Graph) resource.TestCheckFunc {
+func testAccCheckGraphExists(ctx context.Context, t *testing.T, n string, v *awstypes.Graph) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		output, err := tfdetective.FindGraphByARN(ctx, conn, rs.Primary.ID)
 
@@ -162,12 +201,6 @@ func testAccCheckGraphExists(ctx context.Context, n string, v *awstypes.Graph) r
 
 		return nil
 	}
-}
-
-func testAccGraphConfig_basic() string {
-	return `
-resource "aws_detective_graph" "test" {}
-`
 }
 
 func testAccGraphConfig_tags1(tagKey1, tagValue1 string) string {

@@ -6,7 +6,6 @@ package lexmodels_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,11 +13,11 @@ import (
 
 func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
@@ -47,11 +46,11 @@ func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
 
 func TestAccLexModelsIntentDataSource_withVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)

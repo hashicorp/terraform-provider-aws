@@ -1,6 +1,17 @@
-resource "aws_s3_bucket" "test" {
+resource "aws_cleanrooms_configured_table" "test" {
 {{- template "region" }}
-  bucket = var.rName
+  name            = "test-name"
+  description     = "test description"
+  analysis_method = "DIRECT_QUERY"
+  allowed_columns = ["my_column_1", "my_column_2"]
+
+  table_reference {
+    database_name = var.rName
+    table_name    = var.rName
+  }
+{{- template "tags" . }}
+
+  depends_on = [aws_glue_catalog_table.test]
 }
 
 resource "aws_glue_catalog_database" "test" {
@@ -28,18 +39,7 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
-resource "aws_cleanrooms_configured_table" "test" {
+resource "aws_s3_bucket" "test" {
 {{- template "region" }}
-  name            = "test-name"
-  description     = "test description"
-  analysis_method = "DIRECT_QUERY"
-  allowed_columns = ["my_column_1", "my_column_2"]
-
-  table_reference {
-    database_name = var.rName
-    table_name    = var.rName
-  }
-{{- template "tags" }}
-
-  depends_on = [aws_glue_catalog_table.test]
+  bucket = var.rName
 }

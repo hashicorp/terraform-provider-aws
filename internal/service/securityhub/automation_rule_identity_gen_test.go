@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSecurityHubAutomationRule_IdentitySerial(t *testing.T) {
+func testAccSecurityHubAutomationRule_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSecurityHubAutomationRule_Identity_Basic,
-		"ExistingResource":          testAccSecurityHubAutomationRule_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccSecurityHubAutomationRule_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSecurityHubAutomationRule_Identity_basic,
+		"ExistingResource":          testAccSecurityHubAutomationRule_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSecurityHubAutomationRule_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccSecurityHubAutomationRule_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSecurityHubAutomationRule_Identity_Basic(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AutomationRulesConfig
@@ -48,7 +48,7 @@ func testAccSecurityHubAutomationRule_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccSecurityHubAutomationRule_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName, &v),
+					testAccCheckAutomationRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -121,7 +121,7 @@ func testAccSecurityHubAutomationRule_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSecurityHubAutomationRule_Identity_RegionOverride(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securityhub_automation_rule.test"
@@ -241,7 +241,7 @@ func testAccSecurityHubAutomationRule_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AutomationRulesConfig
@@ -254,7 +254,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		CheckDestroy: testAccCheckAutomationRuleDestroy(ctx),
+		CheckDestroy: testAccCheckAutomationRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -263,7 +263,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName, &v),
+					testAccCheckAutomationRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -277,7 +277,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName, &v),
+					testAccCheckAutomationRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -321,7 +321,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSecurityHubAutomationRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AutomationRulesConfig
@@ -334,7 +334,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		CheckDestroy: testAccCheckAutomationRuleDestroy(ctx),
+		CheckDestroy: testAccCheckAutomationRuleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -348,7 +348,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName, &v),
+					testAccCheckAutomationRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

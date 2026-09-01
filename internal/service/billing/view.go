@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package billing
 
 import (
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -131,12 +134,12 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.StringEnumType[awstypes.Dimension](),
 										Required:   true,
 									},
-									names.AttrValues: schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
+									names.AttrValues: schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 									},
 								},
@@ -493,7 +496,7 @@ type dataFilterExpressionModel struct {
 
 type dimensionsModel struct {
 	Key    fwtypes.StringEnum[awstypes.Dimension] `tfsdk:"key"`
-	Values fwtypes.ListOfString                   `tfsdk:"values"`
+	Values fwtypes.SetOfString                    `tfsdk:"values"`
 }
 
 type tagValuesModel struct {

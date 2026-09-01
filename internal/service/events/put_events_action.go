@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -100,12 +101,11 @@ func (a *putEventsAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 	conn := a.Meta().EventsClient(ctx)
 
 	tflog.Info(ctx, "Putting events", map[string]any{
-		"entry_count": len(model.Entry.Elements()),
+		"entry_count": model.Entry.Length(fwtypes.CollectionLengthUnhandledAsZero),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Putting events to EventBridge...",
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Putting events to EventBridge...")
 
 	var input eventbridge.PutEventsInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, model, &input)...)
@@ -130,9 +130,7 @@ func (a *putEventsAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 		return
 	}
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Events put successfully",
-	})
+	cb(ctx, "Events put successfully")
 
 	tflog.Info(ctx, "Put events completed", map[string]any{
 		"successful_entries": len(output.Entries),

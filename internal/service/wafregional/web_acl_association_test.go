@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,16 +21,16 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					testAccCheckWebACLAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -47,19 +46,27 @@ func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					testAccCheckWebACLAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceWebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -69,17 +76,17 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_multiples,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, resourceName),
-					testAccCheckWebACLAssociationExists(ctx, "aws_wafregional_web_acl_association.bar"),
+					testAccCheckWebACLAssociationExists(ctx, t, resourceName),
+					testAccCheckWebACLAssociationExists(ctx, t, "aws_wafregional_web_acl_association.bar"),
 				),
 			},
 			{
@@ -94,9 +101,9 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_web_acl_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID)
@@ -104,12 +111,12 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_checkResourceARNAPIGatewayStage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					testAccCheckWebACLAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -121,9 +128,9 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 	})
 }
 
-func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebACLAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafregional_web_acl_association" {
@@ -147,14 +154,14 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckWebACLAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 

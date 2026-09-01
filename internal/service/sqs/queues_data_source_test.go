@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,11 +16,11 @@ import (
 func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var queueAttributes map[types.QueueAttributeName]string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sqs_queues.test"
 	resourceName := "aws_sqs_queue.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,7 +28,7 @@ func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
 			{
 				Config: testAccQueuesDataSourceConfig_queueNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+					testAccCheckQueueExists(ctx, t, resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "queue_urls.0", resourceName, names.AttrURL),
 				),

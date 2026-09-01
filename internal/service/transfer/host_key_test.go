@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,16 +33,16 @@ func testAccHostKey_basic(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_basic(privateKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -79,16 +78,16 @@ func testAccHostKey_disappears(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_basic(privateKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceHostKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,16 +113,16 @@ func testAccHostKey_tags(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_tags1(privateKey, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -147,7 +146,7 @@ func testAccHostKey_tags(t *testing.T) {
 			{
 				Config: testAccHostKeyConfig_tags2(privateKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,7 +163,7 @@ func testAccHostKey_tags(t *testing.T) {
 			{
 				Config: testAccHostKeyConfig_tags1(privateKey, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -190,16 +189,16 @@ func testAccHostKey_description(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_description(privateKey, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -221,7 +220,7 @@ func testAccHostKey_description(t *testing.T) {
 			{
 				Config: testAccHostKeyConfig_description(privateKey, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -249,16 +248,16 @@ func testAccHostKey_updateHostKeyBody(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_basic(privateKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -269,7 +268,7 @@ func testAccHostKey_updateHostKeyBody(t *testing.T) {
 			{
 				Config: testAccHostKeyConfig_basic(privateKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -290,16 +289,16 @@ func testAccHostKey_hostKeyBodyWO(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -339,16 +338,16 @@ func testAccHostKey_updateHostKeyBodyWO(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckHostKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -359,7 +358,7 @@ func testAccHostKey_updateHostKeyBodyWO(t *testing.T) {
 			{
 				Config: testAccHostKeyConfig_hostKeyBodyWO(privateKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostKeyExists(ctx, resourceName, &v),
+					testAccCheckHostKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -371,14 +370,14 @@ func testAccHostKey_updateHostKeyBodyWO(t *testing.T) {
 	})
 }
 
-func testAccCheckHostKeyExists(ctx context.Context, n string, v *awstypes.DescribedHostKey) resource.TestCheckFunc {
+func testAccCheckHostKeyExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedHostKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		output, err := tftransfer.FindHostKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["host_key_id"])
 
@@ -392,9 +391,9 @@ func testAccCheckHostKeyExists(ctx context.Context, n string, v *awstypes.Descri
 	}
 }
 
-func testAccCheckHostKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_host_key" {

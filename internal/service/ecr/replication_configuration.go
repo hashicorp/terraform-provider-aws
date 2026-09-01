@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ecr
 
 import (
@@ -33,57 +35,59 @@ func resourceReplicationConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRule: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 25,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrRegion: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidRegionName,
-												},
-												"registry_id": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDestination: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 25,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrRegion: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidRegionName,
+													},
+													"registry_id": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidAccountID,
+													},
 												},
 											},
 										},
-									},
-									"repository_filter": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 100,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFilter: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"filter_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.RepositoryFilterType](),
+										"repository_filter": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 100,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFilter: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"filter_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.RepositoryFilterType](),
+													},
 												},
 											},
 										},
@@ -93,7 +97,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

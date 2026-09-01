@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package securityhub
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -41,33 +42,35 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(180 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"auto_enable_standards": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
-			},
-			"organization_configuration": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"auto_enable_standards": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
+				},
+				"organization_configuration": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Computed:    true,
+					DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
+					MaxItems:    1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -188,9 +191,8 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -205,8 +207,8 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	return output, nil
 }
 
-func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOrganizationConfiguration(conn *securityhub.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOrganizationConfiguration(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -222,10 +224,10 @@ func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Clie
 }
 
 func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
 		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
-		Refresh:                   statusOrganizationConfiguration(ctx, conn),
+		Refresh:                   statusOrganizationConfiguration(conn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

@@ -10,8 +10,6 @@ description: |-
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 
--> This resource cannot be used with S3 directory buckets.
-
 ## Example Usage
 
 ### Add inventory configuration
@@ -81,46 +79,64 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
-* `name` - (Required) Unique identifier of the inventory configuration for the bucket.
+* `bucket` - (Required) Name of the source bucket that inventory lists the objects for. Both general purpose and directory buckets are supported.
+* `destination` - (Required) Where to publish the inventory results. See [`destination` Block](#destination-block) below.
 * `included_object_versions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
-* `schedule` - (Required) Specifies the schedule for generating inventory results (documented below).
-* `destination` - (Required) Contains information about where to publish the inventory results (documented below).
-* `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
-* `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
-* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
+* `name` - (Required) Unique identifier of the inventory configuration for the bucket.
+* `schedule` - (Required) Schedule for generating inventory results. See [`schedule` Block](#schedule-block) below.
 
-The `filter` configuration supports the following:
+The following arguments are optional:
+
+* `enabled` - (Optional, Default: `true`) Whether to enable the inventory.
+* `filter` - (Optional) Inventory filter. The inventory only includes objects that meet the filter's criteria. See [`filter` Block](#filter-block) below.
+* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `destination` Block
+
+The following arguments are required:
+
+* `bucket` - (Required) S3 bucket configuration where inventory results are published. See [`bucket` Block](#bucket-block) below.
+
+### `bucket` Block
+
+The following arguments are required:
+
+* `bucket_arn` - (Required) Amazon S3 bucket ARN of the destination. Only general purpose buckets are supported.
+* `format` - (Required) Output format of the inventory results. Valid values: `CSV`, [`ORC`](https://orc.apache.org/), [`Parquet`](https://parquet.apache.org/).
+
+The following arguments are optional:
+
+* `account_id` - (Optional) ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
+* `encryption` - (Optional) Type of server-side encryption to use to encrypt the inventory. See [`encryption` Block](#encryption-block) below.
+* `prefix` - (Optional) Prefix that is prepended to all inventory results.
+
+### `encryption` Block
+
+The following arguments are optional:
+
+* `sse_kms` - (Optional) Server-side encryption with AWS KMS-managed keys to encrypt the inventory file. See [`sse_kms` Block](#sse_kms-block) below.
+* `sse_s3` - (Optional) Server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file.
+
+### `sse_kms` Block
+
+The following arguments are required:
+
+* `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
+
+### `filter` Block
+
+The following arguments are optional:
 
 * `prefix` - (Optional) Prefix that an object must have to be included in the inventory results.
 
-The `schedule` configuration supports the following:
+### `schedule` Block
 
-* `frequency` - (Required) Specifies how frequently inventory results are produced. Valid values: `Daily`, `Weekly`.
+The following arguments are required:
 
-The `destination` configuration supports the following:
-
-* `bucket` - (Required) S3 bucket configuration where inventory results are published (documented below).
-
-The `bucket` configuration supports the following:
-
-* `bucket_arn` - (Required) Amazon S3 bucket ARN of the destination.
-* `format` - (Required) Specifies the output format of the inventory results. Can be `CSV`, [`ORC`](https://orc.apache.org/) or [`Parquet`](https://parquet.apache.org/).
-* `account_id` - (Optional) ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
-* `prefix` - (Optional) Prefix that is prepended to all inventory results.
-* `encryption` - (Optional) Contains the type of server-side encryption to use to encrypt the inventory (documented below).
-
-The `encryption` configuration supports the following:
-
-* `sse_kms` - (Optional) Specifies to use server-side encryption with AWS KMS-managed keys to encrypt the inventory file (documented below).
-* `sse_s3` - (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file.
-
-The `sse_kms` configuration supports the following:
-
-* `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
+* `frequency` - (Required) How frequently inventory results are produced. Valid values: `Daily`, `Weekly`.
 
 ## Attribute Reference
 

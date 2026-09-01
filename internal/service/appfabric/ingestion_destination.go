@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appfabric
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -26,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -46,6 +47,8 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.IngestionDestination")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newIngestionDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionDestinationResource{}
 
@@ -222,14 +225,9 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 		return
 	}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		response.Diagnostics.AddError("creating AppFabric Ingestion Destination", err.Error())
-	}
-
 	// Additional fields.
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.IngestionIdentifier = data.IngestionARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
@@ -394,9 +392,8 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	output, err := conn.GetIngestionDestination(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -411,8 +408,8 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	return output.IngestionDestination, nil
 }
 
-func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIngestionDestination(conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if retry.NotFound(err) {
@@ -428,10 +425,10 @@ func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, app
 }
 
 func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.IngestionDestinationStatusActive),
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
@@ -447,10 +444,10 @@ func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client,
 }
 
 func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IngestionDestinationStatusActive),
 		Target:  []string{},
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 

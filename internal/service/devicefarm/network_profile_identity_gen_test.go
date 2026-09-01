@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDeviceFarmNetworkProfile_Identity_Basic(t *testing.T) {
+func TestAccDeviceFarmNetworkProfile_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.NetworkProfile
@@ -39,7 +39,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_Basic(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkProfileExists(ctx, resourceName, &v),
+					testAccCheckNetworkProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -112,7 +112,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
+func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.NetworkProfile
@@ -128,7 +128,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckNetworkProfileDestroy(ctx),
+		CheckDestroy: testAccCheckNetworkProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -137,7 +137,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkProfileExists(ctx, resourceName, &v),
+					testAccCheckNetworkProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -151,7 +151,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkProfileExists(ctx, resourceName, &v),
+					testAccCheckNetworkProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -194,7 +194,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.NetworkProfile
@@ -210,7 +210,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_NoRefresh_NoChang
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckNetworkProfileDestroy(ctx),
+		CheckDestroy: testAccCheckNetworkProfileDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -224,7 +224,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_NoRefresh_NoChang
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkProfileExists(ctx, resourceName, &v),
+					testAccCheckNetworkProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -239,7 +239,7 @@ func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource_NoRefresh_NoChang
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkProfileExists(ctx, resourceName, &v),
+					testAccCheckNetworkProfileExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

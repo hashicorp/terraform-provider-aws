@@ -19,17 +19,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIAMOutboundWebIdentityFederation_IdentitySerial(t *testing.T) {
+func testAccIAMOutboundWebIdentityFederation_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccIAMOutboundWebIdentityFederation_Identity_Basic,
+		acctest.CtBasic: testAccIAMOutboundWebIdentityFederation_Identity_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccIAMOutboundWebIdentityFederation_Identity_Basic(t *testing.T) {
+func testAccIAMOutboundWebIdentityFederation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_outbound_web_identity_federation.test"

@@ -14,5 +14,5 @@ resource "aws_cleanrooms_collaboration" "test" {
     preserve_nulls                              = false
   }
 
-{{- template "tags" }}
+{{- template "tags" . }}
 }

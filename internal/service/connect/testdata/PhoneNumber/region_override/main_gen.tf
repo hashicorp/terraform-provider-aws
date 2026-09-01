@@ -17,6 +17,7 @@ resource "aws_connect_instance" "test" {
   instance_alias           = var.rName
   outbound_calls_enabled   = true
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

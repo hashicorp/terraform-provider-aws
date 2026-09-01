@@ -139,7 +139,7 @@ This resource supports the following arguments:
 
   Note that you can't specify targets for a target group using both instance IDs and IP addresses.
 
-  If the target type is `ip`, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.
+  If the target type is `ip`, specify IP addresses from the subnets of the VPC for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.
 
   Network Load Balancers do not support the `lambda` target type.
 
@@ -157,11 +157,13 @@ This resource supports the following arguments:
 * `matcher` (Optional) The HTTP or gRPC codes to use when checking for a successful response from a target.
   The `health_check.protocol` must be one of `HTTP` or `HTTPS` or the `target_type` must be `lambda`.
   Values can be comma-separated individual values (e.g., "200,202") or a range of values (e.g., "200-299").
+  Once the value has been set, removing it has no effect. To unset it, set it to an empty string `""`.
     * For gRPC-based target groups (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is `GRPC`), values can be between `0` and `99`. The default is `12`.
     * When used with an Application Load Balancer (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is not `GRPC`), values can be between `200` and `499`. The default is `200`.
     * When used with a Network Load Balancer (i.e., the `protocol` is one of `TCP`, `TCP_UDP`, `UDP`, or `TLS`), values can be between `200` and `599`. The default is `200-399`.
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
+  Once the value has been set, removing it has no effect. To unset it, set it to an empty string `""`.
     * For HTTP and HTTPS health checks, the default is `/`.
     * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
@@ -253,7 +255,7 @@ resource "aws_lb_target_group" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the target group.
+- `arn` (String) ARN of the target group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Target Groups using their ARN. For example:
 

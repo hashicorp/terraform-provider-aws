@@ -9,34 +9,35 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
 	agentModel := "anthropic.claude-v2"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, t, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc"),
 				),
@@ -51,23 +52,25 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
 	agentModel := "anthropic.claude-v2"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, t, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc"),
 				),
@@ -80,7 +83,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 			{
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc2", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, t, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test desc2"),
 				),
@@ -90,34 +93,44 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 }
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, TitanModelsAllowedEnvVar)
+
 	ctx := acctest.Context(t)
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
 	agentModel := "anthropic.claude-v2"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, t, resourceName, &agentknowledgebaseassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_agent_knowledge_base_association" {
@@ -141,14 +154,14 @@ func testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, n string, v *types.AgentKnowledgeBase) resource.TestCheckFunc {
+func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, t *testing.T, n string, v *types.AgentKnowledgeBase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindAgentKnowledgeBaseAssociationByThreePartID(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["knowledge_base_id"])
 

@@ -1,10 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
 	"context"
+	"fmt"
 	"iter"
 	"log"
 	"slices"
@@ -15,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -33,7 +35,12 @@ import (
 
 // @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(idAttrDuplicates="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBParameterGroup")
+// @Testing(preIdentityVersion="v6.59.0")
+// @Testing(name="Parameter Group")
 func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -41,72 +48,70 @@ func resourceParameterGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceParameterGroupDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
-			},
-			names.AttrFamily: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validParamGroupName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validParamGroupNamePrefix,
-			},
-			names.AttrParameter: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"apply_method": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ApplyMethodImmediate,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[types.ApplyMethod](),
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  "Managed by Terraform",
+				},
+				names.AttrFamily: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validParamGroupName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validParamGroupNamePrefix,
+				},
+				names.AttrParameter: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"apply_method": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ApplyMethodImmediate,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[types.ApplyMethod](),
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
+					Set: parameterHash,
 				},
-				Set: parameterHash,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -115,7 +120,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
@@ -153,6 +158,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceParameterGroupFlatten(ctx, conn, dbParameterGroup, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening RDS DB Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
@@ -165,9 +178,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	configParams := d.Get(names.AttrParameter).(*schema.Set)
 	if configParams.Len() < 1 {
-		// If we don't have any params in the ResourceData already, two possibilities
-		// first, we don't have a config available to us. Second, we do, but it has
-		// no parameters. We're going to assume the first, to be safe. In this case,
+		// If we don't have any params in the ResourceData already, two possibilities:
+		// first, we don't have a config available to us (e.g. this is an import, or a
+		// list resource result, neither of which has a config). Second, we do, but it
+		// has no parameters. We're going to assume the first, to be safe. In this case,
 		// we're only going to ask for the user-modified values, because any defaults
 		// the user may have _also_ set are indistinguishable from the hundreds of
 		// defaults AWS sets. If the user hasn't set any parameters, this will return
@@ -178,9 +192,8 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
+		return fmt.Errorf("reading RDS DB Parameter Group parameters: %w", err)
 	}
 
 	var userParams []types.Parameter
@@ -227,13 +240,13 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+		return fmt.Errorf("setting parameter: %w", err)
 	}
 
 	// Support in-place update of non-refreshable attribute.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
-	return diags
+	return nil
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -336,9 +349,7 @@ func findDBParameterGroupByName(ctx context.Context, conn *rds.Client, name stri
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBParameterGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -362,9 +373,8 @@ func findDBParameterGroups(ctx context.Context, conn *rds.Client, input *rds.Des
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -390,9 +400,8 @@ func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

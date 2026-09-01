@@ -1,3 +1,11 @@
+resource "aws_opensearchserverless_collection" "test" {
+{{- template "region" }}
+  name = var.rName
+{{- template "tags" . }}
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+
 resource "aws_opensearchserverless_security_policy" "test" {
 {{- template "region" }}
   name = var.rName
@@ -13,12 +21,4 @@ resource "aws_opensearchserverless_security_policy" "test" {
     ],
     "AWSOwnedKey" = true
   })
-}
-
-resource "aws_opensearchserverless_collection" "test" {
-{{- template "region" }}
-  name = var.rName
-{{- template "tags" }}
-
-  depends_on = [aws_opensearchserverless_security_policy.test]
 }

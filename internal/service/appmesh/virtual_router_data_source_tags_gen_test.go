@@ -28,11 +28,11 @@ func testAccAppMeshVirtualRouterDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccAppMeshVirtualRouterDataSource_tags,
-		"NullMap":                        testAccAppMeshVirtualRouterDataSource_tags_NullMap,
-		"EmptyMap":                       testAccAppMeshVirtualRouterDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualRouterDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccAppMeshVirtualRouterDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccAppMeshVirtualRouterDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccAppMeshVirtualRouterDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccAppMeshVirtualRouterDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccAppMeshVirtualRouterDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -70,7 +70,7 @@ func testAccAppMeshVirtualRouterDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualRouterDataSource_tags_NullMap(t *testing.T) {
+func testAccAppMeshVirtualRouterDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_router.test"
@@ -98,7 +98,7 @@ func testAccAppMeshVirtualRouterDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualRouterDataSource_tags_EmptyMap(t *testing.T) {
+func testAccAppMeshVirtualRouterDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_router.test"
@@ -126,7 +126,7 @@ func testAccAppMeshVirtualRouterDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAppMeshVirtualRouterDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAppMeshVirtualRouterDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_router.test"
@@ -162,7 +162,7 @@ func testAccAppMeshVirtualRouterDataSource_tags_DefaultTags_nonOverlapping(t *te
 	})
 }
 
-func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAppMeshVirtualRouterDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_router.test"
@@ -204,7 +204,7 @@ func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_DefaultTag(t 
 	})
 }
 
-func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAppMeshVirtualRouterDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_appmesh_virtual_router.test"

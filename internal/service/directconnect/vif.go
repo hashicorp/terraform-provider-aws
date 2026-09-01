@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -50,6 +49,39 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Direct Connect Virtual Interface (%s) EnableSiteLink attribute: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6") {
+		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("prefix_pool_allocated_count_ipv4") {
+			input.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv4").(int)))
+		}
+
+		if d.HasChange("prefix_pool_allocated_count_ipv6") {
+			input.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv6").(int)))
+		}
+
+		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) prefix pool allocation: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("rate_limit") {
+		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			RateLimit:          aws.String(d.Get("rate_limit").(string)),
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) RateLimit attribute: %s", d.Id(), err)
 		}
 	}
 
@@ -92,9 +124,8 @@ func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, i
 	}
 
 	if state := output.VirtualInterfaceState; state == awstypes.VirtualInterfaceStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -125,8 +156,8 @@ func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, inpu
 	return tfslices.Filter(output.VirtualInterfaces, tfslices.PredicateValue(filter)), nil
 }
 
-func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVirtualInterface(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVirtualInterfaceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -142,10 +173,10 @@ func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id 
 }
 
 func waitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, pending, target []string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    statusVirtualInterface(ctx, conn, id),
+		Refresh:    statusVirtualInterface(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -161,7 +192,7 @@ func waitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitVirtualInterfaceDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.VirtualInterfaceStateAvailable,
 			awstypes.VirtualInterfaceStateConfirming,
@@ -172,7 +203,7 @@ func waitVirtualInterfaceDeleted(ctx context.Context, conn *directconnect.Client
 			awstypes.VirtualInterfaceStateVerifying,
 		),
 		Target:     []string{},
-		Refresh:    statusVirtualInterface(ctx, conn, id),
+		Refresh:    statusVirtualInterface(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

@@ -26,4 +26,11 @@ var (
 	FindSubnetGroupByName             = findSubnetGroupByName
 
 	DefaultEngine = defaultEngine
+
+	ValidEventSubscriptionName       = validEventSubscriptionName
+	ValidEventSubscriptionNamePrefix = validEventSubscriptionNamePrefix
+	ValidParamGroupName              = validParamGroupName
+	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
+	ValidSubnetGroupName             = validSubnetGroupName
+	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 )

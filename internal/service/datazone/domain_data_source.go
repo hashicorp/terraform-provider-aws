@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datazone
 
 import (
@@ -15,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -82,7 +84,7 @@ func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data domainDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -103,19 +105,20 @@ func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	output, err := findDomain(ctx, conn, filter)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, DSNameDomain, data.Name.String(), err),
-			err.Error(),
-		)
+		idValue := data.ID.ValueString()
+		if idValue == "" {
+			idValue = data.Name.ValueString()
+		}
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, idValue)
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {

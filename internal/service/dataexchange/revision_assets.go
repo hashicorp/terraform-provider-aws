@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dataexchange
 
 import (
@@ -34,7 +36,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -55,7 +56,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -309,8 +309,8 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 	// The `ImportAssetsFromSignedURL` Job technically requires a `Name` parameter, but I've defaulted to the name of the file.
 	// This should probably be changed to explicitly require the `name`
 	revisionID := aws.ToString(out.Id)
-	assets := make([]assetModel, len(plan.Assets.Elements()))
-	existingAssetIDs := make([]string, 0, len(plan.Assets.Elements()))
+	assets := make([]assetModel, plan.Assets.Length(fwtypes.CollectionLengthUnhandledAsZero))
+	existingAssetIDs := make([]string, 0, plan.Assets.Length(fwtypes.CollectionLengthUnhandledAsZero))
 	for i, asset := range nestedObjectCollectionAllMust[assetModel](ctx, plan.Assets) {
 		switch {
 		case !asset.ImportAssetsFromS3.IsNull():
@@ -386,7 +386,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			assets[i] = *asset
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 
 		case !asset.ImportAssetsFromSignedURL.IsNull():
@@ -571,7 +571,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 				if resp.Diagnostics.HasError() {
 					return
 				}
-				assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				assets[i] = *asset
 				existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 			}()
 		case !asset.CreateS3DataAccessFromS3Bucket.IsNull():
@@ -651,7 +651,7 @@ func (r *revisionAssetsResource) Create(ctx context.Context, req resource.Create
 			createS3DataAccessFromS3Bucket.AccessPointARN = flex.StringToFramework(ctx, newAsset.AssetDetails.S3DataAccessAsset.S3AccessPointArn)
 			createS3DataAccessFromS3Bucket.AccessPointAlias = flex.StringToFramework(ctx, newAsset.AssetDetails.S3DataAccessAsset.S3AccessPointAlias)
 			asset.CreateS3DataAccessFromS3Bucket = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, createS3DataAccessFromS3Bucket)
-			assets[i] = *asset // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+			assets[i] = *asset
 			existingAssetIDs = append(existingAssetIDs, aws.ToString(newAsset.Id))
 		}
 	}
@@ -855,7 +855,7 @@ func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId,
 	output, err := conn.GetRevision(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -959,10 +959,10 @@ type kmsKeyToGrantModel struct {
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StateWaiting, awstypes.StateInProgress),
 		Target:       enum.Slice(awstypes.StateCompleted),
-		Refresh:      statusJob(ctx, conn, jobID),
+		Refresh:      statusJob(conn, jobID),
 		Timeout:      timeout,
 		PollInterval: 10 * time.Second,
 	}
@@ -995,8 +995,8 @@ func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error 
 	return err
 }
 
-func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusJob(conn *dataexchange.Client, jobID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findJobByID(ctx, conn, jobID)
 
 		if retry.NotFound(err) {
@@ -1019,7 +1019,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	out, err := conn.GetJob(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
 		}

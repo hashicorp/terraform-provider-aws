@@ -12,6 +12,8 @@ Provides an VPC subnet resource.
 
 ~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), subnets associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
+~> **NOTE:** When AWS GuardDuty is enabled in your account, it automatically creates VPC endpoints in your VPCs to monitor network traffic. During subnet deletion, the provider automatically detects and dissociates the subnet from these GuardDuty-managed VPC endpoints if they are blocking the deletion, preserving GuardDuty protection for other subnets in the VPC. This cleanup only targets resources tagged with `GuardDutyManaged=true` and happens automatically during destroy operations with no manual intervention required. For optimal functionality, the IAM role used by Terraform should have the [optional permissions listed below](#guardduty-cleanup-permissions). If these permissions are not available, the provider will continue with the deletion attempt and surface warnings only if the deletion ultimately fails.
+
 ## Example Usage
 
 ### Basic Usage
@@ -58,7 +60,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
@@ -76,13 +78,13 @@ resource "aws_vpc" "test" {
 resource "aws_vpc_ipam_pool" "vpc" {
   address_family      = "ipv4"
   ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
-  locale              = data.aws_region.current.name
+  locale              = data.aws_region.current.region
   source_ipam_pool_id = aws_vpc_ipam_pool.test.id
 
   source_resource {
     resource_id     = aws_vpc.test.id
     resource_owner  = data.aws_caller_identity.current.account_id
-    resource_region = data.aws_region.current.name
+    resource_region = data.aws_region.current.region
     resource_type   = "vpc"
   }
 }
@@ -127,7 +129,7 @@ This resource supports the following arguments:
 * `ipv6_netmask_length` - (Optional) Netmask. Requires specifying a `ipv6_ipam_pool_id`. Valid values are from 44 to 64 in increments of 4.
 * `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`.
-* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
+* `outpost_arn` - (Optional) ARN of the Outpost.
 * `private_dns_hostname_type_on_launch` - (Optional) The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`.
 * `vpc_id` - (Required) The VPC ID.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -141,6 +143,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during subnet deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSubnets`, `ec2:DescribeVpcs` (on all resources), and `ec2:ModifyVpcEndpoint` (on resources tagged `GuardDutyManaged: true`).
 
 ## Timeouts
 

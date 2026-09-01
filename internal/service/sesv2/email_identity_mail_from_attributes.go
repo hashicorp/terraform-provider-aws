@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -35,22 +37,24 @@ func resourceEmailIdentityMailFromAttributes() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"behavior_on_mx_failure": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          string(types.BehaviorOnMxFailureUseDefaultValue),
-				ValidateDiagFunc: enum.Validate[types.BehaviorOnMxFailure](),
-			},
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"mail_from_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"behavior_on_mx_failure": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          string(types.BehaviorOnMxFailureUseDefaultValue),
+					ValidateDiagFunc: enum.Validate[types.BehaviorOnMxFailure](),
+				},
+				"email_identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"mail_from_domain": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

@@ -49,8 +49,6 @@ FieldToMatch(field_to_match) support following:
 * `data` - (Optional) When the value of Type is HEADER, enter the name of the header that you want AWS WAF to search, for example, User-Agent or Referer. If the value of Type is any other value, omit Data.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
 
-## Remarks
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

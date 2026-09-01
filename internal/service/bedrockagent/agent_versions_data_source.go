@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagent
 
 import (
@@ -18,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_bedrockagent_agent_versions, name="Agent Versions")
+// @FrameworkDataSource("aws_bedrockagent_agent_versions", name="Agent Versions")
 func newDataSourceAgentVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &agentVersionsDataSource{}, nil
 }

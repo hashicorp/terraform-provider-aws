@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package directconnect
 
 import (
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,86 +32,87 @@ import (
 
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	// Resource with v0 schema (provider v5.0.1).
 	resourceV0 := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"encryption_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"has_logical_redundancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"macsec_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"request_macsec": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"partner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"port_encryption_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vlan_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"encryption_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"has_logical_redundancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"macsec_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"request_macsec": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"partner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"port_encryption_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vlan_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 
@@ -150,87 +152,110 @@ func resourceConnection() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validConnectionBandWidth(),
-			},
-			// The MAC Security (MACsec) connection encryption mode.
-			"encryption_mode": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
-			},
-			"has_logical_redundancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// Indicates whether the connection supports MAC Security (MACsec).
-			"macsec_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			// Enable or disable MAC Security (MACsec) on this connection.
-			"request_macsec": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"partner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"port_encryption_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vlan_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validConnectionBandWidth(),
+				},
+				// The MAC Security (MACsec) connection encryption mode.
+				"encryption_mode": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+				},
+				"has_logical_redundancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// Indicates whether the connection supports MAC Security (MACsec).
+				"macsec_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				// Enable or disable MAC Security (MACsec) on this connection.
+				"request_macsec": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"partner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"port_encryption_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"prefix_pool_size_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_size_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_unallocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"rate_limiter_status": rateLimiterStatusSchema(),
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vlan_id": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -298,11 +323,17 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
+	d.Set("prefix_pool_size_ipv4", connection.PrefixPoolSizeIpv4)
+	d.Set("prefix_pool_size_ipv6", connection.PrefixPoolSizeIpv6)
+	d.Set("prefix_pool_unallocated_count_ipv4", connection.PrefixPoolUnallocatedCountIpv4)
+	d.Set("prefix_pool_unallocated_count_ipv6", connection.PrefixPoolUnallocatedCountIpv6)
 	d.Set(names.AttrProviderName, connection.ProviderName)
 	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
 		d.Set("request_macsec", aws.Bool(false))
 	}
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan_id", connection.Vlan)
+	d.Set("rate_limiter_status", flattenRateLimiterStatus(connection.RateLimiterStatus))
 
 	return diags
 }
@@ -379,9 +410,8 @@ func findConnectionByID(ctx context.Context, conn *directconnect.Client, id stri
 	}
 
 	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -402,9 +432,8 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	output, err := conn.DescribeConnections(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -419,8 +448,8 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
-func statusConnection(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -439,10 +468,10 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusConnection(ctx, conn, id),
+		Refresh: statusConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -453,4 +482,49 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	}
 
 	return nil, err
+}
+
+func rateLimiterStatusSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"in_use": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"max_allowed": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"remaining": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"total_bandwidth": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenRateLimiterStatus(apiObject *awstypes.RateLimiterStatus) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"max_allowed": int(apiObject.MaxAllowed),
+		"in_use":      int(apiObject.InUse),
+		"remaining":   int(apiObject.Remaining),
+	}
+
+	if v := apiObject.TotalBandwidth; v != nil {
+		tfMap["total_bandwidth"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }

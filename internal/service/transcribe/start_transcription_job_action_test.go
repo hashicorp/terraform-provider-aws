@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,7 +21,7 @@ func TestAccTranscribeStartTranscriptionJobAction_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,8 +29,8 @@ func TestAccTranscribeStartTranscriptionJobAction_basic(t *testing.T) {
 			{
 				Config: testAccStartTranscriptionJobActionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTranscriptionJobExists(ctx, rName),
-					testAccCheckTranscriptionJobStatus(ctx, rName, "IN_PROGRESS", "COMPLETED"),
+					testAccCheckTranscriptionJobExists(ctx, t, rName),
+					testAccCheckTranscriptionJobStatus(ctx, t, rName, "IN_PROGRESS", "COMPLETED"),
 				),
 			},
 		},
@@ -43,7 +42,7 @@ func TestAccTranscribeStartTranscriptionJobAction_identifyLanguage(t *testing.T)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,9 +50,9 @@ func TestAccTranscribeStartTranscriptionJobAction_identifyLanguage(t *testing.T)
 			{
 				Config: testAccStartTranscriptionJobActionConfig_identifyLanguage(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTranscriptionJobExists(ctx, rName),
-					testAccCheckTranscriptionJobStatus(ctx, rName, "IN_PROGRESS", "COMPLETED"),
-					testAccCheckTranscriptionJobIdentifyLanguage(ctx, rName, true),
+					testAccCheckTranscriptionJobExists(ctx, t, rName),
+					testAccCheckTranscriptionJobStatus(ctx, t, rName, "IN_PROGRESS", "COMPLETED"),
+					testAccCheckTranscriptionJobIdentifyLanguage(ctx, t, rName, true),
 				),
 			},
 		},
@@ -65,7 +64,7 @@ func TestAccTranscribeStartTranscriptionJobAction_withOutputLocation(t *testing.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,17 +72,17 @@ func TestAccTranscribeStartTranscriptionJobAction_withOutputLocation(t *testing.
 			{
 				Config: testAccStartTranscriptionJobActionConfig_withOutputLocation(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTranscriptionJobExists(ctx, rName),
-					testAccCheckTranscriptionJobStatus(ctx, rName, "IN_PROGRESS", "COMPLETED"),
+					testAccCheckTranscriptionJobExists(ctx, t, rName),
+					testAccCheckTranscriptionJobStatus(ctx, t, rName, "IN_PROGRESS", "COMPLETED"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTranscriptionJobExists(ctx context.Context, jobName string) resource.TestCheckFunc {
+func testAccCheckTranscriptionJobExists(ctx context.Context, t *testing.T, jobName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 		input := &transcribe.GetTranscriptionJobInput{
 			TranscriptionJobName: &jobName,
@@ -98,9 +97,9 @@ func testAccCheckTranscriptionJobExists(ctx context.Context, jobName string) res
 	}
 }
 
-func testAccCheckTranscriptionJobStatus(ctx context.Context, jobName string, expectedStatuses ...string) resource.TestCheckFunc {
+func testAccCheckTranscriptionJobStatus(ctx context.Context, t *testing.T, jobName string, expectedStatuses ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 		input := &transcribe.GetTranscriptionJobInput{
 			TranscriptionJobName: &jobName,
@@ -124,9 +123,9 @@ func testAccCheckTranscriptionJobStatus(ctx context.Context, jobName string, exp
 	}
 }
 
-func testAccCheckTranscriptionJobIdentifyLanguage(ctx context.Context, jobName string, expected bool) resource.TestCheckFunc {
+func testAccCheckTranscriptionJobIdentifyLanguage(ctx context.Context, t *testing.T, jobName string, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 		input := &transcribe.GetTranscriptionJobInput{
 			TranscriptionJobName: &jobName,

@@ -79,6 +79,11 @@ func TestRemoveEmptyFields(t *testing.T) {
 			want:     `{}`,
 		},
 		{
+			testName: "single empty string field",
+			input:    `{"key":""}`,
+			want:     `{"key":""}`,
+		},
+		{
 			testName: "single empty array field",
 			input:    `{"key": []}`,
 			want:     `{}`,
@@ -121,6 +126,67 @@ func TestRemoveEmptyFields(t *testing.T) {
 
 			if got, want := tfjson.RemoveEmptyFields([]byte(testCase.input)), testCase.want; string(got) != want {
 				t.Errorf("RemoveEmptyFields(%q) = %q, want %q", testCase.input, got, want)
+			}
+		})
+	}
+}
+
+func TestRemoveEmptyStringFields(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName string
+		input    string
+		want     string
+	}{
+		{
+			testName: "empty JSON",
+			input:    "{}",
+			want:     "{}",
+		},
+		{
+			testName: "single null field",
+			input:    `{"key": null}`,
+			want:     `{"key":null}`,
+		},
+		{
+			testName: "single empty array field",
+			input:    `{"key": []}`,
+			want:     `{"key":[]}`,
+		},
+		{
+			testName: "single empty object field",
+			input:    `{"key": {}}`,
+			want:     `{"key":{}}`,
+		},
+		{
+			testName: "single empty string field",
+			input:    `{"key": ""}`,
+			want:     `{}`,
+		},
+		{
+			testName: "single non-empty string field",
+			input:    `{"key": "a"}`,
+			want:     `{"key":"a"}`,
+		},
+		{
+			testName: "single non-zero number field",
+			input:    `{"key": 42}`,
+			want:     `{"key":42}`,
+		},
+		{
+			testName: "empty string deeply nested",
+			input:    `{"key": {"a": [1, "two", ""], "b": "", "c": {"d": "dee", "e": ""}}}`,
+			want:     `{"key":{"a":[1,"two",""],"c":{"d":"dee"}}}`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfjson.RemoveEmptyStringFields([]byte(testCase.input)), testCase.want; string(got) != want {
+				t.Errorf("RemoveEmptyStringFields(%q) = %q, want %q", testCase.input, got, want)
 			}
 		})
 	}

@@ -41,13 +41,14 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, i
 	if !ok {
 		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
-	val, ok := valRaw.(string)
-	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-	}
-	setAttribute(rd, attr.ResourceAttributeName(), val)
+
+	setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 
 	if attr.ResourceAttributeName() != names.AttrID {
+		val, ok := valRaw.(string)
+		if !ok {
+			return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
+		}
 		rd.SetId(val)
 	}
 
@@ -79,20 +80,21 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, ide
 	if !ok {
 		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
-	val, ok := valRaw.(string)
-	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-	}
-	setAttribute(rd, attr.ResourceAttributeName(), val)
+
+	setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 
 	if attr.ResourceAttributeName() != names.AttrID {
+		val, ok := valRaw.(string)
+		if !ok {
+			return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
+		}
 		rd.SetId(val)
 	}
 
 	return nil
 }
 
-func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -127,11 +129,8 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 				if attr.Required() && !ok {
 					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
-				val, ok := valRaw.(string)
-				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-				}
-				setAttribute(rd, attr.ResourceAttributeName(), val)
+
+				setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 			}
 		}
 
@@ -141,7 +140,7 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 	return nil
 }
 
-func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -172,11 +171,8 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, i
 				if attr.Required() && !ok {
 					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
-				val, ok := valRaw.(string)
-				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-				}
-				setAttribute(rd, attr.ResourceAttributeName(), val)
+
+				setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 			}
 		}
 

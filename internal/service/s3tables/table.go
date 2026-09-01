@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3tables
 
 import (
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -30,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -49,7 +51,6 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -167,6 +168,17 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 							Description: "Iceberg metadata configuration.",
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrProperties: schema.MapAttribute{
+										CustomType:  fwtypes.MapOfStringType,
+										Optional:    true,
+										ElementType: types.StringType,
+										Description: "A map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.",
+										PlanModifiers: []planmodifier.Map{
+											mapplanmodifier.RequiresReplace(),
+										},
+									},
+								},
 								Blocks: map[string]schema.Block{
 									names.AttrSchema: schema.ListNestedBlock{
 										Description: "Schema configuration for the Iceberg table.",
@@ -664,7 +676,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -694,7 +706,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -724,7 +736,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -1014,7 +1026,8 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	Properties fwtypes.MapOfString                                 `tfsdk:"properties"`
+	Schema     fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
 }
 
 type icebergSchemaModel struct {

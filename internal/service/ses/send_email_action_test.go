@@ -10,22 +10,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESSendEmailAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
@@ -40,7 +38,7 @@ func TestAccSESSendEmailAction_basic(t *testing.T) {
 			{
 				Config: testAccSendEmailActionConfig_basic(rName, testEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSendEmailAction(ctx, testEmail),
+					testAccCheckSendEmailAction(ctx, t, testEmail),
 				),
 			},
 		},
@@ -49,11 +47,11 @@ func TestAccSESSendEmailAction_basic(t *testing.T) {
 
 func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
@@ -68,7 +66,7 @@ func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 			{
 				Config: testAccSendEmailActionConfig_htmlBody(rName, testEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSendEmailAction(ctx, testEmail),
+					testAccCheckSendEmailAction(ctx, t, testEmail),
 				),
 			},
 		},
@@ -77,11 +75,11 @@ func TestAccSESSendEmailAction_htmlBody(t *testing.T) {
 
 func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	testEmail := acctest.SkipIfEnvVarNotSet(t, "SES_VERIFIED_EMAIL")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SESEndpointID)
@@ -96,7 +94,7 @@ func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
 			{
 				Config: testAccSendEmailActionConfig_multipleRecipients(rName, testEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSendEmailAction(ctx, testEmail),
+					testAccCheckSendEmailAction(ctx, t, testEmail),
 				),
 			},
 		},
@@ -104,9 +102,9 @@ func TestAccSESSendEmailAction_multipleRecipients(t *testing.T) {
 }
 
 // testAccCheckSendEmailAction verifies the action can send emails
-func testAccCheckSendEmailAction(ctx context.Context, sourceEmail string) resource.TestCheckFunc {
+func testAccCheckSendEmailAction(ctx context.Context, t *testing.T, sourceEmail string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		// Verify the source email is verified in SES
 		input := &ses.GetIdentityVerificationAttributesInput{

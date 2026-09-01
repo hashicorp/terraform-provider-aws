@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kinesis
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -26,7 +27,10 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.47.0")
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
@@ -34,32 +38,30 @@ func resourceStreamConsumer() *schema.Resource {
 		UpdateWithoutTimeout: resourceStreamConsumerUpdate,
 		DeleteWithoutTimeout: resourceStreamConsumerDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStreamARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creation_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStreamARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -155,12 +157,15 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 		ConsumerARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStreamConsumer(ctx, &input)
+	return findStreamConsumerDescription(ctx, conn, &input)
+}
+
+func findStreamConsumerDescription(ctx context.Context, conn *kinesis.Client, input *kinesis.DescribeStreamConsumerInput) (*types.ConsumerDescription, error) {
+	output, err := conn.DescribeStreamConsumer(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -175,8 +180,8 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	return output.ConsumerDescription, nil
 }
 
-func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamConsumer(conn *kinesis.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamConsumerByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -195,10 +200,10 @@ func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusCreating),
 		Target:  enum.Slice(types.ConsumerStatusActive),
-		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Refresh: statusStreamConsumer(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -215,10 +220,10 @@ func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Refresh: statusStreamConsumer(conn, arn),
 		Timeout: timeout,
 	}
 

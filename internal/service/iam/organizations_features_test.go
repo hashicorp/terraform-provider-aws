@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,7 +35,7 @@ func testAccOrganizationsFeatures_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_organizations_features.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -44,12 +43,12 @@ func testAccOrganizationsFeatures_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
+					testAccCheckOrganizationsFeaturesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(2)),
@@ -72,7 +71,7 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_organizations_features.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -80,12 +79,12 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
+					testAccCheckOrganizationsFeaturesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
@@ -102,7 +101,7 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
+					testAccCheckOrganizationsFeaturesExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
@@ -115,9 +114,9 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationsFeaturesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationsFeaturesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_organizations_features" {
@@ -141,14 +140,14 @@ func testAccCheckOrganizationsFeaturesDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckOrganizationsFeaturesExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationsFeaturesExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, err := tfiam.FindOrganizationsFeatures(ctx, conn)
 

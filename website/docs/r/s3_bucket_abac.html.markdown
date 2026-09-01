@@ -33,21 +33,19 @@ resource "aws_s3_bucket_abac" "example" {
 
 The following arguments are required:
 
-* `bucket` - (Required) General purpose bucket that you want to create the metadata configuration for.
 * `abac_status` - (Required) ABAC status configuration. See [`abac_status` Block](#abac_status-block) for details.
+* `bucket` - (Required) General purpose bucket that you want to create the metadata configuration for.
 
 The following arguments are optional:
 
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `abac_status` Block
 
 The `abac_status` configuration block supports the following arguments:
 
-* `status` - (Required) ABAC status of the general purpose bucket.
-Valid values are `Enabled` and `Disabled`.
-By default, ABAC is disabled for all Amazon S3 general purpose buckets.
+* `status` - (Required) ABAC status of the general purpose bucket. Valid values are `Enabled` and `Disabled`. By default, ABAC is disabled for all Amazon S3 general purpose buckets.
 
 ## Attribute Reference
 

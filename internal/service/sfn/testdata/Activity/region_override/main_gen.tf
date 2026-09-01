@@ -6,6 +6,7 @@ resource "aws_sfn_activity" "test" {
 
   name = var.rName
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

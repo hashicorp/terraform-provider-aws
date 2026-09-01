@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,10 +21,10 @@ import (
 func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var botversion lexmodelsv2.DescribeBotVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -33,12 +32,12 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckBotVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
+					testAccCheckBotVersionExists(ctx, t, resourceName, &botversion),
 					resource.TestCheckResourceAttr(resourceName, "locale_specification.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
 				),
@@ -56,33 +55,41 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var botversion lexmodelsv2.DescribeBotVersionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckBotVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
+					testAccCheckBotVersionExists(ctx, t, resourceName, &botversion),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceBotVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckBotVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBotVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexV2ModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lexv2models_bot_version" {
@@ -106,14 +113,14 @@ func testAccCheckBotVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBotVersionExists(ctx context.Context, n string, v *lexmodelsv2.DescribeBotVersionOutput) resource.TestCheckFunc {
+func testAccCheckBotVersionExists(ctx context.Context, t *testing.T, n string, v *lexmodelsv2.DescribeBotVersionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexV2ModelsClient(ctx)
 
 		output, err := tflexv2models.FindBotVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["bot_id"], rs.Primary.Attributes["bot_version"])
 

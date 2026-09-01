@@ -13,11 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +25,22 @@ import (
 func testAccResourceLFTags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
@@ -55,24 +54,35 @@ func testAccResourceLFTags_basic(t *testing.T) {
 
 func testAccResourceLFTags_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					// Expect a destroy + re-create. An empty set is technically a valid value
+					// so Read cannot trigger replacement just based on an empty list of tags
+					// when deleted out of band.
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -82,22 +92,22 @@ func testAccResourceLFTags_disappears(t *testing.T) {
 func testAccResourceLFTags_database(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccResourceLFTagsConfig_database(rName, []string{"copse"}, "copse"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
@@ -107,7 +117,7 @@ func testAccResourceLFTags_database(t *testing.T) {
 			{
 				Config: testAccResourceLFTagsConfig_database(rName, []string{"luffield"}, "luffield"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "luffield",
@@ -121,22 +131,22 @@ func testAccResourceLFTags_database(t *testing.T) {
 func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccResourceLFTagsConfig_databaseMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "woodcote", "theloop"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "woodcote",
@@ -150,7 +160,7 @@ func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 			{
 				Config: testAccResourceLFTagsConfig_databaseMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "stowe", "becketts"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "stowe",
@@ -170,16 +180,16 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 	databaseResourceName := "aws_lakeformation_resource_lf_tags.database_tags"
 	tableResourceName := "aws_lakeformation_resource_lf_tags.table_tags"
 	columnResourceName := "aws_lakeformation_resource_lf_tags.column_tags"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceLFTagsConfig_hierarchy(rName,
@@ -191,9 +201,9 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					"two",
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
-					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
-					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, columnResourceName),
 					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
@@ -221,9 +231,9 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					"three",
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
-					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
-					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, columnResourceName),
 					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
@@ -248,22 +258,22 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 func testAccResourceLFTags_table(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccResourceLFTagsConfig_table(rName, []string{"copse", "abbey", "farm"}, "abbey"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "abbey",
@@ -273,7 +283,7 @@ func testAccResourceLFTags_table(t *testing.T) {
 			{
 				Config: testAccResourceLFTagsConfig_table(rName, []string{"copse", "abbey", "farm"}, "farm"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "farm",
@@ -287,22 +297,22 @@ func testAccResourceLFTags_table(t *testing.T) {
 func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccResourceLFTagsConfig_tableWithColumnsMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "luffield", "vale"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "luffield",
@@ -316,7 +326,7 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 			{
 				Config: testAccResourceLFTagsConfig_tableWithColumnsMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "copse", "aintree"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
@@ -331,9 +341,9 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 	})
 }
 
-func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDatabaseLFTagsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_resource_lf_tags" {
@@ -435,7 +445,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckDatabaseLFTagsExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -520,7 +530,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 		_, err := conn.GetResourceLFTags(ctx, input)
 
 		return err

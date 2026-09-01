@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,10 +15,10 @@ import (
 
 func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-basic")
+	stackName := acctest.RandomWithPrefix(t, "tf-acc-ds-basic")
 	resourceName := "data.aws_cloudformation_stack.network"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -103,10 +102,10 @@ data "aws_cloudformation_stack" "network" {
 
 func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 	ctx := acctest.Context(t)
-	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-yaml")
+	stackName := acctest.RandomWithPrefix(t, "tf-acc-ds-yaml")
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

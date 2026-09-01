@@ -17,7 +17,7 @@ func TestAccSyntheticsRuntimeVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_synthetics_runtime_version.test"
 	prefix := "syn-nodejs-puppeteer"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +42,7 @@ func TestAccSyntheticsRuntimeVersionDataSource_deprecatedVersion(t *testing.T) {
 	prefix := "syn-nodejs-puppeteer"
 	version := "3.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

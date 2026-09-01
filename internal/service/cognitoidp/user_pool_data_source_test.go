@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -25,21 +24,21 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var userpool awsTypes.UserPoolType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					testAccCheckUserPoolExists(ctx, t, dataSourceName, &userpool),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
@@ -56,21 +55,21 @@ func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var userpool awsTypes.UserPoolType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDataSourceConfig_schemaAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					testAccCheckUserPoolExists(ctx, t, dataSourceName, &userpool),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					testSchemaAttributes(dataSourceName),
 				),
@@ -83,22 +82,22 @@ func TestAccCognitoIDPUserPoolDataSource_userPoolTags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var userpool awsTypes.UserPoolType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 	resourceName := "aws_cognito_user_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDataSourceConfig_userPoolTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					testAccCheckUserPoolExists(ctx, t, dataSourceName, &userpool),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -114,21 +113,21 @@ func TestAccCognitoIDPUserPoolDataSource_userPoolAddOns(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var userpool awsTypes.UserPoolType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDataSourceConfig_userPoolAddOns(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					testAccCheckUserPoolExists(ctx, t, dataSourceName, &userpool),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),

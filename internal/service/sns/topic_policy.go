@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sns
 
 import (
@@ -26,7 +28,6 @@ import (
 // @SDKResource("aws_sns_topic_policy", name="Topic Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.8.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,
@@ -34,18 +35,20 @@ func resourceTopicPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceTopicPolicyUpsert,
 		DeleteWithoutTimeout: resourceTopicPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -99,17 +102,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
-	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
-	return diags
+	return append(diags, resourceTopicPolicyFlatten(ctx, d, attributes)...)
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -164,4 +157,20 @@ func defaultTopicPolicy(topicARN, accountID string) string {
 
 func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
 	return putTopicAttribute(ctx, conn, arn, topicAttributeNamePolicy, policy)
+}
+
+func resourceTopicPolicyFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
+	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), attributes[topicAttributeNamePolicy])
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return diags
 }

@@ -101,7 +101,8 @@ The `restore_to_point_in_time` block supports the following arguments:
 ### Serverless V2 Scaling Configuration
 
 The `serverless_v2_scaling_configuration` block supports the following arguments.
-Adding this block (i.e. switching to serverless) or removing it (i.e. switching from serverless) will trigger cluster replacement.
+
+~> **NOTE:** Once `serverless_v2_scaling_configuration` is configured, it cannot be removed with an in-place update. Removing it will force replacement of the cluster.
 
 * `max_capacity` - (Required) Maximum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 1 and 256.
 * `min_capacity` - (Required) Minimum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 0.5 and 256.
@@ -110,12 +111,12 @@ Adding this block (i.e. switching to serverless) or removing it (i.e. switching 
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `cluster_members` - List of DocumentDB Instances that are a part of this cluster
 * `cluster_resource_id` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
-* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
+* `id` - (**Deprecated**) ARN of cluster
 * `reader_endpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

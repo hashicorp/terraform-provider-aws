@@ -63,7 +63,7 @@ func (r *collectionListResource) List(ctx context.Context, request list.ListRequ
 
 			var data collectionResourceModel
 
-			r.SetResult(ctx, awsClient, &data, &result, func() {
+			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, collection, &data); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

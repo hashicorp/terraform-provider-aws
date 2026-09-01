@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -43,56 +45,58 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 
 		CustomizeDiff: resourceIPAMPoolCIDRCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					verify.ValidIPv4CIDRNetworkAddress,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
-			},
-			"cidr_authorization_context": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"signature": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						verify.ValidIPv6CIDRNetworkAddress,
+					),
+				},
+				"cidr_authorization_context": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"signature": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			// This resource's ID is a concatenated id of `<cidr>_<poolid>`
-			// ipam_pool_cidr_id was not part of the initial feature release
-			"ipam_pool_cidr_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
-			},
+				// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+				// ipam_pool_cidr_id was not part of the initial feature release
+				"ipam_pool_cidr_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(0, 128),
+					ConflictsWith: []string{"cidr"},
+				},
+			}
 		},
 	}
 }

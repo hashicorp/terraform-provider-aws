@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package notifications
 
 import (
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -248,9 +249,8 @@ func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn str
 	output, err := conn.GetEventRule(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -265,8 +265,8 @@ func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn str
 	return output, nil
 }
 
-func statusEventRule(ctx context.Context, conn *notifications.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventRule(conn *notifications.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventRuleByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -304,10 +304,10 @@ func waitEventRuleCreated(ctx context.Context, conn *notifications.Client, arn s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
-		Refresh:                   statusEventRule(ctx, conn, arn),
+		Refresh:                   statusEventRule(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -325,11 +325,11 @@ func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		// If regions were added/removed then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating, awstypes.EventRuleStatusUpdating, awstypes.EventRuleStatusDeleting),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
-		Refresh:                   statusEventRule(ctx, conn, id),
+		Refresh:                   statusEventRule(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -347,10 +347,10 @@ func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EventRuleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEventRule(ctx, conn, id),
+		Refresh: statusEventRule(conn, id),
 		Timeout: timeout,
 	}
 

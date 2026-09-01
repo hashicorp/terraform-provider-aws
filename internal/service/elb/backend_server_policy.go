@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package elb
 
 import (
@@ -28,20 +30,22 @@ func resourceBackendServerPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBackendServerPolicySet,
 		DeleteWithoutTimeout: resourceBackendServerPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"instance_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"policy_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"policy_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+			}
 		},
 	}
 }

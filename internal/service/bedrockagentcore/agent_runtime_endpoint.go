@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagentcore
 
 import (
@@ -10,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -24,8 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -40,7 +40,11 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime_endpoint", name="Agent Runtime Endpoint")
 // @Tags(identifierAttribute="agent_runtime_endpoint_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttributes="agent_runtime_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preCheck="testAccAgentRuntimeEndpointPreCheck")
+// @Testing(requireEnvVarValue="AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 func newAgentRuntimeEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeEndpointResource{}
 
@@ -80,7 +84,7 @@ func (r *agentRuntimeEndpointResource) Schema(ctx context.Context, request resou
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -116,7 +120,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateAgentRuntimeEndpoint(ctx, &input)
@@ -130,6 +134,9 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	data.AgentRuntimeVersion = fwflex.StringToFramework(ctx, out.TargetVersion)
 
 	if _, err := waitAgentRuntimeEndpointCreated(ctx, conn, agentRuntimeID, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
+		response.State.SetAttribute(ctx, path.Root(names.AttrName), name)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
@@ -192,7 +199,7 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateAgentRuntimeEndpoint(ctx, &input)
 		if err != nil {
@@ -225,7 +232,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeEndpointInput{
 		AgentRuntimeId: aws.String(agentRuntimeID),
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		EndpointName:   aws.String(name),
 	}
 
@@ -261,10 +268,10 @@ func (r *agentRuntimeEndpointResource) ImportState(ctx context.Context, request 
 }
 
 func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
-		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh:                   statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -279,10 +286,10 @@ func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcore
 }
 
 func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
-		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh:                   statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -297,10 +304,10 @@ func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcore
 }
 
 func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeEndpointStatusDeleting, awstypes.AgentRuntimeEndpointStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh: statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout: timeout,
 	}
 
@@ -313,8 +320,8 @@ func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcore
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntimeEndpoint(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgentRuntimeEndpoint(conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, endpointName)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -341,9 +348,8 @@ func findAgentRuntimeEndpoint(ctx context.Context, conn *bedrockagentcorecontrol
 	out, err := conn.GetAgentRuntimeEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "was not found") {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 

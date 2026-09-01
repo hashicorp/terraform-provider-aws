@@ -23,7 +23,7 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 	// (Not including in config to avoid lintignoring entire config.)
 	localZone := "us-west-2-lax-1" // lintignore:AWSAT003
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

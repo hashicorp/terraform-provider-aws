@@ -33,7 +33,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -89,7 +89,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +137,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +178,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -206,7 +206,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_null(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -219,7 +219,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -277,7 +277,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_EmptyMap(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -290,7 +290,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -300,7 +300,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -344,7 +344,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_AddOnUpdate(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -357,7 +357,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_AddOnUpdate(t *testing.T) 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -367,7 +367,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_AddOnUpdate(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -391,7 +391,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_AddOnUpdate(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -429,7 +429,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_AddOnUpdate(t *testing.T) 
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -442,7 +442,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnCreate(t *testi
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -454,7 +454,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnCreate(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -494,7 +494,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnCreate(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -522,7 +522,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnCreate(t *testi
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -535,7 +535,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *t
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +547,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +579,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -625,7 +625,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -663,7 +663,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Add(t *t
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -676,7 +676,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Replace(
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -688,7 +688,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Replace(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -719,7 +719,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Replace(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -756,7 +756,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_EmptyTag_OnUpdate_Replace(
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -769,7 +769,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -782,7 +782,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -826,7 +826,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -872,7 +872,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -912,7 +912,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -941,7 +941,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_providerOnly(t
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -954,7 +954,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -969,7 +969,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1023,7 +1023,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1076,7 +1076,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1105,7 +1105,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nonOverlapping
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1118,7 +1118,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1133,7 +1133,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1186,7 +1186,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1243,7 +1243,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1285,7 +1285,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_overlapping(t 
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1298,7 +1298,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToProvid
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1310,7 +1310,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToProvid
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1343,7 +1343,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToProvid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1379,7 +1379,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToProvid
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1392,7 +1392,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1405,7 +1405,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToResour
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1433,7 +1433,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1472,7 +1472,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_updateToResour
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1485,7 +1485,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyResourceT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1500,7 +1500,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyResourceT
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1541,7 +1541,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyResourceT
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1554,7 +1554,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyProviderO
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1567,7 +1567,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyProviderO
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1602,7 +1602,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_emptyProviderO
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1615,7 +1615,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullOverlappin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1630,7 +1630,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullOverlappin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1668,7 +1668,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullOverlappin
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1681,7 +1681,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullNonOverlap
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1696,7 +1696,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullNonOverlap
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1734,7 +1734,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_DefaultTags_nullNonOverlap
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1747,7 +1747,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnCreate(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1757,7 +1757,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnCreate(t *te
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1793,7 +1793,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnCreate(t *te
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1806,7 +1806,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Add(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1818,7 +1818,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Add(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1850,7 +1850,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Add(t
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1894,7 +1894,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Add(t
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1907,7 +1907,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Repla
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1919,7 +1919,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Repla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1949,7 +1949,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Repla
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1985,7 +1985,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_ComputedTag_OnUpdate_Repla
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -1998,7 +1998,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Default
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2017,7 +2017,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Default
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2066,7 +2066,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Default
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2115,7 +2115,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Default
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2151,7 +2151,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Default
 	})
 }
 
-func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccConfigServiceConfigurationAggregator_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ConfigurationAggregator
@@ -2164,7 +2164,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Resourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2181,7 +2181,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Resourc
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2244,7 +2244,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Resourc
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2307,7 +2307,7 @@ func TestAccConfigServiceConfigurationAggregator_tags_IgnoreTags_Overlap_Resourc
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &v),
+					testAccCheckConfigurationAggregatorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

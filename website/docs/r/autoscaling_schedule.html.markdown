@@ -63,17 +63,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_autoscaling_schedule.resource-name
-  id = "auto-scaling-group-name/scheduled-action-name"
+  to = aws_autoscaling_schedule.example
+  identity = {
+    autoscaling_group_name = "example-asg"
+    scheduled_action_name  = "example-action"
+  }
+}
+
+resource "aws_autoscaling_schedule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import AutoScaling ScheduledAction using the `auto-scaling-group-name` and `scheduled-action-name`. For example:
+### Identity Schema
+
+#### Required
+
+* `autoscaling_group_name` (String) Name of the Auto Scaling group.
+* `scheduled_action_name` (String) Name of the scaling action.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Schedules using `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_autoscaling_schedule.example
+  id = "example-asg/example-action"
+}
+```
+
+Using `terraform import`, import AutoScaling Schedules using `autoscaling_group_name` and `scheduled_action_name` separated by a forward slash (`/`). For example:
 
 ```console
-% terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+% terraform import aws_autoscaling_schedule.example example-asg/example-action
 ```

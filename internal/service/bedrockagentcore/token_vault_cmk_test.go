@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,10 +25,10 @@ import (
 func testAccTokenVaultCMK_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v bedrockagentcorecontrol.GetTokenVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_token_vault_cmk.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -42,7 +40,7 @@ func testAccTokenVaultCMK_basic(t *testing.T) {
 			{
 				Config: testAccTokenVaultCMKConfig_customerManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTokenVaultExists(ctx, resourceName, &v),
+					testAccCheckTokenVaultExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -69,7 +67,7 @@ func testAccTokenVaultCMK_basic(t *testing.T) {
 			{
 				Config: testAccTokenVaultCMKConfig_serviceManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTokenVaultExists(ctx, resourceName, &v),
+					testAccCheckTokenVaultExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -90,14 +88,14 @@ func testAccTokenVaultCMK_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTokenVaultExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetTokenVaultOutput) resource.TestCheckFunc {
+func testAccCheckTokenVaultExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetTokenVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindTokenVaultByID(ctx, conn, rs.Primary.Attributes["token_vault_id"])
 		if err != nil {

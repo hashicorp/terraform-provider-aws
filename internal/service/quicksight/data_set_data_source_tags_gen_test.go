@@ -6,9 +6,7 @@
 package quicksight_test
 
 import (
-	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,9 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +50,7 @@ func TestAccQuickSightDataSetDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSetDataSource_tags_NullMap(t *testing.T) {
+func TestAccQuickSightDataSetDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_quicksight_data_set.test"
@@ -83,7 +78,7 @@ func TestAccQuickSightDataSetDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSetDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccQuickSightDataSetDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_quicksight_data_set.test"
@@ -111,7 +106,7 @@ func TestAccQuickSightDataSetDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSetDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccQuickSightDataSetDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_quicksight_data_set.test"
@@ -147,7 +142,7 @@ func TestAccQuickSightDataSetDataSource_tags_DefaultTags_nonOverlapping(t *testi
 	})
 }
 
-func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccQuickSightDataSetDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_quicksight_data_set.test"
@@ -179,7 +174,7 @@ func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullDataSetDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -189,7 +184,7 @@ func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	})
 }
 
-func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccQuickSightDataSetDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_quicksight_data_set.test"
@@ -216,7 +211,7 @@ func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *t
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullDataSetDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -224,10 +219,4 @@ func TestAccQuickSightDataSetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *t
 			},
 		},
 	})
-}
-
-func expectFullDataSetDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfquicksight.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-	}), knownValue)
 }

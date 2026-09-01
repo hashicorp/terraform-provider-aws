@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspacesweb
 
 import (
@@ -20,8 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,11 +37,9 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_portal", name="Portal")
 // @Tags(identifierAttribute="portal_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.Portal")
 // @Testing(importStateIdAttribute="portal_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newPortalResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &portalResource{}
 
@@ -219,7 +218,7 @@ func (r *portalResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreatePortal(ctx, &input)
@@ -366,10 +365,10 @@ func (r *portalResource) ImportState(ctx context.Context, request resource.Impor
 
 // Waiters
 func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PortalStatusPending),
 		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
-		Refresh:                   statusPortal(ctx, conn, arn),
+		Refresh:                   statusPortal(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -383,10 +382,10 @@ func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn stri
 }
 
 func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PortalStatusPending),
 		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
-		Refresh:                   statusPortal(ctx, conn, arn),
+		Refresh:                   statusPortal(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -400,10 +399,10 @@ func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn stri
 }
 
 func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PortalStatusActive, awstypes.PortalStatusIncomplete, awstypes.PortalStatusPending),
 		Target:  []string{},
-		Refresh: statusPortal(ctx, conn, arn),
+		Refresh: statusPortal(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -416,8 +415,8 @@ func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, arn stri
 }
 
 // Status function
-func statusPortal(ctx context.Context, conn *workspacesweb.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPortal(conn *workspacesweb.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findPortalByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -440,9 +439,8 @@ func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string
 	output, err := conn.GetPortal(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package elbv2
 
 import (
@@ -106,13 +108,15 @@ func dataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
-		Schema: map[string]*schema.Schema{
-			"load_balancer_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.LoadBalancerTypeEnumApplication,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(enum.Slice(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false)),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"load_balancer_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.LoadBalancerTypeEnumApplication,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(enum.Slice(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false)),
+				},
+			}
 		},
 	}
 }

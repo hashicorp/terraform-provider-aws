@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ram
 
 import (
@@ -31,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_ram_resource_share_associations_exclusive", name="Resource Share Associations Exclusive")
 // @ArnIdentity("resource_share_arn")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckRAMSharingWithOrganizationEnabled")
 func newResourceShareAssociationsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceShareAssociationsExclusiveResource{}, nil
 }
@@ -292,8 +296,8 @@ func (r *resourceShareAssociationsExclusiveResource) syncAssociations(ctx contex
 	var diags diag.Diagnostics
 
 	// Calculate differences
-	addPrincipals, removePrincipals, _ := flex.DiffSlices(currentPrincipals, wantPrincipals, func(a, b string) bool { return a == b })
-	addResources, removeResources, _ := flex.DiffSlices(currentResources, wantResources, func(a, b string) bool { return a == b })
+	addPrincipals, removePrincipals, _ := flex.DiffSlices(currentPrincipals, wantPrincipals, flex.Equal)
+	addResources, removeResources, _ := flex.DiffSlices(currentResources, wantResources, flex.Equal)
 
 	// Remove principals no longer wanted
 	for _, principal := range removePrincipals {

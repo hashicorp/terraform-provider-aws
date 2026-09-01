@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_basic(t *t
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_managed_notification_account_contact_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -32,12 +31,12 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_basic(t *t
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedNotificationAccountContactAssociationConfig_basic(string(awstypes.AccountContactTypeAccountPrimary)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, resourceName),
+					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -55,7 +54,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_disappears
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_managed_notification_account_contact_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -63,12 +62,12 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_disappears
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedNotificationAccountContactAssociationConfig_basic(string(awstypes.AccountContactTypeAccountAlternateSecurity)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, resourceName),
+					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceManagedNotificationAccountContactAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,7 +85,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateB
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_managed_notification_account_contact_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -94,12 +93,12 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateB
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedNotificationAccountContactAssociationConfig_basic(string(awstypes.AccountContactTypeAccountAlternateBilling)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, resourceName),
+					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -117,7 +116,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateO
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_managed_notification_account_contact_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -125,12 +124,12 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateO
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedNotificationAccountContactAssociationConfig_basic(string(awstypes.AccountContactTypeAccountAlternateOperations)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, resourceName),
+					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -144,9 +143,9 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateO
 	})
 }
 
-func testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notifications_managed_notification_account_contact_association" {
@@ -170,14 +169,14 @@ func testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx context
 	}
 }
 
-func testAccCheckManagedNotificationAccountContactAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckManagedNotificationAccountContactAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		_, err := tfnotifications.FindManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_configuration_arn"], rs.Primary.Attributes["contact_identifier"])
 

@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsPolicyAttachment_IdentitySerial(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsPolicyAttachment_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsPolicyAttachment_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsPolicyAttachment_Identity_basic,
+		"ExistingResource":          testAccOrganizationsPolicyAttachment_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicyAttachment_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
@@ -48,7 +48,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -121,7 +121,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
@@ -136,7 +136,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -145,7 +145,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -182,7 +182,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
@@ -197,7 +197,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_No
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -211,7 +211,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_No
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -14,6 +14,7 @@ Documentation guidelines:
 - Focus on brevity and clarity
 - Use present tense and active voice
 - Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
+- Don't spell out common abbreviations (e.g. use "ARN", not "Amazon Resource Name")
 - Boolean arguments should begin with "Whether to"
 - Use "example" instead of "test" in examples
 --->
@@ -64,6 +65,50 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `90m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example
+  identity = {
+{{- if .IncludeComments }}
+<!---
+Add only required attributes in this example.
+--->
+{{- end }}
+  }
+}
+
+resource "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+{{- if .IncludeComments }}
+<!---
+Required attributes here:
+> ARN Identity:
+* `arn` - ARN of the {{ .HumanResourceName }}.
+> Parameterized Identity:
+* `example_id_arg` - ID argument of the {{ .HumanResourceName }}.
+> Singleton Identity: no required attributes.
+--->
+{{- end }}
+
+#### Optional
+{{- if .IncludeComments }}
+<!---
+Optional attributes here:
+> ARN Identity: no optional attributes.
+> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
+--->
+{{- end }}
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
 

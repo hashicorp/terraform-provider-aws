@@ -9,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPermissions(conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)

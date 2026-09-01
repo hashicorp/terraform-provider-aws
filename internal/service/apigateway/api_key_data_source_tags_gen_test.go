@@ -55,7 +55,7 @@ func TestAccAPIGatewayAPIKeyDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayAPIKeyDataSource_tags_NullMap(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_api_key.test"
@@ -83,7 +83,7 @@ func TestAccAPIGatewayAPIKeyDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayAPIKeyDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_api_key.test"
@@ -111,7 +111,7 @@ func TestAccAPIGatewayAPIKeyDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_api_key.test"
@@ -147,7 +147,7 @@ func TestAccAPIGatewayAPIKeyDataSource_tags_DefaultTags_nonOverlapping(t *testin
 	})
 }
 
-func TestAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_api_key.test"
@@ -189,7 +189,7 @@ func TestAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	})
 }
 
-func TestAccAPIGatewayAPIKeyDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccAPIGatewayAPIKeyDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_api_gateway_api_key.test"

@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccDevOpsGuruEventSourcesConfig_IdentitySerial(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccDevOpsGuruEventSourcesConfig_Identity_Basic,
-		"ExistingResource":          testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride,
+		acctest.CtBasic:             testAccDevOpsGuruEventSourcesConfig_Identity_basic,
+		"ExistingResource":          testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccDevOpsGuruEventSourcesConfig_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v devopsguru.DescribeEventSourcesConfigOutput
@@ -51,7 +51,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -59,7 +59,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/EventSourcesConfig/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &v),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -114,7 +114,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_devopsguru_event_sources_config.test"
@@ -227,7 +227,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v devopsguru.DescribeEventSourcesConfigOutput
@@ -242,14 +242,14 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource(t *testing.T)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy: testAccCheckEventSourcesConfigDestroy(ctx),
+		CheckDestroy: testAccCheckEventSourcesConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/EventSourcesConfig/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &v),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -261,7 +261,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource(t *testing.T)
 				ConfigDirectory: config.StaticDirectory("testdata/EventSourcesConfig/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &v),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -303,7 +303,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource(t *testing.T)
 	})
 }
 
-func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v devopsguru.DescribeEventSourcesConfigOutput
@@ -318,7 +318,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_NoRefresh_NoC
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
-		CheckDestroy: testAccCheckEventSourcesConfigDestroy(ctx),
+		CheckDestroy: testAccCheckEventSourcesConfigDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -330,7 +330,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource_NoRefresh_NoC
 				ConfigDirectory: config.StaticDirectory("testdata/EventSourcesConfig/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &v),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

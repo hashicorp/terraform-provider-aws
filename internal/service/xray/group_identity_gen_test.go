@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccXRayGroup_Identity_Basic(t *testing.T) {
+func TestAccXRayGroup_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Group
@@ -35,7 +35,7 @@ func TestAccXRayGroup_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccXRayGroup_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccXRayGroup_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_Identity_RegionOverride(t *testing.T) {
+func TestAccXRayGroup_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_xray_group.test"
@@ -228,7 +228,7 @@ func TestAccXRayGroup_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
+func TestAccXRayGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Group
@@ -241,7 +241,7 @@ func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.XRayServiceID),
-		CheckDestroy: testAccCheckGroupDestroy(ctx),
+		CheckDestroy: testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -250,7 +250,7 @@ func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +264,7 @@ func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -307,7 +307,7 @@ func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccXRayGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Group
@@ -320,7 +320,7 @@ func TestAccXRayGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.XRayServiceID),
-		CheckDestroy: testAccCheckGroupDestroy(ctx),
+		CheckDestroy: testAccCheckGroupDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -334,7 +334,7 @@ func TestAccXRayGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -349,7 +349,7 @@ func TestAccXRayGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
