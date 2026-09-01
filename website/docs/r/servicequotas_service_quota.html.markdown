@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `quota_code` - (Required) Code of the service quota to track. For example: `L-F678F1CE`. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html).
 * `service_code` - (Required) Code of the service to track. For example: `vpc`. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 * `value` - (Required) Float specifying the desired value for the service quota. If the desired value is higher than the current value, a quota increase request is submitted. When a known request is submitted and pending, the value reflects the desired value of the pending request.
-* `wait_for_fulfillment` - (Optional) Boolean indicating whether the resource should wait for the quota increase request to be fulfilled before completing. Defaults to `false`. When set to `true`, Terraform will wait for the request to move from a pending state to an approved state before marking the resource as successfully created or updated. This is useful for automation scenarios where subsequent resources depend on the increased quota being available.
+* `wait_for_fulfillment` - (Optional) Boolean indicating whether the resource should wait for the quota increase request to be fulfilled before completing. Defaults to `false`. When set to `true`, Terraform waits for the request to be approved and for the approved quota value to be enacted before marking the resource as successfully created or updated. An already-open request for the quota is reused. If AWS approves a value lower than requested, the operation fails instead of silently recording a lower value. This is useful for automation scenarios where subsequent resources depend on the increased quota being available.
 
 ## Attribute Reference
 
@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-~> **NOTE:** When using `wait_for_fulfillment = true`, quota increase requests may take longer than the default timeout to be approved and enacted by AWS. Consider configuring longer timeouts if needed.
+~> **NOTE:** When using `wait_for_fulfillment = true`, the configured `create` or `update` timeout covers both request approval and quota enactment. Quota increase requests may take longer than the default timeout; consider configuring a longer timeout if needed.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
