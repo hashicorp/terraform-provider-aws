@@ -35,7 +35,10 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`^ip-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "subnet_group_identifier", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCSecurityGroupIDs+".#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTagsAll+".%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`instance-profile:.+$`)),
 				),
@@ -98,8 +101,10 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "first instance profile"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_identifier", "aws_dms_replication_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCSecurityGroupIDs+".#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrVPCSecurityGroupIDs+".*", "aws_security_group.test", names.AttrID),
 				),
 			},
 			{
@@ -181,6 +186,11 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "testing"
@@ -192,6 +202,7 @@ resource "aws_dms_instance_profile" "test" {
   description             = %[2]q
   network_type            = "IPV4"
   publicly_accessible     = %[3]t
+  kms_key_arn             = aws_kms_key.test.arn
   subnet_group_identifier = aws_dms_replication_subnet_group.test.id
   vpc_security_group_ids  = [aws_security_group.test.id]
 }
