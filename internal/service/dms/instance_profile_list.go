@@ -33,15 +33,6 @@ type listResourceInstanceProfile struct {
 }
 
 func (l *listResourceInstanceProfile) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query instanceProfileListModel
-
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.DMSClient(ctx)
 
@@ -102,10 +93,6 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
-}
-
-type instanceProfileListModel struct {
-	framework.WithRegionModel
 }
 
 func listInstanceProfiles(ctx context.Context, conn *databasemigrationservice.Client, input *databasemigrationservice.DescribeInstanceProfilesInput) iter.Seq2[awstypes.InstanceProfile, error] {
