@@ -61,7 +61,7 @@ resource "aws_elasticache_user" "test" {
   access_string        = "on ~* +@all"
   engine               = "redis"
   passwords_wo         = var.elasticache_password
-  passwords_wo_version = 1 # Increment to trigger password update
+  passwords_wo_version = 1
 }
 ```
 
@@ -80,8 +80,8 @@ The following arguments are optional:
 * `authentication_mode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
-* `passwords_wo` - (Optional) Write-only password for this user. This argument is not stored in state. Conflicts with `passwords` and `authentication_mode`. See [Write-Only Arguments](https://developer.hashicorp.com/terraform/language/resources/syntax#write-only-arguments) for more information. Requires Terraform 1.11+.
-* `passwords_wo_version` - (Optional) Version number for `passwords_wo`. Increment this value to trigger a password update. Required when using `passwords_wo`.
+* `passwords_wo` - (Optional, Write-Only) Write-only password for this user. This argument is not stored in state. Conflicts with `passwords` and `authentication_mode`. If set, requires `passwords_wo_version` to be set.
+* `passwords_wo_version` - (Optional) Used together with `passwords_wo` to trigger an update. Change this value when an update to `passwords_wo` is required.
 * `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
 
 ### authentication_mode Configuration Block

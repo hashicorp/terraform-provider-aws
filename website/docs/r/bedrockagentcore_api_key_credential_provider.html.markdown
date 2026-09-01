@@ -46,12 +46,12 @@ The following arguments are optional:
 
 **Standard API Key (choose one approach):**
 
-* `api_key` - (Optional) API key value. Cannot be used with `api_key_wo`. This value will be visible in Terraform plan outputs and logs.
+* `api_key` - (Optional) API key value. Conflicts with `api_key_wo`. This value will be visible in Terraform plan outputs and logs.
 
 **Write-Only API Key (choose one approach):**
 
-* `api_key_wo` - (Optional) Write-only API key value. Cannot be used with `api_key`. Must be used together with `api_key_wo_version`.
-* `api_key_wo_version` - (Optional) Used together with `api_key_wo` to trigger an update. Increment this value when an update to `api_key_wo` is required.
+* `api_key_wo` - (Optional, Write-Only) Write-only API key value. Conflicts with `api_key`. If set, requires `api_key_wo_version` to be set.
+* `api_key_wo_version` - (Optional) Used together with `api_key_wo` to trigger an update. Change this value when an update to `api_key_wo` is required.
 
 ## Attribute Reference
 
