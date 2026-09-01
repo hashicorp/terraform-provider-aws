@@ -232,6 +232,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 			}),
 		},
+		{
+			Factory:  newVPCEndpointResourceAsListResource,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
 	})
 }
 
