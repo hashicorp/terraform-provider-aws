@@ -1335,7 +1335,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName),
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
@@ -1378,6 +1378,74 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning_deprecatedEnabled(t *testin
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_enableOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_enableDeprecatedOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+				),
 			},
 		},
 	})
@@ -4951,13 +5019,13 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_objectLockEnabledVersioning(bucketName string) string {
+func testAccBucketConfig_objectLockEnabledVersioning(bucketName string, objectLockEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 
-  object_lock_enabled = true
+  object_lock_enabled = %[2]t
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -4966,7 +5034,7 @@ resource "aws_s3_bucket_versioning" "test" {
     status = "Enabled"
   }
 }
-`, bucketName)
+`, bucketName, objectLockEnabled)
 }
 
 func testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName string) string {

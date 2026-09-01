@@ -1627,6 +1627,26 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Object Lock Configuration.
 	//
+	// Handle modifications to either the object_lock_enabled argument, or the
+	// deprecated object_lock_configuration block.
+
+	// Only act when object_lock_enabled has changed to "true".
+	if v, ok := d.GetOk("object_lock_enabled"); ok && v.(bool) && d.HasChange("object_lock_enabled") {
+		// S3 Object Lock configuration cannot be deleted, only updated.
+		input := &s3.PutObjectLockConfigurationInput{
+			Bucket:                  aws.String(d.Id()),
+			ObjectLockConfiguration: &types.ObjectLockConfiguration{ObjectLockEnabled: types.ObjectLockEnabledEnabled},
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutObjectLockConfiguration(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+		}
+	}
+
 	// Only act if the practitioner has explicitly configured `object_lock_configuration` in HCL.
 	// When unset, defer to the dedicated `aws_s3_bucket_object_lock_configuration` resource.
 	if d.HasChange("object_lock_configuration") && deprecatedAttributeInRawConfig(d, "object_lock_configuration") {
