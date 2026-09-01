@@ -243,19 +243,19 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 func TestAccRUMAppMonitor_deobfuscationConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_deobfuscationConfiguration(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -279,7 +279,7 @@ func TestAccRUMAppMonitor_deobfuscationConfiguration(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_deobfuscationConfiguration(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
