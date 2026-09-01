@@ -4,8 +4,10 @@
 resource "aws_dms_instance_profile" "test" {
   count = var.resource_count
 
-  name        = "${var.rName}-${count.index}"
-  description = "list include_resource test"
+  name                = "${var.rName}-${count.index}"
+  description         = "list include_resource test"
+  network_type        = "IPV4"
+  publicly_accessible = false
 
   tags = var.resource_tags
 }
