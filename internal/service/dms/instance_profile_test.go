@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +21,6 @@ import (
 
 func TestAccDMSInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_instance_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -30,10 +30,11 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileConfig_basic(rName),
+				Config: testAccInstanceProfileConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`^ip-[0-9]+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`instance-profile:.+$`)),
@@ -50,7 +51,6 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 
 func TestAccDMSInstanceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_instance_profile.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccDMSInstanceProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileConfig_basic(rName),
+				Config: testAccInstanceProfileConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdms.ResourceInstanceProfile, resourceName),
@@ -127,12 +127,13 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 
 func testAccCheckInstanceProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_instance_profile" {
 				continue
 			}
+
+			ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 			_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
 
@@ -158,6 +159,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name s
 			return fmt.Errorf("Not found: %s", name)
 		}
 
+		ctx = conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
 		_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
@@ -166,12 +168,10 @@ func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name s
 	}
 }
 
-func testAccInstanceProfileConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dms_instance_profile" "test" {
-  name = %[1]q
-}
-`, rName)
+func testAccInstanceProfileConfig_basic() string {
+	return `
+resource "aws_dms_instance_profile" "test" {}
+`
 }
 
 func testAccInstanceProfileConfig_full(rName, description string, publiclyAccessible bool) string {
