@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -100,14 +101,10 @@ func (l *aliasListResource) List(ctx context.Context, request list.ListRequest, 
 					continue
 				}
 
-				rd.Set(names.AttrARN, aliasARN)
-				rd.Set(names.AttrDescription, output.Description)
-				rd.Set("function_version", output.FunctionVersion)
-				rd.Set("invoke_arn", invokeARN(ctx, awsClient, aliasARN))
-				if err := rd.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
-					tflog.Error(ctx, "Setting Lambda Alias routing_config", map[string]any{
+				if diags := resourceAliasFlatten(ctx, awsClient, rd, output); diags.HasError() {
+					tflog.Error(ctx, "Flattening Lambda Alias", map[string]any{
 						names.AttrARN: aliasARN,
-						"error":       err.Error(),
+						"error":       sdkdiag.DiagnosticsString(diags),
 					})
 					continue
 				}

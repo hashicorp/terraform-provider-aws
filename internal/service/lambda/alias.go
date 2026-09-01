@@ -136,10 +136,18 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	aliasARN := aws.ToString(output.AliasArn)
 	d.SetId(aliasARN) // For import.
+
+	return append(diags, resourceAliasFlatten(ctx, meta.(*conns.AWSClient), d, output)...)
+}
+
+func resourceAliasFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *lambda.GetAliasOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	aliasARN := aws.ToString(output.AliasArn)
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
-	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), aliasARN))
+	d.Set("invoke_arn", invokeARN(ctx, awsClient, aliasARN))
 	d.Set(names.AttrName, output.Name)
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
