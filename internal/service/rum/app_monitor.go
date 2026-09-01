@@ -154,7 +154,7 @@ func resourceAppMonitor() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}[a-z0-9](?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?$`), "must be a valid S3 URI"),
+												validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,62}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?$`), "must be a valid S3 URI"),
 											),
 										},
 										names.AttrStatus: {
