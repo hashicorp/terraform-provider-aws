@@ -103,7 +103,6 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 				InstanceArn: aws.String(identityCenterInstanceARN),
 			},
 		},
-		Tags: getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -124,18 +123,27 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	plan.ARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
+	arn := aws.ToString(output.ApplicationArn)
 
-	app, err := waitApplicationCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	app, err := waitApplicationCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Set ARN so the resource is tracked even if the waiter timed out;
 		// next refresh will see the actual state.
-		response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN)
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
+		response.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		if err := createTags(ctx, conn, arn, tags); err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+	}
+
 	// Set values for unknowns.
+	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, app, &plan))
 	if response.Diagnostics.HasError() {
 		return
@@ -211,7 +219,8 @@ func (r *applicationResource) flatten(ctx context.Context, app *accountaccess.Ge
 		model.IdentityCenterInstanceARN = fwflex.StringToFrameworkARN(ctx, details.Value.InstanceArn)
 	}
 
-	setTagsOut(ctx, app.Tags)
+	// The tags returned from GetApplication are not to be trusted.
+	// setTagsOut(ctx, app.Tags)
 
 	return diags
 }
