@@ -4,7 +4,6 @@
 provider "null" {}
 
 resource "aws_dms_instance_profile" "test" {
-  name = var.rName
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
@@ -13,12 +12,6 @@ resource "aws_dms_instance_profile" "test" {
 }
 
 resource "null_resource" "test" {}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "unknownTagKey" {
   type     = string

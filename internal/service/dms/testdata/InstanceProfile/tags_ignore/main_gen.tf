@@ -11,15 +11,8 @@ provider "aws" {
 }
 
 resource "aws_dms_instance_profile" "test" {
-  name = var.rName
 
   tags = var.resource_tags
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {
