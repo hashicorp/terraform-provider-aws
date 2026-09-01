@@ -8,12 +8,16 @@ import (
 	"fmt"
 	"iter"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @FrameworkListResource("aws_dms_instance_profile")
@@ -51,6 +55,26 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 				return
 			}
 
+			// DescribeInstanceProfiles is Region-wide and doesn't return tags, so
+			// they're fetched separately when the full resource is requested. Skip
+			// any instance profile deleted between the list call and now (e.g. by a
+			// concurrent operation) rather than failing the entire list.
+			var instanceProfileTags tftags.KeyValueTags
+			if request.IncludeResource {
+				tags, err := listTags(ctx, conn, aws.ToString(instanceProfile.InstanceProfileArn))
+				// ListTagsForResource returns an "InvalidParameterValue" API error
+				// (not ResourceNotFoundFault) for a missing instance profile.
+				if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[smithy.APIError](err, "Unable to find an instance profile matching the resource name") {
+					continue
+				}
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+				instanceProfileTags = tags
+			}
+
 			var data instanceProfileResourceModel
 			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, instanceProfile, &data, fwflex.WithFieldNamePrefix("InstanceProfile")); diags.HasError() {
@@ -61,6 +85,10 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 
 				data.ID = fwflex.StringToFramework(ctx, instanceProfile.InstanceProfileArn)
 				result.DisplayName = data.Name.ValueString()
+
+				if request.IncludeResource {
+					setTagsOut(ctx, svcTags(instanceProfileTags))
+				}
 			})
 
 			if result.Diagnostics.HasError() {
@@ -80,8 +108,6 @@ type instanceProfileListModel struct {
 	framework.WithRegionModel
 }
 
-// DescribeInstanceProfiles is an "All-Or-Some" call: it lists every instance
-// profile in the account/Region, optionally narrowed with filters.
 func listInstanceProfiles(ctx context.Context, conn *databasemigrationservice.Client, input *databasemigrationservice.DescribeInstanceProfilesInput) iter.Seq2[awstypes.InstanceProfile, error] {
 	return func(yield func(awstypes.InstanceProfile, error) bool) {
 		pages := databasemigrationservice.NewDescribeInstanceProfilesPaginator(conn, input)
