@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_accountaccess_application` ([#49551](https://github.com/hashicorp/terraform-provider-aws/issues/49551))
 * **New List Resource:** `aws_key_pair` ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
 * **New List Resource:** `aws_lambdamicrovms_image` ([#49724](https://github.com/hashicorp/terraform-provider-aws/issues/49724))
 * **New List Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
@@ -10,6 +11,8 @@ FEATURES:
 * **New List Resource:** `aws_opensearchserverless_lifecycle_policy` ([#49718](https://github.com/hashicorp/terraform-provider-aws/issues/49718))
 * **New List Resource:** `aws_opensearchserverless_security_config` ([#49769](https://github.com/hashicorp/terraform-provider-aws/issues/49769))
 * **New List Resource:** `aws_opensearchserverless_security_policy` ([#49770](https://github.com/hashicorp/terraform-provider-aws/issues/49770))
+* **New List Resource:** `aws_opensearchserverless_vpc_endpoint` ([#49774](https://github.com/hashicorp/terraform-provider-aws/issues/49774))
+* **New Resource:** `aws_accountaccess_application` ([#49551](https://github.com/hashicorp/terraform-provider-aws/issues/49551))
 * **New Resource:** `aws_datazone_policy_grant` ([#47050](https://github.com/hashicorp/terraform-provider-aws/issues/47050))
 * **New Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
