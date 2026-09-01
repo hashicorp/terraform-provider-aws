@@ -5,6 +5,7 @@ package rds
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -161,6 +163,30 @@ var (
 	// configuration failure (#41037) is confirmed "failure"-only.
 	createTimeEventCategories = []string{"failure"}
 )
+
+// surfaceRDSUpgradeEvents is the update-path upgrade gate's warning emitter,
+// shared by aws_rds_cluster_instance, aws_rds_cluster, and aws_db_instance.
+// Best-effort: a DescribeEvents error is logged, never fatal — event
+// enrichment must never fail an otherwise-successful apply.
+func surfaceRDSUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, upgradeEventCategories)
+	if err != nil {
+		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
+		return diags
+	}
+
+	for _, m := range msgs {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "RDS reported an event during update that may explain why the change did not take effect",
+			Detail:   m + "\n\nReview RDS events (aws rds describe-events) and any pre-upgrade check log for details.",
+		})
+	}
+
+	return diags
+}
 
 type eventsDataSourceModel struct {
 	framework.WithRegionModel

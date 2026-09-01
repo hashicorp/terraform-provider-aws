@@ -511,6 +511,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 		}
 
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBInstance(ctx, input)
@@ -521,8 +523,18 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		instance, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+		}
+
+		if d.HasChange(names.AttrEngineVersion) {
+			requested := d.Get(names.AttrEngineVersion).(string)
+			pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
+
+			if !pending && requested != aws.ToString(instance.EngineVersion) {
+				diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart)...)
+			}
 		}
 	}
 
