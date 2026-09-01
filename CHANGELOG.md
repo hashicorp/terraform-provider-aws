@@ -9,6 +9,7 @@ FEATURES:
 * **New List Resource:** `aws_opensearchserverless_access_policy` ([#49717](https://github.com/hashicorp/terraform-provider-aws/issues/49717))
 * **New List Resource:** `aws_opensearchserverless_lifecycle_policy` ([#49718](https://github.com/hashicorp/terraform-provider-aws/issues/49718))
 * **New List Resource:** `aws_opensearchserverless_security_config` ([#49769](https://github.com/hashicorp/terraform-provider-aws/issues/49769))
+* **New List Resource:** `aws_opensearchserverless_security_policy` ([#49770](https://github.com/hashicorp/terraform-provider-aws/issues/49770))
 * **New Resource:** `aws_datazone_policy_grant` ([#47050](https://github.com/hashicorp/terraform-provider-aws/issues/47050))
 * **New Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
