@@ -55,6 +55,20 @@ func NewParsingResourceIDErrorDiagnostic(err error) diag.Diagnostic {
 	)
 }
 
+func NewDecodingJSONErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Decoding JSON",
+		err.Error(),
+	)
+}
+
+func NewEncodingJSONErrorDiagnostic(err error) diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		"Encoding JSON",
+		err.Error(),
+	)
+}
+
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	return diag.NewWarningDiagnostic(
 		"AWS resource not found during refresh",

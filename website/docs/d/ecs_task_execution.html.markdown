@@ -35,7 +35,7 @@ data "aws_ecs_task_execution" "example" {
 
 The following arguments are required:
 
-* `cluster` - (Required) Short name or full Amazon Resource Name (ARN) of the cluster to run the task on.
+* `cluster` - (Required) Short name or full ARN of the cluster to run the task on.
 * `task_definition` - (Required) Family and revision (`family:revision`) or full ARN of the task definition to run. If a revision isn't specified, the latest `ACTIVE` revision is used.
 
 The following arguments are optional:
@@ -76,9 +76,9 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 
 * `container_overrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) CPU override for the task.
-* `execution_role_arn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
+* `execution_role_arn` - (Optional) ARN of the task execution role override for the task.
 * `memory` - (Optional) Memory override for the task.
-* `task_role_arn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
+* `task_role_arn` - (Optional) ARN of the role that containers in this task can assume.
 
 ### `container_overrides` Block
 

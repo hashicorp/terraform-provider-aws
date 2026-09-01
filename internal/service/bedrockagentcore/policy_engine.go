@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -80,11 +79,7 @@ func (r *policyEngineResource) Schema(ctx context.Context, req resource.SchemaRe
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`),
-						"must start with a letter and contain only letters, numbers, and underscores",
-					),
-					stringvalidator.LengthBetween(1, 48),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

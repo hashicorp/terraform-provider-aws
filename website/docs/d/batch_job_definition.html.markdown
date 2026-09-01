@@ -164,11 +164,11 @@ This data source exports the following attributes in addition to the arguments a
 * `command` - Command that's passed to the container.
 * `environment` - Environment variables to pass to a container. See [`environment`](#environment-block) below.
 * `ephemeral_storage` - Amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [`ephemeral_storage`](#ephemeral_storage-block) below.
-* `execution_role_arn` - Amazon Resource Name (ARN) of the execution role that AWS Batch can assume. For jobs that run on Fargate resources, you must provide an execution role.
+* `execution_role_arn` - ARN of the execution role that AWS Batch can assume. For jobs that run on Fargate resources, you must provide an execution role.
 * `fargate_platform_configuration` - Platform configuration for jobs that are running on Fargate resources. Jobs that are running on EC2 resources must not specify this parameter. See [`fargate_platform_configuration`](#fargate_platform_configuration-block) below.
 * `image` - Image used to start a container.
 * `instance_type` - Instance type to use for a multi-node parallel job.
-* `job_role_arn` - Amazon Resource Name (ARN) of the IAM role that the container can assume for AWS permissions.
+* `job_role_arn` - ARN of the IAM role that the container can assume for AWS permissions.
 * `linux_parameters` - Linux-specific modifications that are applied to the container. See [`linux_parameters`](#linux_parameters-block) below.
 * `log_configuration` - Log configuration specification for the container. See [`log_configuration`](#log_configuration-block) below.
 * `mount_points` - Mount points for data volumes in your container. See [`mount_points`](#mount_points-block) below.
@@ -225,7 +225,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `secret_options` Block
 
 * `name` - Name of the secret.
-* `value_from` - Secret to expose to the container. The supported values are either the full Amazon Resource Name (ARN) of the AWS Secrets Manager secret or the full ARN of the parameter in the AWS Systems Manager Parameter Store.
+* `value_from` - Secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the AWS Systems Manager Parameter Store.
 
 ### `mount_points` Block
 

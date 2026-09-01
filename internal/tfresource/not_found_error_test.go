@@ -246,6 +246,67 @@ func TestAssertSingleValueResult(t *testing.T) {
 	}
 }
 
+func TestAssertSingleValueResultMap(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         map[string]int
+		key           string
+		expectedValue int
+		expectedError error
+	}{
+		"value": {
+			input: map[string]int{
+				"key": 42,
+			},
+			key:           "key",
+			expectedValue: 42,
+		},
+		"zero value": {
+			input: map[string]int{
+				"key": 0,
+			},
+			key: "key",
+		},
+		"missing key": {
+			input:         map[string]int{},
+			key:           "key",
+			expectedError: NewEmptyResultError(),
+		},
+		"nil map": {
+			key:           "key",
+			expectedError: NewEmptyResultError(),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResultMap(testCase.input, testCase.key)
+
+			if testCase.expectedError != nil {
+				if !errors.Is(err, testCase.expectedError) {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+				if result != nil {
+					t.Errorf("expected nil result, got %d", *result)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if result == nil {
+				t.Errorf("expected %d, got nil", testCase.expectedValue)
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
 func TestAssertSingleValueResultIterErr(t *testing.T) {
 	t.Parallel()
 

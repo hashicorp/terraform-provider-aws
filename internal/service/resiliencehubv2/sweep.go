@@ -29,6 +29,7 @@ func RegisterSweepers() {
 	)
 	awsv2.Register("aws_resiliencehubv2_service_function", sweepServiceFunctions)
 	awsv2.Register("aws_resiliencehubv2_system", sweepSystems,
+		"aws_resiliencehubv2_service",
 		"aws_resiliencehubv2_user_journey",
 	)
 	awsv2.Register("aws_resiliencehubv2_user_journey", sweepUserJourneys)

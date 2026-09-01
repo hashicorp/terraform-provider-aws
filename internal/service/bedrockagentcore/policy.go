@@ -80,8 +80,7 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 48),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

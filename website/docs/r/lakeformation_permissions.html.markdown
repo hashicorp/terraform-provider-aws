@@ -201,7 +201,7 @@ The following arguments are optional:
 
 The following argument is required:
 
-* `arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
+* `arn` - (Required) ARN that uniquely identifies the data location resource.
 
 The following argument is optional:
 
