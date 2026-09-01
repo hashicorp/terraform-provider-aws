@@ -56,6 +56,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 				"object_lock_enabled": {
 					Type:             schema.TypeString,
 					Optional:         true,
+					ForceNew:         true,
 					Default:          types.ObjectLockEnabledEnabled,
 					ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 				},
