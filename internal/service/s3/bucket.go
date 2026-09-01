@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -86,6 +87,11 @@ func resourceBucket() *schema.Resource {
 				return []*schema.ResourceData{rd}, nil
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIf("object_lock_enabled", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+			o, n := diff.GetChange("object_lock_enabled")
+			return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
+		}),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
