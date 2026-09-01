@@ -46,10 +46,6 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 				return
 			}
 
-			// DescribeInstanceProfiles is Region-wide and doesn't return tags, so
-			// they're fetched separately when the full resource is requested. Skip
-			// any instance profile deleted between the list call and now (e.g. by a
-			// concurrent operation) rather than failing the entire list.
 			var instanceProfileTags tftags.KeyValueTags
 			if request.IncludeResource {
 				tags, err := listTags(ctx, conn, aws.ToString(instanceProfile.InstanceProfileArn))
