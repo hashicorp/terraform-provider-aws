@@ -222,6 +222,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute(names.AttrType, true),
 			}),
 		},
+		{
+			Factory:  newSecurityPolicyResourceAsListResource,
+			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrType, true),
+			}),
+		},
 	})
 }
 
