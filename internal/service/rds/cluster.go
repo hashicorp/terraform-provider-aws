@@ -1743,6 +1743,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		const (
 			timeout = 5 * time.Minute
 		)
+
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
@@ -1769,8 +1772,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		cluster, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+		}
+
+		if d.HasChange(names.AttrEngineVersion) {
+			requested := d.Get(names.AttrEngineVersion).(string)
+			pending := cluster.PendingModifiedValues != nil && cluster.PendingModifiedValues.EngineVersion != nil
+
+			if !pending && requested != aws.ToString(cluster.EngineVersion) {
+				diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart)...)
+			}
 		}
 	}
 

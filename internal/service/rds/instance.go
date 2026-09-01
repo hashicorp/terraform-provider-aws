@@ -754,6 +754,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	createStart := time.Now().UTC()
+
 	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
 	// RestoreDBInstanceToPointInTime do not support all parameters to
 	// correctly apply all settings in one pass. For missing parameters or
@@ -1936,6 +1938,30 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Create-time gate (#41037): monitoring_interval/monitoring_role_arn can
+	// reach the instance via several create sub-paths (plain create input,
+	// read replica input, or the restore-path requiresModifyDbInstance block
+	// above), and RDS can silently fail to configure enhanced monitoring
+	// without returning an API error. Describe fresh here, after any
+	// requiresModifyDbInstance/requiresRebootDbInstance modify, since the
+	// instance variable from the initial create wait may be stale by this
+	// point. This gate is deliberately separate from the upgrade gate: no
+	// prior state to compare against, no PendingModifiedValues concept, and
+	// a narrower (failure-only) category set confirmed by the #41037 repro.
+	requestedInterval, intOK := d.GetOk("monitoring_interval")
+	requestedRoleARN, arnOK := d.GetOk("monitoring_role_arn")
+	monitoringRequested := arnOK && requestedRoleARN.(string) != "" && intOK && requestedInterval.(int) > 0
+
+	if monitoringRequested {
+		if instance, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
+			monitoringDropped := instance.MonitoringInterval == nil || aws.ToInt32(instance.MonitoringInterval) == 0
+
+			if monitoringDropped {
+				diags = append(diags, surfaceRDSCreateTimeEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart)...)
+			}
+		}
+	}
+
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
@@ -2232,9 +2258,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			if err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string))); err != nil {
+			modifyDiags, err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string)))
+			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
+			diags = append(diags, modifyDiags...)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
@@ -2343,6 +2371,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				input.DBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			}
 
+			modifyStart := time.Now().UTC()
+
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
@@ -2353,6 +2383,20 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					d.Set("manage_master_user_password", old.(bool))
 				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			if d.HasChange(names.AttrEngineVersion) {
+				// d.Id() is the stable DbiResourceId, which still resolves
+				// after a rename; oldID (input.DBInstanceIdentifier) may not
+				// if this update also renamed the instance.
+				if instance, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
+					requested := d.Get(names.AttrEngineVersion).(string)
+					pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
+
+					if !pending && requested != aws.ToString(instance.EngineVersion) {
+						diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, oldID, types.SourceTypeDbInstance, modifyStart)...)
+					}
+				}
 			}
 		}
 	}

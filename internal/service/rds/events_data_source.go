@@ -58,24 +58,24 @@ func (d *eventsDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"duration": schema.Int64Attribute{
+			names.AttrDuration: schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
-					int64validator.ConflictsWith(path.MatchRoot("start_time"), path.MatchRoot("end_time")),
+					int64validator.ConflictsWith(path.MatchRoot(names.AttrStartTime), path.MatchRoot("end_time")),
 				},
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Optional:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("duration")),
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrDuration)),
 				},
 			},
 			"end_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Optional:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("duration")),
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrDuration)),
 				},
 			},
 			"events": framework.DataSourceComputedListOfObjectAttribute[eventModel](ctx),
@@ -182,6 +182,33 @@ func surfaceRDSUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID str
 			Severity: diag.Warning,
 			Summary:  "RDS reported an event during update that may explain why the change did not take effect",
 			Detail:   m + "\n\nReview RDS events (aws rds describe-events) and any pre-upgrade check log for details.",
+		})
+	}
+
+	return diags
+}
+
+// surfaceRDSCreateTimeEvents is the create-time gate's warning emitter
+// (aws_db_instance only, #41037). Deliberately distinct from
+// surfaceRDSUpgradeEvents: different category set (createTimeEventCategories,
+// confirmed failure-only by the #41037 repro), different summary text, and no
+// shared triggering condition — the create-time gate is non-comparative (no
+// prior state) and has no PendingModifiedValues concept. Best-effort: a
+// DescribeEvents error is logged, never fatal.
+func surfaceRDSCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, createTimeEventCategories)
+	if err != nil {
+		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
+		return diags
+	}
+
+	for _, m := range msgs {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "RDS reported a failure event during create that may explain an unapplied setting",
+			Detail:   m + "\n\nReview RDS events (aws rds describe-events) for details.",
 		})
 	}
 

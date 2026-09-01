@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -144,25 +145,45 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	return input
 }
 
-func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
+func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) (diag.Diagnostics, error) {
+	var diags diag.Diagnostics
+
 	modifyInput := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
-	if diags.HasError() {
-		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	needsModify, popDiags := dbInstancePopulateModify(modifyInput, d)
+	if popDiags.HasError() {
+		return nil, fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(popDiags))
 	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
+		modifyStart := time.Now().UTC()
+
 		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
-			return fmt.Errorf("updating Green environment: %w", err)
+			return nil, fmt.Errorf("updating Green environment: %w", err)
+		}
+
+		if d.HasChange(names.AttrEngineVersion) {
+			// dbInstanceModify's internal wait polls d.Id() (the blue/source
+			// instance), not identifier (the green target), so it cannot be
+			// used to gate on the green instance's post-modify state. Wait
+			// on the green instance explicitly, here, before switchover.
+			instance, err := waitDBInstanceAvailable(ctx, h.conn, identifier, timeout)
+			if err == nil {
+				requested := d.Get(names.AttrEngineVersion).(string)
+				pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
+
+				if !pending && requested != aws.ToString(instance.EngineVersion) {
+					diags = append(diags, surfaceRDSUpgradeEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart)...)
+				}
+			}
 		}
 	}
 
-	return nil
+	return diags, nil
 }

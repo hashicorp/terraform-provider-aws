@@ -1,4 +1,6 @@
 # Design: Surfacing RDS Events (FRB-7061)
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
 Status: Draft (delete after implementation). **Component A (§4, §5) — DONE,
 verified 2026-09-01: `TestAccRDSEventsDataSource_basic` passed
