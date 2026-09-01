@@ -261,7 +261,7 @@ if d.HasChange(names.AttrEngineVersion) {
 		requested := d.Get(names.AttrEngineVersion).(string)
 		if pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil; !pending &&
 			requested != aws.ToString(instance.EngineVersion) {
-			diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn,
+			diags = append(diags, surfaceUpgradeEvents(ctx, conn,
 				aws.ToString(input.DBInstanceIdentifier), awstypes.SourceTypeDbInstance, modifyStart)...)
 		}
 	}
@@ -275,7 +275,7 @@ same `d.Id()`, so the object returned by their waiters
 gate; no extra describe needed.
 
 ```go
-func surfaceRDSUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+func surfaceUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
 	var diags diag.Diagnostics
 	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, upgradeEventCategories)
 	if err != nil {
@@ -306,7 +306,7 @@ source — `waitDBInstanceAvailable` polls by its `id` argument). So:
   not use `dbInstanceModify`'s blue-keyed wait);
 - run this before switchover, while the green instance still exists.
 
-Otherwise the gate is identical to §6.2 (`surfaceRDSUpgradeEvents`, keyed on the
+Otherwise the gate is identical to §6.2 (`surfaceUpgradeEvents`, keyed on the
 green identifier).
 
 ### 6.4 Create-time gate (`aws_db_instance` only — #41037)
@@ -339,12 +339,12 @@ if instance, err := findDBInstanceByID(ctx, conn, identifier); err == nil {
 		(instance.MonitoringInterval == nil || aws.ToInt32(instance.MonitoringInterval) == 0)
 
 	if monitoringDropped {
-		diags = append(diags, surfaceRDSCreateTimeEvents(ctx, conn,
+		diags = append(diags, surfaceCreateTimeEvents(ctx, conn,
 			identifier, awstypes.SourceTypeDbInstance, createStart)...)
 	}
 }
 
-func surfaceRDSCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+func surfaceCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
 	var diags diag.Diagnostics
 	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, createTimeEventCategories)
 	if err != nil {

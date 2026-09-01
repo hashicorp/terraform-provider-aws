@@ -533,7 +533,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
 
 			if !pending && requested != aws.ToString(instance.EngineVersion) {
-				diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart)...)
+				diags = append(diags, surfaceUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart)...)
 			}
 		}
 	}

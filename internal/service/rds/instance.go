@@ -1957,7 +1957,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			monitoringDropped := instance.MonitoringInterval == nil || aws.ToInt32(instance.MonitoringInterval) == 0
 
 			if monitoringDropped {
-				diags = append(diags, surfaceRDSCreateTimeEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart)...)
+				diags = append(diags, surfaceCreateTimeEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart)...)
 			}
 		}
 	}
@@ -2394,7 +2394,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
 
 					if !pending && requested != aws.ToString(instance.EngineVersion) {
-						diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, oldID, types.SourceTypeDbInstance, modifyStart)...)
+						diags = append(diags, surfaceUpgradeEvents(ctx, conn, oldID, types.SourceTypeDbInstance, modifyStart)...)
 					}
 				}
 			}

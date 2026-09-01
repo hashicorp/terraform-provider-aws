@@ -179,7 +179,7 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 				pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
 
 				if !pending && requested != aws.ToString(instance.EngineVersion) {
-					diags = append(diags, surfaceRDSUpgradeEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart)...)
+					diags = append(diags, surfaceUpgradeEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart)...)
 				}
 			}
 		}

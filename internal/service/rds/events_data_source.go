@@ -164,11 +164,11 @@ var (
 	createTimeEventCategories = []string{"failure"}
 )
 
-// surfaceRDSUpgradeEvents is the update-path upgrade gate's warning emitter,
+// surfaceUpgradeEvents is the update-path upgrade gate's warning emitter,
 // shared by aws_rds_cluster_instance, aws_rds_cluster, and aws_db_instance.
 // Best-effort: a DescribeEvents error is logged, never fatal — event
 // enrichment must never fail an otherwise-successful apply.
-func surfaceRDSUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+func surfaceUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, upgradeEventCategories)
@@ -188,14 +188,14 @@ func surfaceRDSUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID str
 	return diags
 }
 
-// surfaceRDSCreateTimeEvents is the create-time gate's warning emitter
+// surfaceCreateTimeEvents is the create-time gate's warning emitter
 // (aws_db_instance only, #41037). Deliberately distinct from
-// surfaceRDSUpgradeEvents: different category set (createTimeEventCategories,
+// surfaceUpgradeEvents: different category set (createTimeEventCategories,
 // confirmed failure-only by the #41037 repro), different summary text, and no
 // shared triggering condition — the create-time gate is non-comparative (no
 // prior state) and has no PendingModifiedValues concept. Best-effort: a
 // DescribeEvents error is logged, never fatal.
-func surfaceRDSCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+func surfaceCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, createTimeEventCategories)

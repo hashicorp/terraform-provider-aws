@@ -1782,7 +1782,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			pending := cluster.PendingModifiedValues != nil && cluster.PendingModifiedValues.EngineVersion != nil
 
 			if !pending && requested != aws.ToString(cluster.EngineVersion) {
-				diags = append(diags, surfaceRDSUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart)...)
+				diags = append(diags, surfaceUpgradeEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart)...)
 			}
 		}
 	}
