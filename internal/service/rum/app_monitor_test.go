@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -289,10 +290,29 @@ func TestAccRUMAppMonitor_deobfuscationConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.s3_uri", fmt.Sprintf("s3://%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRUMAppMonitor_deobfuscationConfiguration_invalidS3URI(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppMonitorConfig_deobfuscationConfigurationInvalidS3URI(rName),
+				ExpectError: regexache.MustCompile("must be a valid S3 URI"),
 			},
 		},
 	})
@@ -504,6 +524,23 @@ resource "aws_rum_app_monitor" "test" {
       s3_uri = "s3://${aws_s3_object.test.bucket}"
     }
   }
+
+  depends_on = [aws_s3_bucket_policy.test]
 }
 `, rName, status)
+}
+
+func testAccAppMonitorConfig_deobfuscationConfigurationInvalidS3URI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name   = %[1]q
+  domain = "localhost"
+  deobfuscation_configuration {
+    javascript_source_maps {
+      status = "ENABLED"
+      s3_uri = "not-a-valid-s3-uri"
+    }
+  }
+}
+`, rName)
 }

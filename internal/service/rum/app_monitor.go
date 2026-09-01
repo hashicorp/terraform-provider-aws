@@ -149,18 +149,18 @@ func resourceAppMonitor() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrStatus: {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.DeobfuscationStatus](),
-										},
 										"s3_uri": {
 											Type:     schema.TypeString,
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?`), "must be a valid S3 URI"),
+												validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}[a-z0-9](?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?$`), "must be a valid S3 URI"),
 											),
+										},
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DeobfuscationStatus](),
 										},
 									},
 								},
@@ -275,7 +275,9 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrARN, arn)
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
-	d.Set("deobfuscation_configuration", flattenDeobfuscationConfiguration(appMon.DeobfuscationConfiguration))
+	if err := d.Set("deobfuscation_configuration", flattenDeobfuscationConfiguration(appMon.DeobfuscationConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deobfuscation_configuration: %s", err)
+	}
 	d.Set(names.AttrDomain, appMon.Domain)
 	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
