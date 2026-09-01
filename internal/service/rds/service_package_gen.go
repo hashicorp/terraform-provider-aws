@@ -31,6 +31,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newEventsDataSource,
+			TypeName: "aws_rds_events",
+			Name:     "Events",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 			Name:     "Global Cluster",
