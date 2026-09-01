@@ -124,6 +124,8 @@ func (r *entitlementResource) Schema(ctx context.Context, request resource.Schem
 									"principal": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[principalModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
 											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
@@ -346,6 +348,54 @@ type entitlementModel struct {
 	PrincipalRole fwtypes.ListNestedObjectValueOf[principalRoleEntitlementModel] `tfsdk:"principal_role"`
 }
 
+var (
+	_ fwflex.Expander  = entitlementModel{}
+	_ fwflex.Flattener = &entitlementModel{}
+)
+
+func (m *entitlementModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.EntitlementMemberPrincipalRole:
+		var model principalRoleEntitlementModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.PrincipalRole, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("entitlementModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m entitlementModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.PrincipalRole.IsNull():
+		model, d := m.PrincipalRole.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.EntitlementDetailsMemberPrincipalRole
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
 type principalRoleEntitlementModel struct {
 	Account     types.String                                    `tfsdk:"account_id"`
 	AccountName types.String                                    `tfsdk:"account_name"`
@@ -357,7 +407,98 @@ type principalModel struct {
 	IdentityCenter fwtypes.ListNestedObjectValueOf[identityCenterPrincipalModel] `tfsdk:"identity_center"`
 }
 
+var (
+	_ fwflex.Expander  = principalModel{}
+	_ fwflex.Flattener = &principalModel{}
+)
+
+func (m *principalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.PrincipalMemberIdentityCenter:
+		var model identityCenterPrincipalModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.IdentityCenter, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("principalModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m principalModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.IdentityCenter.IsNull():
+		model, d := m.IdentityCenter.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.PrincipalMemberIdentityCenter
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
 type identityCenterPrincipalModel struct {
 	GroupID types.String `tfsdk:"group_id"`
 	UserID  types.String `tfsdk:"user_id"`
+}
+
+var (
+	_ fwflex.Expander  = identityCenterPrincipalModel{}
+	_ fwflex.Flattener = &identityCenterPrincipalModel{}
+)
+
+func (m *identityCenterPrincipalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.IdentityCenterPrincipalFilterMemberGroupId:
+		m.GroupID = fwflex.StringValueToFramework(ctx, t.Value)
+
+	case awstypes.IdentityCenterPrincipalFilterMemberUserId:
+		m.UserID = fwflex.StringValueToFramework(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("identityCenterPrincipalModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m identityCenterPrincipalModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.GroupID.IsNull():
+		r := awstypes.IdentityCenterPrincipalMemberGroupId{
+			Value: fwflex.StringValueFromFramework(ctx, m.GroupID),
+		}
+		return &r, diags
+
+	case !m.UserID.IsNull():
+		r := awstypes.IdentityCenterPrincipalMemberUserId{
+			Value: fwflex.StringValueFromFramework(ctx, m.UserID),
+		}
+		return &r, diags
+	}
+
+	return nil, diags
 }
