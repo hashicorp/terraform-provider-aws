@@ -1,3 +1,6 @@
 ```release-note:bug
-resource/aws_s3_bucket_object_lock_configuration: No longer force a replacement when enabling S3 Object Lock
+resource/aws_s3_bucket: Setting `object_lock_enabled` to `true` no longer forces a replacement
+```
+```release-note:bug
+resource/aws_s3_bucket: Setting `object_lock_configuration.object_lock_enabled` to `Enabled` no longer forces a replacement
 ```
