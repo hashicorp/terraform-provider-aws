@@ -19,6 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccEntitlementImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "application_arn", "entitlement_id")
+}
+
 func testAccAccountAccessEntitlement_user(t *testing.T) {
 	ctx := acctest.Context(t)
 

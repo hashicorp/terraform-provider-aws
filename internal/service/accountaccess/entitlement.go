@@ -7,24 +7,27 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accountaccess/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,29 +35,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type principalType string
-
-const (
-	principalTypeUser  principalType = "USER"
-	principalTypeGroup principalType = "GROUP"
-
-	propagationTimeout = 2 * time.Minute
-)
-
-func (principalType) Values() []principalType {
-	return []principalType{principalTypeUser, principalTypeGroup}
-}
-
 // @FrameworkResource("aws_accountaccess_entitlement", name="Entitlement")
 // @IdentityAttribute("application_arn")
 // @IdentityAttribute("entitlement_id")
 // @ImportIDHandler("entitlementImportID")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(importStateIdAttributes="application_arn;entitlement_id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdFunc=testAccEntitlementImportStateIDFunc)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accountaccess;accountaccess.GetEntitlementOutput")
 // @Testing(identityRegionOverrideTest=false)
-// @Testing(plannableImportAction="NoOp")
 // @Testing(serialize=true)
 func newEntitlementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &entitlementResource{}, nil
@@ -62,18 +51,13 @@ func newEntitlementResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type entitlementResource struct {
 	framework.ResourceWithModel[entitlementResourceModel]
+	framework.WithNoUpdate
 	framework.WithImportByIdentity
 }
 
 func (r *entitlementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAccountID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"application_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -87,24 +71,109 @@ func (r *entitlementResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"principal_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+		},
+		Blocks: map[string]schema.Block{
+			"entitlement": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[entitlementModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
 				},
-			},
-			"principal_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[principalType](),
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrRoleARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("principal_role"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"principal_role": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[principalRoleEntitlementModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrAccountID: schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"account_name": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									names.AttrRoleARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"principal": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[principalModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("identity_center"),
+												),
+											},
+											Blocks: map[string]schema.Block{
+												"identity_center": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[identityCenterPrincipalModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("group_id"),
+																path.MatchRelative().AtName("user_id"),
+															),
+														},
+														Attributes: map[string]schema.Attribute{
+															"group_id": schema.StringAttribute{
+																Optional: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"user_id": schema.StringAttribute{
+																Optional: true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -118,38 +187,16 @@ func (r *entitlementResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	applicationARN := fwflex.StringValueFromFramework(ctx, plan.ApplicationARN)
-	principalID := fwflex.StringValueFromFramework(ctx, plan.PrincipalID)
-	roleARN := fwflex.StringValueFromFramework(ctx, plan.RoleARN)
+	conn := r.Meta().AccountAccessClient(ctx)
 
-	var identityCenterPrincipal awstypes.IdentityCenterPrincipal
-	switch plan.PrincipalType.ValueEnum() {
-	case principalTypeUser:
-		identityCenterPrincipal = &awstypes.IdentityCenterPrincipalMemberUserId{Value: principalID}
-	case principalTypeGroup:
-		identityCenterPrincipal = &awstypes.IdentityCenterPrincipalMemberGroupId{Value: principalID}
-	default:
-		response.Diagnostics.AddAttributeError(
-			path.Root("principal_type"),
-			"Invalid principal_type",
-			fmt.Sprintf("Expected USER or GROUP, got %q.", plan.PrincipalType.ValueString()),
-		)
+	applicationARN := fwflex.StringValueFromFramework(ctx, plan.ApplicationARN)
+	var input accountaccess.CreateEntitlementInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().AccountAccessClient(ctx)
-	input := accountaccess.CreateEntitlementInput{
-		ApplicationArn: aws.String(applicationARN),
-		Entitlement: &awstypes.EntitlementMemberPrincipalRole{
-			Value: awstypes.PrincipalRoleEntitlement{
-				Principal: &awstypes.PrincipalMemberIdentityCenter{Value: identityCenterPrincipal},
-				RoleArn:   aws.String(roleARN),
-			},
-		},
-	}
-
-	output, err := tfresource.RetryWhenIsAErrorMessageContains[*accountaccess.CreateEntitlementOutput, *awstypes.ValidationException](
-		ctx, propagationTimeout,
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*accountaccess.CreateEntitlementOutput, *awstypes.ValidationException](ctx, propagationTimeout,
 		func(ctx context.Context) (*accountaccess.CreateEntitlementOutput, error) {
 			return conn.CreateEntitlement(ctx, &input)
 		},
@@ -160,13 +207,14 @@ func (r *entitlementResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	plan.EntitlementID = fwflex.StringToFramework(ctx, output.EntitlementId)
-	out, err := findEntitlementByTwoPartKey(ctx, conn, applicationARN, plan.EntitlementID.ValueString())
+	entitlementID := aws.ToString(output.EntitlementId)
+	out, err := findEntitlementByTwoPartKey(ctx, conn, applicationARN, entitlementID)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, buildEntitlementID(applicationARN, plan.EntitlementID.ValueString()))
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, entitlementID)
 		return
 	}
 
+	// Set values for unknowns.
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &plan))
 	if response.Diagnostics.HasError() {
 		return
@@ -182,9 +230,9 @@ func (r *entitlementResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	applicationARN := fwflex.StringValueFromFramework(ctx, state.ApplicationARN)
-	entitlementID := fwflex.StringValueFromFramework(ctx, state.EntitlementID)
 	conn := r.Meta().AccountAccessClient(ctx)
+
+	applicationARN, entitlementID := fwflex.StringValueFromFramework(ctx, state.ApplicationARN), fwflex.StringValueFromFramework(ctx, state.EntitlementID)
 	out, err := findEntitlementByTwoPartKey(ctx, conn, applicationARN, entitlementID)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -192,7 +240,7 @@ func (r *entitlementResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, buildEntitlementID(applicationARN, entitlementID))
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, entitlementID)
 		return
 	}
 
@@ -211,9 +259,9 @@ func (r *entitlementResource) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	applicationARN := fwflex.StringValueFromFramework(ctx, state.ApplicationARN)
-	entitlementID := fwflex.StringValueFromFramework(ctx, state.EntitlementID)
 	conn := r.Meta().AccountAccessClient(ctx)
+
+	applicationARN, entitlementID := fwflex.StringValueFromFramework(ctx, state.ApplicationARN), fwflex.StringValueFromFramework(ctx, state.EntitlementID)
 	input := accountaccess.DeleteEntitlementInput{
 		ApplicationArn: aws.String(applicationARN),
 		EntitlementId:  aws.String(entitlementID),
@@ -223,35 +271,13 @@ func (r *entitlementResource) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, buildEntitlementID(applicationARN, entitlementID))
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, entitlementID)
 	}
 }
 
-func (r *entitlementResource) flatten(ctx context.Context, out *accountaccess.GetEntitlementOutput, model *entitlementResourceModel) diag.Diagnostics { //nolint:unparam
+func (r *entitlementResource) flatten(ctx context.Context, out *accountaccess.GetEntitlementOutput, model *entitlementResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	model.ApplicationARN = fwflex.StringToFrameworkARN(ctx, out.ApplicationArn)
-	model.EntitlementID = fwflex.StringToFramework(ctx, out.EntitlementId)
-
-	principalRole, ok := out.Entitlement.(*awstypes.EntitlementDetailsMemberPrincipalRole)
-	if !ok {
-		return diags
-	}
-
-	model.AccountID = fwflex.StringToFramework(ctx, principalRole.Value.Account)
-	model.RoleARN = fwflex.StringToFrameworkARN(ctx, principalRole.Value.RoleArn)
-
-	if principal, ok := principalRole.Value.Principal.(*awstypes.PrincipalMemberIdentityCenter); ok {
-		switch value := principal.Value.(type) {
-		case *awstypes.IdentityCenterPrincipalMemberUserId:
-			model.PrincipalID = types.StringValue(value.Value)
-			model.PrincipalType = fwtypes.StringEnumValue(principalTypeUser)
-		case *awstypes.IdentityCenterPrincipalMemberGroupId:
-			model.PrincipalID = types.StringValue(value.Value)
-			model.PrincipalType = fwtypes.StringEnumValue(principalTypeGroup)
-		}
-	}
-
+	diags.Append(fwflex.Flatten(ctx, out, model)...)
 	return diags
 }
 
@@ -260,7 +286,11 @@ func findEntitlementByTwoPartKey(ctx context.Context, conn *accountaccess.Client
 		ApplicationArn: aws.String(applicationARN),
 		EntitlementId:  aws.String(entitlementID),
 	}
-	output, err := conn.GetEntitlement(ctx, &input)
+	return findEntitlement(ctx, conn, &input)
+}
+
+func findEntitlement(ctx context.Context, conn *accountaccess.Client, input *accountaccess.GetEntitlementInput) (*accountaccess.GetEntitlementOutput, error) {
+	output, err := conn.GetEntitlement(ctx, input)
 	if isEntitlementNotFoundError(err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 	}
@@ -273,34 +303,61 @@ func findEntitlementByTwoPartKey(ctx context.Context, conn *accountaccess.Client
 	return output, nil
 }
 
-func buildEntitlementID(applicationARN, entitlementID string) string {
-	return applicationARN + intflex.ResourceIdSeparator + entitlementID
+const entitlementImportIDSeparator = intflex.ResourceIdSeparator
+
+func entitlementParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, entitlementImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected application_arn%[2]sentitlement_id", id, entitlementImportIDSeparator)
 }
+
+var (
+	_ inttypes.ImportIDParser = entitlementImportID{}
+)
 
 type entitlementImportID struct{}
 
-var _ inttypes.ImportIDParser = entitlementImportID{}
-
 func (entitlementImportID) Parse(id string) (string, map[string]any, error) {
-	applicationARN, entitlementID, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found || applicationARN == "" || entitlementID == "" {
-		return "", nil, fmt.Errorf(
-			"id %q should be in the format <application-arn>%s<entitlement-id>",
-			id, intflex.ResourceIdSeparator,
-		)
+	applicationARN, entitlementID, err := entitlementParseImportID(id)
+	if err != nil {
+		return "", nil, err
 	}
-	return id, map[string]any{
+
+	result := map[string]any{
 		"application_arn": applicationARN,
 		"entitlement_id":  entitlementID,
-	}, nil
+	}
+
+	return id, result, nil
 }
 
 type entitlementResourceModel struct {
 	framework.WithRegionModel
-	AccountID      types.String                      `tfsdk:"account_id"`
-	ApplicationARN fwtypes.ARN                       `tfsdk:"application_arn"`
-	EntitlementID  types.String                      `tfsdk:"entitlement_id"`
-	PrincipalID    types.String                      `tfsdk:"principal_id"`
-	PrincipalType  fwtypes.StringEnum[principalType] `tfsdk:"principal_type"`
-	RoleARN        fwtypes.ARN                       `tfsdk:"role_arn"`
+	ApplicationARN fwtypes.ARN                                       `tfsdk:"application_arn"`
+	Entitlement    fwtypes.ListNestedObjectValueOf[entitlementModel] `tfsdk:"entitlement"`
+	EntitlementID  types.String                                      `tfsdk:"entitlement_id"`
+}
+
+type entitlementModel struct {
+	PrincipalRole fwtypes.ListNestedObjectValueOf[principalRoleEntitlementModel] `tfsdk:"principal_role"`
+}
+
+type principalRoleEntitlementModel struct {
+	Account     types.String                                    `tfsdk:"account_id"`
+	AccountName types.String                                    `tfsdk:"account_name"`
+	Principal   fwtypes.ListNestedObjectValueOf[principalModel] `tfsdk:"principal"`
+	RoleARN     fwtypes.ARN                                     `tfsdk:"role_arn"`
+}
+
+type principalModel struct {
+	IdentityCenter fwtypes.ListNestedObjectValueOf[identityCenterPrincipalModel] `tfsdk:"identity_center"`
+}
+
+type identityCenterPrincipalModel struct {
+	GroupID types.String `tfsdk:"group_id"`
+	UserID  types.String `tfsdk:"user_id"`
 }
