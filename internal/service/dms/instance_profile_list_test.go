@@ -128,8 +128,12 @@ func TestAccDMSInstanceProfile_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`instance-profile:.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`instance-profile:.+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("list include_resource test")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("network_type"), knownvalue.StringExact("IPV4")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("subnet_group_identifier"), knownvalue.StringExact("default")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -186,6 +190,10 @@ func TestAccDMSInstanceProfile_List_regionOverride(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_dms_instance_profile.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_dms_instance_profile.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					}),
 				},
 			},
 		},
