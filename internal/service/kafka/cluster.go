@@ -500,9 +500,10 @@ func resourceCluster() *schema.Resource {
 								},
 							},
 							"authorizer_logs": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
+								Type:             schema.TypeList,
+								Optional:         true,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								MaxItems:         1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrCloudWatchLogs: {
