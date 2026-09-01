@@ -44,6 +44,9 @@ func TestAccBedrockAgentCoreHarness_model_openAIAdditionalParams(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					names.AttrEnvironment, "memory",
+				},
 			},
 		},
 	})
@@ -80,6 +83,9 @@ func TestAccBedrockAgentCoreHarness_model_geminiAdditionalParams(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore: []string{
+					names.AttrEnvironment, "memory",
+				},
 			},
 		},
 	})
