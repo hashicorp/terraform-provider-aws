@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -36,6 +36,7 @@ import (
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -45,16 +46,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -62,13 +65,17 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
@@ -97,14 +104,16 @@ const (
 	// Provider name for third configuration testing
 	ProviderNameThird = "awsthird"
 
+	// Provider name for fourth configuration testing
+	ProviderNameFourth = "awsfourth"
+
 	ResourcePrefix = "tf-acc-test"
 
 	CertificateIssueTimeout = 5 * time.Minute
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d{1,2}`
-const accountIDRegexp = `(aws|aws-managed|\d{12})`
+const accountIDRegexp = `(aws|aws-managed|partner-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -123,7 +132,7 @@ var (
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
 )
 
-// Provider is the "main" provider instance
+// Provider is the "default" provider instance.
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
@@ -134,6 +143,12 @@ var (
 )
 
 type ProviderFunc func() *schema.Provider
+
+var (
+	DefaultProviderFunc ProviderFunc = func() *schema.Provider {
+		return Provider
+	}
+)
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -284,6 +299,8 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 	case 3:
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird)
+	case 4:
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird, ProviderNameFourth)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
@@ -302,15 +319,15 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	t.Helper()
 
+	envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
+
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
-
-		if os.Getenv(envvar.AccessKeyId) != "" {
-			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
-		}
-
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.
@@ -429,7 +446,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
+	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, sdkid.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -455,7 +472,7 @@ func CheckResourceAttrNameGeneratedWithPrefix(resourceName string, attributeName
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(id.UniqueIdPrefix, suffix))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(sdkid.UniqueIdPrefix, suffix))(s)
 	}
 }
 
@@ -521,7 +538,7 @@ func MatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -646,7 +663,7 @@ func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeN
 		arnRegexp := arn.ARN{
 			AccountID: accountIDRegexp,
 			Partition: Partition(),
-			Region:    regionRegexp,
+			Region:    inttypes.CanonicalRegionPatternNoAnchors,
 			Resource:  arnResource,
 			Service:   arnService,
 		}.String()
@@ -673,7 +690,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -917,6 +934,10 @@ func ThirdRegion() string {
 	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
 }
 
+func FourthRegion() string {
+	return envvar.GetWithDefault(envvar.FourthRegion, endpoints.UsWest1RegionID)
+}
+
 func Partition() string {
 	return names.PartitionForRegion(Region()).ID()
 }
@@ -941,6 +962,10 @@ func thirdRegionPartition() string {
 	return names.PartitionForRegion(ThirdRegion()).ID()
 }
 
+func fourthRegionPartition() string {
+	return names.PartitionForRegion(FourthRegion()).ID()
+}
+
 func PreCheckAlternateAccount(t *testing.T) {
 	t.Helper()
 
@@ -958,6 +983,17 @@ func PreCheckThirdAccount(t *testing.T) {
 
 	if os.Getenv(envvar.ThirdAccessKeyId) != "" {
 		envvar.SkipIfEmpty(t, envvar.ThirdSecretAccessKey, "static credentials value when using "+envvar.ThirdAccessKeyId)
+	}
+}
+
+// add fourth region
+func PreCheckFourthAccount(t *testing.T) {
+	t.Helper()
+
+	envvar.SkipIfAllEmpty(t, []string{envvar.FourthProfile, envvar.FourthAccessKeyId}, "credentials for running acceptance testing in fourth AWS account")
+
+	if os.Getenv(envvar.FourthAccessKeyId) != "" {
+		envvar.SkipIfEmpty(t, envvar.FourthSecretAccessKey, "static credentials value when using "+envvar.FourthAccessKeyId)
 	}
 }
 
@@ -1002,6 +1038,28 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 		if Partition() != thirdRegionPartition() {
 			t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.ThirdRegion, thirdRegionPartition(), envvar.DefaultRegion, Partition())
 		}
+
+		if regions == 4 {
+			if fourthRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
+				t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
+			}
+
+			if Region() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.FourthRegion)
+			}
+
+			if AlternateRegion() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AlternateRegion, envvar.FourthRegion)
+			}
+
+			if ThirdRegion() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.ThirdRegion, envvar.FourthRegion)
+			}
+
+			if Partition() != fourthRegionPartition() {
+				t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.FourthRegion, fourthRegionPartition(), envvar.DefaultRegion, Partition())
+			}
+		}
 	}
 
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
@@ -1044,6 +1102,15 @@ func PreCheckThirdRegion(t *testing.T, regions ...string) {
 
 	if curr := ThirdRegion(); !slices.Contains(regions, curr) {
 		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.ThirdRegion, curr, strings.Join(regions, ", "))
+	}
+}
+
+// PreCheckFourthRegion checks that the fourth test region is one of the specified AWS Regions.
+func PreCheckFourthRegion(t *testing.T, regions ...string) {
+	t.Helper()
+
+	if curr := FourthRegion(); !slices.Contains(regions, curr) {
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.FourthRegion, curr, strings.Join(regions, ", "))
 	}
 }
 
@@ -1102,12 +1169,14 @@ func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	}
 }
 
+// PreCheckOrganizationsAccount ensures that the default provider instance is configured with an AWS account that is *not* a member of an AWS Organization.
+// WARNING: The name suggests the *opposite* of what it does.
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -1118,12 +1187,33 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
+// PreCheckOrganizationsEnabled ensures that the default provider instance is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
-	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationsEnabled ensures that the provider instance returned by `providerF` is configured with an AWS account that is a member of an AWS Organization.
+// Returns the Organization details.
+func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
+	t.Helper()
+
+	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+
+	if retry.NotFound(err) {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
+	}
+
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	return organization
+}
+
+// PreCheckOrganizationsEnabledServicePrincipal ensures that the default provider instance is configured with an AWS account that has trusted access enabled for the specified AWS service principal in AWS Organizations.
 func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
 	t.Helper()
 
@@ -1138,28 +1228,14 @@ func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testin
 	}
 }
 
-func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
-	t.Helper()
-
-	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
-
-	if tfresource.NotFound(err) {
-		t.Skip("this AWS account must be an existing member of an AWS Organization")
-	}
-
-	if err != nil {
-		t.Fatalf("describing AWS Organization: %s", err)
-	}
-
-	return organization
-}
-
+// PreCheckOrganizationManagementAccount ensures that the default provider instance is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationManagementAccountWithProvider ensures that the provider instance returned by `providerF` is configured with the management account of an AWS Organization.
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1176,12 +1252,14 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 	}
 }
 
+// PreCheckOrganizationMemberAccount ensures that the default provider instance is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
+// PreCheckOrganizationMemberAccountWithProvider ensures that the provider instance returned by `providerF` is configured with a member account of an AWS Organization.
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
@@ -1198,6 +1276,28 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+// PreCheckSameOrganization ensures that all provider instances returned by `providerFs` are configured with AWS accounts that are members of the same AWS Organization.
+func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
+	t.Helper()
+
+	var organizations []*organizationstypes.Organization
+
+	for _, providerF := range providerFs {
+		organizations = append(organizations, PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF))
+	}
+
+	slices.SortFunc(organizations, func(a, b *organizationstypes.Organization) int {
+		return strings.Compare(aws.ToString(a.Id), aws.ToString(b.Id))
+	})
+	organizations = slices.CompactFunc(organizations, func(a, b *organizationstypes.Organization) bool {
+		return aws.ToString(a.Id) == aws.ToString(b.Id)
+	})
+
+	if len(organizations) != 1 {
+		t.Skip("all AWS accounts must be members of the same AWS Organization")
+	}
+}
+
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
@@ -1207,6 +1307,30 @@ func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckRAMSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx, t, DefaultProviderFunc)
+}
+
+func PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	err := tfram.FindSharingWithOrganization(ctx, providerF().Meta().(*conns.AWSClient))
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if retry.NotFound(err) {
+		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
 	}
 
 	if err != nil {
@@ -1228,6 +1352,23 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	}
 }
 
+func PreCheckResourceGroupsTaggingAPIRequiredTags(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
+	input := resourcegroupstaggingapi.ListRequiredTagsInput{}
+
+	output, err := conn.ListRequiredTags(ctx, &input)
+	if err != nil {
+		t.Skipf("listing required tags: %s", err)
+	}
+
+	// Ensure some required tags are configured
+	if output == nil || len(output.RequiredTags) == 0 {
+		t.Skip("no required tags found")
+	}
+}
+
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
 }
@@ -1236,7 +1377,7 @@ func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, regi
 	t.Helper()
 
 	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "", "", region)
+	ctx = conns.NewResourceContext(ctx, "", "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1266,7 +1407,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
@@ -1282,7 +1423,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
 
-	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, DefaultProviderFunc, pathPrefix)
 }
 
 func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
@@ -1347,7 +1488,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	_, err := conn.CreateDirectory(ctx, &input)
 
-	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") ||
+		errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD is no longer open to new customers") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -1463,6 +1605,11 @@ func NamedProvider(name string, providers map[string]*schema.Provider) *schema.P
 	return p
 }
 
+// NewTestResourceContext bootstaps the testing context for a given resource type
+func NewTestResourceContext(ctx context.Context, rType, region string) context.Context {
+	return conns.NewResourceContext(ctx, "", "", rType, region)
+}
+
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
@@ -1485,7 +1632,23 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
-func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+type providerMetaFunc func(ctx context.Context) *conns.AWSClient
+
+func providerMeta(t *testing.T) providerMetaFunc {
+	return func(ctx context.Context) *conns.AWSClient {
+		return ProviderMeta(ctx, t)
+	}
+}
+
+func CheckSDKResourceDisappears(ctx context.Context, t *testing.T, resource *schema.Resource, n string) resource.TestCheckFunc {
+	return checkSDKResourceDisappears(ctx, providerMeta(t), resource, n)
+}
+
+func CheckSDKResourceDisappearsWithProvider(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+	return checkSDKResourceDisappears(ctx, func(context.Context) *conns.AWSClient { return provider.Meta().(*conns.AWSClient) }, resource, n)
+}
+
+func checkSDKResourceDisappears(ctx context.Context, providerMetaF providerMetaFunc, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1496,13 +1659,16 @@ func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, res
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
+		// Bootstrap context for resource type
+		ctx = NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+
 		var state terraformsdk.InstanceState
 		err := mapstructure.Decode(rs.Primary, &state)
 		if err != nil {
 			return err
 		}
 
-		return DeleteResource(ctx, resource, resource.Data(&state), provider.Meta())
+		return DeleteResource(ctx, resource, resource.Data(&state), providerMetaF(ctx))
 	}
 }
 
@@ -1712,6 +1878,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// sts
+	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if errs.IsA[*net.DNSError](err) {
 		return true
@@ -1735,32 +1905,36 @@ const domainNameTestTopLevelDomain domainName = "test"
 // "<random>.<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomSubdomain() string {
-	return string(RandomDomain().RandomSubdomain())
+func RandomSubdomain(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).RandomSubdomain(t))
 }
 
 // RandomDomainName creates a random two-level domain name in the form
 // "<random>.test"
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomDomainName() string {
-	return string(RandomDomain())
+func RandomDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t))
 }
 
 // RandomFQDomainName creates a random fully-qualified two-level domain name in the form
 // "<random>.test."
 // The top level domain ".test" is reserved by IANA for testing purposes:
 // https://datatracker.ietf.org/doc/html/rfc6761
-func RandomFQDomainName() string {
-	return string(RandomDomain().FQDN())
+func RandomFQDomainName(t *testing.T) string {
+	t.Helper()
+	return string(RandomDomain(t).FQDN())
 }
 
 func (d domainName) Subdomain(name string) domainName {
 	return domainName(fmt.Sprintf("%s.%s", name, d))
 }
 
-func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd // standard length of 8
+func (d domainName) RandomSubdomain(t *testing.T) domainName {
+	t.Helper()
+	return d.Subdomain(RandString(t, 8)) //nolint:mnd // standard length of 8
 }
 
 func (d domainName) FQDN() domainName {
@@ -1771,8 +1945,9 @@ func (d domainName) String() string {
 	return string(d)
 }
 
-func RandomDomain() domainName {
-	return domainNameTestTopLevelDomain.RandomSubdomain()
+func RandomDomain(t *testing.T) domainName {
+	t.Helper()
+	return domainNameTestTopLevelDomain.RandomSubdomain(t)
 }
 
 // DefaultEmailAddress is the default email address to set as a
@@ -1842,21 +2017,21 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(id.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -1866,36 +2041,28 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, caARN)
+		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
-		}
-
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", caARN, err)
 		}
 
 		return err
@@ -1910,23 +2077,23 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
-		rootCertificateAuthorityArn := aws.ToString(rootCertificateAuthority.Arn)
+		rootCAARN := aws.ToString(rootCertificateAuthority.Arn)
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(id.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -1936,37 +2103,29 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, rootCAARN)
+		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
-		}
-
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 			CertificateChain:        []byte(aws.ToString(getCertOutput.CertificateChain)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", caARN, err)
 		}
 
 		return err
@@ -1987,7 +2146,7 @@ func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAu
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, t *testing.T, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1998,7 +2157,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 
@@ -2021,7 +2180,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	}
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, t *testing.T, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2032,7 +2191,7 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
@@ -2122,12 +2281,7 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 // The variable's value is returned.
 func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	t.Helper()
-
-	v := os.Getenv(key)
-	if v == "" {
-		t.Skipf("Environment variable %s is not set, skipping test", key)
-	}
-	return v
+	return envvar.SkipIfEmpty(t, key, "")
 }
 
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
@@ -2142,9 +2296,16 @@ func SkipIfExeNotOnPath(t *testing.T, file string) string {
 	return v
 }
 
+// SkipIfNotRunningAcceptanceTests skips the current test if it's not an acceptance test (TF_ACC is set in the environment).
+func SkipIfNotRunningAcceptanceTests(t *testing.T) {
+	t.Helper()
+	SkipIfEnvVarNotSet(t, resource.EnvTfAcc)
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
+	SkipIfNotRunningAcceptanceTests(t)
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -2189,4 +2350,24 @@ func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
 	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+}
+
+func ListOfStrings[E ~string](s ...E) string {
+	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
+		return strconv.Quote(string(e))
+	}), ", ")
+}
+
+func ListOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.ListVariable(listOfStringVariables(s...)...)
+}
+
+func SetOfStringsVariable[E ~string](s ...E) config.Variable {
+	return config.SetVariable(listOfStringVariables(s...)...)
+}
+
+func listOfStringVariables[E ~string](s ...E) []config.Variable {
+	return tfslices.ApplyToAll(s, func(e E) config.Variable {
+		return config.StringVariable(string(e))
+	})
 }

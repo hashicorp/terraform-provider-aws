@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudcontrolapi_resource: Remove invalid regular expressions from CloudFormation resource schema
-```

@@ -139,20 +139,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ssl_properties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_connection_properties`- (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [VPC Connection Properties](#vpc_connection_properties-argument-reference) below for more details.
 
 ### credentials Argument Reference
 
-* `copy_source_arn` (Optional, Conflicts with `credential_pair` and `secret_arn`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
+* `copy_source_arn` (Optional, Conflicts with `credential_pair` and `secret_arn`) - The ARN of a data source that has the credential pair that you want to use.
 When the value is not null, the `credential_pair` from the data source in the ARN is used.
 * `credential_pair` (Optional, Conflicts with `copy_source_arn` and `secret_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
-* `secret_arn` (Optional, Conflicts with `copy_source_arn` and `credential_pair`) - The Amazon Resource Name (ARN) of the secret associated with the data source in Amazon Secrets Manager.
+* `secret_arn` (Optional, Conflicts with `copy_source_arn` and `credential_pair`) - The ARN of the secret associated with the data source in Amazon Secrets Manager.
 
 ### credential_pair Argument Reference
 
@@ -188,7 +188,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### permission Argument Reference
 
 * `actions` - (Required) Set of IAM actions to grant or revoke permissions on. Max of 16 items.
-* `principal` - (Required) The Amazon Resource Name (ARN) of the principal.
+* `principal` - (Required) ARN of the principal.
 
 ### ssl_properties Argument Reference
 
@@ -196,7 +196,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 ### vpc_connection_properties Argument Reference
 
-* `vpc_connection_arn` - (Required) The Amazon Resource Name (ARN) for the VPC connection.
+* `vpc_connection_arn` - (Required) ARN for the VPC connection.
 
 ### amazon_elasticsearch Argument Reference
 
@@ -205,6 +205,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 ### athena Argument Reference
 
 * `work_group` - (Optional) The work-group to which to connect.
+* `role_arn` - (Optional) Use the `role_arn` to override an account-wide role for a specific athena data source.
 
 ### aurora Argument Reference
 
@@ -320,7 +321,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the data source
+* `arn` - ARN of the data source
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

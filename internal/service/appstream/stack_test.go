@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,18 +22,18 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
@@ -61,25 +60,82 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppStreamStack_disappears(t *testing.T) {
+func TestAccAppStreamStack_embedHostDomains(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	randomDomain := acctest.RandomDomain(t)
+	randomSubDomain := randomDomain.RandomSubdomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceStack(), resourceName),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "0"),
+				),
+			},
+			{
+				// Add embed_host_domains to an existing stack.
+				Config: testAccStackConfig_embedHostDomains(rName, randomDomain.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomDomain.String()),
+				),
+			},
+			{
+				// Change embed_host_domains on an existing stack.
+				Config: testAccStackConfig_embedHostDomains(rName, randomSubDomain.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", randomSubDomain.String()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppStreamStack_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackOutput awstypes.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -89,20 +145,20 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
@@ -125,7 +181,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 			{
 				Config: testAccStackConfig_complete(rName, descriptionUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
@@ -147,20 +203,20 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	settingsGroup := "group"
 	settingsGroupUpdated := "group-updated"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
@@ -174,7 +230,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroupUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroupUpdated),
@@ -188,7 +244,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettings(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
@@ -207,19 +263,19 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	settingsGroup := "group"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
@@ -228,7 +284,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 			{
 				Config: testAccStackConfig_applicationSettingsRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
@@ -247,26 +303,38 @@ func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) 
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_applicationSettingsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccStackConfig_applicationSettingsRemoved(rName),
-				PlanOnly: true,
+				Config: testAccStackConfig_applicationSettingsRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -276,19 +344,19 @@ func TestAccAppStreamStack_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_tags1(rName, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -301,7 +369,7 @@ func TestAccAppStreamStack_tags(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags2(rName, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -310,7 +378,7 @@ func TestAccAppStreamStack_tags(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags1(rName, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -323,20 +391,20 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackOutput awstypes.Stack
 	resourceName := "aws_appstream_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	preferredProtocol := "TCP"
 	newPreferredProtocol := "UDP"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_streamingExperienceSettings(rName, preferredProtocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "TCP"),
 				),
@@ -344,7 +412,7 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 			{
 				Config: testAccStackConfig_streamingExperienceSettings(rName, newPreferredProtocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "UDP"),
 				),
@@ -353,9 +421,9 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStackDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_stack" {
@@ -364,7 +432,7 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappstream.FindStackByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -379,14 +447,14 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckStackExists(ctx context.Context, n string, v *awstypes.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, t *testing.T, n string, v *awstypes.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		output, err := tfappstream.FindStackByID(ctx, conn, rs.Primary.ID)
 
@@ -406,6 +474,16 @@ resource "aws_appstream_stack" "test" {
   name = %[1]q
 }
 `, name)
+}
+
+func testAccStackConfig_embedHostDomains(name, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  embed_host_domains = [%[2]q]
+}
+`, name, domain)
 }
 
 func testAccStackConfig_complete(name, description string) string {

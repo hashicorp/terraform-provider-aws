@@ -46,24 +46,23 @@ resource "aws_transcribe_vocabulary" "example" {
 
 The following arguments are required:
 
-* `language_code` - (Required) The language code you selected for your vocabulary.
-* `vocabulary_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
-* `vocabulary_name` - (Required) The name of the Vocabulary.
+* `language_code` - (Required) Language code you selected for your vocabulary.
+* `vocabulary_name` - (Required) Name of the Vocabulary.
 
 The following arguments are optional:
 
+* `phrases` - (Optional) List of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
-* `vocabulary_file_uri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
-* `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vocabulary_file_uri` - (Optional) Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the Vocabulary.
 * `arn` - ARN of the Vocabulary.
 * `download_uri` - Generated download URI.
+* `id` - Name of the Vocabulary.
 
 ## Timeouts
 

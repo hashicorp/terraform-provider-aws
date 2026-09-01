@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -18,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,28 +31,30 @@ func resourceCookieStickinessPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceCookieStickinessPolicyRead,
 		DeleteWithoutTimeout: resourceCookieStickinessPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"cookie_expiration_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			"lb_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"load_balancer": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cookie_expiration_period": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"lb_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				"load_balancer": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -110,7 +114,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 
 	policy, err := findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic LB Cookie Stickiness Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

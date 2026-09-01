@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package costoptimizationhub
 
@@ -8,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -21,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -101,7 +102,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 	}
 
 	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
-	data.Status = fwflex.StringValueToFramework(ctx, aws.ToString(out.Status))
+	data.Status = fwflex.StringToFramework(ctx, out.Status)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -116,7 +117,7 @@ func (r *enrollmentStatusResource) Read(ctx context.Context, request resource.Re
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
 	out, err := findEnrollmentStatus(ctx, conn)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -195,7 +196,7 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 		}
 
 		old.ID = new.ID
-		old.Status = fwflex.StringValueToFramework(ctx, *out.Status)
+		old.Status = fwflex.StringToFramework(ctx, out.Status)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &old)...)

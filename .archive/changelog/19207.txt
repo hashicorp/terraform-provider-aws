@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_batch_job_definition: Prevent diff with default value of `fargatePlatformConfiguration`
-```

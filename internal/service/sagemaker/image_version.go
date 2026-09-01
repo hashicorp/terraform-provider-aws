@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -7,26 +9,30 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const imageVersionResourcePartCount = 2
+const (
+	imageVersionResourcePartCount = 2
+	mutexLockPrefix               = "sagemaker-image-version-"
+)
 
 // @SDKResource("aws_sagemaker_image_version", name="Image Version")
 func resourceImageVersion() *schema.Resource {
@@ -49,74 +55,76 @@ func resourceImageVersion() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aliases": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"base_image": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"container_image": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"horovod": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"image_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"job_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
-			},
-			"ml_framework": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
-			},
-			"processor": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Processor](),
-			},
-			"programming_lang": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
-			},
-			"release_notes": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"vendor_guidance": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VendorGuidance](),
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"aliases": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"base_image": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"container_image": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"horovod": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"image_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"job_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JobType](),
+				},
+				"ml_framework": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				},
+				"processor": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Processor](),
+				},
+				"programming_lang": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				},
+				"release_notes": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"vendor_guidance": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VendorGuidance](),
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -126,10 +134,11 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
+
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk("job_type"); ok {
@@ -164,16 +173,22 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if _, err := conn.CreateImageVersion(ctx, &input); err != nil {
+	lockName := mutexLockPrefix + name
+	conns.GlobalMutexKV.Lock(lockName)
+	out, err := conn.CreateImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(lockName)
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
-	out, err := waitImageVersionCreated(ctx, conn, name)
+	version := imageVersionFromARN(aws.ToString(out.ImageVersionArn))
+	waitOut, err := waitImageVersionCreated(ctx, conn, name, version)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
-	parts := []string{name, strconv.Itoa(int(aws.ToInt32(out.Version)))}
+	parts := []string{name, flex.Int32ToStringValue(waitOut.Version)}
 	id, err := flex.FlattenResourceId(parts, imageVersionResourcePartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
@@ -190,13 +205,12 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	name, version, err := expandImageVersionResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("image_name", name) // to support import
 
 	image, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
 		log.Printf("[WARN] Unable to find SageMaker AI Image Version (%s); removing from state", d.Id())
 		return diags
@@ -208,27 +222,27 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, image.ImageVersionArn)
 	d.Set("base_image", image.BaseImage)
-	d.Set("image_arn", image.ImageArn)
 	d.Set("container_image", image.ContainerImage)
-	d.Set(names.AttrVersion, image.Version)
 	d.Set("horovod", image.Horovod)
+	d.Set("image_arn", image.ImageArn)
+	d.Set("image_name", name)
 	d.Set("job_type", image.JobType)
+	d.Set("ml_framework", image.MLFramework)
 	d.Set("processor", image.Processor)
+	d.Set("programming_lang", image.ProgrammingLang)
 	d.Set("release_notes", image.ReleaseNotes)
 	d.Set("vendor_guidance", image.VendorGuidance)
-	d.Set("ml_framework", image.MLFramework)
-	d.Set("programming_lang", image.ProgrammingLang)
+	d.Set(names.AttrVersion, image.Version)
 
 	// The DescribeImageVersion API response does not include aliases, so these must
 	// be fetched separately using the ListAliases API
 	aliases, err := findImageVersionAliasesByTwoPartKey(ctx, conn, name, version)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image Version (%s) aliases: %s", d.Id(), err)
 	}
 
-	if err := d.Set("aliases", aliases); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
-	}
+	d.Set("aliases", aliases)
 
 	return diags
 }
@@ -237,12 +251,14 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	name := d.Get("image_name").(string)
-	version := d.Get(names.AttrVersion).(int)
+	name, version, err := expandImageVersionResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	input := sagemaker.UpdateImageVersionInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	if d.HasChange("horovod") {
@@ -288,7 +304,9 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if _, err := conn.UpdateImageVersion(ctx, &input); err != nil {
+	_, err = conn.UpdateImageVersion(ctx, &input)
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
@@ -299,72 +317,50 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	name := d.Get("image_name").(string)
-	version := d.Get(names.AttrVersion).(int)
-
-	input := sagemaker.DeleteImageVersionInput{
-		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+	name, version, err := expandImageVersionResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if _, err := conn.DeleteImageVersion(ctx, &input); err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-			return diags
-		}
+	log.Printf("[DEBUG] Deleting SageMaker AI Image Version: %s", d.Id())
+	input := sagemaker.DeleteImageVersionInput{
+		ImageName: aws.String(name),
+		Version:   aws.Int32(version),
+	}
+
+	lockName := mutexLockPrefix + name
+	conns.GlobalMutexKV.Lock(lockName)
+	_, err = conn.DeleteImageVersion(ctx, &input)
+	conns.GlobalMutexKV.Unlock(lockName)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitImageVersionDeleted(ctx, conn, name, version); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-// findImageVersionByName is used immediately after creation to poll for status of
-// the most recently created image version
-//
-// findImageVersionByTwoPartKey should be used for all subsequent operations once the
-// version number is assigned.
-func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
-	input := sagemaker.DescribeImageVersionInput{
-		ImageName: aws.String(name),
-	}
-
-	output, err := conn.DescribeImageVersion(ctx, &input)
-
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 // findImageVersionByTwoPartKey is used to fetch a specific version once a version number
 // is assigned
-func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) (*sagemaker.DescribeImageVersionOutput, error) {
+func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
 	input := sagemaker.DescribeImageVersionInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	output, err := conn.DescribeImageVersion(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -373,24 +369,23 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) ([]string, error) {
+func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) ([]string, error) {
 	input := sagemaker.ListAliasesInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	output, err := conn.ListAliases(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -399,25 +394,32 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SageMakerImageVersionAliases, nil
 }
 
+// imageVersionFromARN extracts the version number from an ImageVersionArn
+//
+// ARN format: arn:aws:sagemaker:region:account:image-version/image-name/version
+func imageVersionFromARN(arn string) int32 {
+	parts := strings.Split(arn, "/")
+	if len(parts) >= 3 {
+		if version, err := strconv.ParseInt(parts[len(parts)-1], 10, 32); err == nil {
+			return int32(version)
+		}
+	}
+	return 0
+}
+
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion
 // of the version portion to an integer
-func expandImageVersionResourceID(id string) (string, int, error) {
+func expandImageVersionResourceID(id string) (string, int32, error) {
 	parts, err := flex.ExpandResourceId(id, imageVersionResourcePartCount, false)
 	if err != nil {
 		return "", 0, err
 	}
 
-	name := parts[0]
-	version, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return name, 0, err
-	}
-
-	return name, version, nil
+	return parts[0], flex.StringValueToInt32Value(parts[1]), nil
 }

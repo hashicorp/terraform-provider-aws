@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -19,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,15 +36,17 @@ import (
 // @Tags
 // @ArnIdentity(identityDuplicateAttributes="id;application_arn")
 // @ArnFormat(global=true)
+// @IdentityFix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeApplicationOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(v60NullValuesError=true)
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationResource{}, nil
 }
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -163,14 +167,14 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
-	data.ApplicationARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
-	data.ID = fwflex.StringToFramework(ctx, output.ApplicationArn)
+	data.ApplicationARN = data.ARN
+	data.ID = data.ARN
 
 	// Read after create to get computed attributes omitted from the create response.
 	app, err := findApplicationByID(ctx, conn, data.ID.ValueString())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
@@ -200,7 +204,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findApplicationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -208,7 +212,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
@@ -223,13 +227,14 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+	data.ARN = data.ApplicationARN
 
 	// listTags requires both application and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
-	tags, err := listTags(ctx, conn, data.ApplicationARN.ValueString(), data.InstanceARN.ValueString())
+	tags, err := listTags(ctx, conn, data.ARN.ValueString(), data.InstanceARN.ValueString())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s) tags", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s) tags", data.ID.String()), err.Error())
 
 		return
 	}
@@ -265,7 +270,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		_, err := conn.UpdateApplication(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s)", new.ID.String()), err.Error())
 
 			return
 		}
@@ -274,8 +279,8 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	// updateTags requires both application and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
 	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
-		if err := updateTags(ctx, conn, new.ApplicationARN.ValueString(), new.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s) tags", new.ID.ValueString()), err.Error())
+		if err := updateTags(ctx, conn, new.ARN.ValueString(), new.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s) tags", new.ID.String()), err.Error())
 
 			return
 		}
@@ -294,7 +299,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	input := ssoadmin.DeleteApplicationInput{
-		ApplicationArn: fwflex.StringFromFramework(ctx, data.ApplicationARN),
+		ApplicationArn: fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteApplication(ctx, &input)
 
@@ -303,7 +308,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting SSO Application (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SSO Application (%s)", data.ID.String()), err.Error())
 
 		return
 	}
@@ -317,8 +322,7 @@ func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) 
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -327,7 +331,7 @@ func findApplicationByID(ctx context.Context, conn *ssoadmin.Client, id string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

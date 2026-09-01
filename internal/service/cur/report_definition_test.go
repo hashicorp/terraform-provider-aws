@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cur_test
@@ -6,18 +6,18 @@ package cur_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcur "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,20 +25,20 @@ func testAccReportDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	s3PrefixUpdated := "testUpdated"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_basic(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					//workaround for region being based on s3 bucket region
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
@@ -59,7 +59,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 			{
 				Config: testAccReportDefinitionConfig_basic(rName, s3PrefixUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					//workaround for region being based on s3 bucket region
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
@@ -79,19 +79,19 @@ func testAccReportDefinition_basic(t *testing.T) {
 func testAccReportDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_tags1(rName, s3Prefix, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -107,7 +107,7 @@ func testAccReportDefinition_tags(t *testing.T) {
 			{
 				Config: testAccReportDefinitionConfig_tags2(rName, s3Prefix, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -116,7 +116,7 @@ func testAccReportDefinition_tags(t *testing.T) {
 			{
 				Config: testAccReportDefinitionConfig_tags1(rName, s3Prefix, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -129,7 +129,7 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -137,16 +137,16 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 	refreshClosedReports := false
 	reportVersioning := "CREATE_NEW_REPORT"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
@@ -173,7 +173,7 @@ func testAccReportDefinition_parquet(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "Parquet"
 	compression := "Parquet"
@@ -181,16 +181,16 @@ func testAccReportDefinition_parquet(t *testing.T) {
 	refreshClosedReports := false
 	reportVersioning := "CREATE_NEW_REPORT"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
@@ -216,7 +216,7 @@ func testAccReportDefinition_athena(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "Parquet"
 	compression := "Parquet"
@@ -224,16 +224,16 @@ func testAccReportDefinition_athena(t *testing.T) {
 	refreshClosedReports := false
 	reportVersioning := "OVERWRITE_REPORT"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
@@ -260,7 +260,7 @@ func testAccReportDefinition_refresh(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -268,16 +268,16 @@ func testAccReportDefinition_refresh(t *testing.T) {
 	refreshClosedReports := true
 	reportVersioning := "CREATE_NEW_REPORT"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
@@ -304,7 +304,7 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -312,16 +312,16 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 	refreshClosedReports := false
 	reportVersioning := "OVERWRITE_REPORT"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
@@ -347,23 +347,26 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 func testAccReportDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	s3Prefix := "test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_basic(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcur.ResourceReportDefinition(), resourceName),
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcur.ResourceReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -373,9 +376,63 @@ func testAccReportDefinition_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+// https://github.com/hashicorp/terraform-provider-aws/issues/43153.
+func testAccReportDefinition_upgradeNoPrefixFromV5(t *testing.T) {
+	acctest.Skip(t, `ValidationException: 1 validation error detected: Value '' at 'reportDefinition.s3Prefix' failed to satisfy constraint: Member must satisfy regular expression pattern: ^.+[^/|.]$`)
+	ctx := acctest.Context(t)
+	resourceName := "aws_cur_report_definition.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CURServiceID),
+		CheckDestroy: testAccCheckReportDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccReportDefinitionConfig_noS3Prefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_prefix"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReportDefinitionConfig_basic(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_prefix"), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckReportDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CURClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CURClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cur_report_definition" {
@@ -384,7 +441,7 @@ func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfcur.FindReportDefinitionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -399,13 +456,14 @@ func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckReportDefinitionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckReportDefinitionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CURClient(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.ProviderMeta(ctx, t).CURClient(ctx)
 
 		_, err := tfcur.FindReportDefinitionByName(ctx, conn, rs.Primary.ID)
 
@@ -413,13 +471,14 @@ func testAccCheckReportDefinitionExists(ctx context.Context, n string) resource.
 	}
 }
 
-func testAccReportDefinitionConfig_basic(rName, s3Prefix string) string {
+func testAccReportDefinitionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
 
+data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket_policy" "test" {
@@ -434,7 +493,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURBillingACLPolicy",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": [
         "s3:GetBucketAcl",
@@ -446,7 +505,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
@@ -455,7 +514,11 @@ resource "aws_s3_bucket_policy" "test" {
 }
 POLICY
 }
+`, rName)
+}
 
+func testAccReportDefinitionConfig_basic(rName, s3Prefix string) string {
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -469,60 +532,18 @@ resource "aws_cur_report_definition" "test" {
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, rName, s3Prefix)
+`, rName, s3Prefix))
 }
 
 func testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression string, additionalArtifacts []string, refreshClosedReports bool, reportVersioning string) string {
-	artifactsStr := strings.Join(additionalArtifacts, "\", \"")
-
+	artifactsStr := acctest.ListOfStrings(additionalArtifacts...)
 	if len(additionalArtifacts) > 0 {
-		artifactsStr = fmt.Sprintf("additional_artifacts       = [\"%s\"]", artifactsStr)
+		artifactsStr = fmt.Sprintf("additional_artifacts       = [%s]", artifactsStr)
 	} else {
 		artifactsStr = ""
 	}
 
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -538,52 +559,11 @@ resource "aws_cur_report_definition" "test" {
   refresh_closed_reports = %[6]t
   report_versioning      = %[7]q
 }
-`, rName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
+`, rName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning))
 }
 
 func testAccReportDefinitionConfig_tags1(rName, s3Prefix, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -601,52 +581,11 @@ resource "aws_cur_report_definition" "test" {
     %[3]q = %[4]q
   }
 }
-`, rName, s3Prefix, tagKey1, tagValue1)
+`, rName, s3Prefix, tagKey1, tagValue1))
 }
 
 func testAccReportDefinitionConfig_tags2(rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -665,7 +604,24 @@ resource "aws_cur_report_definition" "test" {
     %[5]q = %[6]q
   }
 }
-`, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccReportDefinitionConfig_noS3Prefix(rName string) string {
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
+resource "aws_cur_report_definition" "test" {
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
+  report_name                = %[1]q
+  time_unit                  = "DAILY"
+  format                     = "textORcsv"
+  compression                = "GZIP"
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
+  s3_bucket                  = aws_s3_bucket.test.id
+  s3_region                  = aws_s3_bucket.test.region
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+}
+`, rName))
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {

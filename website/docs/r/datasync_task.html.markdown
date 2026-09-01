@@ -24,7 +24,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Scheduling
+### Example Usage with Scheduling
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -38,7 +38,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Filtering
+### Example Usage with Filtering
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -58,7 +58,7 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
-## Example Usage with Enhanced Task Mode
+### Example Usage with Enhanced Task Mode
 
 ```terraform
 resource "aws_datasync_task" "example" {
@@ -81,9 +81,9 @@ resource "aws_datasync_task" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `destination_location_arn` - (Required) Amazon Resource Name (ARN) of destination DataSync Location.
-* `source_location_arn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
-* `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.
+* `destination_location_arn` - (Required) ARN of destination DataSync Location.
+* `source_location_arn` - (Required) ARN of source DataSync Location.
+* `cloudwatch_log_group_arn` - (Optional) ARN of the CloudWatch Log Group that is used to monitor and log events in the sync task.
 * `excludes` - (Optional) Filter rules that determines which files to exclude from a task.
 * `includes` - (Optional) Filter rules that determines which files to include in a task.
 * `name` - (Optional) Name of the DataSync Task.
@@ -131,7 +131,7 @@ The following arguments are supported inside the `task_report_config` configurat
 
 The following arguments are supported inside the `s3_destination` configuration block:
 
-* `bucket_access_role_arn` - (Required) Specifies the Amazon Resource Name (ARN) of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
+* `bucket_access_role_arn` - (Required) ARN of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
 * `s3_bucket_arn` - (Required) Specifies the ARN of the S3 bucket where DataSync uploads your report.
 * `subdirectory` - (Optional) Specifies a bucket prefix for your report.
 
@@ -149,6 +149,7 @@ The following arguments are supported inside the `report_overrides` configuratio
 ### Schedule
 
 * `schedule_expression` - (Required) Specifies the schedule you want your task to use for repeated executions. For more information, see [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
+* `status` - (Optional) Whether to enable or disable your task schedule. Valid values: `ENABLED`, `DISABLED`. Default: `ENABLED`.
 
 ### excludes Argument Reference
 
@@ -164,8 +165,8 @@ The following arguments are supported inside the `report_overrides` configuratio
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the DataSync Task.
-* `arn` - Amazon Resource Name (ARN) of the DataSync Task.
+* `id` - ARN of the DataSync Task.
+* `arn` - ARN of the DataSync Task.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -176,7 +177,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_task.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:task/task-12345678901234567"
+  }
+}
+
+resource "aws_datasync_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the DataSync task.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task ARN. For example:
 
 ```terraform
 import {
@@ -185,7 +207,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_task` using the DataSync Task ARN. For example:
 
 ```console
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567

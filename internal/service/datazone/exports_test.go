@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -16,14 +16,13 @@ var (
 	ResourceProject                           = newProjectResource
 	ResourceUserProfile                       = newUserProfileResource
 
-	FindAssetTypeByID          = findAssetTypeByID
-	FindDomainByID             = findDomainByID
-	FindEnvironmentByID        = findEnvironmentByID
-	FindEnvironmentProfileByID = findEnvironmentProfileByID
-	FindFormTypeByID           = findFormTypeByID
-	FindGlossaryByID           = findGlossaryByID
-	FindGlossaryTermByID       = findGlossaryTermByID
-	FindUserProfileByID        = findUserProfileByID
-
-	IsResourceMissing = isResourceMissing
+	FindAssetTypeByID                                 = findAssetTypeByID
+	FindDomainByID                                    = findDomainByID
+	FindEnvironmentBlueprintConfigurationByTwoPartKey = findEnvironmentBlueprintConfigurationByTwoPartKey
+	FindEnvironmentByID                               = findEnvironmentByID
+	FindEnvironmentProfileByID                        = findEnvironmentProfileByID
+	FindFormTypeByID                                  = findFormTypeByID
+	FindGlossaryByID                                  = findGlossaryByID
+	FindGlossaryTermByID                              = findGlossaryTermByID
+	FindUserProfileByID                               = findUserProfileByID
 )

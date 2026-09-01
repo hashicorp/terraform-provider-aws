@@ -38,6 +38,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the Group.
 * `group_id` - The identifier of the newly created group in the identity store.
 * `external_ids` - A list of external IDs that contains the identifiers issued to this resource by an external identity provider. See [External IDs](#external-ids) below.
 
@@ -45,14 +46,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The identifier issued to this resource by an external identity provider.
 * `issuer` - The issuer for an external identifier.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 

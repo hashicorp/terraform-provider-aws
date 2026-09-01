@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the user.
 * `force_destroy` - (Optional, default false) When destroying this user, destroy even if it
   has non-Terraform-managed IAM access keys, login profile or MFA devices. Without `force_destroy`
-  a user with non-Terraform-managed access keys and login profile will fail to be destroyed.
+  a user with non-Terraform-managed access keys and login profile will fail to be destroyed. This only deletes objects when the user is destroyed, not when setting this parameter to true. Once this parameter is set to true, there must be a successful terraform apply run before a destroy is required to update this value in the resource state. Without a successful terraform apply after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the user or destroying the user, this flag will not work. Additionally when importing a user, a successful terraform apply is required to set this value in state before it will take effect on a destroy operation.
 * `tags` - Key-value map of tags for the IAM user. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -63,23 +63,46 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The user's name.
 * `name` - The user's name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `unique_id` - The [unique ID][1] assigned by AWS.
-
-  [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
+* `unique_id` - The [unique ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs) assigned by AWS.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_user.example
+  identity = {
+    name = "example-user"
+  }
+}
+
+resource "aws_iam_user" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) User name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Users using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_iam_user.lb
-  id = "loadbalancer"
+  to = aws_iam_user.example
+  id = "example-user"
 }
 ```
 
 Using `terraform import`, import IAM Users using the `name`. For example:
 
 ```console
-% terraform import aws_iam_user.lb loadbalancer
+% terraform import aws_iam_user.example example-user
 ```

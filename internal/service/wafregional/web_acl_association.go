@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafregional
 
@@ -14,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,18 +41,20 @@ func resourceWebACLAssociation() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"web_acl_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"web_acl_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -67,7 +71,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 		WebACLId:    aws.String(webACLID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AssociateWebACL(ctx, input)
 	})
 
@@ -91,7 +95,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAF Regional WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -141,8 +145,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafregional.Client, arn 
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -151,7 +154,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafregional.Client, arn 
 	}
 
 	if output == nil || output.WebACLSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACLSummary, nil

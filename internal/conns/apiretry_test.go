@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -68,7 +68,7 @@ func TestAddIsErrorRetryables(t *testing.T) {
 				},
 			},
 			f: func(err error) aws.Ternary {
-				if err, ok := errs.As[*smithy.OperationError](err); ok {
+				if err, ok := errors.AsType[*smithy.OperationError](err); ok {
 					switch err.OperationName {
 					case "StartDeployment":
 						if errs.IsA[*appconfigtypes.ConflictException](err) {

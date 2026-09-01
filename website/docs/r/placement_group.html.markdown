@@ -28,7 +28,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the
   placement group.  Can only be specified when the `strategy` is set to
-  `partition`.  Valid values are 1 - 7 (default is `2`).
+  `partition`.  Must be at least `1`. (default is `2`).
 * `spread_level` - (Optional) Determines how placement groups spread instances. Can only be used
    when the `strategy` is set to `spread`. Can be `host` or `rack`. `host` can only be used for Outpost placement groups. Defaults to `rack`.
 * `strategy` - (Required) The placement strategy. Can be `cluster`, `partition` or `spread`.
@@ -38,7 +38,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the placement group.
+* `arn` - ARN of the placement group.
 * `id` - The name of the placement group.
 * `placement_group_id` - The ID of the placement group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

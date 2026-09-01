@@ -9,17 +9,17 @@ description: |-
 # Resource: aws_rds_cluster_instance
 
 Provides an RDS Cluster Instance Resource. A Cluster Instance Resource defines
-attributes that are specific to a single instance in a [RDS Cluster][3],
+attributes that are specific to a single instance in a [RDS Cluster](/docs/providers/aws/r/rds_cluster.html),
 specifically running Amazon Aurora.
 
 Unlike other RDS resources that support replication, with Amazon Aurora you do
 not designate a primary and subsequent replicas. Instead, you simply add RDS
-Instances and Aurora manages the replication. You can use the [count][5]
+Instances and Aurora manages the replication. You can use the [count](https://www.terraform.io/docs/configuration/meta-arguments/count.html)
 meta-parameter to make multiple instances and join them all to the same RDS
 Cluster, or you may specify different Cluster Instance resources with various
 `instance_class` sizes.
 
-For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amazon RDS User Guide.
+For more information on Amazon Aurora, see [Aurora on Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html) in the Amazon RDS User Guide.
 
 ~> **NOTE:** Deletion Protection from the RDS service can only be enabled at the cluster level, not for individual cluster instances. You can still add the [`prevent_destroy` lifecycle behavior](https://www.terraform.io/language/meta-arguments/lifecycle#prevent_destroy) to your Terraform resource configuration if you desire protection from accidental deletion.
 
@@ -60,13 +60,13 @@ This resource supports the following arguments:
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Optional, Forces new resource) Specifies the DB subnet group to associate with this DB instance. The default behavior varies depending on whether `db_subnet_group_name` is specified. Please refer to official [AWS documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) to understand how `db_subnet_group_name` and `publicly_accessible` parameters affect DB instance behaviour. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
-* `engine_version` - (Optional) Database engine version. Please note that to upgrade the `engine_version` of the instance, it must be done on the `aws_rds_cluster` `engine_version`. Trying to upgrade in `aws_cluster_instance` will not update the `engine_version`.
+* `engine_version` - (Optional) Database engine version. Please note that to upgrade the `engine_version` of the instance, it must be done on the `aws_rds_cluster` `engine_version`. Trying to upgrade in `aws_rds_cluster_instance` will not update the `engine_version`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `force_destroy` - (Optional) Forces an instance to be destroyed when a part of a read replica cluster. **Note:** will promote the read replica to a standalone cluster before instance deletion.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `instance_class` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
+* `instance_class` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html). Aurora uses `db.*` instance classes/types. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not. **NOTE:** When Performance Insights is configured at the cluster level through `aws_rds_cluster`, this argument cannot be set to a value that conflicts with the cluster's configuration.
@@ -75,7 +75,7 @@ This resource supports the following arguments:
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferred_backup_window` is set at the cluster level, this argument **must** be omitted.
 * `preferred_maintenance_window` - (Optional) Window to perform maintenance in. Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
-* `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
+* `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 For more detailed documentation about each argument, refer to
@@ -85,7 +85,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster instance
+* `arn` - ARN of cluster instance
 * `cluster_identifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier
@@ -102,13 +102,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `performance_insights_enabled` - Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - ARN for the KMS encryption key used by Performance Insights.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-[2]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Aurora.html
-[3]: /docs/providers/aws/r/rds_cluster.html
-[4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html
-[5]: https://www.terraform.io/docs/configuration/meta-arguments/count.html
-[6]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
-[7]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 
 ## Timeouts
 

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSR001
 
 The `AWSR001` analyzer reports when a fmt.Sprintf() call contains the format string ending `.amazonaws.com`. This domain suffix is only valid in the AWS Commercial and GovCloud (US) partitions.

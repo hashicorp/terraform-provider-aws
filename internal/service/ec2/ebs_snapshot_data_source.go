@@ -1,16 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,92 +33,95 @@ func dataSourceEBSSnapshot() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"restorable_by_user_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"storage_tier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVolumeSize: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_encryption_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owner_alias": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owners": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"restorable_by_user_ids": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_ids": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"storage_tier": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVolumeSize: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
 func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := ec2.DescribeSnapshotsInput{}
 
@@ -164,18 +167,12 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	d.SetId(aws.ToString(snapshot.SnapshotId))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, ebsSnapshotARN(ctx, c, d.Id()))
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
-	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set(names.AttrOutpostARN, snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)

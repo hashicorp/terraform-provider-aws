@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
@@ -12,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,9 +34,7 @@ type servicePrincipalDataSource struct {
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: datasourceattribute.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -106,7 +107,9 @@ func servicePrincipalNameForPartition(service string, partition endpoints.Partit
 			switch service {
 			case "codedeploy",
 				"elasticmapreduce",
-				"logs":
+				"logs",
+				"ec2",
+				"s3":
 				return partition.DNSSuffix()
 			}
 		}

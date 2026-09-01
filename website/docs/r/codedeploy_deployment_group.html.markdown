@@ -321,7 +321,7 @@ The `target_group_pair_info` configuration block supports the following:
 
 The `prod_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. Must contain exactly one listener ARN.
+* `listener_arns` - (Required) List of ARNs of the load balancer listeners. Must contain exactly one listener ARN.
 
 ##### load_balancer_info target_group_pair_info target_group Argument Reference
 
@@ -333,7 +333,7 @@ The `target_group` configuration block supports the following:
 
 The `test_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of ARNs of the load balancer listeners.
 
 ### on_premises_instance_tag_filter Argument Reference
 
@@ -347,7 +347,7 @@ The `on_premises_instance_tag_filter` configuration block supports the following
 
 Add triggers to a Deployment Group to receive notifications about events related to deployments or instances in the group. Notifications are sent to subscribers of the **SNS** topic associated with the trigger. _CodeDeploy must have permission to publish to the topic from this deployment group_. `trigger_configuration` supports the following:
 
-* `trigger_events` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `DeploymentStart`, `DeploymentSuccess`, `DeploymentFailure`, `DeploymentStop`, `DeploymentRollback`, `InstanceStart`, `InstanceSuccess`, `InstanceFailure`.  See [the CodeDeploy documentation][1] for all possible values.
+* `trigger_events` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `DeploymentStart`, `DeploymentSuccess`, `DeploymentFailure`, `DeploymentStop`, `DeploymentRollback`, `InstanceStart`, `InstanceSuccess`, `InstanceFailure`.  See [the CodeDeploy documentation](http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html) for all possible values.
 * `trigger_name` - (Required) The name of the notification trigger.
 * `trigger_target_arn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
@@ -377,5 +377,3 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, 
 ```console
 % terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
-
-[1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

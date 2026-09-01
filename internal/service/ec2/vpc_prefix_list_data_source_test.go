@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,7 +17,7 @@ func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 	ds1Name := "data.aws_prefix_list.s3_by_id"
 	ds2Name := "data.aws_prefix_list.s3_by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,7 +40,7 @@ func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 	ds1Name := "data.aws_prefix_list.s3_by_id"
 	ds2Name := "data.aws_prefix_list.s3_by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,7 +60,7 @@ func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 
 func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

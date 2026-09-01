@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Report a Documentation Error
 description: Choose this option if you've found an error in the provider documentation or contributor guides.
 labels:

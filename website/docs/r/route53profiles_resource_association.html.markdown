@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
-* `update` - (Default `30m`)
+* `read` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
@@ -77,7 +77,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Route 53 Profiles Resource Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Resource Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_resource_association.example rpa-id-12345678

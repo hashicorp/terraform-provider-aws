@@ -312,6 +312,48 @@ resource "aws_wafv2_rule_group" "example" {
 }
 ```
 
+### Using rules_json
+
+```terraform
+resource "aws_wafv2_rule_group" "example" {
+  name     = "example-rule-group"
+  scope    = "REGIONAL"
+  capacity = 100
+
+  rules_json = jsonencode([{
+    Name     = "rule-1"
+    Priority = 1
+    Action = {
+      Count = {}
+    }
+    Statement = {
+      ByteMatchStatement = {
+        SearchString = "badbot"
+        FieldToMatch = {
+          UriPath = {}
+        }
+        TextTransformations = [{
+          Priority = 1
+          Type     = "NONE"
+        }]
+        PositionalConstraint = "CONTAINS"
+      }
+    }
+    VisibilityConfig = {
+      CloudwatchMetricsEnabled = false
+      MetricName               = "friendly-rule-metric-name"
+      SampledRequestsEnabled   = false
+    }
+  }])
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -323,6 +365,7 @@ This resource supports the following arguments:
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
+* `rules_json` - (Optional) Raw JSON string to allow more than three nested statements. Conflicts with `rule` attribute. This is for advanced use cases where more than 3 levels of nested statements are required. **There is no drift detection at this time**. If you use this attribute instead of `rule`, you will be foregoing drift detection. Additionally, importing an existing rule group into a configuration with `rules_json` set will result in a one time in-place update as the remote rule configuration is initially written to the `rule` attribute. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateRuleGroup.html) for the JSON structure.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
@@ -465,6 +508,7 @@ The `byte_match_statement` block supports the following arguments:
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `positional_constraint` - (Required) The area within the portion of a web request that you want AWS WAF to search for `search_string`. Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchStatement.html) for more information.
 * `search_string` - (Required) A string value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`. The maximum length of the value is 50 bytes.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -489,7 +533,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 
 The `ip_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `arn` - (Required) ARN of the IP Set that this statement references.
 * `ip_set_forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset-forwarded-ip-config) below for more details.
 
 ### NOT Statement
@@ -522,7 +566,7 @@ The `rate_based_statement` block supports the following arguments:
 
   **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
-* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
+* `limit` - (Required) Limit on requests per 5-minute (or `evaluation_window_sec`) period for a single originating IP address (or for other aggregate key, depending on `aggregate_key_type` and `custom_key`).
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
 
 ### Regex Match Statement
@@ -533,6 +577,7 @@ The `regex_match_statement` block supports the following arguments:
 
 * `regex_string` - (Required) The string representing the regular expression. **Note:** The fixed quota for the maximum number of characters in each regex pattern is 200, which can't be changed. See [AWS WAF quotas](https://docs.aws.amazon.com/waf/latest/developerguide/limits.html) for details.
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -543,8 +588,9 @@ A rule statement used to search web request components for matches with regular 
 
 The `regex_pattern_set_reference_statement` block supports the following arguments:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
+* `arn` - (Required) ARN of the Regex Pattern Set that this statement references.
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -559,6 +605,7 @@ The `size_constraint_statement` block supports the following arguments:
 * `comparison_operator` - (Required) The operator to use to compare the request part to the size setting. Valid values include: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.
 * `field_to_match` - (Optional) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `size` - (Required) The size, in bytes, to compare to the request part, after any transformations. Valid values are integers between 0 and 21474836480, inclusive.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -571,6 +618,7 @@ The `sqli_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `sensitivity_level` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -582,6 +630,7 @@ The XSS match statement provides the location in requests that you want AWS WAF 
 The `xss_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `pre_parse_text_transformation` - (Optional) Text transformations to apply to the raw query string before AWS WAF parses the string into individual query arguments, and before any `text_transformation` is applied. Supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. Maximum of 10. See [Pre-Parse Text Transformation](#pre-parse-text-transformation) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [Text Transformation](#text-transformation) below for details.
@@ -707,6 +756,15 @@ The `cookies` block supports the following arguments:
 * `match_pattern` - (Required) The filter to use to identify the subset of cookies to inspect in a web request. You must specify exactly one setting: either `all`, `included_cookies` or `excluded_cookies`. More details: [CookieMatchPattern](https://docs.aws.amazon.com/waf/latest/APIReference/API_CookieMatchPattern.html)
 * `match_scope` - (Required) The parts of the cookies to inspect with the rule inspection criteria. If you specify All, AWS WAF inspects both keys and values. Valid values: `ALL`, `KEY`, `VALUE`
 * `oversize_handling` - (Required) What AWS WAF should do if the cookies of the request are larger than AWS WAF can inspect. AWS WAF does not support inspecting the entire contents of request cookies when they exceed 8 KB (8192 bytes) or 200 total cookies. The underlying host service forwards a maximum of 200 cookies and at most 8 KB of cookie contents to AWS WAF. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`
+
+### Pre-Parse Text Transformation
+
+Pre-parse text transformations normalize the raw query string before AWS WAF parses it into individual query arguments. They are applied before any `text_transformation`. Pre-parse text transformations are supported only when `field_to_match` specifies `single_query_argument` or `all_query_arguments`. You can specify up to 10 pre-parse text transformations per rule statement.
+
+The `pre_parse_text_transformation` block supports the following arguments:
+
+* `priority` - (Required) The relative processing order for the pre-parse text transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before parsing the query string.
+* `type` - (Required) The pre-parse text transformation to apply to the raw query string. Valid values are `NONE`, `URL_DECODE`, `URL_DECODE_UNI`, `COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA`, and `REPLACE_SEMICOLONS_WITH_AMPERSANDS`. See the Pre-Parse Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_PreParseTextTransformation.html) for more details.
 
 ### Text Transformation
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,57 +39,59 @@ func resourceCustomDomainAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"certificate_validation_records": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"certificate_validation_records": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"dns_target": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"enable_www_subdomain": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				ForceNew: true,
-			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"dns_target": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"enable_www_subdomain": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+					ForceNew: true,
+				},
+				"service_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -134,7 +138,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 
 	customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -251,8 +255,7 @@ func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input 
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -274,11 +277,11 @@ const (
 	customDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 )
 
-func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCustomDomain(conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -297,7 +300,7 @@ func waitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusCreating},
 		Target:  []string{customDomainAssociationStatusPendingCertificateDNSValidation, customDomainAssociationStatusBindingCertificate},
-		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Refresh: statusCustomDomain(conn, domainName, serviceARN),
 		Timeout: timeout,
 	}
 
@@ -317,7 +320,7 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusActive, customDomainAssociationStatusDeleting},
 		Target:  []string{},
-		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Refresh: statusCustomDomain(conn, domainName, serviceARN),
 		Timeout: timeout,
 	}
 

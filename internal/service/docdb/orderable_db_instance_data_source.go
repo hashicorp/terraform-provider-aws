@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdb
 
@@ -16,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,44 +26,46 @@ import (
 func dataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  engineDocDB,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_class": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"preferred_instance_classes"},
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "na",
-			},
-			"preferred_instance_classes": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"instance_class"},
-			},
-			"vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  engineDocDB,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_class": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"preferred_instance_classes"},
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "na",
+				},
+				"preferred_instance_classes": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"instance_class"},
+				},
+				"vpc": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -111,7 +115,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if orderableDBInstance == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {
@@ -156,7 +160,7 @@ func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *do
 		}
 
 		for _, v := range page.OrderableDBInstanceOptions {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

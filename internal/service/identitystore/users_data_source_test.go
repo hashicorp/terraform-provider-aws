@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,12 +14,12 @@ import (
 
 func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rEmail := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_identitystore_users.test"
 	userResourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -38,6 +37,7 @@ func TestAccIdentityStoreUsersDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.family_name", userResourceName, "name.0.family_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.name.0.given_name", userResourceName, "name.0.given_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.emails.0.value", userResourceName, "emails.0.value"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "users.*.user_status", userResourceName, "user_status"),
 				),
 			},
 		},

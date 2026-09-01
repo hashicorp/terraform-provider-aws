@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,56 +49,58 @@ func resourceProxyEndpoint() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_proxy_endpoint_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"db_proxy_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_role": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.DBProxyEndpointTargetRoleReadWrite,
-				ValidateDiagFunc: enum.Validate[types.DBProxyEndpointTargetRole](),
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_subnet_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_proxy_endpoint_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				"db_proxy_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"is_default": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_role": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.DBProxyEndpointTargetRoleReadWrite,
+					ValidateDiagFunc: enum.Validate[types.DBProxyEndpointTargetRole](),
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpc_subnet_ids": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -145,7 +149,7 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 
 	dbProxyEndpoint, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -258,9 +262,7 @@ func findDBProxyEndpointByTwoPartKey(ctx context.Context, conn *rds.Client, dbPr
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBProxyName) != dbProxyName || aws.ToString(output.DBProxyEndpointName) != dbProxyEndpointName {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -285,8 +287,7 @@ func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.Desc
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) || errs.IsA[*types.DBProxyEndpointNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -304,11 +305,11 @@ func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.Desc
 	return output, nil
 }
 
-func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBProxyEndpoint(conn *rds.Client, dbProxyName, dbProxyEndpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -324,7 +325,7 @@ func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.Client, dbProxy
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyEndpointStatusCreating, types.DBProxyEndpointStatusModifying),
 		Target:  enum.Slice(types.DBProxyEndpointStatusAvailable),
-		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),
+		Refresh: statusDBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName),
 		Timeout: timeout,
 	}
 
@@ -341,7 +342,7 @@ func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.Client, dbProxyNa
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyEndpointStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),
+		Refresh: statusDBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName),
 		Timeout: timeout,
 	}
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,66 +36,68 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"encryption_entities": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"items": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"field_patterns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"encryption_entities": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							attrItems: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"field_patterns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"provider_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"public_key_id": {
-										Type:     schema.TypeString,
-										Required: true,
+										"provider_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"public_key_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -104,7 +108,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 
 	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
-		CallerReference: aws.String(id.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 	}
 
@@ -137,7 +141,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 
 	output, err := findFieldLevelEncryptionProfileByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Field-level Encryption Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -227,8 +231,7 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -237,7 +240,7 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	}
 
 	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -250,7 +253,7 @@ func expandEncryptionEntities(tfMap map[string]any) *awstypes.EncryptionEntities
 
 	apiObject := &awstypes.EncryptionEntities{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -314,7 +317,7 @@ func expandFieldPatterns(tfMap map[string]any) *awstypes.FieldPatterns {
 
 	apiObject := &awstypes.FieldPatterns{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -331,7 +334,7 @@ func flattenEncryptionEntities(apiObject *awstypes.EncryptionEntities) map[strin
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenEncryptionEntityItems(v)
+		tfMap[attrItems] = flattenEncryptionEntityItems(v)
 	}
 
 	return tfMap
@@ -383,7 +386,7 @@ func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

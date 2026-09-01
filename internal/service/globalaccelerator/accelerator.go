@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -13,15 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +32,8 @@ import (
 
 // @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -37,103 +41,101 @@ func resourceAccelerator() *schema.Resource {
 		UpdateWithoutTimeout: resourceAcceleratorUpdate,
 		DeleteWithoutTimeout: resourceAcceleratorDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAttributes: {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_logs_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"flow_logs_s3_bucket": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
-						},
-						"flow_logs_s3_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 255),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAttributes: {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_logs_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"flow_logs_s3_bucket": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"flow_logs_s3_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
 						},
 					},
 				},
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dual_stack_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.IpAddressTypeIpv4,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			names.AttrIPAddresses: {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"ip_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddresses: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ip_family": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dual_stack_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.IpAddressTypeIpv4,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				names.AttrIPAddresses: {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"ip_sets": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddresses: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ip_family": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -145,7 +147,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get(names.AttrName).(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -194,7 +196,7 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	accelerator, err := findAcceleratorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Accelerator (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -342,8 +344,7 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -352,7 +353,7 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Accelerator, nil
@@ -367,8 +368,7 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -377,17 +377,17 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AcceleratorAttributes, nil
 }
 
-func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccelerator(conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		accelerator, err := findAcceleratorByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -403,7 +403,7 @@ func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AcceleratorStatusInProgress),
 		Target:  enum.Slice(awstypes.AcceleratorStatusDeployed),
-		Refresh: statusAccelerator(ctx, conn, arn),
+		Refresh: statusAccelerator(conn, arn),
 		Timeout: timeout,
 	}
 

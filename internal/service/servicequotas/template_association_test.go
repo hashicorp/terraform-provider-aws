@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,7 +23,7 @@ func testAccTemplateAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_template_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -32,12 +32,12 @@ func testAccTemplateAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateAssociationExists(ctx, resourceName),
+					testAccCheckTemplateAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
@@ -54,7 +54,7 @@ func testAccTemplateAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_template_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -63,15 +63,23 @@ func testAccTemplateAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicequotas.ResourceTemplateAssociation, resourceName),
+					testAccCheckTemplateAssociationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplateAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicequotas_template_association.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_servicequotas_template_association.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -81,7 +89,7 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_template_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -90,12 +98,12 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateAssociationConfig_skipDestroy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateAssociationExists(ctx, resourceName),
+					testAccCheckTemplateAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
@@ -107,7 +115,7 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 				// Use the basic config to remove association on destroy
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateAssociationExists(ctx, resourceName),
+					testAccCheckTemplateAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ServiceQuotaTemplateAssociationStatusAssociated)),
 				),
 			},
@@ -115,9 +123,9 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckTemplateAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTemplateAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicequotas_template_association" {
@@ -126,7 +134,7 @@ func testAccCheckTemplateAssociationDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfservicequotas.FindTemplateAssociation(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -141,14 +149,14 @@ func testAccCheckTemplateAssociationDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckTemplateAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTemplateAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 		_, err := tfservicequotas.FindTemplateAssociation(ctx, conn)
 

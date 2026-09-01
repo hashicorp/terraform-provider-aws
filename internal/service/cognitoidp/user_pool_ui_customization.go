@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -12,14 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,42 +37,44 @@ func resourceUserPoolUICustomization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrClientID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "ALL",
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"css": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"css", "image_file"},
-			},
-			"css_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_file": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"image_file", "css"},
-			},
-			"image_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrClientID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "ALL",
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"css": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					AtLeastOneOf: []string{"css", "image_file"},
+				},
+				"css_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					AtLeastOneOf: []string{"image_file", "css"},
+				},
+				"image_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -99,7 +103,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("image_file"); ok {
-		v, err := itypes.Base64Decode(v.(string))
+		v, err := inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -127,7 +131,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 
 	uiCustomization, err := findUserPoolUICustomizationByTwoPartKey(ctx, conn, userPoolID, clientID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Pool UI Customization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,8 +190,7 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -197,8 +200,8 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil.
-	if output == nil || output.UICustomization == nil || itypes.IsZero(output.UICustomization) {
-		return nil, tfresource.NewEmptyResultError(input)
+	if output == nil || output.UICustomization == nil || inttypes.IsZero(output.UICustomization) {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UICustomization, nil

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,33 +25,35 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
-		Schema: map[string]*schema.Schema{
-			"authorization_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"expires_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"proxy_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"expires_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"proxy_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -58,7 +62,12 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	out, err := conn.GetAuthorizationToken(ctx, &ecr.GetAuthorizationTokenInput{})
+	input := ecr.GetAuthorizationTokenInput{}
+	if v, ok := d.GetOk("registry_id"); ok {
+		input.RegistryIds = []string{v.(string)}
+	}
+
+	out, err := conn.GetAuthorizationToken(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Authorization Token: %s", err)
@@ -66,12 +75,9 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 
 	authorizationData := out.AuthorizationData[0]
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
-	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
-	proxyEndpoint := aws.ToString(authorizationData.ProxyEndpoint)
-	authBytes, err := itypes.Base64Decode(authorizationToken)
+	authBytes, err := inttypes.Base64Decode(authorizationToken)
 	if err != nil {
-		d.SetId("")
-		return sdkdiag.AppendErrorf(diags, "decoding ECR authorization token: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
@@ -79,12 +85,13 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
+
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("authorization_token", authorizationToken)
-	d.Set("proxy_endpoint", proxyEndpoint)
-	d.Set("expires_at", expiresAt)
-	d.Set(names.AttrUserName, userName)
+	d.Set("expires_at", aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339))
 	d.Set(names.AttrPassword, password)
+	d.Set("proxy_endpoint", authorizationData.ProxyEndpoint)
+	d.Set(names.AttrUserName, userName)
 
 	return diags
 }

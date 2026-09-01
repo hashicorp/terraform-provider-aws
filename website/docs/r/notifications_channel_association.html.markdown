@@ -34,7 +34,7 @@ resource "aws_notifications_channel_association" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) ARN of the channel to associate with the notification configuration. This can be an email contact ARN.
+* `arn` - (Required) ARN of the channel to associate with the notification configuration. Must match pattern `^arn:aws:(chatbot|consoleapp|notifications-contacts):[a-zA-Z0-9-]*:[0-9]{12}:[a-zA-Z0-9-_.@]+/[a-zA-Z0-9/_.@:-]+$`.
 * `notification_configuration_arn` - (Required) ARN of the notification configuration to associate the channel with.
 
 ## Attribute Reference

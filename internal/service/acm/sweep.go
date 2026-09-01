@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -9,7 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
@@ -43,12 +45,17 @@ func sweepCertificates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ACMClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	input := acm.ListCertificatesInput{}
+	input := acm.ListCertificatesInput{
+		Includes: &awstypes.Filters{
+			// By default, ListCertificates only returns  RSA_1024 and RSA_2048 certificates
+			KeyTypes: enum.EnumValues[awstypes.KeyAlgorithm](),
+		},
+	}
 	pages := acm.NewListCertificatesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)

@@ -174,7 +174,7 @@ This resource supports the following arguments:
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-* `service_role_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
+* `service_role_arn` - (Optional) ARN of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 * `cloudwatch_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
 
@@ -185,7 +185,7 @@ This resource supports the following arguments:
 
 `notification_config` supports the following:
 
-* `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
+* `notification_arn` - (Optional) ARN for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
 * `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
 * `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
 
@@ -209,11 +209,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "4f7ca192-7e9a-40fe-9192-5cb15EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `window_id` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window task.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_maintenance_window_task.task
+  to = aws_ssm_maintenance_window_task.example
   id = "<window_id>/<window_task_id>"
 }
 ```
@@ -221,5 +249,5 @@ import {
 Using `terraform import`, import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+% terraform import aws_ssm_maintenance_window_task.example <window_id>/<window_task_id>
 ```

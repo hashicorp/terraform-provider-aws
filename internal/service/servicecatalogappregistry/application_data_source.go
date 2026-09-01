@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalogappregistry
 
@@ -75,7 +77,7 @@ func (d *applicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 
 	// Transparent tagging doesn't work for DataSource yet
-	data.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+	data.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, keyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 //
@@ -63,7 +64,6 @@ type StateChangeConf = StateChangeConfOf[any, string]
 // reach the target state.
 //
 // Cancellation of the passed in context will cancel the refresh loop.
-
 func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T, error) {
 	// Set a default for times to check for not found.
 	if conf.NotFoundChecks == 0 {
@@ -73,17 +73,21 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		conf.ContinuousTargetOccurence = 1
 	}
 
+	// Set a default Delay using the StateChangeConf values
+	delay := backoff.SDKv2HelperRetryCompatibleDelay(ctx, conf.Delay, conf.PollInterval, conf.MinTimeout)
+
 	var (
 		t                             T
-		currentState                  S
+		currentState, priorState      S
 		err                           error
 		notFoundTick, targetOccurence int
 		l                             *backoff.Loop
 	)
-	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
+	for l = backoff.NewLoopWithOptions(ctx, conf.Timeout, backoff.WithDelay(delay)); l.Continue(ctx); {
 		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
+			currentState = priorState
 			break
 		}
 
@@ -91,12 +95,21 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 			return t, err
 		}
 
-		if any(t) == nil {
+		// Save prior state in case next time round the loop the deadline's exceeded.
+		priorState = currentState
+
+		if inttypes.IsZero(t) {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
 				if conf.ContinuousTargetOccurence == targetOccurence {
 					return t, err
+				}
+
+				// https://github.com/hashicorp/terraform-provider-aws/issues/48682.
+				// Backwards compatibility with SDKv2 helper/retry.
+				if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+					v.SetIncrementDelay(false)
 				}
 
 				continue
@@ -136,14 +149,18 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 					ExpectedState: tfslices.Strings(conf.Target),
 				}
 			}
+
+			// Wait between refreshes using exponential backoff, except when
+			// waiting for the target state to reoccur.
+			if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+				v.SetIncrementDelay(targetOccurence == 0)
+			}
 		}
 	}
 
 	// Timed out or Context canceled.
 	if l.Remaining() == 0 {
-		var zero T
-
-		return zero, &TimeoutError{
+		return inttypes.Zero[T](), &TimeoutError{
 			LastError:     err,
 			LastState:     string(currentState),
 			Timeout:       conf.Timeout,

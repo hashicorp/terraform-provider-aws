@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -10,12 +9,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for reproducible test fixture generation
 	"os"
 	"strconv"
 	"strings"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 func main() {
@@ -41,9 +40,9 @@ func main() {
 
 	log.SetFlags(0)
 
-	seed := int64(1) // Default rand seed
+	seed := int64(48) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	faker.Seed(seed)
+	fake := faker.NewWithSeedInt64(seed)
 
 	entitiesFile, err := os.OpenFile("./test-fixtures/entity_recognizer/entitylist.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -72,7 +71,7 @@ func main() {
 	}
 
 	for i := 0; i < 1000; i++ {
-		name := faker.Name().Name()
+		name := fake.Person().Name()
 		entity := entities[r.Intn(len(entities))]
 
 		if _, err := fmt.Fprintf(entitiesFile, "%s,%s\n", name, entity); err != nil {

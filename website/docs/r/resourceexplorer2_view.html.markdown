@@ -60,10 +60,31 @@ The `included_property` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Resource Explorer view.
+* `arn` - ARN of the Resource Explorer view.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_resourceexplorer2_view.example
+  identity = {
+    "arn" = "arn:aws:resource-explorer-2:us-east-1:123456789012:view/example-view/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_resourceexplorer2_view" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Resource Explorer view.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer views using the `arn`. For example:
 

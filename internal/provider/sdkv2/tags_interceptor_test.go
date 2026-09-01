@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -86,9 +86,9 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	}))
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		ctx = conns.NewResourceContext(ctx, "Test", "aws_test", "")
+		ctx = conns.NewResourceContext(ctx, "Test", "test", "aws_test", "")
 		if v, ok := meta.(*conns.AWSClient); ok {
-			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx), v.TagPolicyConfig(ctx))
 		}
 
 		return ctx
@@ -123,13 +123,19 @@ func (d *resourceData) GetRawConfig() cty.Value {
 
 func (d *resourceData) GetRawPlan() cty.Value {
 	return cty.ObjectVal(map[string]cty.Value{
+		// `tags` is set from the user's configuration, while `tags_all` is
+		// computed (unknown) in the plan when, for example, an empty string
+		// tag value forces tags_all to be re-computed.
+		"tags": cty.MapVal(map[string]cty.Value{
+			"tag1": cty.StringVal("value1"),
+		}),
 		"tags_all": cty.MapVal(map[string]cty.Value{
 			"tag1": cty.UnknownVal(cty.String),
 		}),
 	})
 }
 
-func (d *resourceData) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+func (d *resourceData) GetRawState() cty.Value {
 	return cty.Value{}
 }
 

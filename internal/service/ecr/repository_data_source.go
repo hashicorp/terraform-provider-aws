@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -24,62 +26,80 @@ func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"image_scanning_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"scan_on_push": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"image_scanning_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"scan_on_push": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"image_tag_mutability": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"most_recent_image_tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"repository_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				"image_tag_mutability": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_tag_mutability_exclusion_filter": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFilter: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"filter_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"most_recent_image_tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"repository_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -113,6 +133,9 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)

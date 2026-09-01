@@ -167,6 +167,7 @@ This resource supports the following arguments:
 * `enable_notification` - (Optional) Enables notifications for the branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for this branch.
+* `enable_skew_protection` - (Optional) Enables skew protection for the branch.  
 * `environment_variables` - (Optional) Environment variables for the branch.
 * `framework` - (Optional) Framework for the branch.
 * `pull_request_environment_name` - (Optional) Amplify environment name for the pull request.

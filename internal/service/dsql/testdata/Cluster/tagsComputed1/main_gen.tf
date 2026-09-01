@@ -1,28 +1,16 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
 
 resource "aws_dsql_cluster" "test" {
-  deletion_protection_enabled = false
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
 }
 
-output "rName" {
-  value       = var.rName
-  description = "To prevent tflint issues"
-}
-
 resource "null_resource" "test" {}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "unknownTagKey" {
   type     = string

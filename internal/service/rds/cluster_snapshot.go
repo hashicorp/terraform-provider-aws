@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,84 +46,86 @@ func resourceClusterSnapshot() *schema.Resource {
 			Create: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"shared_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"source_db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"db_cluster_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_cluster_snapshot_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+						validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+					),
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"shared_accounts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"source_db_cluster_snapshot_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"snapshot_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -140,7 +144,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDBClusterSnapshot(ctx, input)
 	})
 
@@ -177,7 +181,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 	snapshot, err := findDBClusterSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Cluster Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -207,7 +211,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	switch {
 	case err == nil:
 		d.Set("shared_accounts", attribute.AttributeValues)
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 	}
@@ -274,9 +278,7 @@ func findDBClusterSnapshotByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -301,8 +303,7 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 
 		if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -320,11 +321,11 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterSnapshot(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -340,7 +341,7 @@ func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating, clusterSnapshotStatusCopying},
 		Target:     []string{clusterSnapshotStatusAvailable},
-		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
+		Refresh:    statusDBClusterSnapshot(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
@@ -380,8 +381,7 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 
 	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -390,7 +390,7 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 	}
 
 	if output == nil || output.DBClusterSnapshotAttributesResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, tfslices.PredicateValue(filter)), nil

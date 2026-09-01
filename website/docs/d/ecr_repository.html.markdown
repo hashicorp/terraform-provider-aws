@@ -34,6 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `encryption_configuration` - Encryption configuration for the repository. See [Encryption Configuration](#encryption-configuration) below.
 * `image_scanning_configuration` - Configuration block that defines image scanning configuration for the repository. See [Image Scanning Configuration](#image-scanning-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for the repository.
+* `image_tag_mutability_exclusion_filter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `most_recent_image_tags` - List of image tags associated with the most recently pushed image in the repository.
 * `repository_url` - URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
 * `tags` - Map of tags assigned to the resource.
@@ -42,6 +43,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `encryption_type` - Encryption type to use for the repository, either `AES256` or `KMS`.
 * `kms_key` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
+
+### Image Tag Mutability Exclusion Filter
+
+* `filter` - The filter pattern to use for excluding image tags from the mutability setting.
+* `filter_type` - The type of filter to use.
 
 ### Image Scanning Configuration
 

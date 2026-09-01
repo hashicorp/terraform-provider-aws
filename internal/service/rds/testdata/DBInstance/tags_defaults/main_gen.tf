@@ -1,15 +1,10 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
-}
-
-ephemeral "aws_secretsmanager_random_password" "test" {
-  password_length     = 20
-  exclude_punctuation = true
 }
 
 resource "aws_db_instance" "test" {
@@ -26,6 +21,11 @@ resource "aws_db_instance" "test" {
   tags = var.resource_tags
 }
 
+ephemeral "aws_secretsmanager_random_password" "test" {
+  password_length     = 20
+  exclude_punctuation = true
+}
+
 # testAccInstanceConfig_orderableClassMySQL
 
 data "aws_rds_engine_version" "default" {
@@ -36,9 +36,9 @@ data "aws_rds_orderable_db_instance" "test" {
   engine         = data.aws_rds_engine_version.default.engine
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
-  storage_type   = "standard"
+  storage_type   = "gp2"
 
-  preferred_instance_classes = ["db.t4g.micro"]
+  preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
 }
 
 variable "rName" {

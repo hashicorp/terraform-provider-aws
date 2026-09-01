@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpoint
 
@@ -17,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,17 +54,20 @@ type emailTemplateResource struct {
 
 func (r *emailTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES (aws_ses_template or aws_sesv2_* resources). See the AWS End User Messaging migration guide for details.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"template_name": schema.StringAttribute{
-				Required: true,
+				Required:           true,
+				DeprecationMessage: "template_name is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"email_template": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				CustomType:         fwtypes.NewListNestedObjectTypeOf[emailTemplate](ctx),
+				DeprecationMessage: "email_template is deprecated. AWS End User Messaging email features are being discontinued on October 30, 2026. Migrate to Amazon SES.",
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 				},
@@ -156,7 +161,7 @@ func (r *emailTemplateResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findEmailTemplateByName(ctx, conn, state.TemplateName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -256,15 +261,14 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

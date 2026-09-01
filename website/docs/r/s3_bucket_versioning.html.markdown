@@ -92,29 +92,55 @@ resource "aws_s3_object" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the S3 bucket.
-* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
 
-### versioning_configuration
+### `versioning_configuration` Block
 
 ~> **Note:** While the `versioning_configuration.status` parameter supports `Disabled`, this value is only intended for _creating_ or _importing_ resources that correspond to unversioned S3 buckets.
 Updating the value from `Enabled` or `Suspended` to `Disabled` will result in errors as the AWS S3 API does not support returning buckets to an unversioned state.
 
 The `versioning_configuration` configuration block supports the following arguments:
 
+* `mfa_delete` - (Optional) Whether MFA delete is enabled in the bucket versioning configuration. Valid values: `Enabled` or `Disabled`.
 * `status` - (Required) Versioning state of the bucket. Valid values: `Enabled`, `Suspended`, or `Disabled`. `Disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
-* `mfa_delete` - (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: `Enabled` or `Disabled`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_versioning.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket versioning using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

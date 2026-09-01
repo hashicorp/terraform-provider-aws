@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -10,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,100 +26,102 @@ import (
 
 // @SDKDataSource("aws_connect_user", name="User")
 // @Tags
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hierarchy_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_info": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"first_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secondary_email": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hierarchy_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_info": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"first_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secondary_email": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "user_id"},
-			},
-			"phone_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_contact_work_time_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"auto_accept": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"desk_phone_number": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"phone_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrName, "user_id"},
+				},
+				"phone_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_contact_work_time_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"auto_accept": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"desk_phone_number": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"phone_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"routing_profile_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_profile_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"routing_profile_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"user_id", names.AttrName},
-			},
+				"security_profile_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"user_id", names.AttrName},
+				},
+			}
 		},
 	}
 }
@@ -204,8 +208,7 @@ func findUserSummaries(ctx context.Context, conn *connect.Client, input *connect
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

@@ -70,52 +70,49 @@ EOF
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `error_document` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document).
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document).
 * `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
-* `routing_rules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
-  describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
+* `routing_rules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html) describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
 
-### error_document
+### `error_document` Block
 
 The `error_document` configuration block supports the following arguments:
 
 * `key` - (Required) Object key name to use when a 4XX class error occurs.
 
-### index_document
+### `index_document` Block
 
 The `index_document` configuration block supports the following arguments:
 
-* `suffix` - (Required) Suffix that is appended to a request that is for a directory on the website endpoint.
-For example, if the suffix is `index.html` and you make a request to `samplebucket/images/`, the data that is returned will be for the object with the key name `images/index.html`.
-The suffix must not be empty and must not include a slash character.
+* `suffix` - (Required) Suffix that is appended to a request that is for a directory on the website endpoint. The suffix must not be empty and must not include a slash character. For example, if the suffix is `index.html` and you make a request to `samplebucket/images/`, the data that is returned will be for the object with the key name `images/index.html`.
 
-### redirect_all_requests_to
+### `redirect_all_requests_to` Block
 
 The `redirect_all_requests_to` configuration block supports the following arguments:
 
 * `host_name` - (Required) Name of the host where requests are redirected.
 * `protocol` - (Optional) Protocol to use when redirecting requests. The default is the protocol that is used in the original request. Valid values: `http`, `https`.
 
-### routing_rule
+### `routing_rule` Block
 
 The `routing_rule` configuration block supports the following arguments:
 
 * `condition` - (Optional) Configuration block for describing a condition that must be met for the specified redirect to apply. [See below](#condition).
 * `redirect` - (Required) Configuration block for redirect information. [See below](#redirect).
 
-### condition
+### `condition` Block
 
 The `condition` configuration block supports the following arguments:
 
 * `http_error_code_returned_equals` - (Optional, Required if `key_prefix_equals` is not specified) HTTP error code when the redirect is applied. If specified with `key_prefix_equals`, then both must be true for the redirect to be applied.
 * `key_prefix_equals` - (Optional, Required if `http_error_code_returned_equals` is not specified) Object key name prefix when the redirect is applied. If specified with `http_error_code_returned_equals`, then both must be true for the redirect to be applied.
 
-### redirect
+### `redirect` Block
 
 The `redirect` configuration block supports the following arguments:
 
@@ -129,11 +126,37 @@ The `redirect` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 * `website_domain` - Domain of the website endpoint. This is used to create Route 53 alias records.
 * `website_endpoint` - Website endpoint.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_website_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket website configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

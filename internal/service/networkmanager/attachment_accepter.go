@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,59 +37,61 @@ func resourceAttachmentAccepter() *schema.Resource {
 			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"attachment_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"attachment_policy_rule_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			// querying attachments requires knowing the type ahead of time
-			// therefore type is required in provider, though not on the API
-			"attachment_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AttachmentType](),
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"edge_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"edge_locations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"attachment_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			names.AttrOwnerAccountID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"segment_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"attachment_policy_rule_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				// querying attachments requires knowing the type ahead of time
+				// therefore type is required in provider, though not on the API
+				"attachment_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AttachmentType](),
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"edge_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"edge_locations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrOwnerAccountID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"segment_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -211,7 +215,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeVpc:
 		vpcAttachment, err := findVPCAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -228,7 +232,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := findSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Site To Site VPN Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -245,7 +249,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeConnect:
 		connectAttachment, err := findConnectAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -262,7 +266,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeTransitGatewayRouteTable:
 		tgwAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -279,7 +283,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeDirectConnectGateway:
 		dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Direct Connect Gateway Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags

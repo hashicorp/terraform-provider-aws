@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,11 +14,11 @@ import (
 
 func TestAccEKSAccessEntryDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_access_entry.test"
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,6 +34,30 @@ func TestAccEKSAccessEntryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceResourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, dataSourceResourceName, names.AttrUserName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSAccessEntryDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_access_entry.test"
+	resourceName := "aws_eks_access_entry.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessEntryDataSourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, dataSourceResourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -62,4 +85,31 @@ data "aws_eks_access_entry" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccAccessEntryDataSourceConfig_tags(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+
+resource "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_user.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+
+data "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_user.test.arn
+
+  depends_on = [
+    aws_eks_access_entry.test,
+    aws_eks_cluster.test,
+  ]
+}
+`, rName, tagKey1, tagValue1))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
@@ -9,23 +9,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIdentityStoreUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -33,12 +32,12 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Acceptance Test"),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
@@ -59,6 +58,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttr(resourceName, "user_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
@@ -74,10 +74,10 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 func TestAccIdentityStoreUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -85,14 +85,22 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceUser(), resourceName),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceUser(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -102,10 +110,10 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -113,12 +121,12 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_addresses2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 1"),
@@ -138,7 +146,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 			{
 				Config: testAccUserConfig_addresses3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "GB"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 2"),
@@ -158,7 +166,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 			{
 				Config: testAccUserConfig_addresses1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", ""),
@@ -178,7 +186,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 				),
 			},
@@ -194,13 +202,13 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
+	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -208,12 +216,12 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_emails1(rName, email1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 1"),
@@ -228,7 +236,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 			{
 				Config: testAccUserConfig_emails2(rName, email2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 2"),
@@ -243,7 +251,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 			{
 				Config: testAccUserConfig_emails3(rName, email2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
@@ -258,7 +266,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
 				),
 			},
@@ -274,10 +282,10 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 func TestAccIdentityStoreUser_Locale(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -285,12 +293,12 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_locale(rName, "en-US"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "locale", "en-US"),
 				),
 			},
@@ -302,7 +310,7 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 			{
 				Config: testAccUserConfig_locale(rName, "en-GB"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "locale", "en-GB"),
 				),
 			},
@@ -314,7 +322,7 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "locale", ""),
 				),
 			},
@@ -325,10 +333,10 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -336,12 +344,12 @@ func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameFamilyName(rName, "Doe"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Doe"),
 				),
 			},
@@ -353,7 +361,7 @@ func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameFamilyName(rName, "Deer"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Deer"),
 				),
 			},
@@ -364,10 +372,10 @@ func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -375,12 +383,12 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameFormatted(rName, "JD1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.formatted", "JD1"),
 				),
 			},
@@ -392,7 +400,7 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameFormatted(rName, "JD2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.formatted", "JD2"),
 				),
 			},
@@ -404,7 +412,7 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.formatted", ""),
 				),
 			},
@@ -415,10 +423,10 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -426,12 +434,12 @@ func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameGivenName(rName, "John"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.given_name", "John"),
 				),
 			},
@@ -443,7 +451,7 @@ func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameGivenName(rName, "Jane"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.given_name", "Jane"),
 				),
 			},
@@ -454,10 +462,10 @@ func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -465,12 +473,12 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameHonorificPrefix(rName, "Dr."),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_prefix", "Dr."),
 				),
 			},
@@ -482,7 +490,7 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameHonorificPrefix(rName, "Mr."),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_prefix", "Mr."),
 				),
 			},
@@ -493,10 +501,10 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -504,12 +512,12 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameHonorificSuffix(rName, "M.D."),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", "M.D."),
 				),
 			},
@@ -521,7 +529,7 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameHonorificSuffix(rName, "MSc"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", "MSc"),
 				),
 			},
@@ -533,7 +541,7 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 				),
 			},
@@ -544,10 +552,10 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -555,12 +563,12 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameMiddleName(rName, "Howard"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", "Howard"),
 				),
 			},
@@ -572,7 +580,7 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameMiddleName(rName, "Ben"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", "Ben"),
 				),
 			},
@@ -584,7 +592,7 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", ""),
 				),
 			},
@@ -595,10 +603,10 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 func TestAccIdentityStoreUser_NickName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -606,12 +614,12 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nickName(rName, "JD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "nickname", "JD"),
 				),
 			},
@@ -623,7 +631,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 			{
 				Config: testAccUserConfig_nickName(rName, "Johnny"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "nickname", "Johnny"),
 				),
 			},
@@ -635,7 +643,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "nickname", ""),
 				),
 			},
@@ -646,10 +654,10 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -657,12 +665,12 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_phoneNumbers1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 1"),
@@ -677,7 +685,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 			{
 				Config: testAccUserConfig_phoneNumbers2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 2"),
@@ -692,7 +700,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 			{
 				Config: testAccUserConfig_phoneNumbers3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", ""),
@@ -707,7 +715,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 				),
 			},
@@ -723,10 +731,10 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -734,12 +742,12 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_preferredLanguage(rName, "EN"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", "EN"),
 				),
 			},
@@ -751,7 +759,7 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 			{
 				Config: testAccUserConfig_preferredLanguage(rName, "ET"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", "ET"),
 				),
 			},
@@ -763,7 +771,7 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", ""),
 				),
 			},
@@ -774,10 +782,10 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -785,12 +793,12 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_profileURL(rName, "http://example.com/1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", "http://example.com/1"),
 				),
 			},
@@ -802,7 +810,7 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 			{
 				Config: testAccUserConfig_profileURL(rName, "http://example.com/2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", "http://example.com/2"),
 				),
 			},
@@ -814,7 +822,7 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
 				),
 			},
@@ -825,10 +833,10 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -836,12 +844,12 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_timezone(rName, "UTC"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
 				),
 			},
@@ -853,7 +861,7 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 			{
 				Config: testAccUserConfig_timezone(rName, "Europe/London"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "Europe/London"),
 				),
 			},
@@ -865,7 +873,7 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 				),
 			},
@@ -876,10 +884,10 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 func TestAccIdentityStoreUser_Title(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -887,12 +895,12 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_title(rName, "Mr"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "title", "Mr"),
 				),
 			},
@@ -904,7 +912,7 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 			{
 				Config: testAccUserConfig_title(rName, "Ms"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "title", "Ms"),
 				),
 			},
@@ -916,7 +924,7 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 				),
 			},
@@ -927,10 +935,10 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 func TestAccIdentityStoreUser_UserType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user identitystore.DescribeUserOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
@@ -938,12 +946,12 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_userType(rName, "Member"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_type", "Member"),
 				),
 			},
@@ -955,7 +963,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 			{
 				Config: testAccUserConfig_userType(rName, "Admin"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_type", "Admin"),
 				),
 			},
@@ -967,7 +975,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
@@ -975,9 +983,9 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 	})
 }
 
-func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IdentityStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_identitystore_user" {
@@ -986,7 +994,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfidentitystore.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["user_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1000,14 +1008,14 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserExists(ctx context.Context, n string, v *identitystore.DescribeUserOutput) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, t *testing.T, n string, v *identitystore.DescribeUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IdentityStoreClient(ctx)
 
 		output, err := tfidentitystore.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["user_id"])
 

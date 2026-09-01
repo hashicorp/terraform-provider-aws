@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
@@ -21,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,12 +30,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.VpcEndpointDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := vpcEndpointResource{}
 
@@ -46,14 +51,10 @@ func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, 
 	return &r, nil
 }
 
-const (
-	resNameVPCEndpoint = "VPC Endpoint"
-)
-
 type vpcEndpointResource struct {
 	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -112,7 +113,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 
 func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -120,19 +121,16 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.CreateVpcEndpointInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -140,10 +138,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 
 	if _, err := waitVPCEndpointCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -151,10 +146,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
@@ -163,17 +155,17 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -182,21 +174,18 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 
 	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -205,10 +194,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
@@ -217,21 +203,18 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var new, old vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -239,7 +222,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.UpdateVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, new.ID),
 	}
 
@@ -272,18 +255,12 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	_, err := conn.UpdateVpcEndpoint(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, new.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.Name.ValueString())
 		return
 	}
 
 	if _, err := waitVPCEndpointUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, resNameVPCEndpoint, new.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.Name.ValueString())
 		return
 	}
 
@@ -291,10 +268,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), new.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, new.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.ID.ValueString())
 		return
 	}
 
@@ -303,17 +277,17 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &new))
 }
 
 func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -321,7 +295,7 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, data.ID),
 	})
 
@@ -330,18 +304,12 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
 	if _, err := waitVPCEndpointDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForDeletion, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 }
@@ -379,8 +347,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -389,17 +356,17 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcEndpointDetails, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpoint(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -415,7 +382,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -425,7 +392,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -438,7 +405,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -447,7 +414,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -460,7 +427,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
 		Target:                    []string{},
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 5,
 	}
@@ -469,7 +436,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

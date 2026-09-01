@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +22,7 @@ func testAccAccountSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_quicksight_account_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +43,7 @@ func testAccAccountSettings_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_namespace"), knownvalue.StringExact("default")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_namespace"), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("termination_protection_enabled"), knownvalue.Bool(false)),
 				},
 			},

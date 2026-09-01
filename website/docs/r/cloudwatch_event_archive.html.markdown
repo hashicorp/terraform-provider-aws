@@ -25,7 +25,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
-## Example all optional arguments
+### Example Usage Optional Arguments
 
 ```terraform
 resource "aws_cloudwatch_event_bus" "order" {
@@ -43,36 +43,131 @@ resource "aws_cloudwatch_event_archive" "order" {
 }
 ```
 
+### Example Usage CMK Encryption
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_bus" "example" {
+  name = "example"
+}
+
+resource "aws_kms_key" "example" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow describing of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt",
+          "kms:ReEncrypt*"
+        ],
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:events:event-bus:arn" = aws_cloudwatch_event_bus.example.arn
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_archive" "example" {
+  name               = "example"
+  event_source_arn   = aws_cloudwatch_event_bus.example.arn
+  kms_key_identifier = aws_kms_key.example.id
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 characters.
-* `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.
-* `description` - (Optional) The description of the new event archive.
-* `event_pattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
+* `name` - (Required) Name of the archive. The archive name cannot exceed 48 characters.
+* `event_source_arn` - (Required) ARN of the event bus associated with the archive. Only events from this event bus are sent to the archive.
+* `description` - (Optional) Description for the archive.
+* `event_pattern` - (Optional) Event pattern to use to filter events sent to the archive. By default, it attempts to archive every event received in the `event_source_arn`.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this archive. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 * `retention_days` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the event archive.
+* `arn` - ARN of the archive.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge archive using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_archive.imported_event_archive.test
-  id = "order-archive"
+  to = aws_cloudwatch_event_archive.example
+  identity = {
+    name = "example-archive"
+  }
+}
+
+resource "aws_cloudwatch_event_archive" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import an EventBridge archive using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the archive.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Archives using `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_archive.example
+  id = "example-archive"
+}
+```
+
+Using `terraform import`, import Archives using `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+% terraform import aws_cloudwatch_event_archive.example example-archive
 ```

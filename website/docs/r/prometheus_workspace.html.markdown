@@ -64,13 +64,13 @@ This resource supports the following arguments:
 
 The `logging_configuration` block supports the following arguments:
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist.
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist. The ARN must end with `:*`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the workspace.
+* `arn` - ARN of the workspace.
 * `id` - Identifier of the workspace
 * `prometheus_endpoint` - Prometheus endpoint available for this workspace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -19,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,10 +33,10 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_log_anomaly_detector", name="Anomaly Detector")
 // @Tags(identifierAttribute="arn")
-// @Testing(importStateIdFunc="testAccAnomalyDetectorImportStateIDFunc")
-// @Testing(importStateIdAttribute="arn")
+// @ArnIdentity
 // @Testing(importIgnore="enabled")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
+// @Testing(preIdentityVersion="v6.51.0")
 func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
@@ -44,6 +45,7 @@ func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure
 
 type anomalyDetectorResource struct {
 	framework.ResourceWithModel[anomalyDetectorResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -99,8 +101,8 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, request resource.C
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := &cloudwatchlogs.CreateLogAnomalyDetectorInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input cloudwatchlogs.CreateLogAnomalyDetectorInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -108,7 +110,7 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, request resource.C
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	outputCLAD, err := conn.CreateLogAnomalyDetector(ctx, input)
+	outputCLAD, err := conn.CreateLogAnomalyDetector(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating CloudWatch Logs Anomaly Detector", err.Error())
@@ -117,12 +119,13 @@ func (r *anomalyDetectorResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	data.AnomalyDetectorARN = fwflex.StringToFramework(ctx, outputCLAD.AnomalyDetectorArn)
+	arn := aws.ToString(outputCLAD.AnomalyDetectorArn)
+	data.AnomalyDetectorARN = fwflex.StringValueToFramework(ctx, arn)
 
-	outputGLAD, err := findLogAnomalyDetectorByARN(ctx, conn, data.AnomalyDetectorARN.ValueString())
+	outputGLAD, err := findLogAnomalyDetectorByARN(ctx, conn, arn)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", arn), err.Error())
 
 		return
 	}
@@ -141,9 +144,10 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findLogAnomalyDetectorByARN(ctx, conn, data.AnomalyDetectorARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, data.AnomalyDetectorARN)
+	output, err := findLogAnomalyDetectorByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -151,7 +155,7 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Anomaly Detector (%s)", arn), err.Error())
 
 		return
 	}
@@ -185,17 +189,18 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, request resource.U
 	}
 
 	if diff.HasChanges() {
-		input := &cloudwatchlogs.UpdateLogAnomalyDetectorInput{}
+		arn := fwflex.StringValueFromFramework(ctx, new.AnomalyDetectorARN)
+		var input cloudwatchlogs.UpdateLogAnomalyDetectorInput
 
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateLogAnomalyDetector(ctx, input)
+		_, err := conn.UpdateLogAnomalyDetector(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Anomaly Detector (%s)", new.AnomalyDetectorARN.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Anomaly Detector (%s)", arn), err.Error())
 
 			return
 		}
@@ -213,23 +218,21 @@ func (r *anomalyDetectorResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().LogsClient(ctx)
 
-	_, err := conn.DeleteLogAnomalyDetector(ctx, &cloudwatchlogs.DeleteLogAnomalyDetectorInput{
-		AnomalyDetectorArn: data.AnomalyDetectorARN.ValueStringPointer(),
-	})
+	arn := fwflex.StringValueFromFramework(ctx, data.AnomalyDetectorARN)
+	input := cloudwatchlogs.DeleteLogAnomalyDetectorInput{
+		AnomalyDetectorArn: aws.String(arn),
+	}
+	_, err := conn.DeleteLogAnomalyDetector(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Anomaly Detector (%s)", data.AnomalyDetectorARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Anomaly Detector (%s)", arn), err.Error())
 
 		return
 	}
-}
-
-func (r *anomalyDetectorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
@@ -245,8 +248,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -255,7 +257,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

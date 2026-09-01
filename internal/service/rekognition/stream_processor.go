@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rekognition
 
@@ -28,14 +30,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -74,6 +76,10 @@ var (
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rekognition;rekognition.DescribeStreamProcessorOutput")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preIdentityVersion="v6.56.0")
 func newStreamProcessorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &streamProcessorResource{}
 
@@ -91,6 +97,7 @@ const (
 type streamProcessorResource struct {
 	framework.ResourceWithModel[streamProcessorResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *streamProcessorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -471,17 +478,11 @@ func (r *streamProcessorResource) Create(ctx context.Context, req resource.Creat
 
 	out, err := conn.CreateStreamProcessor(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameStreamProcessor, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 	if out == nil || out.StreamProcessorArn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameStreamProcessor, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -495,10 +496,7 @@ func (r *streamProcessorResource) Create(ctx context.Context, req resource.Creat
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -521,16 +519,13 @@ func (r *streamProcessorResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	out, err := findStreamProcessorByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameStreamProcessor, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
@@ -651,20 +646,14 @@ func (r *streamProcessorResource) Update(ctx context.Context, req resource.Updat
 
 		_, err := conn.UpdateStreamProcessor(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Rekognition, create.ErrActionUpdating, ResNameStreamProcessor, plan.Name.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		updated, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForUpdate, ResNameStreamProcessor, plan.Name.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 			return
 		}
 
@@ -697,33 +686,23 @@ func (r *streamProcessorResource) Delete(ctx context.Context, req resource.Delet
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameStreamProcessor, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitStreamProcessorDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameStreamProcessor, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
-}
-
-func (r *streamProcessorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -741,7 +720,7 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, n
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StreamProcessorStatusUpdating),
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -766,7 +745,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 			awstypes.StreamProcessorStatusUpdating,
 		),
 		Target:  []string{},
-		Refresh: statusStreamProcessor(ctx, conn, name),
+		Refresh: statusStreamProcessor(conn, name),
 		Timeout: timeout,
 	}
 
@@ -778,10 +757,10 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 	return nil, err
 }
 
-func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamProcessor(conn *rekognition.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -802,8 +781,7 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -811,7 +789,7 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

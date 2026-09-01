@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package convert
@@ -72,6 +72,33 @@ func TestToLowercasePrefix(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ToLowercasePrefix(tt.s); got != tt.want {
 				t.Errorf("ToLowercasePrefix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToAWSCapitalization(t *testing.T) {
+	tests := map[string]struct {
+		s    string
+		want string
+	}{
+		"unchanged": {
+			s:    "ThisWillNotChange",
+			want: "ThisWillNotChange",
+		},
+		"empty": {
+			s:    "",
+			want: "",
+		},
+		"VPC": {
+			s:    "VPCThing",
+			want: "VpcThing",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := ToAWSCapitalization(tt.s); got != tt.want {
+				t.Errorf("ToAWSCapitalization() = %v, want %v", got, tt.want)
 			}
 		})
 	}

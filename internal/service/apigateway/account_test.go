@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,21 +26,21 @@ func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_basic,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_version"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("features"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact("api-gateway-account")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("features"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_settings"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"burst_limit": knownvalue.Int32Exact(5000),
@@ -60,16 +60,16 @@ func testAccAccount_basic(t *testing.T) {
 
 func testAccAccount_cloudwatchRoleARN_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_role0(rName),
@@ -120,13 +120,13 @@ func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_empty,
@@ -147,12 +147,12 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		CheckDestroy: testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -162,6 +162,11 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 					},
 				},
 				Config: testAccAccountConfig_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
 				},
@@ -169,7 +174,17 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_basic,
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+				},
 			},
 		},
 	})
@@ -177,15 +192,15 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 
 func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		CheckDestroy: testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -195,6 +210,11 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 					},
 				},
 				Config: testAccAccountConfig_role0(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
 						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
@@ -206,7 +226,21 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_role0(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
 			},
 		},
 	})
@@ -216,15 +250,15 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 // removed does not result in unexpected behavior.
 func testAccAccount_upgradeV6(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		CheckDestroy: testAccCheckAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -258,9 +292,9 @@ func testAccAccount_upgradeV6(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		account, err := tfapigateway.FindAccount(ctx, conn)
 		if err != nil {

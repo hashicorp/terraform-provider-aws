@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,23 +25,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+/*
+  NOTE: aws_route53_record has a mutable identity ONLY because we shortcut the replace resource flow
+	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
+*/
+
+// For Resource Identity, the fully qualified `fqdn` is used for the `name` attribute to fully, uniquely identify the resource.
+// The `name` of the resource can be partial or fully-qualified so it does not do this.
+
 // @SDKResource("aws_route53_record", name="Record")
 // @IdentityAttribute("zone_id")
-// @IdentityAttribute("name")
+// @IdentityAttribute("name", resourceAttributeName="fqdn")
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
-// @WrappedImport(false)
-// @Testing(identityTest=false)
+// @ImportIDHandler("recordImportID")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="6.4.0")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -51,82 +63,14 @@ func resourceRecord() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if d.Id() != "" {
-					parts := recordParseResourceID(d.Id())
-					// We check that we have parsed the id into the correct number of segments.
-					// We need at least 3 segments!
-					// However, parts[1] can be the empty string if it is the root domain of the zone,
-					// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
-					if parts[0] == "" || parts[2] == "" {
-						return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
-					}
-
-					d.Set("zone_id", parts[0])
-					d.Set(names.AttrName, parts[1])
-					d.Set(names.AttrType, parts[2])
-					if parts[3] != "" {
-						d.Set("set_identifier", parts[3])
-					}
-
-					return []*schema.ResourceData{d}, nil
-				}
-
-				identity, err := d.Identity()
-				if err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 
-				zoneIDRaw, ok := identity.GetOk("zone_id")
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "zone_id")
+				if v, ok := d.GetOk("fqdn"); ok {
+					d.Set(names.AttrName, v)
+					d.SetId(createRecordImportID(d))
 				}
-				zoneID, ok := zoneIDRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "zone_id", zoneIDRaw)
-				}
-				d.Set("zone_id", zoneID)
-
-				nameRaw, ok := identity.GetOk(names.AttrName)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
-				}
-				name, ok := nameRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
-				}
-				d.Set(names.AttrName, name)
-
-				typeRaw, ok := identity.GetOk(names.AttrType)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrType)
-				}
-				typ, ok := typeRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrType, typeRaw)
-				}
-				d.Set(names.AttrType, typ)
-
-				vars := []string{
-					zoneID,
-					name,
-					typ,
-				}
-
-				setIdentifierRaw, ok := identity.GetOk("set_identifier")
-				if ok {
-					setIdentifier, ok := setIdentifierRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "set_identifier", setIdentifierRaw)
-					}
-					d.Set("set_identifier", setIdentifier)
-
-					vars = append(vars, setIdentifier)
-				} else {
-					d.Set("set_identifier", "")
-				}
-
-				d.SetId(strings.Join(vars, "_"))
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -135,271 +79,272 @@ func resourceRecord() *schema.Resource {
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"evaluate_target_health": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							StateFunc:        normalizeAliasDomainName,
-							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-							ValidateFunc:     validation.StringLenBetween(1, 1024),
-						},
-						"zone_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
-						},
-					},
-				},
-				ExactlyOneOf:  []string{names.AttrAlias, "records"},
-				ConflictsWith: []string{"ttl"},
-			},
-			"allow_overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"cidr_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"collection_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"location_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAlias: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"evaluate_target_health": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								StateFunc:        normalizeAliasDomainName,
+								DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+								ValidateFunc:     validation.StringLenBetween(1, 1024),
+							},
+							"zone_id": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 32),
+							},
 						},
 					},
+					ExactlyOneOf:  []string{names.AttrAlias, "records"},
+					ConflictsWith: []string{"ttl"},
 				},
-				ConflictsWith: []string{
-					"failover_routing_policy",
-					"geolocation_routing_policy",
-					"geoproximity_routing_policy",
-					"latency_routing_policy",
-					"multivalue_answer_routing_policy",
-					"weighted_routing_policy",
+				"allow_overwrite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"failover_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceRecordSetFailover](),
+				"cidr_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"collection_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"location_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
+					ConflictsWith: []string{
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
 				},
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"geolocation_routing_policy",
-					"geoproximity_routing_policy",
-					"latency_routing_policy",
-					"multivalue_answer_routing_policy",
-					"weighted_routing_policy",
-				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"fqdn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"geolocation_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"continent": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"country": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"subdivision": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"failover_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceRecordSetFailover](),
+							},
 						},
 					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
 				},
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"failover_routing_policy",
-					"geoproximity_routing_policy",
-					"latency_routing_policy",
-					"multivalue_answer_routing_policy",
-					"weighted_routing_policy",
+				"fqdn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"geoproximity_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_region": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"geolocation_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"continent": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"country": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"subdivision": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
-						"bias": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(-99, 99),
-						},
-						"coordinates": {
-							Type: schema.TypeSet,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"latitude": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"longitude": {
-										Type:     schema.TypeString,
-										Required: true,
+					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
+				},
+				"geoproximity_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"aws_region": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"bias": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(-99, 99),
+							},
+							"coordinates": {
+								Type: schema.TypeSet,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"latitude": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"longitude": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
+								Optional: true,
 							},
-							Optional: true,
-						},
-						"local_zone_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"failover_routing_policy",
-					"geolocation_routing_policy",
-					"latency_routing_policy",
-					"multivalue_answer_routing_policy",
-					"weighted_routing_policy",
-				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"health_check_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"latency_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRegion: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceRecordSetRegion](),
+							"local_zone_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
 				},
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"failover_routing_policy",
-					"geolocation_routing_policy",
-					"geoproximity_routing_policy",
-					"multivalue_answer_routing_policy",
-					"weighted_routing_policy",
+				"health_check_id": {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"multivalue_answer_routing_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"failover_routing_policy",
-					"geolocation_routing_policy",
-					"geoproximity_routing_policy",
-					"latency_routing_policy",
-					"weighted_routing_policy",
-				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
-					// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
-					// to trim the string to prevent Route53 API error.
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
-				},
-			},
-			"records": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{names.AttrAlias, "records"},
-			},
-			"set_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ttl": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrAlias},
-				RequiredWith:  []string{"records", "ttl"},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RRType](),
-			},
-			"weighted_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrWeight: {
-							Type:     schema.TypeInt,
-							Required: true,
+				"latency_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRegion: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceRecordSetRegion](),
+							},
 						},
 					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
 				},
-				ConflictsWith: []string{
-					"cidr_routing_policy",
-					"failover_routing_policy",
-					"geolocation_routing_policy",
-					"geoproximity_routing_policy",
-					"latency_routing_policy",
-					"multivalue_answer_routing_policy",
+				"multivalue_answer_routing_policy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
 				},
-				RequiredWith: []string{"set_identifier"},
-			},
-			"zone_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
+						// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
+						// to trim the string to prevent Route53 API error.
+						value := strings.TrimSuffix(v.(string), ".")
+						return strings.ToLower(value)
+					},
+				},
+				"records": {
+					Type:         schema.TypeSet,
+					Optional:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					ExactlyOneOf: []string{names.AttrAlias, "records"},
+				},
+				"set_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ttl": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrAlias},
+					RequiredWith:  []string{"records", "ttl"},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RRType](),
+				},
+				"weighted_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrWeight: {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+						},
+					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
+				},
+				"zone_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -443,11 +388,11 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 
@@ -455,15 +400,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Record: %s", err)
 	}
 
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	if output := outputRaw.(*route53.ChangeResourceRecordSetsOutput); output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -478,9 +415,9 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	record, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -489,6 +426,12 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
 	}
+
+	return resourceRecordFlatten(d, record)
+}
+
+func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceRecordSet) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []any{map[string]any{
@@ -520,13 +463,10 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "setting failover_routing_policy: %s", err)
 		}
 	}
-	// findResourceRecordSetByFourPartKey returns the FQDN in API-normalized form.
-	// For backwards compatibility, restore any '*' as the leftmost label in the domain name.
-	// \052 is the octal representation of '*'.
-	if v := aws.ToString(fqdn); strings.HasPrefix(v, `\052.`) {
-		fqdn = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
-	}
+
+	fqdn := denormalizeDomainName(record.Name)
 	d.Set("fqdn", fqdn)
+
 	if geoLocation := record.GeoLocation; geoLocation != nil {
 		tfList := []any{map[string]any{
 			"continent":   aws.ToString(geoLocation.ContinentCode),
@@ -735,6 +675,11 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		oldRec.SetIdentifier = aws.String(v.(string))
 	}
 
+	newRecAction := awstypes.ChangeActionCreate
+	if d.Get("allow_overwrite").(bool) {
+		newRecAction = awstypes.ChangeActionUpsert
+	}
+
 	// Delete the old and create the new records in a single batch.
 	input := &route53.ChangeResourceRecordSetsInput{
 		ChangeBatch: &awstypes.ChangeBatch{
@@ -744,7 +689,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 					ResourceRecordSet: oldRec,
 				},
 				{
-					Action:            awstypes.ChangeActionCreate,
+					Action:            newRecAction,
 					ResourceRecordSet: expandResourceRecordSet(d, aws.ToString(zoneRecord.HostedZone.Name)),
 				},
 			},
@@ -755,7 +700,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := conn.ChangeResourceRecordSets(ctx, input)
 
-	if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+	if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 		err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 	}
 
@@ -769,16 +714,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	// Generate a new ID.
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
@@ -797,9 +733,9 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		name = d.Get(names.AttrName).(string)
 	}
-	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	rec, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -867,11 +803,11 @@ func recordParseResourceID(id string) [4]string {
 	return [4]string{recZone, recName, recType, recSet}
 }
 
-func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, *string, error) {
+func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Client, zoneID, recordName, recordType, recordSetID string) (*awstypes.ResourceRecordSet, error) {
 	zone, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
@@ -902,10 +838,10 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return output, &name, nil
+	return output, nil
 }
 
 func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, morePages tfslices.Predicate[*route53.ListResourceRecordSetsOutput], filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {
@@ -927,8 +863,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 
 		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1219,4 +1154,43 @@ func expandTxtEntry(s string) string {
 
 func flattenTxtEntry(s string) string {
 	return fmt.Sprintf(`"%s"`, s)
+}
+
+type recordImportID struct{}
+
+func (recordImportID) Create(d *schema.ResourceData) string {
+	return createRecordImportID(d)
+}
+
+func (recordImportID) Parse(id string) (string, map[string]any, error) {
+	parts := recordParseResourceID(id)
+	// We check that we have parsed the id into the correct number of segments.
+	// We need at least 3 segments!
+	// However, parts[1] can be the empty string if it is the root domain of the zone,
+	// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+	if parts[0] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
+	}
+
+	result := map[string]any{
+		"zone_id":      parts[0],
+		names.AttrName: parts[1],
+		names.AttrType: parts[2],
+	}
+	if parts[3] != "" {
+		result["set_identifier"] = parts[3]
+	}
+	return id, result, nil
+}
+
+func createRecordImportID(d *schema.ResourceData) string {
+	parts := []string{
+		d.Get("zone_id").(string),
+		strings.ToLower(d.Get(names.AttrName).(string)),
+		d.Get(names.AttrType).(string),
+	}
+	if v, ok := d.GetOk("set_identifier"); ok {
+		parts = append(parts, v.(string))
+	}
+	return strings.Join(parts, "_")
 }

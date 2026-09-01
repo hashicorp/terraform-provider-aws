@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -42,7 +42,7 @@ func sweepAccountAssignments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 
@@ -76,7 +76,9 @@ func sweepAccountAssignments(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
+			if awsv2.SkipSweepError(err) ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "This operation is not supported for account instances of IAM Identity Center") {
 				log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
 				return nil
 			}
@@ -134,7 +136,7 @@ func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 	var sweepResources []sweep.Sweepable
@@ -173,8 +175,13 @@ func sweepApplications(region string) error {
 
 			for _, application := range page.Applications {
 				applicationARN := aws.ToString(application.ApplicationArn)
-				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 
+				if applicationProviderARN := aws.ToString(application.ApplicationProviderArn); applicationProviderARN != "" {
+					log.Printf("[INFO] Skipping SSO Application %s: ApplicationProviderArn=%s", applicationARN, applicationProviderARN)
+					continue
+				}
+
+				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
@@ -191,7 +198,7 @@ func sweepPermissionSets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 	var sweepResources []sweep.Sweepable
@@ -220,7 +227,9 @@ func sweepPermissionSets(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
+			if awsv2.SkipSweepError(err) ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") ||
+				tfawserr.ErrMessageContains(err, "ValidationException", "This operation is not supported for account instances of IAM Identity Center") {
 				log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
 				return nil
 			}

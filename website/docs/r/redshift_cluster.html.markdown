@@ -15,7 +15,7 @@ Provides a Redshift Cluster Resource.
 
 ~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `default_iam_role_arn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `default_iam_role_arn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
--> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.
   If you do not provide a name, Amazon Redshift will create a default database called `dev`.
-* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
+* `default_iam_role_arn` - (Optional) ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
@@ -74,8 +74,8 @@ This resource supports the following arguments:
 * `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `multi_az` - (Optional) Specifies if the Redshift cluster is multi-AZ.
-* `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
-* `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
+* `vpc_security_group_ids` - (Optional) List of VPC security groups to be associated with the cluster.
+* `cluster_subnet_group_name` - (Optional) Name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside VPC.
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.
 * `availability_zone_relocation_enabled` - (Optional) If true, the cluster can be relocated to another availabity zone, either automatically by AWS or when requested. Default is `false`. Available for use on clusters from the RA3 instance family.
 * `preferred_maintenance_window` - (Optional) The weekly time range (in UTC) during which automated cluster maintenance can occur.
@@ -118,7 +118,7 @@ the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
 * `cluster_type` - The cluster type
@@ -139,7 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
 * `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
-* `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
+* `cluster_namespace_arn` - Namespace ARN of the cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:

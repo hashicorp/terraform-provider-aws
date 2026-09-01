@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 MILESTONE_NAME=$(gh api graphql -F current="$MILESTONE" -f query='
 query($current: String!) {
@@ -61,6 +63,7 @@ PULL_URL=$(jq \
   '$data | fromjson | .[0].data.repository.pullRequest.url')
 
 # Get the URLs for all issues closed by this pull request. Needed for the gh call.
+# shellcheck disable=SC2207
 ISSUES_URLS=($(jq \
   --null-input \
   --raw-output \

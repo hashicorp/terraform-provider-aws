@@ -32,14 +32,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the template alias.
+* `arn` - ARN of the template alias.
 * `id` - A comma-delimited string joining AWS account ID, template ID, and alias name.
 
 ## Import

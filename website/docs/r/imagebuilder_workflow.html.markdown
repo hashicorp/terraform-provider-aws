@@ -66,7 +66,7 @@ The following arguments are optional:
 * `change_description` - (Optional) Change description of the workflow.
 * `data` - (Optional) Inline YAML string with data of the workflow. Exactly one of `data` and `uri` can be specified.
 * `description` - (Optional) Description of the workflow.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the workflow.
+* `kms_key_id` - (Optional) ARN of the KMS Key used to encrypt the workflow.
 * `tags` - (Optional) Key-value map of resource tags for the workflow. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `uri` - (Optional) S3 URI with data of the workflow. Exactly one of `data` and `uri` can be specified.
 
@@ -74,13 +74,35 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the workflow.
+* `id` - ARN of the workflow.
+* `arn` - ARN of the workflow.
 * `date_created` - Date the workflow was created.
 * `owner` - Owner of the workflow.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Image Builder Workflow using the `example_id_arg`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_workflow.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:workflow/build/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_workflow" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Image Builder workflow.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Image Builder Workflow using the `arn`. For example:
 
 ```terraform
 import {
@@ -89,7 +111,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 Image Builder Workflow using the `example_id_arg`. For example:
+Using `terraform import`, import EC2 Image Builder Workflow using the `arn`. For example:
 
 ```console
 % terraform import aws_imagebuilder_workflow.example arn:aws:imagebuilder:us-east-1:aws:workflow/test/example/1.0.1/1

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -14,14 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,55 +49,57 @@ func resourceListener() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultAction: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fixed_response": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
-										Type:     schema.TypeInt,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fixed_response": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatusCode: {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_groups": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_group_identifier": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrWeight: {
-													Type:     schema.TypeInt,
-													Default:  100,
-													Optional: true,
+							"forward": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_groups": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_group_identifier": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrWeight: {
+														Type:     schema.TypeInt,
+														Default:  100,
+														Optional: true,
+													},
 												},
 											},
 										},
@@ -105,47 +109,47 @@ func resourceListener() *schema.Resource {
 						},
 					},
 				},
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrPort: {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ListenerProtocol](),
-			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
-			},
-			"service_identifier": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"last_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrPort: {
+					Type:         schema.TypeInt,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ListenerProtocol](),
+				},
+				"service_arn": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					AtLeastOneOf: []string{"service_arn", "service_identifier"},
+				},
+				"service_identifier": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					AtLeastOneOf: []string{"service_arn", "service_identifier"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -156,7 +160,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateListenerInput{
-		ClientToken:   aws.String(sdkid.UniqueId()),
+		ClientToken:   aws.String(create.UniqueId(ctx)),
 		Name:          aws.String(name),
 		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
@@ -197,7 +201,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findListenerByTwoPartKey(ctx, conn, serviceID, listenerID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -310,7 +314,7 @@ func findListenerByTwoPartKey(ctx context.Context, conn *vpclattice.Client, serv
 	}
 
 	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -321,8 +325,7 @@ func findListener(ctx context.Context, conn *vpclattice.Client, input *vpclattic
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -331,7 +334,7 @@ func findListener(ctx context.Context, conn *vpclattice.Client, input *vpclattic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

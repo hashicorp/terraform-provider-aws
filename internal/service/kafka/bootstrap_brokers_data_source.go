@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -19,52 +21,70 @@ func dataSourceBootstrapBrokers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBootstrapBrokersRead,
 
-		Schema: map[string]*schema.Schema{
-			"bootstrap_brokers": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_vpc_connectivity_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bootstrap_brokers": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_public_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_sasl_iam": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_sasl_scram": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_vpc_connectivity_tls": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -91,6 +111,10 @@ func dataSourceBootstrapBrokersRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
 	d.Set("bootstrap_brokers_vpc_connectivity_tls", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivityTls)))
+	d.Set("bootstrap_brokers_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringIpv6)))
+	d.Set("bootstrap_brokers_sasl_iam_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIamIpv6)))
+	d.Set("bootstrap_brokers_sasl_scram_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslScramIpv6)))
+	d.Set("bootstrap_brokers_tls_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringTlsIpv6)))
 
 	return diags
 }

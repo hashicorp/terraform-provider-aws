@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -7,20 +7,19 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
+func testAccOrganizationalUnitDescendantOUsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.current"
 	newOU1DataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.test0"
 	newOU2DataSourceName := "data.aws_organizations_organizational_unit_descendant_organizational_units.test1"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)

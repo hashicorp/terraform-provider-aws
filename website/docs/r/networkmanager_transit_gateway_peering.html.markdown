@@ -16,6 +16,11 @@ Manages a Network Manager transit gateway peering connection. Creates a peering 
 resource "aws_networkmanager_transit_gateway_peering" "example" {
   core_network_id     = awscc_networkmanager_core_network.example.id
   transit_gateway_arn = aws_ec2_transit_gateway.example.arn
+
+  depends_on = [
+    aws_ec2_transit_gateway_policy_table.example,
+    aws_networkmanager_core_network_policy_attachment.example,
+  ]
 }
 ```
 

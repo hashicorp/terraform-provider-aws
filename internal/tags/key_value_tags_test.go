@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tags
@@ -900,14 +900,14 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 		},
 		{
 			name:  "non-existent key",
-			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": new("value1")}),
 			key:   "key2",
 			field: "field2",
 			want:  nil,
 		},
 		{
 			name:  "non-existent TagData",
-			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": new("value1")}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
@@ -916,8 +916,8 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 			name: "non-existent field",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
-					AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-					Value:                testStringPtr("value1"),
+					AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+					Value:                new("value1"),
 				},
 			}),
 			key:   "key1",
@@ -928,20 +928,20 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 			name: "matching value",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
-					AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-					Value:                testStringPtr("value1"),
+					AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+					Value:                new("value1"),
 				},
 			}),
 			key:   "key1",
 			field: "field1",
-			want:  testBoolPtr(true),
+			want:  new(true),
 		},
 		{
 			name: "matching nil",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalBoolFields: map[string]*bool{"field1": nil},
-					Value:                testStringPtr("value1"),
+					Value:                new("value1"),
 				},
 			}),
 			key:   "key1",
@@ -991,14 +991,14 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 		},
 		{
 			name:  "non-existent key",
-			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": new("value1")}),
 			key:   "key2",
 			field: "field2",
 			want:  nil,
 		},
 		{
 			name:  "non-existent TagData",
-			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": new("value1")}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
@@ -1007,8 +1007,8 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 			name: "non-existent field",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
-					AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-					Value:                  testStringPtr("value1"),
+					AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+					Value:                  new("value1"),
 				},
 			}),
 			key:   "key1",
@@ -1019,20 +1019,20 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 			name: "matching value",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
-					AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-					Value:                  testStringPtr("value1"),
+					AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+					Value:                  new("value1"),
 				},
 			}),
 			key:   "key1",
 			field: "field1",
-			want:  testStringPtr("field1value"),
+			want:  new("field1value"),
 		},
 		{
 			name: "matching nil",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalStringFields: map[string]*string{"field1": nil},
-					Value:                  testStringPtr("value1"),
+					Value:                  new("value1"),
 				},
 			}),
 			key:   "key1",
@@ -1080,13 +1080,13 @@ func TestKeyValueTagsKeyExists(t *testing.T) {
 		},
 		{
 			name: "non-existent",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key2",
 			want: false,
 		},
 		{
 			name: "matching with string value",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key1",
 			want: true,
 		},
@@ -1129,7 +1129,7 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 		},
 		{
 			name: "non-existent",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key2",
 			want: nil,
 		},
@@ -1137,22 +1137,22 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 			name: "matching with additional boolean fields",
 			tags: New(ctx, map[string]*TagData{
 				"key1": {
-					AdditionalBoolFields: map[string]*bool{"boolfield": testBoolPtr(true)},
-					Value:                testStringPtr("value1"),
+					AdditionalBoolFields: map[string]*bool{"boolfield": new(true)},
+					Value:                new("value1"),
 				},
 			}),
 			key: "key1",
 			want: &TagData{
-				AdditionalBoolFields: map[string]*bool{"boolfield": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"boolfield": new(true)},
+				Value:                new("value1"),
 			},
 		},
 		{
 			name: "matching with string value",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key1",
 			want: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 		},
 		{
@@ -1202,15 +1202,15 @@ func TestKeyValueTagsKeyValues(t *testing.T) {
 		},
 		{
 			name: "non-existent",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key2",
 			want: nil,
 		},
 		{
 			name: "matching with string value",
-			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": new("value1")}),
 			key:  "key1",
-			want: testStringPtr("value1"),
+			want: new("value1"),
 		},
 		{
 			name: "matching with nil value",
@@ -1304,9 +1304,9 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		{
 			name: "non_empty_map_string_stringPointer",
 			tags: New(ctx, map[string]*string{
-				"key1": testStringPtr("value1"),
-				"key2": testStringPtr("value2"),
-				"key3": testStringPtr("value3"),
+				"key1": new("value1"),
+				"key2": new("value2"),
+				"key3": new("value3"),
 			}),
 			want: []string{
 				"key1",
@@ -1406,9 +1406,9 @@ func TestKeyValueTagsMap(t *testing.T) {
 		{
 			name: "non_empty_map_string_stringPointer",
 			tags: New(ctx, map[string]*string{
-				"key1": testStringPtr("value1"),
-				"key2": testStringPtr("value2"),
-				"key3": testStringPtr("value3"),
+				"key1": new("value1"),
+				"key2": new("value2"),
+				"key3": new("value3"),
 			}),
 			want: map[string]string{
 				"key1": "value1",
@@ -1419,7 +1419,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 		{
 			name: "empty_value",
 			tags: New(ctx, map[string]*string{
-				"key1": testStringPtr(""),
+				"key1": new(""),
 			}),
 			want: map[string]string{
 				"key1": "",
@@ -1952,6 +1952,91 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsContainsAllKeys(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := []struct {
+		name   string
+		source KeyValueTags
+		target KeyValueTags
+		want   bool
+	}{
+		{
+			name:   "empty",
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{}),
+			want:   true,
+		},
+		{
+			name:   "source_empty",
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+			}),
+			want: false,
+		},
+		{
+			name: "target_empty",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+			}),
+			target: New(ctx, map[string]string{}),
+			want:   true,
+		},
+		{
+			name: "exact_match",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			want: true,
+		},
+		{
+			name: "source_contains_all",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key3": "value3",
+			}),
+			want: true,
+		},
+		{
+			name: "source_does_not_contain_all",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key4": "value4",
+			}),
+			want: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.source.ContainsAllKeys(testCase.target)
+
+			if got != testCase.want {
+				t.Errorf("unexpected ContainsAllKeys: %t", got)
+			}
+		})
+	}
+}
+
 func TestKeyValueTagsEqual(t *testing.T) {
 	t.Parallel()
 
@@ -2436,10 +2521,10 @@ func TestNew(t *testing.T) {
 					Value: nil,
 				},
 				"key2": &TagData{
-					Value: testStringPtr(""),
+					Value: new(""),
 				},
 				"key3": &TagData{
-					Value: testStringPtr("value3"),
+					Value: new("value3"),
 				},
 			},
 			want: map[string]string{
@@ -2455,10 +2540,10 @@ func TestNew(t *testing.T) {
 					Value: nil,
 				},
 				"key2": {
-					Value: testStringPtr(""),
+					Value: new(""),
 				},
 				"key3": {
-					Value: testStringPtr("value3"),
+					Value: new("value3"),
 				},
 			},
 			want: map[string]string{
@@ -2495,8 +2580,8 @@ func TestNew(t *testing.T) {
 			name: "non_empty_map_string_stringPointer",
 			source: map[string]*string{
 				"key1": nil,
-				"key2": testStringPtr(""),
-				"key3": testStringPtr("value3"),
+				"key2": new(""),
+				"key3": new("value3"),
 			},
 			want: map[string]string{
 				"key1": "",
@@ -2548,7 +2633,7 @@ func TestNew(t *testing.T) {
 					t.Fatal("expected source to be copied, got source modification")
 				}
 			case map[string]*TagData:
-				src["mergekey"] = &TagData{Value: testStringPtr("mergevalue")}
+				src["mergekey"] = &TagData{Value: new("mergevalue")}
 
 				_, ok := got.Map()["mergekey"]
 
@@ -2579,14 +2664,14 @@ func TestTagDataEqual(t *testing.T) {
 			name:     "first nil",
 			tagData1: nil,
 			tagData2: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			want: false,
 		},
 		{
 			name: "second nil",
 			tagData1: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			tagData2: nil,
 			want:     false,
@@ -2594,92 +2679,92 @@ func TestTagDataEqual(t *testing.T) {
 		{
 			name: "differing value",
 			tagData1: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			tagData2: &TagData{
-				Value: testStringPtr("value2"),
+				Value: new("value2"),
 			},
 			want: false,
 		},
 		{
 			name: "differing additional bool fields",
 			tagData1: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+				Value:                new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field2": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field2": new(true)},
+				Value:                new("value1"),
 			},
 			want: false,
 		},
 		{
 			name: "differing additional bool field values",
 			tagData1: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+				Value:                new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(false)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(false)},
+				Value:                new("value1"),
 			},
 			want: false,
 		},
 		{
 			name: "differing additional string fields",
 			tagData1: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+				Value:                  new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalStringFields: map[string]*string{"field2": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field2": new("field1value")},
+				Value:                  new("value1"),
 			},
 			want: false,
 		},
 		{
 			name: "differing additional string field values",
 			tagData1: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+				Value:                  new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field2value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field2value")},
+				Value:                  new("value1"),
 			},
 			want: false,
 		},
 		{
 			name: "same value",
 			tagData1: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			tagData2: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			want: true,
 		},
 		{
 			name: "same additional bool fields",
 			tagData1: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+				Value:                new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+				Value:                new("value1"),
 			},
 			want: true,
 		},
 		{
 			name: "same additional string fields",
 			tagData1: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+				Value:                  new("value1"),
 			},
 			tagData2: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+				Value:                  new("value1"),
 			},
 			want: true,
 		},
@@ -2714,23 +2799,23 @@ func TestTagDataString(t *testing.T) {
 		{
 			name: "value",
 			tagData: &TagData{
-				Value: testStringPtr("value1"),
+				Value: new("value1"),
 			},
 			want: "TagData{Value: value1}",
 		},
 		{
 			name: "additional bool fields",
 			tagData: &TagData{
-				AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
-				Value:                testStringPtr("value1"),
+				AdditionalBoolFields: map[string]*bool{"field1": new(true)},
+				Value:                new("value1"),
 			},
 			want: "TagData{AdditionalBoolFields: map[field1:true], Value: value1}",
 		},
 		{
 			name: "additional string fields",
 			tagData: &TagData{
-				AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
-				Value:                  testStringPtr("value1"),
+				AdditionalStringFields: map[string]*string{"field1": new("field1value")},
+				Value:                  new("value1"),
 			},
 			want: "TagData{AdditionalStringFields: map[field1:field1value], Value: value1}",
 		},
@@ -2840,12 +2925,4 @@ func testKeyValueTagsVerifyMap(t *testing.T, got map[string]string, want map[str
 			t.Errorf("got extra key: %s", k)
 		}
 	}
-}
-
-func testBoolPtr(b bool) *bool {
-	return &b
-}
-
-func testStringPtr(str string) *string {
-	return &str
 }

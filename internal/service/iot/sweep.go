@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -112,7 +112,7 @@ func sweepCertificates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListCertificatesInput{}
@@ -154,7 +154,7 @@ func sweepPolicyAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListPoliciesInput{}
@@ -218,7 +218,7 @@ func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListPoliciesInput{}
@@ -259,7 +259,7 @@ func sweepRoleAliases(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListRoleAliasesInput{}
@@ -300,7 +300,7 @@ func sweepThingPrincipalAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListThingsInput{}
@@ -364,7 +364,7 @@ func sweepThings(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListThingsInput{}
@@ -405,7 +405,7 @@ func sweepThingTypes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListThingTypesInput{}
@@ -446,7 +446,7 @@ func sweepTopicRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListTopicRulesInput{}
@@ -487,7 +487,7 @@ func sweepThingGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListThingGroupsInput{}
@@ -528,7 +528,7 @@ func sweepTopicRuleDestinations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListTopicRuleDestinationsInput{}
@@ -569,7 +569,7 @@ func sweepAuthorizers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListAuthorizersInput{}
@@ -611,7 +611,7 @@ func sweepDomainConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListDomainConfigurationsInput{}
@@ -675,7 +675,7 @@ func sweepCACertificates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.IoTClient(ctx)
 	input := &iot.ListCACertificatesInput{}

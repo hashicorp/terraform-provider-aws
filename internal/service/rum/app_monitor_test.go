@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rum_test
@@ -9,32 +9,31 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchrum "github.com/hashicorp/terraform-provider-aws/internal/service/rum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRUMAppMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -54,7 +53,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -74,19 +73,19 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
@@ -99,7 +98,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_customEvents(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "DISABLED"),
 				),
@@ -107,7 +106,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
@@ -119,19 +118,19 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 func TestAccRUMAppMonitor_domainList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_domainList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -154,7 +153,7 @@ func TestAccRUMAppMonitor_domainList(t *testing.T) {
 				// Updating by removing the domain_list and adding the domain
 				Config: testAccAppMonitorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -171,7 +170,7 @@ func TestAccRUMAppMonitor_domainList(t *testing.T) {
 				// Updating by removing the domain and adding the domain list again
 				Config: testAccAppMonitorConfig_domainList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
@@ -192,19 +191,19 @@ func TestAccRUMAppMonitor_domainList(t *testing.T) {
 func TestAccRUMAppMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -217,7 +216,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -226,7 +225,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 			{
 				Config: testAccAppMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -238,31 +237,39 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					testAccCheckAppMonitorExists(ctx, t, resourceName, &appMon),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAppMonitorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RUMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rum_app_monitor" {
@@ -271,7 +278,7 @@ func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudwatchrum.FindAppMonitorByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -286,14 +293,14 @@ func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAppMonitorExists(ctx context.Context, n string, v *awstypes.AppMonitor) resource.TestCheckFunc {
+func testAccCheckAppMonitorExists(ctx context.Context, t *testing.T, n string, v *awstypes.AppMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RUMClient(ctx)
 
 		output, err := tfcloudwatchrum.FindAppMonitorByName(ctx, conn, rs.Primary.ID)
 

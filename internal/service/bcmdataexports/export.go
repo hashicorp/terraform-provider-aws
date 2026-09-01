@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bcmdataexports
 
@@ -13,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +41,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(v60RefreshError=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
 
@@ -54,7 +58,7 @@ const (
 type exportResource struct {
 	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -117,12 +121,17 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
-					// map[string]map[string]string
-					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
+					// TODO: Because `Computed` can only be speciied at the top level, default values for specific tables must be specified if any values are specified.
+					// This should be resolved when we can use `schema.MapNestedAttribute` with protov6.
+					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
+					},
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(1),
 					},
 				},
 			},
@@ -233,15 +242,15 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	in := &bcmdataexports.CreateExportInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	in := bcmdataexports.CreateExportInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.ResourceTags = getTagsIn(ctx)
 
-	out, err := conn.CreateExport(ctx, in)
+	out, err := conn.CreateExport(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionCreating, ResNameExport, "", err),
@@ -290,13 +299,13 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	out, err := findExportByARN(ctx, conn, state.ARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionReading, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -324,15 +333,15 @@ func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		in := bcmdataexports.UpdateExportInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		in.ExportArn = plan.ARN.ValueStringPointer()
 
-		out, err := conn.UpdateExport(ctx, in)
+		out, err := conn.UpdateExport(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), err),
@@ -373,11 +382,11 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	in := &bcmdataexports.DeleteExportInput{
+	in := bcmdataexports.DeleteExportInput{
 		ExportArn: state.ARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteExport(ctx, in)
+	_, err := conn.DeleteExport(ctx, &in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -407,7 +416,7 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -425,7 +434,7 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -439,10 +448,10 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	return nil, err
 }
 
-func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExport(conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findExportByARN(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -455,15 +464,14 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 }
 
 func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
-	in := &bcmdataexports.GetExportInput{
+	in := bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
 
-	out, err := conn.GetExport(ctx, in)
+	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -472,7 +480,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -497,8 +505,8 @@ type exportData struct {
 }
 
 type dataQueryData struct {
-	QueryStatement      types.String                                         `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
+	QueryStatement      types.String             `tfsdk:"query_statement"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {

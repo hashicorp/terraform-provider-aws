@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigatewayv2
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +31,7 @@ import (
 // @SDKResource("aws_apigatewayv2_domain_name", name="Domain Name")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetDomainNameOutput")
-// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain(t)")
 // @Testing(tlsKey=true)
 // @Testing(tlsKeyDomain=rName)
 func resourceDomainName() *schema.Resource {
@@ -48,85 +50,93 @@ func resourceDomainName() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_mapping_selection_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"domain_name_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCertificateARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrEndpointType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
-						},
-						names.AttrHostedZoneID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrIPAddressType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-						},
-						"ownership_verification_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"security_policy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.SecurityPolicyTls12), true),
-						},
-						"target_domain_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_mapping_selection_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"domain_name_configuration": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificateARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrEndpointType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
+							},
+							names.AttrHostedZoneID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrIPAddressType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+							},
+							"ownership_verification_certificate_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"security_policy": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.SecurityPolicyTls12), true),
+							},
+							"target_domain_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"mutual_tls_authentication": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"truststore_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"truststore_version": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"mutual_tls_authentication": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"truststore_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"truststore_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"routing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RoutingMode](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -141,6 +151,9 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
 		MutualTlsAuthentication:  expandMutualTLSAuthenticationInput(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                     getTagsIn(ctx),
+	}
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = awstypes.RoutingMode(v.(string))
 	}
 
 	output, err := conn.CreateDomainName(ctx, &input)
@@ -165,7 +178,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findDomainName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Domain Name (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -184,6 +197,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err := d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
+	d.Set("routing_mode", output.RoutingMode)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -194,7 +208,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
+	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication", "routing_mode") {
 		input := apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
 			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
@@ -219,6 +233,10 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					TruststoreUri: aws.String(""),
 				}
 			}
+		}
+
+		if d.HasChange("routing_mode") {
+			input.RoutingMode = awstypes.RoutingMode(d.Get("routing_mode").(string))
 		}
 
 		_, err := conn.UpdateDomainName(ctx, &input)
@@ -265,8 +283,7 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -275,17 +292,17 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	}
 
 	if output == nil || len(output.DomainNameConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainName(conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -301,14 +318,14 @@ func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.Client, nam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainNameStatusUpdating),
 		Target:  enum.Slice(awstypes.DomainNameStatusAvailable),
-		Refresh: statusDomainName(ctx, conn, name),
+		Refresh: statusDomainName(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetDomainNameOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameConfigurations[0].DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameConfigurations[0].DomainNameStatusMessage)))
 
 		return output, err
 	}

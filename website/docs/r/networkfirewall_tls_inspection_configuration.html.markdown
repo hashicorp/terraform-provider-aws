@@ -233,7 +233,7 @@ The following arguments are optional:
 
 ### Encryption Configuration
 
-* `key_id` - (Optional) ARN of the Amazon Web Services Key Management Service (KMS) customer managed key.
+* `key_id` - (Optional) ARN of the Amazon Web Services KMS customer managed key.
 * `type` - (Optional) Type of KMS key to use for encryption of your Network Firewall resources. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_KMS`.
 
 ### TLS Inspection Configuration
@@ -264,7 +264,7 @@ The `scope` block supports the following arguments:
 
 * `destination` - (Required) Set of configuration blocks describing the destination IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any destination address. See [Destination](#destination) below for details.
 * `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Ports](#destination-ports) below for details.
-* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
+* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned IP number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
 * `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 * `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [Source Ports](#source-ports) below for details.
 
@@ -338,6 +338,27 @@ The `certificates` block exports the following attributes:
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_networkfirewall_tls_inspection_configuration.example
+  identity = {
+    "arn" = "arn:aws:network-firewall:us-west-2:123456789012:tls-configuration/example"
+  }
+}
+
+resource "aws_networkfirewall_tls_inspection_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Network Firewall TLS inspection configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall TLS Inspection Configuration using the `arn`. For example:
 

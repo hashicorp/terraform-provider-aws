@@ -47,11 +47,11 @@ This resource supports the following arguments:
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.
 * `replication_type` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
-* `source_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
+* `source_endpoint_arn` - (Required) ARN string that uniquely identifies the source endpoint.
 * `table_mappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
-* `target_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
+* `target_endpoint_arn` - (Required) ARN string that uniquely identifies the target endpoint.
 * `replication_settings` - (Optional) An escaped JSON string that are used to provision this replication configuration. For example, [Change processing tuning settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.ChangeProcessingTuning.html)
-* `resource_identifier` - (Optional) Unique value or name that you set for a given resource that can be used to construct an Amazon Resource Name (ARN) for that resource. For more information, see [Fine-grained access control using resource names and tags](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.FineGrainedAccess)
+* `resource_identifier` - (Optional) Unique value or name that you set for a given resource that can be used to construct an ARN for that resource. For more information, see [Fine-grained access control using resource names and tags](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.FineGrainedAccess)
 * `supplemental_settings` - (Optional) JSON settings for specifying supplemental data. For more information see [Specifying supplemental data for task settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -59,7 +59,7 @@ This resource supports the following arguments:
 
 * `availability_zone` - (Optional) The Availability Zone where the DMS Serverless replication using this configuration will run. The default value is a random.
 * `dns_name_servers` - (Optional) A list of custom DNS name servers supported for the DMS Serverless replication to access your source or target database.
-* `kms_key_id` - (Optional) An Key Management Service (KMS) key Amazon Resource Name (ARN) that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
+* `kms_key_id` - (Optional) KMS key ARN that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
 * `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 1 DCUs as the minimum value allowed. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
 * `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS sets the lowest allowed value, 1.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
@@ -71,13 +71,13 @@ This resource supports the following arguments:
     - Constraints: Minimum 30-minute window.
 
 * `replication_subnet_group_id` - (Optional) Specifies a subnet group identifier to associate with the DMS Serverless replication.
-* `vpc_security_group_ids` - (Optional) Specifies the virtual private cloud (VPC) security group to use with the DMS Serverless replication. The VPC security group must work with the VPC containing the replication.
+* `vpc_security_group_ids` - (Optional) VPC security group to use with the DMS Serverless replication. The VPC security group must work with the VPC containing the replication.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) for the serverless replication config.
+* `arn` - ARN for the serverless replication config.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -89,6 +89,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dms_replication_config.example
+  identity = {
+    "arn" = "arn:aws:dms:us-east-1:123456789012:replication-config:example-config"
+  }
+}
+
+resource "aws_dms_replication_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the DMS replication configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `arn`. For example:
 

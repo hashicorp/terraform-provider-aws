@@ -31,7 +31,7 @@ This data source supports the following arguments:
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
 * `multi_az` - (Required) Whether the reservation applies to Multi-AZ deployments.
 * `offering_type` - (Required) Offering type of this reserved DB instance. Valid values are `No Upfront`, `Partial Upfront`, `All Upfront`.
-* `product_description` - (Required) Description of the reserved DB instance.
+* `product_description` - (Required) Description of the reserved DB instance. Example values are `postgresql`, `aurora-postgresql`, `mysql`, `aurora-mysql`, `mariadb`.
 
 ## Attribute Reference
 

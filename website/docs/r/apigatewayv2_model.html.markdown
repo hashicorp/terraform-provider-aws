@@ -38,12 +38,12 @@ resource "aws_apigatewayv2_model" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
-* `content_type` - (Required)  The content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
-* `name` - (Required) Name of the model. Must be alphanumeric. Must be between 1 and 128 characters in length.
-* `schema` - (Required) Schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model. Must be less than or equal to 32768 characters in length.
+* `content_type` - (Required) Content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
 * `description` - (Optional) Description of the model. Must be between 1 and 128 characters in length.
+* `name` - (Required) Name of the model. Must be alphanumeric. Must be between 1 and 128 characters in length.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `schema` - (Required) Schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model. Must be less than or equal to 32768 characters in length.
 
 ## Attribute Reference
 

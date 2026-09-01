@@ -3,11 +3,11 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_route_server_peer"
 description: |-
-  Terraform resource for managing a VPC (Virtual Private Cloud) Route Server Peer.
+  Terraform resource for managing a VPC Route Server Peer.
 ---
 # Resource: aws_vpc_route_server_peer
 
-  Provides a resource for managing a VPC (Virtual Private Cloud) Route Server Peer.
+  Provides a resource for managing a VPC Route Server Peer.
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ resource "aws_vpc_route_server" "test" {
   }
 }
 
-resource "aws_vpc_route_server_association" "test" {
+resource "aws_vpc_route_server_vpc_association" "test" {
   route_server_id = aws_vpc_route_server.test.route_server_id
   vpc_id          = aws_vpc.test.id
 }
@@ -51,14 +51,14 @@ resource "aws_vpc_route_server_endpoint" "test" {
     Name = "Test Endpoint"
   }
 
-  depends_on = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_vpc_association.test]
 }
 
 resource "aws_vpc_route_server_propagation" "test" {
   route_server_id = aws_vpc_route_server.test.route_server_id
   route_table_id  = aws_route_table.test.id
 
-  depends_on = [aws_vpc_route_server_association.test]
+  depends_on = [aws_vpc_route_server_vpc_association.test]
 }
 
 resource "aws_vpc_route_server_peer" "test" {
@@ -116,7 +116,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server using the `route_server_peer_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Route Server using the `route_server_peer_id`. For example:
 
 ```terraform
 import {
@@ -125,7 +125,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC (Virtual Private Cloud) Route Server using the `route_server_peer_id`. For example:
+Using `terraform import`, import VPC Route Server using the `route_server_peer_id`. For example:
 
 ```console
 % terraform import aws_vpc_route_server_peer.example rsp-12345678

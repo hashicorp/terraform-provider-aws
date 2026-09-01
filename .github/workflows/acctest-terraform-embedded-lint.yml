@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Acceptance Test Embedded Configuration Linting
 on:
   push:
@@ -8,6 +11,8 @@ on:
     paths:
       - .github/workflows/acctest-terraform-embedded-lint.yml
       - .ci/.tflint.hcl
+      - .ci/.tflint_opa.hcl
+      - .ci/opa-policies/**
       - .ci/scripts/validate-terraform.sh
       - .ci/tools/go.mod
       - go.sum
@@ -19,15 +24,21 @@ on:
 ##   - Documentation: docs/makefile-cheat-sheet.md
 ##   - Makefile: ./GNUmakefile
 
+permissions:
+  contents: read # required for checkout
+
 jobs:
+  tflint-opa-policy-tests:
+    uses: ./.github/workflows/tflint-opa-policy-tests.yml
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -43,6 +54,7 @@ jobs:
 
   tflint:
     name: Validate Acceptance Test Terraform
+    needs: tflint-opa-policy-tests
     runs-on: custom-ubuntu-22.04-xl
     strategy:
       matrix:
@@ -51,17 +63,17 @@ jobs:
       TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         name: Cache plugin dir
         continue-on-error: true
         timeout-minutes: 2
@@ -78,3 +90,5 @@ jobs:
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
             | .ci/scripts/validate-terraform.sh
+        env:
+          TFLINT_OPA_POLICY_DIR: ${{ github.workspace }}/.ci/opa-policies

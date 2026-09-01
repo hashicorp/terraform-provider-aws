@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -13,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -47,119 +49,121 @@ func resourceProduct() *schema.Resource {
 			Delete: schema.DefaultTimeout(ProductDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"distributor": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"has_default_path": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_parameters": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"disable_template_validation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  false,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"template_physical_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"provisioning_artifact_parameters.0.template_url",
-								"provisioning_artifact_parameters.0.template_physical_id",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"distributor": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"has_default_path": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_parameters": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
 							},
-						},
-						"template_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ExactlyOneOf: []string{
-								"provisioning_artifact_parameters.0.template_url",
-								"provisioning_artifact_parameters.0.template_physical_id",
+							"disable_template_validation": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  false,
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"template_physical_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"provisioning_artifact_parameters.0.template_url",
+									"provisioning_artifact_parameters.0.template_physical_id",
+								},
+							},
+							"template_url": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ExactlyOneOf: []string{
+									"provisioning_artifact_parameters.0.template_url",
+									"provisioning_artifact_parameters.0.template_physical_id",
+								},
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"support_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"support_email": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"support_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProductType](),
-			},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"support_description": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"support_email": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"support_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProductType](),
+				},
+			}
 		},
 	}
 }
@@ -170,7 +174,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreateProductInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Owner:            aws.String(d.Get(names.AttrOwner).(string)),
 		ProductType:      awstypes.ProductType(d.Get(names.AttrType).(string)),
@@ -204,7 +208,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateProduct(ctx, input)
 	}, "profile does not exist")
 
@@ -317,7 +321,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 		return conn.UpdateProduct(ctx, input)
 	}, "profile does not exist")
 

@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
 
 import (
+	"iter"
 	"slices"
 )
 
@@ -69,6 +70,10 @@ type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`.
 func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
+	if len(s) == 0 {
+		return nil
+	}
+
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {
@@ -154,12 +159,67 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringable interface {
+type Stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringable](s S) []string {
+func Strings[S ~[]E, E Stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})
+}
+
+// CollectWithError collects values from seq into a new slice and returns it.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result is nil.
+func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFunc[E]) ([]E, error) {
+	var s []E
+	opts := newFinderOptions(optFns...)
+
+	for v, err := range seq {
+		if err != nil {
+			return nil, err
+		}
+		if filter := opts.Filter(); filter != nil && !filter(v) {
+			continue
+		}
+		s = append(s, v)
+		if opts.ReturnFirstMatch() {
+			return s, nil
+		}
+	}
+
+	return s, nil
+}
+
+// CollectAndConcatWithError collects values from seq into a new slice and returns it.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result is nil.
+func CollectAndConcatWithError[S ~[]E, E any](seq iter.Seq2[S, error], optFns ...FinderOptionsFunc[E]) (S, error) {
+	var s S
+	opts := newFinderOptions(optFns...)
+
+	for page, err := range seq {
+		if err != nil {
+			return nil, err
+		}
+
+		// Optimization for the common case.
+		if len(optFns) == 0 {
+			s = append(s, page...)
+			continue
+		}
+
+		for _, v := range page {
+			if filter := opts.Filter(); filter != nil && !filter(v) {
+				continue
+			}
+			s = append(s, v)
+			if opts.ReturnFirstMatch() {
+				return s, nil
+			}
+		}
+	}
+
+	return s, nil
 }

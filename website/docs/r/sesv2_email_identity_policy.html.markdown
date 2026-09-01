@@ -52,10 +52,10 @@ EOF
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `email_identity` - (Required) The email identity.
-* `policy_name` - (Required) - The name of the policy.
+* `email_identity` - (Required) Email identity.
 * `policy` - (Required) - The text of the policy in JSON format.
+* `policy_name` - (Required) - The name of the policy.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -63,7 +63,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Policy using the `id` (`email_identity|policy_name`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Policy using the `email_identity` and `policy_name` separated by `|`. For example:
 
 ```terraform
 import {
@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Policy using the `example_id_arg`. For example:
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Policy using the `email_identity` and `policy_name` separated by `|`. For example:
 
 ```console
 % terraform import aws_sesv2_email_identity_policy.example example_email_identity|example_policy_name

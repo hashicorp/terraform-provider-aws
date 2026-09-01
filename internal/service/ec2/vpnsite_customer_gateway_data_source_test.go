@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,18 +16,18 @@ func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	asn := sdkacctest.RandIntRange(64512, 65534)
-	hostOctet := sdkacctest.RandIntRange(1, 254)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	asn := acctest.RandIntRange(t, 64512, 65534)
+	hostOctet := acctest.RandIntRange(t, 1, 254)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_filter(rName, asn, hostOctet),
+				Config: testAccCustomerGatewayDataSourceConfig_filter(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
@@ -47,18 +46,18 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	asn := sdkacctest.RandIntRange(64512, 65534)
-	hostOctet := sdkacctest.RandIntRange(1, 254)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	asn := acctest.RandIntRange(t, 64512, 65534)
+	hostOctet := acctest.RandIntRange(t, 1, 254)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayDataSourceConfig_id(rName, asn, hostOctet),
+				Config: testAccCustomerGatewayDataSourceConfig_id(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
@@ -73,7 +72,7 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	})
 }
 
-func testAccSiteVPNCustomerGatewayDataSourceConfig_filter(rName string, asn, hostOctet int) string {
+func testAccCustomerGatewayDataSourceConfig_filter(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -94,7 +93,7 @@ data "aws_customer_gateway" "test" {
 `, rName, asn, hostOctet)
 }
 
-func testAccSiteVPNCustomerGatewayDataSourceConfig_id(rName string, asn, hostOctet int) string {
+func testAccCustomerGatewayDataSourceConfig_id(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d

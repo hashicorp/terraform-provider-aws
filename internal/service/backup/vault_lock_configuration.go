@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_backup_vault_lock_configuration", name="Vault Lock Configuration")
@@ -31,33 +33,35 @@ func resourceVaultLockConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"backup_vault_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
-			},
-			"backup_vault_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"changeable_for_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(3),
-			},
-			"max_retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"min_retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"backup_vault_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				},
+				"backup_vault_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"changeable_for_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(3),
+				},
+				"max_retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"min_retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -100,7 +104,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 
 	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

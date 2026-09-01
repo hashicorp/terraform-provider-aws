@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -19,52 +21,54 @@ func dataSourceLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinkRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"download_speed": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"upload_speed": {
-							Type:     schema.TypeInt,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"download_speed": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"upload_speed": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"link_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"site_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"link_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"site_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -99,7 +103,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

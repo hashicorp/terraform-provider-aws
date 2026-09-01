@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -19,80 +21,82 @@ func dataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_location": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"zone": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_location": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"subnet_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"global_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"latitude": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"longitude": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"device_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"global_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"latitude": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"longitude": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"model": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"serial_number": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"site_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vendor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"model": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"serial_number": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"site_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vendor": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -135,7 +139,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrType, device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

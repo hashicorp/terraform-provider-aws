@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -16,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,33 +39,35 @@ func resourceCoreNetworkPolicyAttachment() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"core_network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "must be a valid Core Network ID"),
-				),
-			},
-			"policy_document": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 10000000),
-					validation.StringIsJSON,
-				),
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"core_network_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 50),
+						validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "must be a valid Core Network ID"),
+					),
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"policy_document": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 10000000),
+						validation.StringIsJSON,
+					),
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -81,7 +85,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 
 	coreNetwork, err := findCoreNetworkByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -96,21 +100,20 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 
 	// getting the policy document uses a different API call
 	// pass in latestPolicyVersionId to get the latest version id by default
-	coreNetworkPolicy, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), aws.Int32(latestPolicyVersionID))
-
-	if tfresource.NotFound(err) {
+	coreNetworkPolicy, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
+	switch {
+	case retry.NotFound(err):
 		d.Set("policy_document", nil)
-	} else if err != nil {
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
-	} else {
+	default:
 		encodedPolicyDocument, err := structure.NormalizeJsonString(aws.ToString(coreNetworkPolicy.PolicyDocument))
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
 		d.Set("policy_document", encodedPolicyDocument)
 	}
+
 	return diags
 }
 

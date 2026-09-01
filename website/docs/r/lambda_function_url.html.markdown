@@ -9,6 +9,8 @@ description: Manages a Lambda function URL.
 
 Manages a Lambda function URL. Creates a dedicated HTTP(S) endpoint for a Lambda function to enable direct invocation via HTTP requests.
 
+~> **NOTE:** When [`authorization_type` is `"NONE"`](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html#urls-auth-none) the `lambda:InvokeFunctionUrl` permission allowing a public endpoint and `lambda:InvokeFunction` permission with the `InvokedViaFunctionUrl` flag set to `true` are automatically added to the Lambda function on creation. These policies are NOT removed from AWS when the resource is destroyed.
+
 ## Example Usage
 
 ### Basic Function URL with No Authentication
@@ -49,12 +51,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cors` - (Optional) Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors).
+* `cors` - (Optional) Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors-block).
 * `invoke_mode` - (Optional) How the Lambda function responds to an invocation. Valid values are `BUFFERED` (default) and `RESPONSE_STREAM`.
 * `qualifier` - (Optional) Alias name or `$LATEST`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### CORS
+### `cors` Block
 
 * `allow_credentials` - (Optional) Whether to allow cookies or other credentials in requests to the function URL.
 * `allow_headers` - (Optional) HTTP headers that origins can include in requests to the function URL.

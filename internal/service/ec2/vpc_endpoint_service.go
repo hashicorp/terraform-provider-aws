@@ -1,29 +1,29 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,113 +42,115 @@ func resourceVPCEndpointService() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"acceptance_required": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"allowed_principals": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"base_endpoint_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"gateway_load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"acceptance_required": {
+					Type:     schema.TypeBool,
+					Required: true,
 				},
-			},
-			"manages_vpc_endpoints": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"network_load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"allowed_principals": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"private_dns_name_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"base_endpoint_dns_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"gateway_load_balancer_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"manages_vpc_endpoints": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"network_load_balancer_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"private_dns_name_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrServiceName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"supported_ip_address_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectivityType](),
+				names.AttrServiceName: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"supported_regions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"service_type": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"supported_ip_address_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectivityType](),
+					},
+				},
+				"supported_regions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -165,7 +167,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
-		ClientToken:        aws.String(id.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpointService),
 	}
 
@@ -217,11 +219,12 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	svcCfg, err := findVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Service %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -232,14 +235,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpcEndpointServiceARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZones, svcCfg.AvailabilityZones)
 	d.Set("base_endpoint_dns_names", svcCfg.BaseEndpointDnsNames)
 	d.Set("gateway_load_balancer_arns", svcCfg.GatewayLoadBalancerArns)
@@ -403,4 +399,12 @@ func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) 
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
 		return aws.ToString(v.Region)
 	})
+}
+
+func vpcEndpointServiceARN(ctx context.Context, c *conns.AWSClient, serviceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpc-endpoint-service/"+serviceID)
+}
+
+func vpcEndpointServiceARNWithRegion(ctx context.Context, c *conns.AWSClient, region, serviceID string) string {
+	return c.RegionalARNWithRegion(ctx, names.EC2, region, "vpc-endpoint-service/"+serviceID)
 }

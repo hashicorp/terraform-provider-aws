@@ -12,7 +12,7 @@ Invokes an AWS Lambda Function as an ephemeral resource. Use this ephemeral reso
 
 The Lambda function is invoked with [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
 
-~> **Note:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> **Note:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ~> **Note:** The `aws_lambda_invocation` ephemeral resource invokes the function during every `plan` and `apply` when the function is known. A common use case for this functionality is when invoking a lightweight function—where repeated invocations are acceptable—that produces sensitive information you do not want to store in the state.
 

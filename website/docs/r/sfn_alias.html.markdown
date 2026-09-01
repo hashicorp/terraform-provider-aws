@@ -50,17 +50,46 @@ This resource supports the following arguments:
 
 `routing_configuration` supports the following arguments:
 
-* `state_machine_version_arn` - (Required) The Amazon Resource Name (ARN) of the state machine version.
+* `state_machine_version_arn` - (Required) ARN of the state machine version.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) identifying your state machine alias.
+* `arn` - ARN identifying your state machine alias.
 * `creation_date` - The date the state machine alias was created.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_alias.example
+  identity = {
+    "arn" = "arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo"
+  }
+}
+
+resource "aws_sfn_alias" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the alias.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SFN (Step Functions) Alias using the `arn`. For example:
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appsync
 
@@ -10,17 +12,19 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,112 +46,114 @@ func resourceFunction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"runtime"},
-				ValidateFunc: validation.StringLenBetween(1, 32768),
-			},
-			"data_source": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"function_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"function_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					functionVersion2018_05_29,
-				}, true),
-			},
-			"max_batch_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
-			},
-			"request_mapping_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"response_mapping_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"runtime": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"code"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
-						},
-						"runtime_version": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"code": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"runtime"},
+					ValidateFunc: validation.StringLenBetween(1, 32768),
+				},
+				"data_source": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"function_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"function_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						functionVersion2018_05_29,
+					}, true),
+				},
+				"max_batch_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
+				},
+				"request_mapping_template": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"response_mapping_template": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"runtime": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     1,
+					RequiredWith: []string{"code"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
+							},
+							"runtime_version": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"sync_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"conflict_detection": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
-						},
-						"conflict_handler": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
-						},
-						"lambda_conflict_handler_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_conflict_handler_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+				"sync_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"conflict_detection": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
+							},
+							"conflict_handler": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
+							},
+							"lambda_conflict_handler_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_conflict_handler_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -197,12 +203,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	output, err := conn.CreateFunction(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync Function: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	d.SetId(functionCreateResourceID(apiID, aws.ToString(output.FunctionConfiguration.FunctionId)))
 
-	return append(diags, resourceFunctionRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceFunctionRead(ctx, d, meta))
 }
 
 func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -211,19 +217,19 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	apiID, functionID, err := functionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	function, err := findFunctionByTwoPartKey(ctx, conn, apiID, functionID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync Function (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Function (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", apiID)
@@ -238,10 +244,10 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("request_mapping_template", function.RequestMappingTemplate)
 	d.Set("response_mapping_template", function.ResponseMappingTemplate)
 	if err := d.Set("runtime", flattenRuntime(function.Runtime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("sync_config", flattenSyncConfig(function.SyncConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting sync_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	return diags
@@ -253,7 +259,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	apiID, functionID, err := functionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	input := &appsync.UpdateFunctionInput{
@@ -295,10 +301,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	_, err = conn.UpdateFunction(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating AppSync Function (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceFunctionRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceFunctionRead(ctx, d, meta))
 }
 
 func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -307,7 +313,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	apiID, functionID, err := functionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Appsync Function: %s", d.Id())
@@ -322,7 +328,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppSync Function (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -341,7 +347,7 @@ func functionParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, functionResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sFUNCTION-ID", id, functionResourceIDSeparator)
+		return "", "", smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sFUNCTION-ID", id, functionResourceIDSeparator))
 	}
 
 	return parts[0], parts[1], nil
@@ -356,18 +362,17 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID, 
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.FunctionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.FunctionConfiguration, nil

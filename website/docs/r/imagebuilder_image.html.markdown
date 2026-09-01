@@ -24,18 +24,19 @@ resource "aws_imagebuilder_image" "example" {
 
 The following arguments are required:
 
-* `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
+* `infrastructure_configuration_arn` - (Required) ARN of the Image Builder Infrastructure Configuration.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
-* `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
+* `container_recipe_arn` - (Optional) - ARN of the container recipe.
+* `distribution_configuration_arn` - (Optional) ARN of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
-* `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
-* `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
+* `execution_role` - (Optional) ARN of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
+* `image_recipe_arn` - (Optional) ARN of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
 * `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -63,11 +64,17 @@ The following arguments are optional:
 * `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 
+### logging_configuration
+
+The following arguments are optional:
+
+* `log_group_name` - (Optional) Name of the CloudWatch Log Group to send logs to.
+
 ### workflow
 
 The following arguments are required:
 
-* `workflow_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
+* `workflow_arn` - (Required) ARN of the Image Builder Workflow.
 
 The following arguments are optional:
 
@@ -87,12 +94,13 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the image.
+* `id` - ARN of the image.
+* `arn` - ARN of the image.
 * `date_created` - Date the image was created.
 * `platform` - Platform of the image.
 * `os_version` - Operating System version of the image.
 * `output_resources` - List of objects with resources created by the image.
-    * `amis` - Set of objects with each Amazon Machine Image (AMI) created.
+    * `amis` - Set of objects with each AMI created.
         * `account_id` - Account identifier of the AMI.
         * `description` - Description of the AMI.
         * `image` - Identifier of the AMI.
@@ -112,7 +120,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1"
+  }
+}
+
+resource "aws_imagebuilder_image" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Image Builder image.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the ARN. For example:
 
 ```terraform
 import {
@@ -121,7 +150,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_image` resources using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package auditmanager
 
@@ -17,25 +19,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_auditmanager_framework_share", name="Framework Share")
+// @IdentityAttribute("id")
+// @Testing(importIgnore="status", plannableImportAction="NoOp")
+// @Testing(altRegionTfVars=true)
+// @Testing(preIdentityVersion="v6.42.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/auditmanager/types;awstypes;awstypes.AssessmentFrameworkShareRequest")
 func newFrameworkShareResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &frameworkShareResource{}, nil
 }
 
 type frameworkShareResource struct {
 	framework.ResourceWithModel[frameworkShareResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithNoUpdate
 }
 
@@ -121,7 +127,7 @@ func (r *frameworkShareResource) Read(ctx context.Context, request resource.Read
 
 	output, err := findFrameworkShareByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -155,7 +161,7 @@ func (r *frameworkShareResource) Delete(ctx context.Context, request resource.De
 	id := fwflex.StringValueFromFramework(ctx, data.ID)
 	output, err := findFrameworkShareByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -223,9 +229,7 @@ func findFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id s
 		}
 	}
 
-	return nil, &retry.NotFoundError{
-		LastRequest: input,
-	}
+	return nil, &retry.NotFoundError{}
 }
 
 type frameworkShareResourceModel struct {

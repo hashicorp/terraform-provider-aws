@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
@@ -7,6 +7,7 @@ package vpclattice
 var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
 	ResourceAuthPolicy                        = resourceAuthPolicy
+	ResourceDomainVerification                = newDomainVerificationResource
 	ResourceListener                          = resourceListener
 	ResourceListenerRule                      = resourceListenerRule
 	ResourceResourceConfiguration             = newResourceConfigurationResource
@@ -22,6 +23,7 @@ var (
 
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
 	FindAuthPolicyByID                        = findAuthPolicyByID
+	FindDomainVerificationByID                = findDomainVerificationByID
 	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
 	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
