@@ -9,12 +9,18 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -267,4 +273,131 @@ func diffVersion(n, o *gversion.Version) (result versionDiff) {
 	}
 
 	return
+}
+
+// customizeDiffValidateEngineVersionAvailable errors at plan time when engine_version is unavailable for the engine in the Region; any API error is skipped (fail open) so offline or unpermissioned plans still work.
+func customizeDiffValidateEngineVersionAvailable(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	engine, engineVersion, ok := configuredEngineVersion(diff)
+	if !ok {
+		return nil
+	}
+
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+
+	available, err := findCacheEngineVersions(ctx, conn, engine)
+	if err != nil {
+		tflog.Debug(ctx, "skipping ElastiCache engine_version availability validation", map[string]any{
+			names.AttrEngine:        engine,
+			names.AttrEngineVersion: engineVersion,
+			"error":                 err.Error(),
+		})
+		return nil //nolint:nilerr // fail open: skip plan-time validation when the API is unavailable (e.g. missing IAM permissions)
+	}
+	if len(available) == 0 {
+		return nil
+	}
+
+	if !findAvailableCacheEngineVersion(engine, engineVersion, available) {
+		return fmt.Errorf("engine_version %q is not available for engine %q in this region; available versions: %s",
+			engineVersion, engine, strings.Join(availableEngineVersionStrings(available), ", "))
+	}
+
+	return nil
+}
+
+// configuredEngineVersion returns engine and engine_version when both are known; an unset engine defaults to redis, while a set-but-unknown (interpolated) engine or engine_version yields ok=false so validation is skipped.
+func configuredEngineVersion(diff *schema.ResourceDiff) (engine, engineVersion string, ok bool) {
+	if !rawConfigAttrKnown(diff, names.AttrEngineVersion) {
+		return "", "", false
+	}
+	engineVersion, _ = diff.Get(names.AttrEngineVersion).(string)
+	if engineVersion == "" {
+		return "", "", false
+	}
+
+	if !rawConfigAttrKnown(diff, names.AttrEngine) {
+		return "", "", false
+	}
+	engine, _ = diff.Get(names.AttrEngine).(string)
+	if engine == "" {
+		engine = engineRedis
+	}
+
+	return engine, engineVersion, true
+}
+
+func rawConfigAttrKnown(diff *schema.ResourceDiff, attr string) bool {
+	rawConfig := diff.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+
+	return rawConfig.GetAttr(attr).IsKnown()
+}
+
+func findAvailableCacheEngineVersion(engine, engineVersion string, available []awstypes.CacheEngineVersion) bool {
+	for _, v := range available {
+		if engineVersionMatches(engine, engineVersion, aws.ToString(v.EngineVersion)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// engineVersionMatches handles the Redis "<major>.x" convention (only Redis, and only "6.x" is reachable since format validation rejects "7.x"-"9.x" first), reusing redisVersionPostV6Regexp instead of a second divergent regex.
+func engineVersionMatches(engine, configVersion, apiVersion string) bool {
+	if apiVersion == "" {
+		return false
+	}
+	if configVersion == apiVersion {
+		return true
+	}
+
+	if engine == engineRedis {
+		// m[1] is the "<major>.x" wildcard group; m[2] is its major (e.g. "6" from "6.x").
+		if m := redisVersionPostV6Regexp.FindStringSubmatch(configVersion); m != nil && m[1] != "" {
+			return strings.HasPrefix(apiVersion, m[2]+".")
+		}
+	}
+
+	return false
+}
+
+func availableEngineVersionStrings(available []awstypes.CacheEngineVersion) []string {
+	seen := make(map[string]struct{}, len(available))
+	versions := make([]string, 0, len(available))
+	for _, v := range available {
+		ev := aws.ToString(v.EngineVersion)
+		if ev == "" {
+			continue
+		}
+		if _, dup := seen[ev]; dup {
+			continue
+		}
+		seen[ev] = struct{}{}
+		versions = append(versions, ev)
+	}
+	slices.Sort(versions)
+
+	return versions
+}
+
+func findCacheEngineVersions(ctx context.Context, conn *elasticache.Client, engine string) ([]awstypes.CacheEngineVersion, error) {
+	input := &elasticache.DescribeCacheEngineVersionsInput{
+		Engine: aws.String(engine),
+	}
+
+	var output []awstypes.CacheEngineVersion
+	pages := elasticache.NewDescribeCacheEngineVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CacheEngineVersions...)
+	}
+
+	return output, nil
 }
