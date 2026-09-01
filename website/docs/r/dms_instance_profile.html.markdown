@@ -45,7 +45,7 @@ The following arguments are optional:
 * `availability_zone` - (Optional) Availability Zone where the instance profile runs. Default is a random, system-chosen Availability Zone.
 * `description` - (Optional) Description for the instance profile.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the connection parameters for the instance profile. If you don't specify a value, DMS uses your default encryption key.
-* `name` - (Optional) Name for the instance profile. If omitted, Terraform will assign a random, unique name.
+* `name` - (Optional) Name for the instance profile. If omitted, DMS assigns a generated name.
 * `network_type` - (Optional) Network type for the instance profile. Valid values are `IPV4`, `IPV6`, and `DUAL`.
 * `publicly_accessible` - (Optional) Whether the instance profile is publicly accessible. Default is `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
