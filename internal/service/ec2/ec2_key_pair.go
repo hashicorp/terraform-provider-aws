@@ -32,8 +32,9 @@ import (
 // @Testing(tagsTest=false)
 // @IdentityAttribute("key_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.KeyPairInfo")
-// @Testing(identityTest=false)
 // @Testing(preIdentityVersion="v6.62.0")
+// @Testing(importIgnore="public_key", plannableImportAction="Replace")
+// @Testing(sshKeyPair=true)
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
