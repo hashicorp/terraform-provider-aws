@@ -47,6 +47,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1249,63 +1250,63 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessModelConfigurationMemberBedrockModelConfig:
-		var data harnessBedrockModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessBedrockModelConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.BedrockModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.BedrockModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessModelConfigurationMemberGeminiModelConfig:
-		var data harnessGeminiModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessGeminiModelConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
-		if t.Value.AdditionalParams != nil {
-			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
+		if v := t.Value.AdditionalParams; v != nil {
+			s, err := tfsmithy.DocumentToJSONString(v)
 			if err != nil {
 				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
-			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+			model.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
 		} else {
-			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+			model.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
 		}
 		var d diag.Diagnostics
-		m.GeminiModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.GeminiModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessModelConfigurationMemberLiteLlmModelConfig:
-		var data harnessLiteLLMModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessLiteLLMModelConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.LiteLLMModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.LiteLLMModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessModelConfigurationMemberOpenAiModelConfig:
-		var data harnessOpenAIModelConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessOpenAIModelConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
-		if t.Value.AdditionalParams != nil {
-			s, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalParams)
+		if v := t.Value.AdditionalParams; v != nil {
+			json, err := tfsmithy.DocumentToJSONString(v)
 			if err != nil {
 				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
-			data.AdditionalParams = fwtypes.NewSmithyJSONValue(s, document.NewLazyDocument)
+			model.AdditionalParams = fwtypes.NewSmithyJSONValue(json, document.NewLazyDocument)
 		} else {
-			data.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+			model.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
 		}
 		var d diag.Diagnostics
-		m.OpenAIModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.OpenAIModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1480,36 +1481,36 @@ func (m *harnessSkillModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessSkillMemberAwsSkills:
-		var data harnessSkillAWSSkillsSourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessSkillAWSSkillsSourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AWSSkills, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AWSSkills, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessSkillMemberGit:
-		var data harnessSkillGitSourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessSkillGitSourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.Git, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.Git, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessSkillMemberPath:
 		m.Path = fwflex.StringValueToFramework(ctx, t.Value)
 
 	case awstypes.HarnessSkillMemberS3:
-		var data harnessSkillS3SourceModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessSkillS3SourceModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.S3, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1611,61 +1612,61 @@ func (m *harnessToolConfigurationModel) Flatten(ctx context.Context, v any) diag
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessToolConfigurationMemberAgentCoreBrowser:
-		var data harnessAgentCoreBrowserConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessAgentCoreBrowserConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AgentCoreBrowser, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AgentCoreBrowser, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessToolConfigurationMemberAgentCoreCodeInterpreter:
-		var data harnessAgentCoreCodeInterpreterConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessAgentCoreCodeInterpreterConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AgentCoreCodeInterpreter, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AgentCoreCodeInterpreter, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessToolConfigurationMemberAgentCoreGateway:
-		var data harnessAgentCoreGatewayConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessAgentCoreGatewayConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AgentCoreGateway, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AgentCoreGateway, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessToolConfigurationMemberInlineFunction:
-		var data harnessInlineFunctionConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessInlineFunctionConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
-		if t.Value.InputSchema != nil {
-			json, err := tfsmithy.DocumentToJSONString(t.Value.InputSchema)
+		if v := t.Value.InputSchema; v != nil {
+			json, err := tfsmithy.DocumentToJSONString(v)
 			if err != nil {
 				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
-			data.InputSchema = jsontypes.NewNormalizedValue(json)
+			model.InputSchema = jsontypes.NewNormalizedValue(json)
 		}
 		var d diag.Diagnostics
-		m.InlineFunction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.InlineFunction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessToolConfigurationMemberRemoteMcp:
-		var data harnessRemoteMCPConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessRemoteMCPConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.RemoteMCP, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.RemoteMCP, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1792,13 +1793,13 @@ func (m *harnessGatewayOutboundAuthModel) Flatten(ctx context.Context, v any) di
 		m.None = types.BoolValue(true)
 
 	case awstypes.HarnessGatewayOutboundAuthMemberOauth:
-		var data harnessOAuthCredentialProviderModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessOAuthCredentialProviderModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.OAuth, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.OAuth, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1867,23 +1868,23 @@ func (m *harnessTruncationStrategyConfigurationModel) Flatten(ctx context.Contex
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessTruncationStrategyConfigurationMemberSlidingWindow:
-		var data harnessSlidingWindowConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessSlidingWindowConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.SlidingWindow, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.SlidingWindow, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessTruncationStrategyConfigurationMemberSummarization:
-		var data harnessSummarizationConfigModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessSummarizationConfigModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.Summarization, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.Summarization, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -1948,13 +1949,13 @@ func (m *harnessEnvironmentProviderModel) Flatten(ctx context.Context, v any) di
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessEnvironmentProviderMemberAgentCoreRuntimeEnvironment:
-		var data harnessAgentCoreRuntimeEnvironmentModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessAgentCoreRuntimeEnvironmentModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AgentCoreRuntimeEnvironment, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AgentCoreRuntimeEnvironment, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -2008,13 +2009,13 @@ func (m *harnessEnvironmentArtifactModel) Flatten(ctx context.Context, v any) di
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessEnvironmentArtifactMemberContainerConfiguration:
-		var data containerConfigurationModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model containerConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.ContainerConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.ContainerConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	default:
@@ -2089,28 +2090,29 @@ func (m *harnessMemoryConfigurationModel) Flatten(ctx context.Context, v any) di
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.HarnessMemoryConfigurationMemberAgentCoreMemoryConfiguration:
-		var data harnessAgentCoreMemoryConfigurationModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessAgentCoreMemoryConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.AgentCoreMemoryConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.AgentCoreMemoryConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
-		var data harnessManagedMemoryConfigurationModel
-		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		var model harnessManagedMemoryConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		var d diag.Diagnostics
-		m.ManagedMemoryConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &data)
+		m.ManagedMemoryConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.HarnessMemoryConfigurationMemberDisabled:
+		var model harnessDisabledMemoryConfigurationModel
 		var d diag.Diagnostics
-		m.Disabled, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &harnessDisabledMemoryConfigurationModel{})
+		m.Disabled, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
 	case awstypes.UnknownUnionMember:
@@ -2173,15 +2175,7 @@ func (m harnessMemoryConfigurationModel) expandToHarnessMemoryConfiguration(ctx 
 func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfiguration(ctx context.Context) (*awstypes.UpdatedHarnessMemoryConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
-	case !m.AgentCoreMemoryConfiguration.IsNull():
-		r, d := m.expandToHarnessMemoryConfiguration(ctx)
-		smerr.AddEnrich(ctx, &diags, d)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &awstypes.UpdatedHarnessMemoryConfiguration{OptionalValue: r}, diags
-
-	case m.ManagedMemoryConfiguration.IsNull():
+	case !m.AgentCoreMemoryConfiguration.IsNull(), !m.ManagedMemoryConfiguration.IsNull():
 		r, d := m.expandToHarnessMemoryConfiguration(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -2199,20 +2193,19 @@ func (m harnessMemoryConfigurationModel) expandToUpdatedHarnessMemoryConfigurati
 
 func (m *harnessMemoryConfigurationModel) flattenEnriched(ctx context.Context, conn *bedrockagentcorecontrol.Client) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	if !m.ManagedMemoryConfiguration.IsNull() {
-		managedMemory, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
+	switch {
+	case !m.ManagedMemoryConfiguration.IsNull():
+		model, d := m.ManagedMemoryConfiguration.ToPtr(ctx)
 		diags.Append(d...)
-		if diags.HasError() || managedMemory == nil {
+		if diags.HasError() || model == nil {
 			return diags
 		}
-
-		diags.Append(managedMemory.flattenEnriched(ctx, conn)...)
+		diags.Append(model.flattenEnriched(ctx, conn)...)
 		if diags.HasError() {
 			return diags
 		}
-
-		m.ManagedMemoryConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, managedMemory)
+		m.ManagedMemoryConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, model)
+		smerr.AddEnrich(ctx, &diags, d)
 	}
 
 	return diags
@@ -2248,24 +2241,24 @@ func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Con
 		return diags
 	}
 
-	memory, err := findMemoryByARN(ctx, conn, m.ARN.ValueString())
+	arn := fwflex.StringValueFromFramework(ctx, m.ARN)
+	memory, err := findMemoryByARN(ctx, conn, arn)
 	if err != nil {
-		diags.AddError("reading managed memory", err.Error())
+		diags.AddError(fmt.Sprintf("reading Bedrock AgentCore Memory (%s)", arn), err.Error())
 		return diags
 	}
 
 	// Populate fields from the memory resource.
-	if memory.EncryptionKeyArn != nil {
-		m.EncryptionKeyARN = fwtypes.ARNValue(aws.ToString(memory.EncryptionKeyArn))
+	if v := memory.EncryptionKeyArn; v != nil {
+		m.EncryptionKeyARN = fwflex.StringToFrameworkARN(ctx, v)
 	}
-	if memory.EventExpiryDuration != nil {
-		m.EventExpiryDuration = fwflex.Int32ToFramework(ctx, memory.EventExpiryDuration)
+	if v := memory.EventExpiryDuration; v != nil {
+		m.EventExpiryDuration = fwflex.Int32ToFramework(ctx, v)
 	}
-	if len(memory.Strategies) > 0 {
-		elements := make([]attr.Value, 0, len(memory.Strategies))
-		for _, s := range memory.Strategies {
-			elements = append(elements, fwtypes.StringEnumValue(awstypes.HarnessManagedMemoryStrategyType(s.Type)))
-		}
+	if v := memory.Strategies; len(v) > 0 {
+		elements := tfslices.ApplyToAll(v, func(v awstypes.MemoryStrategy) attr.Value {
+			return fwtypes.StringEnumValue(awstypes.HarnessManagedMemoryStrategyType(v.Type))
+		})
 		m.Strategies = fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.HarnessManagedMemoryStrategyType]](ctx, elements)
 	}
 
