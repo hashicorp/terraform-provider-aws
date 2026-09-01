@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -36,6 +35,7 @@ import (
 // @FrameworkResource("aws_dms_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(generator=false)
 // @Testing(hasNoPreExistingResource=true)
 func newInstanceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &instanceProfileResource{}, nil
@@ -128,7 +128,6 @@ func (r *instanceProfileResource) Create(ctx context.Context, req resource.Creat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.InstanceProfileName = aws.String(create.Name(ctx, plan.Name.ValueString(), ""))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateInstanceProfile(ctx, &input)
