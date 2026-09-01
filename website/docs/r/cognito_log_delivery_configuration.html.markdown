@@ -41,7 +41,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_cloudwatch_log_group" "example" {
@@ -120,7 +121,7 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
@@ -133,7 +134,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_s3_bucket" "example" {
@@ -145,8 +147,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
-    event_source = "userNotification"
-    log_level    = "ERROR"
+    event_source = "userAuthEvents"
+    log_level    = "INFO"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.example.arn
@@ -201,6 +203,32 @@ The `s3_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cognito_log_delivery_configuration.example
+  identity = {
+    user_pool_id = "us-west-2_example123"
+  }
+}
+
+resource "aws_cognito_log_delivery_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `user_pool_id` (String) ID of the Cognito User Pool.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito IDP (Identity Provider) Log Delivery Configuration using the `user_pool_id`. For example:
 

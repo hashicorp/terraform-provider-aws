@@ -1,26 +1,24 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
 
-type NestedObjectOfOption[T any] func(*NestedObjectOfOptions[T])
+type NestedObjectOfOptionsFunc[T any] func(*nestedObjectOfOptions[T])
 
-type NestedObjectOfOptions[T any] struct {
+type nestedObjectOfOptions[T any] struct {
 	SemanticEqualityFunc semanticEqualityFunc[T]
 }
 
-func WithSemanticEqualityFunc[T any](f semanticEqualityFunc[T]) NestedObjectOfOption[T] {
-	return func(o *NestedObjectOfOptions[T]) {
+func WithSemanticEqualityFunc[T any](f semanticEqualityFunc[T]) NestedObjectOfOptionsFunc[T] {
+	return func(o *nestedObjectOfOptions[T]) {
 		o.SemanticEqualityFunc = f
 	}
 }
 
-func newNestedObjectOfOptions[T any](options ...NestedObjectOfOption[T]) *NestedObjectOfOptions[T] {
-	opts := &NestedObjectOfOptions[T]{}
-
-	for _, opt := range options {
-		opt(opts)
+func newNestedObjectOfOptions[T any](optFns ...NestedObjectOfOptionsFunc[T]) nestedObjectOfOptions[T] {
+	var opts nestedObjectOfOptions[T]
+	for _, fn := range optFns {
+		fn(&opts)
 	}
-
 	return opts
 }

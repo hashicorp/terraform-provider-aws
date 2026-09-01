@@ -90,15 +90,15 @@ The `criteria` configuration block supports the following attributes:
 * `note_text` - (Optional) The text of a user-defined note that's added to a finding. [Documented below](#string-filter-argument-reference).
 * `note_updated_at` - (Optional) The timestamp of when the note was updated. [Documented below](#date-filter-argument-reference).
 * `note_updated_by` - (Optional) The principal that created a note. [Documented below](#string-filter-argument-reference).
-* `product_arn` - (Optional) The Amazon Resource Name (ARN) for a third-party product that generated a finding in Security Hub. [Documented below](#string-filter-argument-reference).
+* `product_arn` - (Optional) ARN for a third-party product that generated a finding in Security Hub. [Documented below](#string-filter-argument-reference).
 * `product_name` - (Optional) Provides the name of the product that generated the finding. For control-based findings, the product name is Security Hub. [Documented below](#string-filter-argument-reference).
 * `record_state` - (Optional) Provides the current state of a finding. [Documented below](#string-filter-argument-reference).
 * `related_findings_id` - (Optional) The product-generated identifier for a related finding.  [Documented below](#string-filter-argument-reference).
 * `related_findings_product_arn` - (Optional) The ARN for the product that generated a related finding. [Documented below](#string-filter-argument-reference).
-* `resource_application_arn` - (Optional) The Amazon Resource Name (ARN) of the application that is related to a finding. [Documented below](#string-filter-argument-reference).
+* `resource_application_arn` - (Optional) ARN of the application that is related to a finding. [Documented below](#string-filter-argument-reference).
 * `resource_application_name` - (Optional) The name of the application that is related to a finding. [Documented below](#string-filter-argument-reference).
 * `resource_details_other` - (Optional) Custom fields and values about the resource that a finding pertains to. [Documented below](#map-filter-argument-reference).
-* `resource_id` - (Optional) The identifier for the given resource type. For AWS resources that are identified by Amazon Resource Names (ARNs), this is the ARN. For AWS resources that lack ARNs, this is the identifier as defined by the AWS service that created the resource. For non-AWS resources, this is a unique identifier that is associated with the resource. [Documented below](#string-filter-argument-reference).
+* `resource_id` - (Optional) Identifier for the given resource type. For AWS resources that are identified by ARNs, this is the ARN. For AWS resources that lack ARNs, this is the identifier as defined by the AWS service that created the resource. For non-AWS resources, this is a unique identifier that is associated with the resource. [Documented below](#string-filter-argument-reference).
 * `resource_partition` - (Optional) The partition in which the resource that the finding pertains to is located. A partition is a group of AWS Regions. Each AWS account is scoped to one partition. [Documented below](#string-filter-argument-reference).
 * `resource_region` - (Optional) The AWS Region where the resource that a finding pertains to is located. [Documented below](#string-filter-argument-reference).
 * `resource_tags` - (Optional) A list of AWS tags associated with a resource at the time the finding was processed. [Documented below](#map-filter-argument-reference).
@@ -197,12 +197,33 @@ The `workflow` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Security Hub automation rule (matches `arn`).
+* `id` - (**Deprecated**) The ARN of the Security Hub automation rule.
 * `arn` - The ARN of the Security Hub automation rule.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub Automation Rule using their ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_automation_rule.example
+  identity = {
+    arn = "arn:aws:securityhub:us-east-1:123456789012:automation-rule/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_securityhub_automation_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Security Hub automation rule.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub automation rules using `arn`. For example:
 
 ```terraform
 import {
@@ -211,7 +232,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub automation rule using their ARN. For example:
+Using `terraform import`, import Security Hub automation rules using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc

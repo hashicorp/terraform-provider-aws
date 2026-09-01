@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Snapshot.
 ---
 
-# Resource: aws_memorydb_snapshot
+# Data Source: aws_memorydb_snapshot
 
 Provides information about a MemoryDB Snapshot.
 

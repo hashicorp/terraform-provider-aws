@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,32 +38,34 @@ func resourceDeployment() *schema.Resource {
 			StateContext: resourceDeploymentImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -72,7 +76,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := apigateway.CreateDeploymentInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
-		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:   aws.String(d.Get(attrRestAPIID).(string)),
 		Variables:   flex.ExpandStringValueMap(d.Get("variables").(map[string]any)),
 	}
 
@@ -91,10 +95,10 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 	deployment, err := findDeploymentByTwoPartKey(ctx, conn, restAPIID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +132,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input := apigateway.UpdateDeploymentInput{
 			DeploymentId:    aws.String(d.Id()),
 			PatchOperations: operations,
-			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			RestApiId:       aws.String(d.Get(attrRestAPIID).(string)),
 		}
 		_, err := conn.UpdateDeployment(ctx, &input)
 
@@ -144,7 +148,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	restAPIID := d.Get(attrRestAPIID).(string)
 
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 	input := apigateway.DeleteDeploymentInput{
@@ -182,7 +186,7 @@ func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta an
 	deploymentID := idParts[1]
 
 	d.SetId(deploymentID)
-	d.Set("rest_api_id", restApiID)
+	d.Set(attrRestAPIID, restApiID)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -197,8 +201,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -207,7 +210,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

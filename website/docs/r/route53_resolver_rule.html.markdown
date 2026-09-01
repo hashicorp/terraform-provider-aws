@@ -85,19 +85,53 @@ The `target_ip` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the resolver rule.
-* `arn` - ARN (Amazon Resource Name) for the resolver rule.
+* `arn` - ARN for the resolver rule.
 * `owner_id` - When a rule is shared with another AWS account, the account ID of the account that the rule is shared with.
 * `share_status` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_resolver_rule.example
+  identity = {
+    id = "rslvr-rr-0123456789abcdef0"
+  }
+}
+
+resource "aws_route53_resolver_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Route53 Resolver rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_route53_resolver_rule.sys
+  to = aws_route53_resolver_rule.example
   id = "rslvr-rr-0123456789abcdef0"
 }
 ```
@@ -105,5 +139,5 @@ import {
 Using `terraform import`, import Route53 Resolver rules using the `id`. For example:
 
 ```console
-% terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+% terraform import aws_route53_resolver_rule.example rslvr-rr-0123456789abcdef0
 ```

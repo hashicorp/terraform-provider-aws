@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -15,26 +17,36 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_medialive_multiplex_program", name="Multiplex Program")
+// @IdentityAttribute("program_name")
+// @IdentityAttribute("multiplex_id")
+// @ImportIDHandler("multiplexProgramImportID", setIDAttribute=true)
+// @IdAttrFormat("{program_name}/{multiplex_id}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexProgramOutput")
+// @Testing(preIdentityVersion="v6.60.0")
+// @Testing(serialize=true)
+// @Testing(generator="randomMultiplexProgramName(t)")
 func newMultiplexProgramResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := multiplexProgramResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
@@ -49,7 +61,7 @@ const (
 type multiplexProgramResource struct {
 	framework.ResourceWithModel[multiplexProgramResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (m *multiplexProgramResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -174,7 +186,7 @@ func (m *multiplexProgramResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	input := medialive.CreateMultiplexProgramInput{
-		RequestId: aws.String(id.UniqueId()),
+		RequestId: aws.String(create.UniqueId(ctx)),
 	}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
@@ -237,7 +249,7 @@ func (m *multiplexProgramResource) Read(ctx context.Context, req resource.ReadRe
 
 	out, err := findMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -372,8 +384,7 @@ func findMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -382,7 +393,7 @@ func findMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -400,6 +411,35 @@ func parseMultiplexProgramID(id string) (programName string, multiplexId string,
 	multiplexId = idParts[1]
 
 	return programName, multiplexId, err
+}
+
+var (
+	_ inttypes.ImportIDParser           = multiplexProgramImportID{}
+	_ inttypes.FrameworkImportIDCreator = multiplexProgramImportID{}
+)
+
+type multiplexProgramImportID struct{}
+
+func (multiplexProgramImportID) Parse(id string) (string, map[string]any, error) {
+	programName, multiplexId, err := parseMultiplexProgramID(id)
+	if err != nil {
+		return "", nil, fmt.Errorf("id %q should be in the format <program_name>/<multiplex_id>: %w", id, err)
+	}
+
+	result := map[string]any{
+		"program_name": programName,
+		"multiplex_id": multiplexId,
+	}
+
+	return id, result, nil
+}
+
+func (multiplexProgramImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var programName, multiplexId types.String
+	state.GetAttribute(ctx, path.Root("program_name"), &programName)
+	state.GetAttribute(ctx, path.Root("multiplex_id"), &multiplexId)
+
+	return fmt.Sprintf("%s/%s", programName.ValueString(), multiplexId.ValueString())
 }
 
 type multiplexProgramResourceModel struct {

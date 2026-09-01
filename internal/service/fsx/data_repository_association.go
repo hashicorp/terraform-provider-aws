@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -14,15 +16,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,111 +51,113 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"batch_import_meta_data_on_create": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"data_repository_path": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-			},
-			"delete_data_in_filesystem": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(11, 21),
-					validation.StringMatch(regexache.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
-				),
-			},
-			"file_system_path": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 4096),
-					validation.StringMatch(regexache.MustCompile(`^/.*`), "path must begin with /"),
-				),
-			},
-			"imported_file_chunk_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 512000),
-			},
-			"s3": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_export_policy": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"events": {
-										Type:     schema.TypeList,
-										MaxItems: 3,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAssociationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"batch_import_meta_data_on_create": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"data_repository_path": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 900),
+						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					),
+				},
+				"delete_data_in_filesystem": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(11, 21),
+						validation.StringMatch(regexache.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
+					),
+				},
+				"file_system_path": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 4096),
+						validation.StringMatch(regexache.MustCompile(`^/.*`), "path must begin with /"),
+					),
+				},
+				"imported_file_chunk_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 512000),
+				},
+				"s3": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_export_policy": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"events": {
+											Type:     schema.TypeList,
+											MaxItems: 3,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+											},
 										},
 									},
 								},
 							},
-						},
-						"auto_import_policy": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"events": {
-										Type:     schema.TypeList,
-										MaxItems: 3,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+							"auto_import_policy": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"events": {
+											Type:     schema.TypeList,
+											MaxItems: 3,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+											},
 										},
 									},
 								},
 							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -163,7 +167,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
 		FileSystemId:       aws.String(d.Get(names.AttrFileSystemID).(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
@@ -203,7 +207,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 
 	association, err := findDataRepositoryAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for Lustre Data Repository Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,7 +239,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
 			AssociationId:      aws.String(d.Id()),
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		}
 
 		if d.HasChange("imported_file_chunk_size") {
@@ -266,7 +270,7 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
 		AssociationId:          aws.String(d.Id()),
-		ClientRequestToken:     aws.String(id.UniqueId()),
+		ClientRequestToken:     aws.String(create.UniqueId(ctx)),
 		DeleteDataInFileSystem: aws.Bool(d.Get("delete_data_in_filesystem").(bool)),
 	}
 
@@ -315,8 +319,7 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input
 
 		if errs.IsA[*awstypes.DataRepositoryAssociationNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -334,11 +337,11 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input
 	return output, nil
 }
 
-func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataRepositoryAssociation(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -354,7 +357,7 @@ func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleCreating),
 		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -363,7 +366,7 @@ func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -376,7 +379,7 @@ func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleUpdating),
 		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -385,7 +388,7 @@ func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -398,7 +401,7 @@ func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleAvailable, awstypes.DataRepositoryLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -407,7 +410,7 @@ func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

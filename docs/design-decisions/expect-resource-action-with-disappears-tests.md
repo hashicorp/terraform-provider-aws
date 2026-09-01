@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Use `plancheck.ExpectResourceAction` with disappears acceptance tests
 
 **Summary:** Acceptance tests exercising out of band deletion (colloquially named "disappears" tests) should utilize the terraform-plugin-testing library's plancheck package to assert expected post apply actions.  
@@ -13,7 +16,7 @@ Resources implemented in the Terraform AWS provider commonly include a “disapp
 ```
 func TestAccExampleThing_disappears(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +49,7 @@ The contributor guide and [`skaff`](https://hashicorp.github.io/terraform-provid
 ```
 func TestAccExampleThing_disappears(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{

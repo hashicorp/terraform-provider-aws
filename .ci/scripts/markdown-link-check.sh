@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 # Local script runner for recursive markdown-link-check
 # Based on: https://github.com/gaurav-nelson/github-action-markdown-link-check/blob/master/entrypoint.sh
@@ -36,7 +38,7 @@ docker run --rm -i -t \
   -w /github/workspace \
   --entrypoint /usr/bin/find \
   "${link_check_container}" \
-  website \( -type f -name "*.md" -or -name "*.markdown" \) -not -path "website/docs/cdktf/*" -exec /src/markdown-link-check --config .ci/.markdownlinkcheck.json --quiet --verbose {} \; \
+  website \( -type f -name "*.md" -or -name "*.markdown" \) -exec /src/markdown-link-check --config .ci/.markdownlinkcheck.json --quiet --verbose {} \; \
   | tee -a "${output_file}"
 
 touch "${error_file}"

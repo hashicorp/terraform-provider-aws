@@ -84,7 +84,7 @@ This resource supports the following arguments:
 
 ### compute_environment_order
 
-* `compute_environment` - (Required) The Amazon Resource Name (ARN) of the compute environment.
+* `compute_environment` - (Required) ARN of the compute environment.
 * `order` - (Required) The order of the compute environment. Compute environments are tried in ascending order. For example, if two compute environments are associated with a job queue, the compute environment with a lower order integer value is tried for job placement first.
 
 ### job_state_time_limit_action
@@ -98,7 +98,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name of the job queue.
+* `arn` - ARN of the job queue.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -110,6 +110,27 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_job_queue.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:job-queue/sample"
+  }
+}
+
+resource "aws_batch_job_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the job queue.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Queue using the `arn`. For example:
 

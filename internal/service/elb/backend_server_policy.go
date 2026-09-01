@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_load_balancer_backend_server_policy", name="Backend Server Policy")
@@ -28,20 +30,22 @@ func resourceBackendServerPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBackendServerPolicySet,
 		DeleteWithoutTimeout: resourceBackendServerPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"instance_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"policy_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"policy_names": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -86,7 +90,7 @@ func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData
 
 	policyNames, err := findLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Backend Server Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

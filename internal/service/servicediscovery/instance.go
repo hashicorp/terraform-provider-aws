@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicediscovery
 
@@ -14,14 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,33 +40,35 @@ func resourceInstance() *schema.Resource {
 			StateContext: resourceInstanceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 255),
-					validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!-~]+$`), ""),
-					validation.MapValueLenBetween(0, 1024),
-					validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
-				),
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
-				),
-			},
-			"service_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ValidateDiagFunc: validation.AllDiag(
+						validation.MapKeyLenBetween(1, 255),
+						validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!-~]+$`), ""),
+						validation.MapValueLenBetween(0, 1024),
+						validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
+					),
+				},
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
+					),
+				},
+				"service_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
@@ -76,7 +80,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta any) 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
 		Attributes:       flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]any)),
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}
@@ -104,7 +108,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	instance, err := findInstanceByTwoPartKey(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,8 +191,7 @@ func findInstanceByTwoPartKey(ctx context.Context, conn *servicediscovery.Client
 
 	if errs.IsA[*awstypes.InstanceNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -197,7 +200,7 @@ func findInstanceByTwoPartKey(ctx context.Context, conn *servicediscovery.Client
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil

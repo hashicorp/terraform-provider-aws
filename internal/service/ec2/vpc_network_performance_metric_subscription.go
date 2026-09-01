@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -17,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,35 +30,37 @@ func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceNetworkPerformanceMetricSubscriptionRead,
 		DeleteWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDestination: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"metric": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.MetricTypeAggregateLatency,
-				ValidateDiagFunc: enum.Validate[awstypes.MetricType](),
-			},
-			"period": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"statistic": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StatisticTypeP50,
-				ValidateDiagFunc: enum.Validate[awstypes.StatisticType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDestination: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"metric": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.MetricTypeAggregateLatency,
+					ValidateDiagFunc: enum.Validate[awstypes.MetricType](),
+				},
+				"period": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"statistic": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StatisticTypeP50,
+					ValidateDiagFunc: enum.Validate[awstypes.StatisticType](),
+				},
+			}
 		},
 	}
 }
@@ -99,7 +103,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 
 	subscription, err := findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 AWS Network Performance Metric Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

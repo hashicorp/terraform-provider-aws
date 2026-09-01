@@ -1,11 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic ID generation only
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,25 +25,31 @@ func dataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInvocationRead,
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"input": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  FunctionVersionLatest,
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"input": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  FunctionVersionLatest,
+				},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tenant_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -61,6 +69,10 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		Qualifier:      aws.String(qualifier),
 	}
 
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
+	}
+
 	output, err := conn.Invoke(ctx, input)
 
 	if err != nil {
@@ -71,7 +83,7 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, `invoking Lambda Function (%s): %s`, functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5 -- MD5 used for non-cryptographic ID generation only
 	d.Set("result", string(output.Payload))
 
 	return diags

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -20,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,81 +38,97 @@ func resourceHostedTransitVirtualInterface() *schema.Resource {
 			StateContext: resourceHostedTransitVirtualInterfaceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
-			},
-			"amazon_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"amazon_side_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"bgp_auth_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"customer_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"mtu": {
-				Type:         schema.TypeInt,
-				Default:      1500,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"vlan": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 4094),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
+				},
+				"amazon_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"amazon_side_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_asn": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+				"bgp_auth_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"customer_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"mtu": {
+					Type:         schema.TypeInt,
+					Default:      1500,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
+				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"vlan": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 4094),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -148,6 +166,10 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 		input.NewTransitVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewTransitVirtualInterfaceAllocation.RateLimit = aws.String(v.(string))
+	}
+
 	output, err := conn.AllocateTransitVirtualInterface(ctx, input)
 
 	if err != nil {
@@ -169,7 +191,7 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Hosted Transit Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -199,6 +221,9 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

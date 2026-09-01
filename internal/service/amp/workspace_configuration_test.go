@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +25,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 	retentionPeriod := 30
 	retentionPeriodUpdated := 15
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,7 +34,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriod),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriod)),
 				),
@@ -50,7 +49,7 @@ func TestAccAMPWorkspaceConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfigurationConfig_basic(retentionPeriodUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", strconv.Itoa(retentionPeriodUpdated)),
 				),
@@ -65,7 +64,7 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,7 +73,7 @@ func TestAccAMPWorkspaceConfiguration_defaultBucket(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfigurationConfig_defaultBucket(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "1"),
 				),
@@ -95,7 +94,7 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 	resourceName := "aws_prometheus_workspace_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -104,7 +103,7 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfigurationConfig_limitPerLabelSet(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceConfigurationExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "limits_per_label_set.0.%", "2"),
@@ -127,14 +126,59 @@ func TestAccAMPWorkspaceConfiguration_limitPerLabelSet(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkspaceConfigurationExists(ctx context.Context, n string, v *awstypes.WorkspaceConfigurationDescription) resource.TestCheckFunc {
+func TestAccAMPWorkspaceConfiguration_timeWindowAndQueryOffset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WorkspaceConfigurationDescription
+	resourceName := "aws_prometheus_workspace_configuration.test"
+	workspaceResourceName := "aws_prometheus_workspace.test"
+	timeWindow := 120
+	queryOffset := 300
+	timeWindowUpdated := 300
+	queryOffsetUpdated := 600
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindow, queryOffset),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "out_of_order_time_window_in_seconds", strconv.Itoa(timeWindow)),
+					resource.TestCheckResourceAttr(resourceName, "rule_query_offset_in_seconds", strconv.Itoa(queryOffset)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
+			},
+			{
+				Config: testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindowUpdated, queryOffsetUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "out_of_order_time_window_in_seconds", strconv.Itoa(timeWindowUpdated)),
+					resource.TestCheckResourceAttr(resourceName, "rule_query_offset_in_seconds", strconv.Itoa(queryOffsetUpdated)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckWorkspaceConfigurationExists(ctx context.Context, t *testing.T, n string, v *awstypes.WorkspaceConfigurationDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		output, err := tfamp.FindWorkspaceConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
@@ -213,4 +257,16 @@ resource "aws_prometheus_workspace_configuration" "test" {
   }
 }
 `
+}
+
+func testAccWorkspaceConfigurationConfig_timeWindowAndQueryOffset(timeWindow, queryOffset int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {}
+
+resource "aws_prometheus_workspace_configuration" "test" {
+  workspace_id                        = aws_prometheus_workspace.test.id
+  out_of_order_time_window_in_seconds = %[1]d
+  rule_query_offset_in_seconds        = %[2]d
+}
+`, timeWindow, queryOffset)
 }

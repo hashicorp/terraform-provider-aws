@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -15,12 +17,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,46 +33,48 @@ func resourcePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_attribute": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				// If policy_attribute(s) are not specified,
-				// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
-				// will be returned by the API; thus, this TypeSet is marked as Computed.
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_attribute": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					// If policy_attribute(s) are not specified,
+					// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
+					// will be returned by the API; thus, this TypeSet is marked as Computed.
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
+					// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
+					// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
+					// differences caused by additional attributes returned by the API are suppressed.
+					DiffSuppressFunc: suppressPolicyAttributeDiffs,
 				},
-				// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
-				// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
-				// differences caused by additional attributes returned by the API are suppressed.
-				DiffSuppressFunc: suppressPolicyAttributeDiffs,
-			},
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_type_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"policy_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_type_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -115,7 +118,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +151,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -207,7 +210,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -270,7 +273,7 @@ func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbNa
 
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return reassignments, nil
 	}
 

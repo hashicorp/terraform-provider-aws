@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
@@ -12,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,10 +25,6 @@ import (
 func newAccessPolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &accessPolicyDataSource{}, nil
 }
-
-const (
-	DSNameAccessPolicy = "Access Policy Data Source"
-)
 
 type accessPolicyDataSource struct {
 	framework.DataSourceWithModel[accessPolicyDataSourceModel]
@@ -69,28 +67,25 @@ func (d *accessPolicyDataSource) Read(ctx context.Context, req datasource.ReadRe
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
 	var data accessPolicyDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findAccessPolicyByNameAndType(ctx, conn, data.Name.ValueString(), data.Type.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameAccessPolicy, data.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.ID = flex.StringToFramework(ctx, out.Name)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type accessPolicyDataSourceModel struct {

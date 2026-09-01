@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -14,19 +16,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEndpointOutput")
+// @Testing(altRegionProvider=true)
+// Alternate region not working
+// @Testing(identityTest=false)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -34,102 +43,100 @@ func resourceEndpoint() *schema.Resource {
 		UpdateWithoutTimeout: resourceEndpointUpdate,
 		DeleteWithoutTimeout: resourceEndpointDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"endpoint_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"event_bus": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 2,
-				MinItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event_bus_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"endpoint_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"event_bus": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 2,
+					MinItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"event_bus_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
-			},
-			"replication_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrState: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ReplicationStateEnabled,
-							ValidateDiagFunc: enum.Validate[types.ReplicationState](),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
+				},
+				"replication_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrState: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ReplicationStateEnabled,
+								ValidateDiagFunc: enum.Validate[types.ReplicationState](),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"routing_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failover_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"primary": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrHealthCheck: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"routing_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failover_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"primary": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrHealthCheck: {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
-									},
-									"secondary": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"route": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidRegionName,
+										"secondary": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"route": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidRegionName,
+													},
 												},
 											},
 										},
@@ -139,7 +146,7 @@ func resourceEndpoint() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -149,7 +156,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateEndpointInput{
+	input := eventbridge.CreateEndpointInput{
 		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]any)),
 		Name:          aws.String(name),
 		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any)),
@@ -168,7 +175,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateEndpoint(ctx, input)
+		return conn.CreateEndpoint(ctx, &input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
 	if err != nil {
@@ -193,7 +200,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Global Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -233,7 +240,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateEndpointInput{
+	input := eventbridge.UpdateEndpointInput{
 		Name: aws.String(d.Id()),
 	}
 
@@ -259,7 +266,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.RoutingConfig = expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.UpdateEndpoint(ctx, input)
+	_, err := conn.UpdateEndpoint(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Global Endpoint (%s): %s", d.Id(), err)
@@ -280,9 +287,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Global Endpoint: %s", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &eventbridge.DeleteEndpointInput{
+	input := eventbridge.DeleteEndpointInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -303,16 +311,19 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeEndpointOutput, error) {
-	input := &eventbridge.DescribeEndpointInput{
+	input := eventbridge.DescribeEndpointInput{
 		Name: aws.String(name),
 	}
 
+	return findEndpoint(ctx, conn, &input)
+}
+
+func findEndpoint(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeEndpointInput) (*eventbridge.DescribeEndpointOutput, error) {
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -321,17 +332,17 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpointState(conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -347,14 +358,14 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateCreating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -366,14 +377,14 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateUpdating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -385,14 +396,14 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

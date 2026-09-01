@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -16,22 +19,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_eks_pod_identity_association", name="Pod Identity Association")
+// @IdentityAttribute("cluster_name")
+// @IdentityAttribute("association_id")
 // @Tags(identifierAttribute="association_arn")
+// @ImportIDHandler("podIdentityAssociationImportID", setIDAttribute=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.PodIdentityAssociation")
+// @Testing(importStateIdFunc=testAccCheckPodIdentityAssociationImportStateIDFunc)
+// @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.40.0")
 func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &podIdentityAssociationResource{}
 
@@ -40,22 +52,24 @@ func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWith
 
 type podIdentityAssociationResourceModel struct {
 	framework.WithRegionModel
-	AssociationARN     types.String `tfsdk:"association_arn"`
-	AssociationID      types.String `tfsdk:"association_id"`
-	ClusterName        types.String `tfsdk:"cluster_name"`
-	DisableSessionTags types.Bool   `tfsdk:"disable_session_tags"`
-	ExternalID         types.String `tfsdk:"external_id"`
-	ID                 types.String `tfsdk:"id"`
-	Namespace          types.String `tfsdk:"namespace"`
-	RoleARN            fwtypes.ARN  `tfsdk:"role_arn"`
-	ServiceAccount     types.String `tfsdk:"service_account"`
-	Tags               tftags.Map   `tfsdk:"tags"`
-	TagsAll            tftags.Map   `tfsdk:"tags_all"`
-	TargetRoleARN      fwtypes.ARN  `tfsdk:"target_role_arn"`
+	AssociationARN     types.String      `tfsdk:"association_arn"`
+	AssociationID      types.String      `tfsdk:"association_id"`
+	ClusterName        types.String      `tfsdk:"cluster_name"`
+	DisableSessionTags types.Bool        `tfsdk:"disable_session_tags"`
+	ExternalID         types.String      `tfsdk:"external_id"`
+	ID                 types.String      `tfsdk:"id"`
+	Namespace          types.String      `tfsdk:"namespace"`
+	Policy             fwtypes.IAMPolicy `tfsdk:"policy"`
+	RoleARN            fwtypes.ARN       `tfsdk:"role_arn"`
+	ServiceAccount     types.String      `tfsdk:"service_account"`
+	Tags               tftags.Map        `tfsdk:"tags"`
+	TagsAll            tftags.Map        `tfsdk:"tags_all"`
+	TargetRoleARN      fwtypes.ARN       `tfsdk:"target_role_arn"`
 }
 
 type podIdentityAssociationResource struct {
 	framework.ResourceWithModel[podIdentityAssociationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -94,6 +108,10 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, request res
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: fwtypes.IAMPolicyType,
+				Optional:   true,
+			},
 			names.AttrRoleARN: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.ARNType,
@@ -130,7 +148,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -164,7 +182,7 @@ func (r *podIdentityAssociationResource) Read(ctx context.Context, request resou
 
 	association, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, data.AssociationID.ValueString(), data.ClusterName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -202,6 +220,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 	conn := r.Meta().EKSClient(ctx)
 
 	if !new.DisableSessionTags.Equal(old.DisableSessionTags) ||
+		!new.Policy.Equal(old.Policy) ||
 		!new.RoleARN.Equal(old.RoleARN) ||
 		!new.TargetRoleARN.Equal(old.TargetRoleARN) {
 		var input eks.UpdatePodIdentityAssociationInput
@@ -211,7 +230,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 		}
 
 		// Set values for unknowns.
-		input.ClientRequestToken = aws.String(sdkid.UniqueId())
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, &input)
@@ -261,34 +280,21 @@ func (r *podIdentityAssociationResource) Delete(ctx context.Context, request res
 	}
 }
 
-func (r *podIdentityAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const (
-		partCount = 2
-	)
-	parts, err := flex.ExpandResourceId(request.ID, partCount, false)
-	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(fmt.Errorf("wrong format of import ID (%s), use: 'cluster-name,association-id'", request.ID)))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrAssociationID), parts[1])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
-}
-
 func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {
 	input := eks.DescribePodIdentityAssociationInput{
 		AssociationId: aws.String(associationID),
 		ClusterName:   aws.String(clusterName),
 	}
 
-	output, err := conn.DescribePodIdentityAssociation(ctx, &input)
+	return findPodIdentityAssociation(ctx, conn, &input)
+}
+
+func findPodIdentityAssociation(ctx context.Context, conn *eks.Client, input *eks.DescribePodIdentityAssociationInput) (*awstypes.PodIdentityAssociation, error) {
+	output, err := conn.DescribePodIdentityAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -297,8 +303,48 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	}
 
 	if output == nil || output.Association == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Association, nil
+}
+
+const podIdentityAssociationImportIDSeparator = intflex.ResourceIdSeparator
+
+func podIdentityAssociationParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, podIdentityAssociationImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sassociation-id", id, podIdentityAssociationImportIDSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser           = podIdentityAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = podIdentityAssociationImportID{}
+)
+
+type podIdentityAssociationImportID struct{}
+
+func (podIdentityAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	clusterName, associationID, err := podIdentityAssociationParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrAssociationID: associationID,
+		names.AttrClusterName:   clusterName,
+	}
+
+	return associationID, result, nil
+}
+
+func (podIdentityAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var associationID types.String
+	state.GetAttribute(ctx, path.Root(names.AttrAssociationID), &associationID)
+
+	return fwflex.StringValueFromFramework(ctx, associationID)
 }

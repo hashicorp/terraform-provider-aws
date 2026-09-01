@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -13,10 +15,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,51 +38,69 @@ func resourceResourceDataSync() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"s3_destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
-						},
-						"sync_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.ResourceDataSyncS3FormatJsonSerde,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceDataSyncS3Format](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"s3_destination": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"destination_data_sharing": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"destination_data_sharing_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringInSlice([]string{"Organization"}, false),
+										},
+									},
+								},
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrPrefix: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
+							"sync_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.ResourceDataSyncS3FormatJsonSerde,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceDataSyncS3Format](),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -115,7 +137,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 
 	syncItem, err := findResourceDataSyncByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Resource Data Sync (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,7 +148,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set(names.AttrName, syncItem.SyncName)
-	if err := d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination)); err != nil {
+	if err := d.Set("s3_destination", flattenResourceDataSyncS3Destination(d, syncItem.S3Destination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_destination: %s", err)
 	}
 
@@ -191,7 +213,7 @@ func findResourceDataSyncs(ctx context.Context, conn *ssm.Client, input *ssm.Lis
 	return output, nil
 }
 
-func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3Destination) []any {
+func flattenResourceDataSyncS3Destination(d *schema.ResourceData, apiObject *awstypes.ResourceDataSyncS3Destination) []any {
 	tfMap := make(map[string]any)
 
 	tfMap[names.AttrBucketName] = aws.ToString(apiObject.BucketName)
@@ -203,6 +225,21 @@ func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3
 	if apiObject.Prefix != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
 	}
+	tfMap["destination_data_sharing"] = flattenResourceDataSyncDestinationDataSharing(d)
+
+	return []any{tfMap}
+}
+
+func flattenResourceDataSyncDestinationDataSharing(d *schema.ResourceData) []any {
+	tfMap := make(map[string]any)
+
+	// `DestinationDataSharing` is only used when creating a Data Sync, and is `nil` when reading.
+	// Preserve the value from the state.
+	state := d.Get("s3_destination.0.destination_data_sharing.0.destination_data_sharing_type")
+	if state == nil || state.(string) == "" {
+		return nil
+	}
+	tfMap["destination_data_sharing_type"] = state.(string)
 
 	return []any{tfMap}
 }
@@ -222,6 +259,16 @@ func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.Resou
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
-
+	apiObject.DestinationDataSharing = expandResourceDataSyncDestinationDataSharing(tfMap["destination_data_sharing"].([]any))
 	return apiObject
+}
+
+func expandResourceDataSyncDestinationDataSharing(tfList []any) *awstypes.ResourceDataSyncDestinationDataSharing {
+	if len(tfList) == 0 {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+	return &awstypes.ResourceDataSyncDestinationDataSharing{
+		DestinationDataSharingType: aws.String(tfMap["destination_data_sharing_type"].(string)),
+	}
 }

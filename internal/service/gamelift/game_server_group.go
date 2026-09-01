@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,145 +51,147 @@ func resourceGameServerGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_scaling_group_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_scaling_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"estimated_instance_warmup": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"target_tracking_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_value": {
-										Type:         schema.TypeFloat,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.FloatAtLeast(0),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_scaling_group_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_scaling_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"estimated_instance_warmup": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"target_tracking_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_value": {
+											Type:         schema.TypeFloat,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.FloatAtLeast(0),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"balancing_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.BalancingStrategy](),
-			},
-			"game_server_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"game_server_protection_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.GameServerProtectionPolicy](),
-			},
-			"instance_definition": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 2,
-				MaxItems: 20,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrInstanceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.GameServerGroupInstanceType](),
-						},
-						"weighted_capacity": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 3),
-						},
-					},
+				"balancing_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BalancingStrategy](),
 				},
-			},
-			names.AttrLaunchTemplate: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"launch_template.0.name"},
-							ValidateFunc:  verify.ValidLaunchTemplateID,
-						},
-						names.AttrName: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"launch_template.0.id"},
-							ValidateFunc:  verify.ValidLaunchTemplateName,
-						},
-						names.AttrVersion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-					},
-				},
-			},
-			"max_size": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"min_size": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_subnets": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 20,
-				Elem: &schema.Schema{
+				"game_server_group_name": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(15, 24),
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-			},
+				"game_server_protection_policy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.GameServerProtectionPolicy](),
+				},
+				"instance_definition": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 2,
+					MaxItems: 20,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrInstanceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.GameServerGroupInstanceType](),
+							},
+							"weighted_capacity": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 3),
+							},
+						},
+					},
+				},
+				names.AttrLaunchTemplate: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"launch_template.0.name"},
+								ValidateFunc:  verify.ValidLaunchTemplateID,
+							},
+							names.AttrName: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"launch_template.0.id"},
+								ValidateFunc:  verify.ValidLaunchTemplateName,
+							},
+							names.AttrVersion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+						},
+					},
+				},
+				"max_size": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"min_size": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_subnets": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 20,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(15, 24),
+					},
+				},
+			}
 		},
 	}
 }
@@ -247,7 +251,7 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	gameServerGroup, err := findGameServerGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Game Server Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -268,7 +272,7 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 		asgPolicy, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, autoscalingConn, asgName, d.Id())
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s/%s): %s", asgName, d.Id(), err)
 		}
@@ -369,8 +373,7 @@ func findGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name 
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -379,17 +382,17 @@ func findGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name 
 	}
 
 	if output == nil || output.GameServerGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GameServerGroup, nil
 }
 
-func statusGameServerGroup(ctx context.Context, conn *gamelift.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGameServerGroup(conn *gamelift.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGameServerGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -408,14 +411,14 @@ func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name 
 			awstypes.GameServerGroupStatusActivating,
 		),
 		Target:  enum.Slice(awstypes.GameServerGroupStatusActive),
-		Refresh: statusGameServerGroup(ctx, conn, name),
+		Refresh: statusGameServerGroup(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.GameServerGroup); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -430,14 +433,14 @@ func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.Client, n
 			awstypes.GameServerGroupStatusDeleting,
 		),
 		Target:  []string{},
-		Refresh: statusGameServerGroup(ctx, conn, name),
+		Refresh: statusGameServerGroup(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.GameServerGroup); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

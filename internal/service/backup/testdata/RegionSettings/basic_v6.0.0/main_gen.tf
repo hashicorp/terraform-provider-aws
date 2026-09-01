@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_backup_region_settings" "test" {
@@ -11,6 +11,7 @@ resource "aws_backup_region_settings" "test" {
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
+    "EKS"                    = true
     "FSx"                    = true
     "Neptune"                = true
     "RDS"                    = true

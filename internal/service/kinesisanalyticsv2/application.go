@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kinesisanalyticsv2
 
@@ -18,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -116,6 +118,26 @@ func resourceApplication() *schema.Resource {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CodeContentType](),
+										},
+									},
+								},
+							},
+							"application_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
 										},
 									},
 								},
@@ -918,7 +940,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	application, err := findApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -966,6 +988,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if d.HasChange("application_configuration.0.application_code_configuration") {
 				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]any))
+
+				updateApplication = true
+			}
+
+			if d.HasChange("application_configuration.0.application_encryption_configuration") {
+				applicationConfigurationUpdate.ApplicationEncryptionConfigurationUpdate = expandApplicationEncryptionConfigurationUpdate(d.Get("application_configuration.0.application_encryption_configuration").([]any))
 
 				updateApplication = true
 			}
@@ -1283,20 +1311,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 
-			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := findApplicationDetailByName(ctx, conn, applicationName)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
-				}
-
-				if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
-
-					updateApplication = true
-				}
-			}
-
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 		}
 
@@ -1392,6 +1406,17 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if updateApplication {
+			// Always send 'run_configuration', else defaults are applied.
+			application, err := findApplicationDetailByName(ctx, conn, applicationName)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+			}
+
+			if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
+				input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+			}
+
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
 			output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {
@@ -1571,8 +1596,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1581,17 +1605,17 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationDetail, nil
 }
 
-func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationDetailByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1607,7 +1631,7 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1624,7 +1648,7 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusForceStopping, awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1641,7 +1665,7 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1658,7 +1682,7 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1685,8 +1709,7 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1695,17 +1718,17 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	}
 
 	if output == nil || output.ApplicationOperationInfoDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationOperationInfoDetails, nil
 }
 
-func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplicationOperation(conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationOperationByTwoPartKey(ctx, conn, applicationName, operationID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1721,7 +1744,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusInProgress),
 		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
-		Refresh: statusApplicationOperation(ctx, conn, applicationName, operationID),
+		Refresh: statusApplicationOperation(conn, applicationName, operationID),
 		Timeout: timeout,
 	}
 
@@ -1729,7 +1752,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 	if output, ok := outputRaw.(*awstypes.ApplicationOperationInfoDetails); ok {
 		if failureDetails := output.OperationFailureDetails; failureDetails != nil && failureDetails.ErrorInfo != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
 		}
 
 		return output, err
@@ -1740,7 +1763,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 func waitIAMPropagation[T any](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1824,6 +1847,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 		}
 
 		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
+	}
+
+	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
+		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
 	}
 
 	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]any); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
@@ -2713,6 +2740,10 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		mApplicationConfiguration["application_code_configuration"] = []any{mApplicationCodeConfiguration}
 	}
 
+	if applicationEncryptionConfigurationDescription := applicationConfigurationDescription.ApplicationEncryptionConfigurationDescription; applicationEncryptionConfigurationDescription != nil {
+		mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfigurationDescription)
+	}
+
 	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
 		mApplicationSnapshotConfiguration := map[string]any{
 			"snapshots_enabled": aws.ToBool(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
@@ -3101,4 +3132,58 @@ func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Stop
 	}
 
 	return apiObject
+}
+
+func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfiguration {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfiguration{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyType = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func expandApplicationEncryptionConfigurationUpdate(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfigurationUpdate {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfigurationUpdate{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyTypeUpdate = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyIdUpdate = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfigurationDescription) []any {
+	if applicationEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	mApplicationEncryptionConfiguration := map[string]any{
+		"key_type": applicationEncryptionConfiguration.KeyType,
+	}
+
+	if applicationEncryptionConfiguration.KeyId != nil {
+		mApplicationEncryptionConfiguration[names.AttrKeyID] = aws.ToString(applicationEncryptionConfiguration.KeyId)
+	}
+
+	return []any{mApplicationEncryptionConfiguration}
 }

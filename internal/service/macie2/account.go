@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package macie2
 
@@ -13,10 +15,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -36,31 +37,33 @@ func resourceAccount() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"finding_publishing_frequency": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FindingPublishingFrequency](),
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
-			},
-			names.AttrServiceRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"finding_publishing_frequency": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FindingPublishingFrequency](),
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
+				},
+				names.AttrServiceRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -71,7 +74,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.EnableMacieInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -81,22 +84,18 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Status = awstypes.MacieStatus(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.EnableMacie(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableMacie(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
@@ -166,11 +165,11 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	input := &macie2.DisableMacieInput{}
 
-	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DisableMacie(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Cannot disable Macie while associated with an administrator account") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
@@ -178,15 +177,11 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DisableMacie(ctx, input)
-	}
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,57 +35,59 @@ func resourceReplicationConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRule: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 25,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrRegion: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidRegionName,
-												},
-												"registry_id": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidAccountID,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDestination: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 25,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrRegion: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidRegionName,
+													},
+													"registry_id": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidAccountID,
+													},
 												},
 											},
 										},
-									},
-									"repository_filter": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 100,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrFilter: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"filter_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.RepositoryFilterType](),
+										"repository_filter": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 100,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrFilter: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"filter_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.RepositoryFilterType](),
+													},
 												},
 											},
 										},
@@ -92,7 +97,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -124,7 +129,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 	output, err := findReplicationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -170,7 +175,7 @@ func findReplicationConfiguration(ctx context.Context, conn *ecr.Client) (*ecr.D
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil || len(output.ReplicationConfiguration.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -11,7 +11,7 @@ var (
 	}
 )
 
-// AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
+// AutoFlexOptionsFunc is a type alias for an auto-flattener or expander functional option.
 type AutoFlexOptionsFunc func(*AutoFlexOptions)
 
 // AutoFlexOptions stores configurable options for an auto-flattener or expander.

@@ -1,0 +1,141 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: PR Test Trigger
+
+permissions:
+  contents: read        # required for checkout
+  pull-requests: write  # required to post feedback comments
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  trigger:
+    name: Trigger Tests from Comment
+    runs-on: ubuntu-latest
+    # Only run when the comment is on a pull request and starts with /test
+    if: |
+      github.event.issue.pull_request
+      && startsWith(github.event.comment.body, '/test')
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.comment.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Checkout
+        if: steps.community_check.outputs.maintainer == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Go
+        if: steps.community_check.outputs.maintainer == 'true'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+
+      - name: Cache Go modules
+        if: steps.community_check.outputs.maintainer == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('.ci/tools/go.sum') }}
+
+      - name: Install tctest
+        if: steps.community_check.outputs.maintainer == 'true'
+        run: cd .ci/tools && go install github.com/katbyte/tctest
+
+      - name: Determine Changed Packages
+        if: steps.community_check.outputs.maintainer == 'true'
+        id: pkgs
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pkgs=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/files --paginate \
+            --jq '[.[].filename | select(startswith("internal/service/")) | split("/")[2]] | unique | join(",")')
+          echo "pkgs=${pkgs}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on Multiple Packages
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && contains(steps.pkgs.outputs.pkgs, ',')
+        env:
+          PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.issue.html_url }} --body \
+            "This PR touches multiple packages (\`${PKGS}\`). Please run tests manually."
+
+      - name: Run Tests
+        if: |
+          steps.community_check.outputs.maintainer == 'true'
+          && !contains(steps.pkgs.outputs.pkgs, ',')
+        id: run_tests
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
+          TCTEST_BUILD_TYPE_ID: ${{ secrets.TCTEST_BUILD_TYPE_ID }}
+          TCTEST_REPO: hashicorp/terraform-provider-aws
+          TCTEST_FILEREGEX: "^internal/.*"
+          TCTEST_SKIP_QUEUE: 1
+          TCTEST_TOKEN_TC: ${{ secrets.TCTEST_TOKEN_TC }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Extract PARALLELISM=<digits> — digits only, safe for arithmetic comparison.
+          parallelism_value=$(echo "${COMMENT_BODY}" | grep -oiP '(?<=PARALLELISM=)\d+' | head -1)
+
+          # Extract PATTERN and allow only characters valid in a Go test name:
+          # alphanumerics, underscores, hyphens, dots, slashes, backslashes, parentheses, and the anchors ^ and $.
+          # Any other character causes the pattern to be rejected entirely.
+          raw_pattern=$(echo "${COMMENT_BODY}" | grep -oiP '(?<=PATTERN=)\S+' | head -1)
+          if [[ -n "${raw_pattern}" ]]; then
+            if [[ ! "${raw_pattern}" =~ ^[a-zA-Z0-9_.^$/|\\()-]+$ ]]; then
+              echo "::error::PATTERN contains disallowed characters: ${raw_pattern}"
+              exit 1
+            fi
+            pattern="${raw_pattern}"
+          fi
+
+          properties=""
+          if [[ -n "${parallelism_value}" ]]; then
+            if [[ "${parallelism_value}" -gt 20 ]]; then
+              echo "::error::Parallelism value ${parallelism_value} exceeds maximum of 20"
+              exit 1
+            fi
+            properties="ACCTEST_PARALLELISM=${parallelism_value}"
+          fi
+
+          # Invoke tctest directly — no eval, no string-assembled commands.
+          if [[ -n "${pattern}" ]]; then
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" "${pattern}" --comment --reappend-split-character
+            fi
+          else
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" --comment --reappend-split-character
+            fi
+          fi
+
+      - name: Comment on Test Start
+        if: steps.run_tests.outcome == 'success'
+        env:
+          PKGS: ${{ steps.pkgs.outputs.pkgs }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.issue.html_url }} --body \
+            "Automated tests have been triggered for package \`${PKGS}\`. Results will be posted when complete."

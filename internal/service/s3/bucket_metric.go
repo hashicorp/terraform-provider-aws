@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -14,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,44 +39,46 @@ func resourceBucketMetric() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_point": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
-						},
-						names.AttrPrefix: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
-						},
-						names.AttrTags: {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							Elem:         &schema.Schema{Type: schema.TypeString},
-							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrFilter: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_point": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+								AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
+							},
+							names.AttrPrefix: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
+							},
+							names.AttrTags: {
+								Type:         schema.TypeMap,
+								Optional:     true,
+								Elem:         &schema.Schema{Type: schema.TypeString},
+								AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }
@@ -146,7 +150,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	mc, err := findMetricsConfiguration(ctx, conn, bucket, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Metric (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -323,8 +327,7 @@ func findMetricsConfiguration(ctx context.Context, conn *s3.Client, bucket, id s
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -333,7 +336,7 @@ func findMetricsConfiguration(ctx context.Context, conn *s3.Client, bucket, id s
 	}
 
 	if output == nil || output.MetricsConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MetricsConfiguration, nil

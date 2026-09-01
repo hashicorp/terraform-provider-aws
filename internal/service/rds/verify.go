@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
 
 import (
+	gversion "github.com/YakDriver/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,4 +35,14 @@ func compareActualEngineVersion(d *schema.ResourceData, oldVersion, newVersion, 
 	}
 
 	d.Set(names.AttrEngineVersion, newVersion)
+}
+
+// engineVersionIsNewer returns true when v1 is strictly greater than v2 using
+// numeric-aware version comparison. This handles both plain versions ("16.3")
+// and Aurora-style versions ("8.0.mysql_aurora.3.10.0") correctly, including
+// unpadded minor/patch segments where lexicographic comparison would fail
+// (e.g. "3.9" < "3.10" even though "3.9" > "3.10" as a string).
+// Returns false if either string cannot be parsed as a version.
+func engineVersionIsNewer(v1, v2 string) bool {
+	return !gversion.LessThan(v1, v2) && v1 != v2
 }

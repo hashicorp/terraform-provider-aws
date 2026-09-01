@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -22,12 +24,14 @@ func dataSourceResourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -57,11 +61,11 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findResourceTagsByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.Tag, error) {
-	input := &organizations.ListTagsForResourceInput{
+	input := organizations.ListTagsForResourceInput{
 		ResourceId: aws.String(id),
 	}
 
-	return findResourceTags(ctx, conn, input)
+	return findResourceTags(ctx, conn, &input)
 }
 
 func findResourceTags(ctx context.Context, conn *organizations.Client, input *organizations.ListTagsForResourceInput) ([]awstypes.Tag, error) {

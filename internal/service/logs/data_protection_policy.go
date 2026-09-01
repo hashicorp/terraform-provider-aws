@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -24,6 +26,9 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_log_data_protection_policy", name="Data Protection Policy")
+// @IdentityAttribute("log_group_name")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetDataProtectionPolicyOutput")
 func resourceDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataProtectionPolicyPut,
@@ -31,18 +36,16 @@ func resourceDataProtectionPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceDataProtectionPolicyPut,
 		DeleteWithoutTimeout: resourceDataProtectionPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrLogGroupName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupName,
-			},
-			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrLogGroupName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogGroupName,
+				},
+				"policy_document": sdkv2.JSONDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -57,12 +60,12 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 	}
 
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
-	input := &cloudwatchlogs.PutDataProtectionPolicyInput{
+	input := cloudwatchlogs.PutDataProtectionPolicyInput{
 		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     aws.String(policy),
 	}
 
-	_, err = conn.PutDataProtectionPolicy(ctx, input)
+	_, err = conn.PutDataProtectionPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupName, err)
@@ -112,9 +115,10 @@ func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
-	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{
+	input := cloudwatchlogs.DeleteDataProtectionPolicyInput{
 		LogGroupIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataProtectionPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -138,7 +142,7 @@ func findDataProtectionPolicyByLogGroupName(ctx context.Context, conn *cloudwatc
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err
@@ -158,7 +162,7 @@ func findDataProtectionPolicy(ctx context.Context, conn *cloudwatchlogs.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

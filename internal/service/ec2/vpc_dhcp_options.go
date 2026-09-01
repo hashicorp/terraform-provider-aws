@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,56 +40,58 @@ func resourceVPCDHCPOptions() *schema.Resource {
 
 		// Keep in sync with aws_default_vpc_dhcp_options' schema.
 		// See notes in vpc_default_vpc_dhcp_options.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"domain_name_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"ipv6_address_preferred_lease_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"netbios_name_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"netbios_node_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"ntp_servers": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"domain_name_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"ipv6_address_preferred_lease_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"netbios_name_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"netbios_node_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				"ntp_servers": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -137,7 +142,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 		return findDHCPOptionsByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 DHCP Options Set %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -13,18 +13,21 @@ import (
 
 // TODO: Needs a better name
 type ImportByIdentityer interface {
-	SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport)
+	Identityer
+	SetImportSpec(importSpec inttypes.FrameworkImport)
 }
 
 var _ ImportByIdentityer = &WithImportByIdentity{}
 
+// WithImportByIdentity is intended to be embedded in resources which support resource identity.
+//
+// See: https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#importing-by-identity
 type WithImportByIdentity struct {
-	identity   inttypes.Identity
+	WithIdentity
 	importSpec inttypes.FrameworkImport
 }
 
-func (w *WithImportByIdentity) SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport) {
-	w.identity = identity
+func (w *WithImportByIdentity) SetImportSpec(importSpec inttypes.FrameworkImport) {
 	w.importSpec = importSpec
 }
 
@@ -50,10 +53,6 @@ func (w WithImportByIdentity) ImportState(ctx context.Context, request resource.
 	} else {
 		importer.MultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 	}
-}
-
-func (w WithImportByIdentity) IdentitySpec() inttypes.Identity {
-	return w.identity
 }
 
 func (w WithImportByIdentity) ImportSpec() inttypes.FrameworkImport {

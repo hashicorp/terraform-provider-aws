@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -6,6 +6,7 @@ package appsync
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,7 +41,7 @@ func sweepAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable,
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return sweepResources, nil
@@ -68,7 +69,7 @@ func sweepGraphQLAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return sweepResources, nil
@@ -96,7 +97,7 @@ func sweepDomainNames(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return sweepResources, nil
@@ -124,7 +125,7 @@ func sweepDomainNameAssociations(ctx context.Context, client *conns.AWSClient) (
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return sweepResources, nil

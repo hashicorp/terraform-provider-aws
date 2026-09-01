@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,14 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,75 +53,77 @@ func resourceKeySigningKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"digest_algorithm_mnemonic": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"digest_algorithm_type": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"digest_value": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dnskey_record": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ds_record": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"flag": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"key_management_service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"key_tag": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
-				),
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_algorithm_mnemonic": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_algorithm_type": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  keySigningKeyStatusActive,
-				ValidateFunc: validation.StringInSlice([]string{
-					keySigningKeyStatusActive,
-					keySigningKeyStatusInactive,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"digest_algorithm_mnemonic": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"digest_algorithm_type": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"digest_value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dnskey_record": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ds_record": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"flag": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"key_management_service_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"key_tag": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 128),
+						validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
+					),
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_algorithm_mnemonic": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_algorithm_type": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  keySigningKeyStatusActive,
+					ValidateFunc: validation.StringInSlice([]string{
+						keySigningKeyStatusActive,
+						keySigningKeyStatusInactive,
+					}, false),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -142,7 +146,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	input := &route53.CreateKeySigningKeyInput{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		HostedZoneId:    aws.String(hostedZoneID),
 		Name:            aws.String(name),
 		Status:          aws.String(status),
@@ -185,7 +189,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	hostedZoneID, name := parts[0], parts[1]
 	keySigningKey, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Key Signing Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -336,8 +340,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) || errs.IsA[*awstypes.NoSuchKeySigningKey](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -346,7 +349,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.KeySigningKeys {
@@ -358,11 +361,11 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	return nil, &retry.NotFoundError{}
 }
 
-func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeySigningKey(conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -380,7 +383,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 	)
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
+		Refresh:    statusKeySigningKey(conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
 		Timeout:    timeout,
 	}
@@ -389,7 +392,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 
 	if output, ok := outputRaw.(*awstypes.KeySigningKey); ok {
 		if status := aws.ToString(output.Status); status == keySigningKeyStatusInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

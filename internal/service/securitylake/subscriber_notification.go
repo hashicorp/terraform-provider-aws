@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securitylake
 
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -173,7 +176,7 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	output, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -291,7 +294,7 @@ func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securit
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return nil, &tfresource.EmptyResultError{}
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -302,13 +305,13 @@ func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subs
 	var diags diag.Diagnostics
 
 	for _, item := range subscriberNotificationResourceConfigurationModels {
-		if !item.SqsNotificationConfiguration.IsNull() && (len(item.SqsNotificationConfiguration.Elements()) > 0) {
+		if item.SqsNotificationConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 			var sqsNotificationConfiguration []sqsNotificationConfigurationModel
 			diags.Append(item.SqsNotificationConfiguration.ElementsAs(ctx, &sqsNotificationConfiguration, false)...)
 			notificationConfiguration := expandSQSNotificationConfigurationModel(sqsNotificationConfiguration)
 			configuration = append(configuration, notificationConfiguration)
 		}
-		if (!item.HTTPSNotificationConfiguration.IsNull()) && (len(item.HTTPSNotificationConfiguration.Elements()) > 0) {
+		if item.HTTPSNotificationConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 			var httpsNotificationConfiguration []httpsNotificationConfigurationModel
 			diags.Append(item.HTTPSNotificationConfiguration.ElementsAs(ctx, &httpsNotificationConfiguration, false)...)
 			notificationConfiguration := expandHTTPSNotificationConfigurationModel(ctx, httpsNotificationConfiguration)

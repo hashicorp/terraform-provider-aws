@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,128 +36,130 @@ func resourceCachePolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  86400,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  31536000,
-			},
-			"min_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"parameters_in_cache_key_and_forwarded_to_origin": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookies_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookie_behavior": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
-									},
-									"cookies": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  86400,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"max_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  31536000,
+				},
+				"min_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"parameters_in_cache_key_and_forwarded_to_origin": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookies_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cookie_behavior": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
+										},
+										"cookies": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"enable_accept_encoding_brotli": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_accept_encoding_gzip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"headers_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"header_behavior": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
-									},
-									"headers": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"enable_accept_encoding_brotli": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_accept_encoding_gzip": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"headers_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"header_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
+										},
+										"headers": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"query_strings_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"query_string_behavior": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
-									},
-									"query_strings": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"query_strings_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"query_string_behavior": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
+										},
+										"query_strings": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
@@ -165,7 +169,7 @@ func resourceCachePolicy() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -211,7 +215,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findCachePolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -309,8 +313,7 @@ func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 
 	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -319,7 +322,7 @@ func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 	}
 
 	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -380,7 +383,7 @@ func expandCookieNames(tfMap map[string]any) *awstypes.CookieNames {
 
 	apiObject := &awstypes.CookieNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -414,7 +417,7 @@ func expandHeaders(tfMap map[string]any) *awstypes.Headers {
 
 	apiObject := &awstypes.Headers{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -448,7 +451,7 @@ func expandQueryStringNames(tfMap map[string]any) *awstypes.QueryStringNames {
 
 	apiObject := &awstypes.QueryStringNames{}
 
-	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[attrItems].(*schema.Set); ok && v.Len() > 0 {
 		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
@@ -511,7 +514,7 @@ func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -541,7 +544,7 @@ func flattenHeaders(apiObject *awstypes.Headers) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap
@@ -571,7 +574,7 @@ func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]an
 	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = v
+		tfMap[attrItems] = v
 	}
 
 	return tfMap

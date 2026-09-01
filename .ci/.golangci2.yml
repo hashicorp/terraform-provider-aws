@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: "2"
 linters:
   default: none
@@ -5,10 +8,15 @@ linters:
     # !! only add a-e linters here
     - asasalint
     - asciicheck
+    - bidichk
     - containedctx
     - contextcheck
     - copyloopvar
+    - decorder
     - dogsled
+    # ../internal/service/appautoscaling/policy.go:560:14: Duplicate words (Scaling) found (dupword)
+    # log.Printf("[WARN] Application Auto Scaling Scaling Policy (%s) not found, removing from state", d.Id())
+    # - dupword
     - durationcheck
     - errcheck
     - errname
@@ -29,8 +37,6 @@ linters:
         - os.Remove
         - os.Setenv
         - os.Unsetenv
-    errorlint:
-      errorf: false
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3

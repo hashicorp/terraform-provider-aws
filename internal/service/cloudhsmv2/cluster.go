@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudhsmv2
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,77 +48,79 @@ func resourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"cluster_certificates": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_hardware_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cluster_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cluster_csr": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"hsm_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"manufacturer_hardware_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cluster_certificates": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"aws_hardware_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cluster_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cluster_csr": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"hsm_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"manufacturer_hardware_certificate": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hsm_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
-			},
-			names.AttrMode: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ClusterMode](),
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_backup_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hsm_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice([]string{"hsm1.medium", "hsm2m.medium"}, false),
+				},
+				names.AttrMode: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ClusterMode](),
+				},
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_backup_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -165,7 +169,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -240,16 +244,13 @@ func findClusterByID(ctx context.Context, conn *cloudhsmv2.Client, id string) (*
 
 	if state := output.State; state == types.ClusterStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.ClusterId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -282,11 +283,11 @@ func findClusters(ctx context.Context, conn *cloudhsmv2.Client, input *cloudhsmv
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -302,7 +303,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateActive),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -311,7 +312,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -323,7 +324,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateDeleteInProgress),
 		Target:     []string{},
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -332,7 +333,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -344,7 +345,7 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateUninitialized),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -353,7 +354,7 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}

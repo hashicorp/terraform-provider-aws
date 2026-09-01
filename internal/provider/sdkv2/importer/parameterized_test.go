@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,15 +21,15 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
-func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentity(attrName)
+func regionalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+func regionalSingleParameterizedIdentitySpecNameMapped(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
@@ -326,12 +326,12 @@ var globalSingleParameterizedSchema = map[string]*schema.Schema{
 	},
 }
 
-func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentity(attrName)
+func globalSingleParameterizedIdentitySpec(name string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(name, true))
 }
 
-func globalSingleParameterizedIdentitySpecWithMappedName(attrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.GlobalSingleParameterIdentityWithMappedName(attrName, resourceAttrName)
+func globalSingleParameterizedIdentitySpecWithMappedName(name, resourceAttributeName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName(name, true, resourceAttributeName))
 }
 
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
@@ -544,7 +544,7 @@ var regionalMultipleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identity {
@@ -563,6 +563,14 @@ func regionalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[strin
 		} else {
 			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
 		}
+	}
+	return inttypes.RegionalParameterizedIdentity(attrs)
+}
+
+func regionalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
 	}
 	return inttypes.RegionalParameterizedIdentity(attrs)
 }
@@ -626,7 +634,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -763,6 +771,22 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			expectedRegion: region,
 			expectError:    false,
 		},
+
+		"null value": {
+			identityAttrs: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+			},
+			expectedID:     "a_name,",
+			expectedRegion: region,
+			expectError:    false,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -783,7 +807,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -850,6 +874,14 @@ func globalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]
 	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
+func globalMultipleParameterizedIdentitySpecWithOptionalValue(attrNames map[string]bool) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for attrName, required := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, required))
+	}
+	return inttypes.GlobalParameterizedIdentity(attrs)
+}
+
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -892,7 +924,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -965,6 +997,21 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			},
 			expectError: false,
 		},
+
+		"null value": {
+			identityAttrs: map[string]string{
+				"name": "a_name",
+			},
+			identitySpec: globalMultipleParameterizedIdentitySpecWithOptionalValue(map[string]bool{
+				"name": true,
+				"type": false,
+			}),
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+			},
+			expectedID:  "a_name,",
+			expectError: false,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -985,7 +1032,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -1028,7 +1075,7 @@ func (t testImportID) Create(d *schema.ResourceData) string {
 		d.Get("name").(string),
 		d.Get("type").(string),
 	}
-	result, err := flex.FlattenResourceId(idParts, len(idParts), false)
+	result, err := flex.FlattenResourceId(idParts, len(idParts), true)
 	if err != nil {
 		t.t.Fatalf("Creating test Import ID: %s", err)
 	}
@@ -1036,15 +1083,15 @@ func (t testImportID) Create(d *schema.ResourceData) string {
 	return result
 }
 
-func (t testImportID) Parse(id string) (string, map[string]string, error) {
+func (t testImportID) Parse(id string) (string, map[string]any, error) {
 	t.t.Helper()
 
-	parts, err := flex.ExpandResourceId(id, 2, false)
+	parts, err := flex.ExpandResourceId(id, 2, true)
 	if err != nil {
 		t.t.Fatalf("Parsing test Import ID: %s", err)
 	}
 
-	return id, map[string]string{
+	return id, map[string]any{
 		"name": parts[0],
 		"type": parts[1],
 	}, nil

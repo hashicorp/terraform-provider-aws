@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -16,8 +16,29 @@ func (streamType) Values() []streamType {
 }
 
 const (
+	anycastIPListDeployed  = "Deployed"
+	anycastIPListDeploying = "Deploying"
+)
+
+const (
+	connectionFunctionStatusPublishing   = "PUBLISHING"
+	connectionFunctionStatusUnassociated = "UNASSOCIATED"
+	connectionFunctionStatusUnpublished  = "UNPUBLISHED"
+)
+
+const (
 	distributionStatusDeployed   = "Deployed"
 	distributionStatusInProgress = "InProgress"
+)
+
+const (
+	connectionGroupStatusDeployed   = "Deployed"
+	connectionGroupStatusInProgress = "InProgress"
+)
+
+const (
+	distributionTenantStatusDeployed   = "Deployed"
+	distributionTenantStatusInProgress = "InProgress"
 )
 
 const (

@@ -32,6 +32,7 @@ This resource supports the following arguments:
 * `default_route_table_propagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dns_support` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
+* `encryption_support` - (Optional) Whether encryption support for VPC Encryption Control is enabled. Valid values: `disable`, `enable`. Default value: `disable`. Once set, switching to `disable` requires explicitly specifying `disable` rather than removing the argument.
 * `security_group_referencing_support` - (Optional) Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`. Default value: `disable`.
 * `multicast_support` - (Optional) Whether Multicast support is enabled. Required to use `ec2_transit_gateway_multicast_domain`. Valid values: `disable`, `enable`. Default value: `disable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -42,7 +43,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
+* `arn` - EC2 Transit Gateway ARN
 * `association_default_route_table_id` - Identifier of the default association route table
 * `id` - EC2 Transit Gateway identifier
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

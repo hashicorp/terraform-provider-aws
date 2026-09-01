@@ -37,10 +37,36 @@ The name must start with the word "alias" followed by a forward slash (alias/). 
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the key alias.
-* `target_key_arn` - The Amazon Resource Name (ARN) of the target key identifier.
+* `arn` - ARN of the key alias.
+* `target_key_arn` - ARN of the target key identifier.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_kms_alias.example
+  identity = {
+    name = "alias/my-key-alias"
+  }
+}
+
+resource "aws_kms_alias" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the KMS key alias.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS aliases using the `name`. For example:
 

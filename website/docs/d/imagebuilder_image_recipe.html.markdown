@@ -29,13 +29,14 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `ami_tags` - Tags that are applied to the AMI that Image Builder creates during the Build phase prior to image distribution.
 * `block_device_mapping` - Set of objects with block device mappings for the image recipe.
     * `device_name` - Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
     * `ebs` - Single list of object with Elastic Block Storage (EBS) block device mapping settings.
         * `delete_on_termination` - Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
         * `encrypted` - Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
         * `iops` - Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
-        * `kms_key_id` - ARN of the Key Management Service (KMS) Key for encryption.
+        * `kms_key_id` - ARN of the KMS Key for encryption.
         * `snapshot_id` - Identifier of the EC2 Volume Snapshot.
         * `throughput` - For GP3 volumes only. The throughput in MiB/s that the volume supports.
         * `volume_size` - Size of the volume, in GiB.

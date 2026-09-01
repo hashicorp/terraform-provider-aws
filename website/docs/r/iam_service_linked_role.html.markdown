@@ -31,8 +31,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the role.
-* `arn` - The Amazon Resource Name (ARN) specifying the role.
+* `id` - ARN of the role.
+* `arn` - ARN specifying the role.
 * `create_date` - The creation date of the IAM role.
 * `name` - The name of the role.
 * `path` - The path of the role.
@@ -40,6 +40,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_service_linked_role.example
+  identity = {
+    "arn" = "arn:aws:iam::123456789012:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk"
+  }
+}
+
+resource "aws_iam_service_linked_role" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the IAM service-linked role.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM service-linked roles using role ARN. For example:
 

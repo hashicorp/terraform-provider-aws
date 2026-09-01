@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -29,37 +31,39 @@ func dataSourceInstances() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"instance_tags": tftags.TagsSchemaComputed(),
-			"instance_state_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.InstanceStateName](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"private_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"public_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"instance_tags": tftags.TagsSchemaComputed(),
+				"instance_state_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.InstanceStateName](),
+					},
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"private_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"public_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -94,15 +98,13 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Filters = nil
 	}
 
-	output, err := findInstances(ctx, conn, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
-	}
-
 	var instanceIDs, privateIPs, publicIPs, ipv6Addresses []string
 
-	for _, v := range output {
+	for v, err := range listInstances(ctx, conn, &input) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
+		}
+
 		instanceIDs = append(instanceIDs, aws.ToString(v.InstanceId))
 		if privateIP := aws.ToString(v.PrivateIpAddress); privateIP != "" {
 			privateIPs = append(privateIPs, privateIP)

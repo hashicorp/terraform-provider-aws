@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -47,7 +47,7 @@ func TestAccElastiCacheReservedCacheNode_Redis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_cache_nodes_offering_id", resourceName, "offering_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "reserved_cache_nodes_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_type", resourceName, "offering_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
@@ -90,7 +90,7 @@ func TestAccElastiCacheReservedCacheNode_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_cache_nodes_offering_id", resourceName, "offering_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "reserved_cache_nodes_offering_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_type", resourceName, "offering_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
@@ -135,26 +135,21 @@ func TestAccElastiCacheReservedCacheNode_ID(t *testing.T) {
 	})
 }
 
-func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, reservation *awstypes.ReservedCacheNode) resource.TestCheckFunc {
+func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReservedCacheNode) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache Reserved Cache Node reservation id is set")
-		}
-
-		resp, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
+		output, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*reservation = resp
+		*v = *output
 
 		return nil
 	}
@@ -163,12 +158,12 @@ func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, 
 func testAccReservedInstanceConfig_Redis_basic() string {
 	return `
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }
@@ -178,12 +173,12 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 func testAccReservedInstanceConfig_Valkey_basic() string {
 	return `
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "valkey"
 }
@@ -193,13 +188,13 @@ data "aws_elasticache_reserved_cache_node_offering" "test" {
 func testAccReservedInstanceConfig_ID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_reserved_cache_node" "test" {
-  offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
-  id          = %[1]q
+  reserved_cache_nodes_offering_id = data.aws_elasticache_reserved_cache_node_offering.test.offering_id
+  id                               = %[1]q
 }
 
 data "aws_elasticache_reserved_cache_node_offering" "test" {
   cache_node_type     = "cache.t4g.small"
-  duration            = 31536000
+  duration            = "P1Y"
   offering_type       = "No Upfront"
   product_description = "redis"
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appfabric
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -25,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,6 +46,8 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppAuthorization")
 // @Testing(importIgnore="credential")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preCheck="testAccPreCheck")
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 
@@ -213,13 +217,8 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
-	}
-
 	input.AppBundleIdentifier = data.AppBundleARN.ValueStringPointer()
-	input.ClientToken = aws.String(uuid)
+	input.ClientToken = aws.String(create.UUID(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)
@@ -279,7 +278,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 
 	output, err := findAppAuthorizationByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -412,8 +411,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -422,17 +420,17 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 	}
 
 	if output == nil || output.AppAuthorization == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppAuthorization, nil
 }
 
-func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAppAuthorization(conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -448,7 +446,7 @@ func waitAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, ap
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusPendingConnect, awstypes.AppAuthorizationStatusConnected),
-		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
+		Refresh: statusAppAuthorization(conn, appAuthorizationARN, appBundleIdentifier),
 		Timeout: timeout,
 	}
 
@@ -465,7 +463,7 @@ func waitAppAuthorizationUpdated(ctx context.Context, conn *appfabric.Client, ap
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusConnected, awstypes.AppAuthorizationStatusPendingConnect),
-		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
+		Refresh: statusAppAuthorization(conn, appAuthorizationARN, appBundleIdentifier),
 		Timeout: timeout,
 	}
 
@@ -482,7 +480,7 @@ func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, ap
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppAuthorizationStatusConnected, awstypes.AppAuthorizationStatusPendingConnect),
 		Target:  []string{},
-		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
+		Refresh: statusAppAuthorization(conn, appAuthorizationARN, appBundleIdentifier),
 		Timeout: timeout,
 	}
 

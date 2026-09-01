@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3outposts
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3outposts/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,62 +39,64 @@ func resourceEndpoint() *schema.Resource {
 			StateContext: resourceEndpointImportState,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EndpointAccessType](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"network_interfaces": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrNetworkInterfaceID: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointAccessType](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				"network_interfaces": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"outpost_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"security_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			names.AttrSubnetID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
+				"outpost_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				"security_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+			}
 		},
 	}
 }
@@ -136,7 +140,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Outposts Endpoint %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -224,7 +228,7 @@ func findEndpointByARN(ctx context.Context, conn *s3outposts.Client, arn string)
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outposts.ListEndpointsInput) ([]awstypes.Endpoint, error) {
@@ -236,8 +240,7 @@ func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outpos
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -251,11 +254,11 @@ func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outpos
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *s3outposts.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpoint(conn *s3outposts.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -274,7 +277,7 @@ func waitEndpointStatusCreated(ctx context.Context, conn *s3outposts.Client, arn
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusPending),
 		Target:  enum.Slice(awstypes.EndpointStatusAvailable),
-		Refresh: statusEndpoint(ctx, conn, arn),
+		Refresh: statusEndpoint(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -282,7 +285,7 @@ func waitEndpointStatusCreated(ctx context.Context, conn *s3outposts.Client, arn
 
 	if output, ok := outputRaw.(*awstypes.Endpoint); ok {
 		if failedReason := output.FailedReason; failedReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failedReason.ErrorCode), aws.ToString(failedReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failedReason.ErrorCode), aws.ToString(failedReason.Message)))
 		}
 
 		return output, err

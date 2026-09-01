@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -6,7 +6,6 @@ provider "null" {}
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = var.rName
-  visibility          = var.rName
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id

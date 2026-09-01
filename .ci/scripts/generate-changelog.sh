@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 set -o errexit
 set -o nounset
@@ -26,7 +28,7 @@ then
     exit 1
 fi 
 
-CHANGELOG=$($(go env GOPATH)/bin/changelog-build -this-release $TARGET_SHA \
+CHANGELOG=$("$(go env GOPATH)"/bin/changelog-build -this-release $TARGET_SHA \
                       -last-release $PREVIOUS_RELEASE_SHA \
                       -git-dir $__root \
                       -entries-dir .changelog \

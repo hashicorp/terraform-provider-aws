@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -18,11 +20,13 @@ func dataSourceRegistrationCode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegistrationCodeRead,
 
-		Schema: map[string]*schema.Schema{
-			"registration_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"registration_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

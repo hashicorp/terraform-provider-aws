@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -21,17 +23,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
@@ -79,6 +83,8 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 					),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -101,6 +107,12 @@ func (r *keyValueStoreResource) Create(ctx context.Context, request resource.Cre
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	name := aws.ToString(input.Name)
@@ -142,7 +154,7 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 
 	output, err := findKeyValueStoreByName(ctx, conn, data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -176,38 +188,49 @@ func (r *keyValueStoreResource) Update(ctx context.Context, request resource.Upd
 		return
 	}
 
-	conn := r.Meta().CloudFrontClient(ctx)
-
-	kvsARN := old.ARN.ValueString()
-
-	// Updating changes the etag of the key value store.
-	// Use a mutex serialize actions
-	mutexKey := kvsARN
-	conns.GlobalMutexKV.Lock(mutexKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKey)
-
-	var input cloudfront.UpdateKeyValueStoreInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	diff, d := fwflex.Diff(ctx, new, old, fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTagsAll))
+	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
+	if diff.HasChanges() {
+		conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := conn.UpdateKeyValueStore(ctx, &input)
+		kvsARN := old.ARN.ValueString()
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront Key Value Store (%s)", new.Name.ValueString()), err.Error())
+		// Updating changes the etag of the key value store.
+		// Use a mutex serialize actions
+		mutexKey := kvsARN
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		return
+		var input cloudfront.UpdateKeyValueStoreInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
+
+		output, err := conn.UpdateKeyValueStore(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront Key Value Store (%s)", new.Name.ValueString()), err.Error())
+
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.KeyValueStore, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	} else {
+		new.ETag = old.ETag
+		new.LastModifiedTime = old.LastModifiedTime
 	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.KeyValueStore, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -264,17 +287,17 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	}
 
 	if output == nil || output.KeyValueStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeyValueStore(conn *cloudfront.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeyValueStoreByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -290,7 +313,7 @@ func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyValueStoreStatusProvisioning},
 		Target:  []string{keyValueStoreStatusReady},
-		Refresh: statusKeyValueStore(ctx, conn, name),
+		Refresh: statusKeyValueStore(conn, name),
 		Timeout: timeout,
 	}
 
@@ -310,5 +333,7 @@ type keyValueStoreResourceModel struct {
 	ID               types.String      `tfsdk:"id"`
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
+	Tags             tftags.Map        `tfsdk:"tags"`
+	TagsAll          tftags.Map        `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
 }

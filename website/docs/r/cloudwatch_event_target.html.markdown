@@ -553,7 +553,7 @@ resource "aws_appsync_graphql_api" "graphql-api" {
 
 The following arguments are required:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the target.
+* `arn` - (Required) ARN of the target.
 * `rule` - (Required) The name of the rule you want to add targets to.
 
 The following arguments are optional:
@@ -571,7 +571,7 @@ The following arguments are optional:
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
+* `role_arn` - (Optional) ARN of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
@@ -690,11 +690,41 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_target.example
+  identity = {
+    event_bus_name = "default"
+    rule           = "rule-name"
+    target_id      = "target-id"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `event_bus_name` (String) Event bus name for the target.
+* `rule` (String) Rule name for the target.
+* `target_id` (String) Target ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```terraform
 import {
-  to = aws_cloudwatch_event_target.test-event-target
+  to = aws_cloudwatch_event_target.example
   id = "rule-name/target-id"
 }
 ```
@@ -702,5 +732,5 @@ import {
 Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```console
-% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+% terraform import aws_cloudwatch_event_target.example rule-name/target-id
 ```

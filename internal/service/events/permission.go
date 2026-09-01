@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -16,17 +18,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
+// @IdentityAttribute("statement_id")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
@@ -34,59 +38,57 @@ func resourcePermission() *schema.Resource {
 		UpdateWithoutTimeout: resourcePermissionUpdate,
 		DeleteWithoutTimeout: resourcePermissionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "events:PutEvents",
-				ValidateFunc: validatePermissionAction,
-			},
-			names.AttrCondition: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "events:PutEvents",
+					ValidateFunc: validatePermissionAction,
+				},
+				names.AttrCondition: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
 						},
 					},
 				},
-			},
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusName,
-				Default:      DefaultEventBusName,
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validatePermissionPrincipal,
-			},
-			"statement_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validatePermissionStatementID,
-			},
+				"event_bus_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validBusName,
+					Default:      defaultEventBusName,
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validatePermissionPrincipal,
+				},
+				"statement_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validatePermissionStatementID,
+				},
+			}
 		},
 	}
 }
@@ -98,7 +100,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
 	id := permissionCreateResourceID(eventBusName, statementID)
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -106,7 +108,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err := conn.PutPermission(ctx, input)
+	_, err := conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Permission (%s): %s", id, err)
@@ -127,11 +129,11 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyStatement, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
+	policyStatement, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
-	})
+	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -177,7 +179,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -185,7 +187,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err = conn.PutPermission(ctx, input)
+	_, err = conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Permission (%s): %s", d.Id(), err)
@@ -204,10 +206,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Permission: %s", d.Id())
-	_, err = conn.RemovePermission(ctx, &eventbridge.RemovePermissionInput{
+	input := eventbridge.RemovePermissionInput{
 		EventBusName: aws.String(eventBusName),
 		StatementId:  aws.String(statementID),
-	})
+	}
+	_, err = conn.RemovePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -243,7 +246,7 @@ func findPermissionByTwoPartKey(ctx context.Context, conn *eventbridge.Client, e
 const permissionResourceIDSeparator = "/"
 
 func permissionCreateResourceID(eventBusName, statementID string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return statementID
 	}
 
@@ -257,7 +260,7 @@ func permissionParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, permissionResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

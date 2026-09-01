@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -6,18 +6,15 @@ package kendra_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,10 +24,10 @@ func TestAccKendraExperience_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -38,12 +35,12 @@ func TestAccKendraExperience_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
@@ -69,10 +66,10 @@ func TestAccKendraExperience_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -80,15 +77,23 @@ func TestAccKendraExperience_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceExperience(), resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceExperience(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -100,10 +105,10 @@ func TestAccKendraExperience_Description(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -111,12 +116,12 @@ func TestAccKendraExperience_Description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
@@ -129,7 +134,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 			{
 				Config: testAccExperienceConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -142,7 +147,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				// the update to an empty value is not currently supported
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
@@ -157,11 +162,11 @@ func TestAccKendraExperience_Name(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -169,12 +174,12 @@ func TestAccKendraExperience_Name(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
@@ -182,7 +187,7 @@ func TestAccKendraExperience_Name(t *testing.T) {
 			{
 				Config: testAccExperienceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -205,10 +210,10 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -216,12 +221,12 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
@@ -229,7 +234,7 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 			{
 				Config: testAccExperienceConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -252,10 +257,10 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -263,12 +268,12 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
@@ -282,7 +287,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_directPutContent(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
@@ -291,7 +296,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_directPutContent(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
@@ -307,10 +312,10 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -318,12 +323,12 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_faqIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
@@ -346,10 +351,10 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -357,12 +362,12 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_faqIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
@@ -373,7 +378,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
@@ -395,15 +400,11 @@ func TestAccKendraExperience_Configuration_UserIdentityConfiguration(t *testing.
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -411,12 +412,12 @@ func TestAccKendraExperience_Configuration_UserIdentityConfiguration(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.0.identity_attribute_name", userId),
@@ -437,15 +438,11 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIden
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -453,12 +450,12 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIden
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfigurationAndUserIdentityConfiguration(rName, userId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
@@ -481,15 +478,11 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -497,12 +490,12 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfigurationAndUserIdentityConfiguration(rName, userId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
@@ -513,7 +506,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_directPutContent(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
@@ -535,15 +528,11 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -551,12 +540,12 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
+		CheckDestroy:             testAccCheckExperienceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperienceConfig_configuration_contentSourceConfigurationAndUserIdentityConfiguration(rName, userId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExperienceExists(ctx, resourceName),
+					testAccCheckExperienceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
@@ -585,9 +574,9 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 	})
 }
 
-func testAccCheckExperienceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckExperienceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KendraClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kendra_experience" {
@@ -600,7 +589,7 @@ func testAccCheckExperienceDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err = tfkendra.FindExperienceByID(ctx, conn, id, indexId)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -613,7 +602,7 @@ func testAccCheckExperienceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckExperienceExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckExperienceExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -624,7 +613,7 @@ func testAccCheckExperienceExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("No Kendra Experience is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KendraClient(ctx)
 
 		id, indexId, err := tfkendra.ExperienceParseResourceID(rs.Primary.ID)
 		if err != nil {

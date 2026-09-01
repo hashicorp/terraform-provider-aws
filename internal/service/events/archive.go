@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -12,19 +14,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_archive", name="Archive")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeArchiveOutput")
 func resourceArchive() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveCreate,
@@ -32,53 +39,48 @@ func resourceArchive() *schema.Resource {
 		UpdateWithoutTimeout: resourceArchiveUpdate,
 		DeleteWithoutTimeout: resourceArchiveDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"event_pattern": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateEventPatternValue(),
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v.(string))
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"event_source_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_key_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
-				),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validArchiveName,
-			},
-			"retention_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"event_pattern": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateEventPatternValue(),
+					StateFunc:    sdkv2.NormalizeJsonStringSchemaStateFunc,
+				},
+				"event_source_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validArchiveName,
+				},
+				"retention_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -88,7 +90,7 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateArchiveInput{
+	input := eventbridge.CreateArchiveInput{
 		ArchiveName:    aws.String(name),
 		EventSourceArn: aws.String(d.Get("event_source_arn").(string)),
 	}
@@ -114,7 +116,7 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.RetentionDays = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := conn.CreateArchive(ctx, input)
+	_, err := conn.CreateArchive(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Archive (%s)): %s", name, err)
@@ -131,7 +133,7 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	output, err := findArchiveByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -156,7 +158,7 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateArchiveInput{
+	input := eventbridge.UpdateArchiveInput{
 		ArchiveName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -181,7 +183,7 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input.RetentionDays = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := conn.UpdateArchive(ctx, input)
+	_, err := conn.UpdateArchive(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Archive (%s): %s", d.Id(), err)
@@ -195,9 +197,10 @@ func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Archive: %s", d.Id())
-	_, err := conn.DeleteArchive(ctx, &eventbridge.DeleteArchiveInput{
+	input := eventbridge.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteArchive(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -211,16 +214,19 @@ func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func findArchiveByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeArchiveOutput, error) {
-	input := &eventbridge.DescribeArchiveInput{
+	input := eventbridge.DescribeArchiveInput{
 		ArchiveName: aws.String(name),
 	}
 
+	return findArchive(ctx, conn, &input)
+}
+
+func findArchive(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeArchiveInput) (*eventbridge.DescribeArchiveOutput, error) {
 	output, err := conn.DescribeArchive(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -229,7 +235,7 @@ func findArchiveByName(ctx context.Context, conn *eventbridge.Client, name strin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

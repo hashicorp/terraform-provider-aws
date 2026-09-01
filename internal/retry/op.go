@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -91,23 +90,20 @@ func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 			t   T
 			err error
 		)
-		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
+		for l = backoff.NewLoopWithOptions(ctx, timeout, opts...); l.Continue(ctx); {
 			t, err = op(ctx)
 
-			if retry, err := predicate(t, err); !retry {
+			var retry bool
+			if retry, err = predicate(t, err); !retry {
 				return t, err
 			}
 		}
 
-		if err == nil {
-			if l.Remaining() == 0 || errors.Is(err, context.Cause(ctx)) {
-				err = &TimeoutError{
-					// LastError must be nil for `TimedOut` to return true.
-					// LastError:     err,
-					LastState:     "retryableerror",
-					Timeout:       timeout,
-					ExpectedState: []string{"success"},
-				}
+		if err == nil && l.Remaining() == 0 {
+			err = &TimeoutError{
+				LastState:     "retryableerror",
+				Timeout:       timeout,
+				ExpectedState: []string{"success"},
 			}
 		}
 

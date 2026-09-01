@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -85,7 +85,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 		_, err := conn.PutBucketTagging(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("setting resource tags (%s): %s", identifier, err)
+			return fmt.Errorf("setting resource tags (%s): %w", identifier, err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
 		input := s3control.DeleteBucketTaggingInput{
@@ -96,7 +96,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 		_, err := conn.DeleteBucketTagging(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("deleting resource tags (%s): %s", identifier, err)
+			return fmt.Errorf("deleting resource tags (%s): %w", identifier, err)
 		}
 	}
 

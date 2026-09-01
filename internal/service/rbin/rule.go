@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rbin
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,128 +45,130 @@ func resourceRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 500),
-			},
-			"exclude_resource_tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resource_tag_key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 127),
-						},
-						"resource_tag_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 500),
+				},
+				"exclude_resource_tags": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"resource_tag_key": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 127),
+							},
+							"resource_tag_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
 						},
 					},
+					ConflictsWith: []string{names.AttrResourceTags},
 				},
-				ConflictsWith: []string{names.AttrResourceTags},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lock_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"unlock_delay": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"unlock_delay_unit": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.UnlockDelayUnit](),
-									},
-									"unlock_delay_value": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(7, 30),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lock_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"unlock_delay": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"unlock_delay_unit": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.UnlockDelayUnit](),
+										},
+										"unlock_delay_value": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(7, 30),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"lock_end_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lock_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceTags: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resource_tag_key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 127),
+				"lock_end_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lock_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceTags: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"resource_tag_key": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 127),
+							},
+							"resource_tag_value": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
 						},
-						"resource_tag_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
+					},
+					ConflictsWith: []string{"exclude_resource_tags"},
+				},
+				names.AttrResourceType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ResourceType](),
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"retention_period_value": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 365),
+							},
+							"retention_period_unit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
+							},
 						},
 					},
 				},
-				ConflictsWith: []string{"exclude_resource_tags"},
-			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ResourceType](),
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"retention_period_value": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 365),
-						},
-						"retention_period_unit": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
-						},
-					},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -213,7 +217,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findRuleByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RBin Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -322,8 +326,7 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -332,17 +335,17 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 	}
 
 	if output == nil || output.Identifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRule(conn *rbin.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRuleByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -358,7 +361,7 @@ func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
-		Refresh:                   statusRule(ctx, conn, id),
+		Refresh:                   statusRule(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -376,7 +379,7 @@ func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
-		Refresh:                   statusRule(ctx, conn, id),
+		Refresh:                   statusRule(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -394,7 +397,7 @@ func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleStatusPending, types.RuleStatusAvailable),
 		Target:  []string{},
-		Refresh: statusRule(ctx, conn, id),
+		Refresh: statusRule(conn, id),
 		Timeout: timeout,
 	}
 

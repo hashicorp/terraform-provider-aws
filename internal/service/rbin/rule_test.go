@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rbin_test
@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrbin "github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,19 +25,19 @@ func TestAccRBinRule_basic(t *testing.T) {
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "exclude_resource_tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
@@ -59,7 +59,7 @@ func TestAccRBinRule_basic(t *testing.T) {
 			{
 				Config: testAccRuleConfig_basic2(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "exclude_resource_tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
@@ -93,22 +93,30 @@ func TestAccRBinRule_disappears(t *testing.T) {
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rbinrule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRule(), resourceName),
+					testAccCheckRuleExists(ctx, t, resourceName, &rbinrule),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrbin.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -121,19 +129,19 @@ func TestAccRBinRule_excludeResourceTags(t *testing.T) {
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_excludeResourceTags1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
 
@@ -157,7 +165,7 @@ func TestAccRBinRule_excludeResourceTags(t *testing.T) {
 			{
 				Config: testAccRuleConfig_excludeResourceTags2(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
 					resource.TestCheckResourceAttr(resourceName, "exclude_resource_tags.#", "2"),
@@ -184,7 +192,7 @@ func TestAccRBinRule_excludeResourceTags(t *testing.T) {
 			{
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "exclude_resource_tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
@@ -208,19 +216,19 @@ func TestAccRBinRule_lockConfig(t *testing.T) {
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rbin.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", "7"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_unit", "DAYS"),
@@ -237,19 +245,19 @@ func TestAccRBinRule_tags(t *testing.T) {
 	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RBin)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RBin),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_tags1(resourceType, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -262,7 +270,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 			{
 				Config: testAccRuleConfig_tags2(resourceType, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -271,7 +279,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 			{
 				Config: testAccRuleConfig_tags1(resourceType, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &rule),
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -280,9 +288,9 @@ func TestAccRBinRule_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RBinClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rbin_rule" {
@@ -291,7 +299,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfrbin.FindRuleByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -306,14 +314,14 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleExists(ctx context.Context, n string, v *rbin.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, t *testing.T, n string, v *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RBinClient(ctx)
 
 		output, err := tfrbin.FindRuleByID(ctx, conn, rs.Primary.ID)
 

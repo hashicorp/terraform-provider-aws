@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -14,14 +14,16 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Directory": {
-			acctest.CtBasic:               testAccDirectory_basic,
-			acctest.CtDisappears:          testAccDirectory_disappears,
-			"ipGroupIds":                  testAccDirectory_ipGroupIDs,
-			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
-			"subnetIDs":                   testAccDirectory_subnetIDs,
-			"tags":                        testAccDirectory_tags,
-			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
-			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
+			acctest.CtBasic:             testAccDirectory_basic,
+			acctest.CtDisappears:        testAccDirectory_disappears,
+			"ipGroupIds":                testAccDirectory_ipGroupIDs,
+			"selfServicePermissions":    testAccDirectory_selfServicePermissions,
+			"subnetIDs":                 testAccDirectory_subnetIDs,
+			"tags":                      testAccDirectory_tags,
+			"tenancy":                   testAccDirectory_tenancy,
+			"workspaceAccessProperties": testAccDirectory_workspaceAccessProperties,
+			"workspaceAccessProperties_accessEndpointConfig":              testAccDirectory_workspaceAccessProperties_accessEndpointConfig,
+			"workspaceCreationProperties":                                 testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
 			"workspaceCertificateBasedAuthProperties":                     testAccDirectory_CertificateBasedAuthProperties,
 			"workspaceSamlProperties":                                     testAccDirectory_SamlProperties,
@@ -35,6 +37,13 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			acctest.CtDisappears:  testAccIPGroup_disappears,
 			"multipleDirectories": testAccIPGroup_MultipleDirectories,
 			"tags":                testAccIPGroup_tags,
+		},
+		"Pool": {
+			acctest.CtBasic:       testAccPool_basic,
+			acctest.CtDisappears:  testAccPool_disappears,
+			"applicationSettings": testAccPool_ApplicationSettings,
+			"timeoutSettings":     testAccPool_TimeoutSettings,
+			"Identity":            testAccWorkSpacesPool_identitySerial,
 		},
 		"Workspace": {
 			acctest.CtBasic:          testAccWorkspace_basic,

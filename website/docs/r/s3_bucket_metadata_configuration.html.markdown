@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `metadata_configuration` Block
@@ -83,14 +84,25 @@ The `record_expiration` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `metadata_configuration.0.destination` - Destination information for the S3 Metadata configuration.
-    * `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
-    * `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
-    * `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
-* `metadata_configuration.0.inventory_table_configuration.0.table_arn` - Inventory table ARN.
-* `metadata_configuration.0.inventory_table_configuration.0.table_name` - Inventory table name.
-* `metadata_configuration.0.journal_table_configuration.0.table_arn` - Journal table ARN.
-* `metadata_configuration.0.journal_table_configuration.0.table_name` - Journal table name.
+### `metadata_configuration` Block
+
+* `destination` - Destination information for the S3 Metadata configuration. See [`destination` Block](#destination-block) for details.
+
+### `destination` Block
+
+* `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
+* `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
+* `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
+
+### `inventory_table_configuration` Block
+
+* `table_arn` - Inventory table ARN.
+* `table_name` - Inventory table name.
+
+### `journal_table_configuration` Block
+
+* `table_arn` - Journal table ARN.
+* `table_name` - Journal table name.
 
 ## Timeouts
 
@@ -100,9 +112,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket metadata configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+```terraform
+import {
+  to = aws_s3_bucket_metadata_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_metadata_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket metadata configuration using the `bucket`. For example:
 
 ```terraform
 import {
@@ -111,25 +147,8 @@ import {
 }
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
-
-```terraform
-import {
-  to = aws_s3_bucket_metadata_configuration.example
-  id = "bucket-name,123456789012"
-}
-```
-
-**Using `terraform import` to import** S3 bucket metadata configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
-
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+**Using `terraform import` to import** S3 bucket metadata configuration using the `bucket`. For example:
 
 ```console
 % terraform import aws_s3_bucket_metadata_configuration.example bucket-name
-```
-
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
-
-```console
-% terraform import aws_s3_bucket_metadata_configuration.example bucket-name,123456789012
 ```

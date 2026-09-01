@@ -43,6 +43,7 @@ This resource supports the following arguments:
 * `name_prefix` - (Optional, Forces new resource) A signing profile name prefix. Terraform will generate a unique suffix. Conflicts with `name`.
 * `signature_validity_period` - (Optional, Forces new resource) The validity period for a signing job. See [`signature_validity_period` Block](#signature_validity_period-block) below for details.
 * `signing_material` - (Optional, Forces new resource) The AWS Certificate Manager certificate that will be used to sign code with the new signing profile. See [`signing_material` Block](#signing_material-block) below for details.
+* `signing_parameters` - (Optional, Forces new resource) Map of key-value pairs for signing. These can include any information that you want to use during signing.
 * `tags` - (Optional) A list of tags associated with the signing profile. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `signature_validity_period` Block
@@ -56,13 +57,13 @@ The `signature_validity_period` configuration block supports the following argum
 
 The `signing_material` configuration block supports the following arguments:
 
-* `certificate_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the certificates that is used to sign your code.
+* `certificate_arn` - (Required, Forces new resource) ARN of the certificates that is used to sign your code.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) for the signing profile.
+* `arn` - ARN for the signing profile.
 * `name` - The name of the target signing profile.
 * `platform_display_name` - A human-readable name for the signing platform associated with the signing profile.
 * `revocation_record` - Revocation information for a signing profile. See [`revocation_record` Block](#revocation_record-block) below for details.

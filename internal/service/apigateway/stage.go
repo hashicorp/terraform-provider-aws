@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,120 +51,122 @@ func resourceStage() *schema.Resource {
 				restApiID := idParts[0]
 				stageName := idParts[1]
 				d.Set("stage_name", stageName)
-				d.Set("rest_api_id", restApiID)
+				d.Set(attrRestAPIID, restApiID)
 				d.SetId(fmt.Sprintf("ags-%s-%s", restApiID, stageName))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_log_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestinationARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrFormat: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cache_cluster_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"cache_cluster_size": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.CacheClusterSize](),
-			},
-			"canary_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"percent_traffic": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  0.0,
-						},
-						"stage_variable_overrides": {
-							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-						},
-						"use_stage_cache": {
-							Type:     schema.TypeBool,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_log_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestinationARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrFormat: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"client_certificate_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"deployment_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"documentation_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"xray_tracing_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"web_acl_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cache_cluster_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"cache_cluster_size": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.CacheClusterSize](),
+				},
+				"canary_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"percent_traffic": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  0.0,
+							},
+							"stage_variable_overrides": {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+							},
+							"use_stage_cache": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"client_certificate_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"deployment_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"documentation_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invoke_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"xray_tracing_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"web_acl_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -171,7 +175,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	deploymentID := d.Get("deployment_id").(string)
 	input := apigateway.CreateStageInput{
@@ -238,13 +242,14 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -257,7 +262,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, c, apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -277,8 +282,8 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, c, apiID, stageName))
+	d.Set("invoke_url", c.APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
 	}
@@ -295,7 +300,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		apiID := d.Get("rest_api_id").(string)
+		apiID := d.Get(attrRestAPIID).(string)
 		stageName := d.Get("stage_name").(string)
 		operations := make([]types.PatchOperation, 0)
 		waitForCache := false
@@ -413,7 +418,7 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
 	input := apigateway.DeleteStageInput{
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		RestApiId: aws.String(d.Get(attrRestAPIID).(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 	_, err := conn.DeleteStage(ctx, &input)
@@ -439,8 +444,7 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -449,17 +453,17 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func stageCacheStatus(conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -477,7 +481,7 @@ func waitStageCacheAvailable(ctx context.Context, conn *apigateway.Client, apiID
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusDeleteInProgress, types.CacheClusterStatusFlushInProgress),
 		Target:  enum.Slice(types.CacheClusterStatusAvailable),
-		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Refresh: stageCacheStatus(conn, apiID, name),
 		Timeout: timeout,
 	}
 
@@ -503,7 +507,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 			// TODO: Check if this bug still exists in AWS SDK v2
 			types.CacheClusterStatusDeleteInProgress,
 		),
-		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Refresh: stageCacheStatus(conn, apiID, name),
 		Timeout: timeout,
 	}
 

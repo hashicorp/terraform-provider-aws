@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafv2
 
@@ -15,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,9 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +74,7 @@ func resourceIPSet() *schema.Resource {
 								for _, ov := range oldAddresses {
 									hasAddress := false
 									for _, nv := range newAddresses {
-										if itypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
+										if inttypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
 											hasAddress = true
 											break
 										}
@@ -124,7 +126,7 @@ func resourceIPSet() *schema.Resource {
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
+						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
@@ -145,7 +147,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateIPSetInput{
 		Addresses:        []string{},
 		IPAddressVersion: awstypes.IPAddressVersion(d.Get("ip_address_version").(string)),
@@ -180,7 +182,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	output, err := findIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAFv2 IPSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -275,8 +277,7 @@ func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, 
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -285,7 +286,7 @@ func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, 
 	}
 
 	if output == nil || output.IPSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

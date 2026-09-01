@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
 
 // Exports for use in tests only.
 var (
-	ResourceCatalogDatabase               = resourceCatalogDatabase
+	FlattenViewRepresentation  = flattenViewRepresentation
+	FlattenViewRepresentations = flattenViewRepresentations
+
+	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier
@@ -26,19 +29,20 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer    = findCatalogTableOptimizer
-	FindClassifierByName         = findClassifierByName
-	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
-	FindCrawlerByName            = findCrawlerByName
-	FindDatabaseByName           = findDatabaseByName
-	FindDataQualityRulesetByName = findDataQualityRulesetByName
-	FindDevEndpointByName        = findDevEndpointByName
-	FindJobByName                = findJobByName
-	FindPartitionByValues        = findPartitionByValues
-	FindPartitionIndexByName     = findPartitionIndexByName
-	FindRegistryByID             = findRegistryByID
-	FindResourcePolicy           = findResourcePolicy
-	FindSchemaByID               = findSchemaByID
-	FindTableByName              = findTableByName
-	FindTriggerByName            = findTriggerByName
+	FindCatalogByName               = findCatalogByName
+	FindCatalogTableOptimizer       = findCatalogTableOptimizer
+	FindClassifierByName            = findClassifierByName
+	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
+	FindCrawlerByName               = findCrawlerByName
+	FindDatabaseByTwoPartKey        = findDatabaseByTwoPartKey
+	FindDataQualityRulesetByName    = findDataQualityRulesetByName
+	FindDevEndpointByName           = findDevEndpointByName
+	FindJobByName                   = findJobByName
+	FindPartitionByValues           = findPartitionByValues
+	FindPartitionIndexByFourPartKey = findPartitionIndexByFourPartKey
+	FindRegistryByID                = findRegistryByID
+	FindResourcePolicy              = findResourcePolicy
+	FindSchemaByID                  = findSchemaByID
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTriggerByName               = findTriggerByName
 )

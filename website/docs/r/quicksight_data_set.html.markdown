@@ -36,6 +36,31 @@ resource "aws_quicksight_data_set" "example" {
 }
 ```
 
+### With use_as
+
+```terraform
+resource "aws_quicksight_data_set" "example" {
+  data_set_id = "example-id"
+  name        = "example-name"
+  import_mode = "SPICE"
+  use_as      = "RLS_RULES"
+
+  physical_table_map {
+    physical_table_map_id = "example-id"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.example.arn
+      input_columns {
+        name = "UserName"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+```
+
 ### With Column Level Permission Rules
 
 ```terraform
@@ -183,6 +208,7 @@ The following arguments are optional:
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
 * `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `use_as` - (Optional, Forces new resource) Specifies the purpose of the data set. The only valid value is `RLS_RULES`, which designates this data set as a Row Level Security (RLS) rules dataset. An RLS rules dataset is used to control access to data at the row level in QuickSight analyses and dashboards. See the [AWS documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CreateDataSet.html#API_CreateDataSet_RequestSyntax) for details.
 
 ### physical_table_map
 
@@ -393,9 +419,18 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the data set.
+* `arn` - ARN of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
+* `output_columns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`output_columns` Block](#output_columns-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### `output_columns` Block
+
+The `output_columns` block has the following attributes.
+
+* `name` - The name of the column.
+* `description` - The description of the column.
+* `type` - The data type of the column.
 
 ## Import
 

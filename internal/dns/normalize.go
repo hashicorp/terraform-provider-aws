@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dns
@@ -46,7 +46,7 @@ func normalizeCasingAndEscapeCodes(input string) string {
 				return b >= '0' && b <= '7' // Octal.
 			}) {
 				output.WriteRune(ch)
-				output.WriteString(string(bytes))
+				output.Write(bytes)
 				_, _ = br.Discard(lenOctalCode)
 				continue
 			}

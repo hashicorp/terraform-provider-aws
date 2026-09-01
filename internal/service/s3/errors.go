@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -20,6 +20,7 @@ const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
+	errCodeMalformedXML                         = "MalformedXML"
 	errCodeMetadataConfigurationNotFound        = "MetadataConfigurationNotFound"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchBucket                         = "NoSuchBucket"

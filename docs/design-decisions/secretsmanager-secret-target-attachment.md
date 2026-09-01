@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # SecretsManager Secret Target Attachment
 
 **Summary:** Assess the feasibility of replicating the `AWS::SecretsManager::SecretTargetAttachment` CloudFormation function with Terraform.
@@ -21,7 +24,7 @@ With this approach the database (RDS Postgres in this example) is initially crea
 An empty secret is created at the same time.
 Once database creation is complete, the username, password, and database connection information are all written to a new version of the existing secret.
 
-```hcl
+```terraform
 terraform {
   required_providers {
     aws = {
@@ -88,7 +91,7 @@ Specifically, the [RotateSecret](https://docs.aws.amazon.com/secretsmanager/late
 AWS provides Lambda function [templates](https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_available-rotation-templates.html) for the most common secret rotation use cases, and the [AWS Serverless Application Repository](https://serverlessrepo.aws.amazon.com/application) contains many pre-built secret rotation functions.
 Once a rotation Lambda function is deployed, rotation can be managed with the `aws_secretsmanager_secret_rotation` resource.
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret_rotation" "test" {
   secret_id = aws_secretsmanager_secret.test.id
 
@@ -108,7 +111,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 With this approach the database (RDS Postgres in this example) is initially created with the `manage_master_user_password` argument set to `true` (no password required).
 RDS will create a new "managed" secret to store credentials as part of database creation.
 
-```hcl
+```terraform
 terraform {
   required_providers {
     aws = {
@@ -157,7 +160,7 @@ This may be a limitation the `SecretTargetAttachment` CloudFormation is able to 
 
 As an alternative, supplemental connection information could be applied as `tags` if it’s absolutely necessary for the information to exist on the secret itself.
 
-```hcl
+```terraform
 # Optionally import the managed secret and modify attributes via Terraform
 # (secret value cannot be modified).
 import {

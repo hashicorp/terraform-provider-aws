@@ -38,6 +38,8 @@ This resource supports the following arguments:
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
 * `ip_address` - (Optional) The address (within the address range of the specified subnet) at
 which the file system may be mounted via the mount target.
+* `ip_address_type` - (Optional) IP address type for the mount target. Valid values are `IPV4_ONLY` (only IPv4 addresses), `IPV6_ONLY` (only IPv6 addresses), and `DUAL_STACK` (dual-stack, both IPv4 and IPv6 addresses). Defaults to `IPV4_ONLY`.
+* `ipv6_address` - (Optional) IPv6 address to use. Valid only when `ip_address_type` is set to `IPV6_ONLY` or `DUAL_STACK`.
 * `security_groups` - (Optional) A list of up to 5 VPC security group IDs (that must
 be for the same VPC as subnet specified) in effect for the mount target.
 
@@ -52,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the mount target.
 * `dns_name` - The DNS name for the EFS file system.
 * `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
-* `file_system_arn` - Amazon Resource Name of the file system.
+* `file_system_arn` - ARN of the file system.
 * `network_interface_id` - The ID of the network interface that Amazon EFS created when it created the mount target.
 * `availability_zone_name` - The name of the Availability Zone (AZ) that the mount target resides in.
 * `availability_zone_id` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.

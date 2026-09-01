@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package accessanalyzer
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,53 +40,55 @@ func resourceArchiveRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"analyzer_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"criteria": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"contains": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"eq": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"exists": {
-							Type:         nullable.TypeNullableBool,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableBool,
-						},
-						"neq": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"analyzer_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrFilter: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"criteria": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"contains": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"eq": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"exists": {
+								Type:         nullable.TypeNullableBool,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableBool,
+							},
+							"neq": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"rule_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+				"rule_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -99,7 +103,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	id := archiveRuleCreateResourceID(analyzerName, ruleName)
 	input := accessanalyzer.CreateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(sdkid.UniqueId()),
+		ClientToken:  aws.String(create.UniqueId(ctx)),
 		RuleName:     aws.String(ruleName),
 	}
 
@@ -131,7 +135,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	archiveRule, err := findArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Access Analyzer Archive Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -161,7 +165,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(sdkid.UniqueId()),
+		ClientToken:  aws.String(create.UniqueId(ctx)),
 		RuleName:     aws.String(ruleName),
 	}
 
@@ -192,7 +196,7 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Deleting IAM Access Analyzer Archive Rule: %s", d.Id())
 	input := accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(sdkid.UniqueId()),
+		ClientToken:  aws.String(create.UniqueId(ctx)),
 		RuleName:     aws.String(ruleName),
 	}
 	_, err = conn.DeleteArchiveRule(ctx, &input)
@@ -218,8 +222,7 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -228,7 +231,7 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 	}
 
 	if output == nil || output.ArchiveRule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ArchiveRule, nil

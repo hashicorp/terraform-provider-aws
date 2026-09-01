@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package amp
 
@@ -24,14 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,11 +58,31 @@ type workspaceConfigurationResource struct {
 func (r *workspaceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"out_of_order_time_window_in_seconds": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(0, 600),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
 			"retention_period_in_days": schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			"rule_query_offset_in_seconds": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(0, 86400),
 				},
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
@@ -134,7 +156,7 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
 
@@ -153,7 +175,9 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns after creation is complete.
+	data.OutOfOrderTimeWindowInSeconds = fwflex.Int32ToFramework(ctx, output.OutOfOrderTimeWindowInSeconds)
 	data.RetentionPeriodInDays = fwflex.Int32ToFramework(ctx, output.RetentionPeriodInDays)
+	data.RuleQueryOffsetInSeconds = fwflex.Int32ToFramework(ctx, output.RuleQueryOffsetInSeconds)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -169,7 +193,7 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, request resou
 
 	out, err := findWorkspaceConfigurationByID(ctx, conn, data.WorkspaceID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -207,7 +231,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.UpdateWorkspaceConfiguration(ctx, &input)
 
@@ -217,9 +241,16 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 		return
 	}
 
-	if _, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+	output, err := waitWorkspaceConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts))
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Workspace (%s) Configuration update", workspaceID), err.Error())
 
+		return
+	}
+
+	// Re-read to get updated computed values
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -238,8 +269,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -248,17 +278,17 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.WorkspaceConfiguration == nil || output.WorkspaceConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WorkspaceConfiguration, nil
 }
 
-func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspaceConfiguration(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -274,14 +304,14 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
-		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
+		Refresh: statusWorkspaceConfiguration(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.WorkspaceConfigurationDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -291,10 +321,12 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 
 type workspaceConfigurationResourceModel struct {
 	framework.WithRegionModel
-	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
-	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
-	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`
-	WorkspaceID           types.String                                            `tfsdk:"workspace_id"`
+	LimitsPerLabelSet             fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
+	OutOfOrderTimeWindowInSeconds types.Int32                                             `tfsdk:"out_of_order_time_window_in_seconds"`
+	RetentionPeriodInDays         types.Int32                                             `tfsdk:"retention_period_in_days"`
+	RuleQueryOffsetInSeconds      types.Int32                                             `tfsdk:"rule_query_offset_in_seconds"`
+	Timeouts                      timeouts.Value                                          `tfsdk:"timeouts"`
+	WorkspaceID                   types.String                                            `tfsdk:"workspace_id"`
 }
 
 type limitsPerLabelSetModel struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -37,6 +37,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
 			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
+			"endpointIpAddressType":        testAccClientVPNEndpoint_endpointIPAddressType,
+			"trafficIpAddressType":         testAccClientVPNEndpoint_trafficIPAddressType,
+			"transitGatewayConfiguration":  testAccClientVPNEndpoint_transitGatewayConfiguration,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {
@@ -55,6 +58,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			acctest.CtBasic:      testAccClientVPNRoute_basic,
 			"description":        testAccClientVPNRoute_description,
 			acctest.CtDisappears: testAccClientVPNRoute_disappears,
+			"transitGateway":     testAccClientVPNRoute_transitGateway,
 		},
 	}
 

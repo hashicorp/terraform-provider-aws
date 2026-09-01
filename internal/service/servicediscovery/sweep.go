@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -52,7 +52,7 @@ func sweepHTTPNamespaces(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ServiceDiscoveryClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -89,7 +89,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ServiceDiscoveryClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -126,7 +126,7 @@ func sweepPublicDNSNamespaces(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ServiceDiscoveryClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -163,7 +163,7 @@ func sweepServices(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ServiceDiscoveryClient(ctx)
 	input := &servicediscovery.ListServicesInput{}

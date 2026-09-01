@@ -1,0 +1,80 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package logs
+
+import (
+	"context"
+	"iter"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+)
+
+// @SDKListResource("aws_cloudwatch_log_group")
+func newLogGroupResourceAsListResource() inttypes.ListResourceForSDK {
+	l := logGroupListResource{}
+	l.SetResourceSchema(resourceGroup())
+
+	return &l
+}
+
+type logGroupListResource struct {
+	framework.ListResourceWithSDKv2Resource
+}
+
+type logGroupListResourceModel struct {
+	framework.WithRegionModel
+}
+
+func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.LogsClient(ctx)
+
+	var query logGroupListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		var input cloudwatchlogs.DescribeLogGroupsInput
+		for output, err := range listLogGroups(ctx, conn, &input) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			logGroupName := aws.ToString(output.LogGroupName)
+			rd := l.ResourceData()
+			rd.SetId(logGroupName)
+			resourceGroupFlatten(ctx, rd, output)
+
+			result.DisplayName = logGroupName
+
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogGroup, error] {
+	return tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, input, optFns...))
+}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rum
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rum"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,155 +42,157 @@ func resourceAppMonitor() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"app_monitor_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_cookies": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_xray": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"excluded_pages": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"favorite_pages": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"guest_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"included_pages": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"session_sample_rate": {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							Default:      0.1,
-							ValidateFunc: validation.FloatBetween(0, 1),
-						},
-						"telemetries": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.Telemetry](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"app_monitor_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_cookies": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_xray": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"excluded_pages": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"favorite_pages": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"guest_role_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"identity_pool_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"included_pages": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"session_sample_rate": {
+								Type:         schema.TypeFloat,
+								Optional:     true,
+								Default:      0.1,
+								ValidateFunc: validation.FloatBetween(0, 1),
+							},
+							"telemetries": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.Telemetry](),
+								},
 							},
 						},
 					},
 				},
-			},
-			"app_monitor_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_events": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.CustomEventsStatusDisabled,
-							ValidateDiagFunc: enum.Validate[awstypes.CustomEventsStatus](),
+				"app_monitor_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_events": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.CustomEventsStatusDisabled,
+								ValidateDiagFunc: enum.Validate[awstypes.CustomEventsStatus](),
+							},
 						},
 					},
 				},
-			},
-			"cw_log_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"cw_log_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deobfuscation_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"javascript_source_maps": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DeobfuscationStatus](),
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?`), "must be a valid S3 URI"),
-										),
+				"cw_log_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"cw_log_group": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deobfuscation_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"javascript_source_maps": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatus: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DeobfuscationStatus](),
+										},
+										"s3_uri": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 1024),
+												validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?`), "must be a valid S3 URI"),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
-				ValidateFunc: validation.StringLenBetween(1, 253),
-			},
-			"domain_list": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     5,
-				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
-				Elem: &schema.Schema{
+				names.AttrDomain: {
 					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
 					ValidateFunc: validation.StringLenBetween(1, 253),
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"domain_list": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     5,
+					ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 253),
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -241,7 +245,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	appMon, err := findAppMonitorByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM App Monitor %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -359,8 +363,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -369,7 +372,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 	}
 
 	if output == nil || output.AppMonitor == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppMonitor, nil

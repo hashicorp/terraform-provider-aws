@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -100,7 +100,7 @@ func tagsFromTagDescriptions(tds []awstypes.TagDescription) []awstypes.Tag {
 }
 
 func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
-	v := *tftags.TagsSchema() // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	v := *tftags.TagsSchema()
 	v.ConflictsWith = conflictsWith
 
 	return &v

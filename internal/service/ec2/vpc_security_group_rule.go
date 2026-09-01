@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -20,13 +22,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,107 +54,109 @@ func resourceSecurityGroupRule() *schema.Resource {
 		SchemaVersion: 2,
 		MigrateState:  securityGroupRuleMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr_blocks": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"source_security_group_id", "self"},
+					AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				},
+				names.AttrDescription: {
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+					Optional:     true,
+					ValidateFunc: validSecurityGroupRuleDescription,
 				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validSecurityGroupRuleDescription,
-			},
-			"from_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
-					if protocol == "-1" && old == "0" {
-						return true
-					}
-					return false
+				"from_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+					// Support existing configurations that have non-zero from_port and to_port defined with all protocols
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
+						if protocol == "-1" && old == "0" {
+							return true
+						}
+						return false
+					},
 				},
-			},
-			"ipv6_cidr_blocks": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				"ipv6_cidr_blocks": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+					},
+					ConflictsWith: []string{"source_security_group_id", "self"},
+					AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
-			},
-			"prefix_list_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
+				"prefix_list_ids": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.NoZeroValues,
+					},
+					AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 				},
-				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
-			},
-			names.AttrProtocol: {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: protocolStateFunc,
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"security_group_rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"self": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ForceNew:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
-			},
-			"source_security_group_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
-				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
-			},
-			"to_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
-					if protocol == "-1" && old == "0" {
-						return true
-					}
-					return false
+				names.AttrProtocol: {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: protocolStateFunc,
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[securityGroupRuleType](),
-			},
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"security_group_rule_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"self": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Default:       false,
+					ForceNew:      true,
+					ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
+					AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				},
+				"source_security_group_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
+					AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
+				},
+				"to_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+					// Support existing configurations that have non-zero from_port and to_port defined with all protocols
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
+						if protocol == "-1" && old == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[securityGroupRuleType](),
+				},
+			}
 		},
 	}
 }
@@ -269,7 +273,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
 		d.SetId("")
 		return diags

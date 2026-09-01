@@ -39,8 +39,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the schema.
-* `id` - Amazon Resource Name (ARN) of the schema.
+* `arn` - ARN of the schema.
+* `id` - ARN of the schema.
 * `registry_name` - The name of the Glue Registry.
 * `latest_schema_version` - The latest version of the schema associated with the returned schema definition.
 * `next_schema_version` - The next version of the schema associated with the returned schema definition.
@@ -48,6 +48,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_schema.example
+  identity = {
+    "arn" = "arn:aws:glue:us-west-2:123456789012:schema/example-registry/example-schema"
+  }
+}
+
+resource "aws_glue_schema" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Glue schema.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 

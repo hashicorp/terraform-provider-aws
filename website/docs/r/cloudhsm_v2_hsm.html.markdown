@@ -49,6 +49,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `ip_address` - The IP address of the HSM Module.
 * `subnet_id` -  The ID of subnet in which HSM is located
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `120m`)
+* `delete` - (Default `120m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import HSM modules using their HSM ID. For example:

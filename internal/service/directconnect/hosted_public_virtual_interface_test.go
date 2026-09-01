@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,25 +25,25 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	amazonAddress := "175.45.176.5/28"
 	customerAddress := "175.45.176.6/28"
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPublicVirtualInterfaceConfig_basic(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -82,25 +81,25 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 	var vif awstypes.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
-	rName := fmt.Sprintf("tf-testacc-public-vif-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
 	amazonAddress := "175.45.176.7/28"
 	customerAddress := "175.45.176.8/28"
-	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	vlan := sdkacctest.RandIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTags(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -127,7 +126,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 			{
 				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -155,14 +154,14 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 	})
 }
 
-func testAccCheckHostedPublicVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostedPublicVirtualInterfaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_hosted_public_virtual_interface")
+		return testAccCheckVirtualInterfaceDestroy(ctx, t, s, "aws_dx_hosted_public_virtual_interface")
 	}
 }
 
-func testAccCheckHostedPublicVirtualInterfaceExists(ctx context.Context, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
+func testAccCheckHostedPublicVirtualInterfaceExists(ctx context.Context, t *testing.T, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, t, name, vif)
 }
 
 func testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
@@ -231,4 +230,75 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   }
 }
 `, rName))
+}
+
+func TestAccDirectConnectHostedPublicVirtualInterface_rateLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_hosted_public_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
+	amazonAddress := "175.45.176.11/28"
+	customerAddress := "175.45.176.12/28"
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostedPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "1Gbps"),
+				),
+			},
+			{
+				Config:            testAccHostedPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccHostedPublicVirtualInterfaceConfig_rateLimit(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+# Creator
+resource "aws_dx_hosted_public_virtual_interface" "test" {
+  address_family   = "ipv4"
+  amazon_address   = %[3]q
+  bgp_asn          = %[5]d
+  connection_id    = %[1]q
+  customer_address = %[4]q
+  name             = %[2]q
+  owner_account_id = data.aws_caller_identity.accepter.account_id
+  rate_limit       = "1Gbps"
+  vlan             = %[6]d
+
+  route_filter_prefixes = [
+    "175.45.176.0/22",
+    "210.52.109.0/24",
+  ]
+}
+
+# Accepter
+data "aws_caller_identity" "accepter" {
+  provider = "awsalternate"
+}
+
+resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
+  provider = "awsalternate"
+
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
+}
+`, cid, rName, amzAddr, custAddr, bgpAsn, vlan))
 }

@@ -37,7 +37,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a HOME_NET Override
+### Policy with a HOME_NET Override
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -67,7 +67,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with a Custom Action for Stateless Inspection
+### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
 resource "aws_networkfirewall_firewall_policy" "example" {
@@ -91,7 +91,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Action Order
+### Policy with Active Threat Defense in Action Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -112,7 +112,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-## Policy with Active Threat Defense in Strict Order
+### Policy with Active Threat Defense in Strict Order
 
 ```terraform
 data "aws_region" "current" {}
@@ -160,9 +160,11 @@ This resource supports the following arguments:
 
 The `firewall_policy` block supports the following arguments:
 
+* `enable_tls_session_holding` - (Optional) Boolean indicating whether to prevent TCP and TLS packets from reaching destination servers until TLS Inspection has evaluated Server Name Indication (SNI) rules. If `true`, `tls_inspection_configuration_arn` is required. Default value: `false`.
+
 * `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
 
-* `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`.
+* `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. Value values: `aws:drop_strict`, `aws:drop_established`, `aws:drop_established_app_layer`, `aws:alert_strict`, `aws:alert_established, `aws:alert_established_app_layer`. For more information, see [Strict evaluation order](https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html#suricata-strict-rule-evaluation-order.html) in the AWS Network Firewall Developer Guide.
 
 * `stateful_engine_options` - (Optional) A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](#stateful-engine-options) below for details.
 
@@ -221,7 +223,7 @@ The `stateful_rule_group_reference` block supports the following arguments:
   For details, refer to [AWS active threat defense for AWS Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-atd.html) in the AWS Network Firewall Developer Guide.
 * `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.
+* `resource_arn` - (Required) ARN of the stateful rule group.
 
 * `override` - (Optional) Configuration block for override values
 
@@ -243,7 +245,7 @@ The `stateless_rule_group_reference` block supports the following arguments:
 
 * `priority` - (Required) An integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Network Firewall applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
 
-* `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateless rule group.
+* `resource_arn` - (Required) ARN of the stateless rule group.
 
 ### Action Definition
 
@@ -267,9 +269,9 @@ The `dimension` block supports the following argument:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the firewall policy.
+* `id` - ARN that identifies the firewall policy.
 
-* `arn` - The Amazon Resource Name (ARN) that identifies the firewall policy.
+* `arn` - ARN that identifies the firewall policy.
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

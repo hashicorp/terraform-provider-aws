@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3control
 
@@ -14,12 +16,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,49 +44,51 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"details": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateS3MultiRegionAccessPointName,
-						},
-						names.AttrPolicy: {
-							Type:                  schema.TypeString,
-							Required:              true,
-							ValidateFunc:          validation.StringIsJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v any) string {
-								json, _ := structure.NormalizeJsonString(v)
-								return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"details": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateS3MultiRegionAccessPointName,
+							},
+							names.AttrPolicy: {
+								Type:                  schema.TypeString,
+								Required:              true,
+								ValidateFunc:          validation.StringIsJSON,
+								DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+								DiffSuppressOnRefresh: true,
+								StateFunc: func(v any) string {
+									json, _ := structure.NormalizeJsonString(v)
+									return json
+								},
 							},
 						},
 					},
 				},
-			},
-			"established": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"proposed": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"established": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"proposed": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -105,7 +109,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]any)[0].(map[string]any))
 	}
 
-	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
+	id := multiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
 
 	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
@@ -129,14 +133,14 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, name, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyDocument, err := findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx, conn, accountID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Multi-Region Access Point Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -177,7 +181,7 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, _, err := MultiRegionAccessPointParseResourceID(d.Id())
+	accountID, _, err := multiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -219,8 +223,7 @@ func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, c
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -229,7 +232,7 @@ func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, c
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
