@@ -8,11 +8,11 @@ description: |-
 
 # Resource: aws_accountaccess_entitlement
 
-Manages an AWS Account Access Entitlement. An Entitlement grants an IAM Identity Center principal (user or group) the ability to assume a specific IAM role in a target AWS account through an Account Access [Application](accountaccess_application.html.markdown).
+Manages an AWS Account Access Entitlement. An Entitlement grants an IAM Identity Center principal the ability to assume a specific IAM role in a target AWS account through an Account Access [Application](accountaccess_application.html.markdown).
 
-~> **Note:** Entitlements are immutable. Changing `principal_id`, `principal_type`, `role_arn`, or `application_arn` triggers replacement.
+~> **Note:** Entitlements are immutable. Changing `application_arn` or `entitlement` triggers replacement.
 
-~> **Note:** The IAM role referenced by `role_arn` must have a trust policy that allows the Account Access service to assume it. The role's `assume_role_policy` must grant `sts:AssumeRole`, `sts:SetContext`, and `sts:TagSession` to the `account-access.amazonaws.com` service principal. Without `sts:TagSession`, credential retrieval for the entitlement fails. See the [Complete Example](#complete-example) below.
+~> **Note:** The IAM role referenced by `entitlement.principal_role.role_arn` must have a trust policy that allows the Account Access service to assume it. The role's `assume_role_policy` must grant `sts:AssumeRole`, `sts:SetContext`, and `sts:TagSession` to the `account-access.amazonaws.com` service principal. Without `sts:TagSession`, credential retrieval for the entitlement fails. See the [Complete Example](#complete-example) below.
 
 ## Example Usage
 
@@ -25,22 +25,40 @@ resource "aws_accountaccess_application" "example" {
 
 data "aws_ssoadmin_instances" "example" {}
 
-resource "aws_accountaccess_entitlement" "developer" {
+resource "aws_accountaccess_entitlement" "example" {
   application_arn = aws_accountaccess_application.example.arn
-  principal_id    = "11111111-2222-3333-4444-555555555555"
-  principal_type  = "USER"
-  role_arn        = "arn:aws:iam::123456789012:role/Developer"
+
+  entitlement {
+    principal_role {
+      role_arn = "arn:aws:iam::123456789012:role/Developer"
+
+      principal {
+        identity_center {
+          user_id = "11111111-2222-3333-4444-555555555555"
+        }
+      }
+    }
+  }
 }
 ```
 
 ### Group Principal
 
 ```terraform
-resource "aws_accountaccess_entitlement" "engineering" {
+resource "aws_accountaccess_entitlement" "example" {
   application_arn = aws_accountaccess_application.example.arn
-  principal_id    = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-  principal_type  = "GROUP"
-  role_arn        = "arn:aws:iam::123456789012:role/Engineering"
+
+  entitlement {
+    principal_role {
+      role_arn = "arn:aws:iam::123456789012:role/Engineering"
+
+      principal {
+        identity_center {
+          group_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -58,7 +76,7 @@ resource "aws_accountaccess_application" "example" {
 # The target role must allow the Account Access service to assume it.
 # sts:TagSession is required for credential retrieval to succeed.
 resource "aws_iam_role" "target" {
-  name = "account-access-developer"
+  name = "example-account-access-developer"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -80,9 +98,18 @@ resource "aws_iam_role" "target" {
 
 resource "aws_accountaccess_entitlement" "example" {
   application_arn = aws_accountaccess_application.example.arn
-  principal_id    = "11111111-2222-3333-4444-555555555555"
-  principal_type  = "USER"
-  role_arn        = aws_iam_role.target.arn
+
+  entitlement {
+    principal_role {
+      role_arn = aws_iam_role.target.arn
+
+      principal {
+        identity_center {
+          user_id = "11111111-2222-3333-4444-555555555555"
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -91,20 +118,45 @@ resource "aws_accountaccess_entitlement" "example" {
 The following arguments are required:
 
 * `application_arn` - (Required) ARN of the parent Account Access Application. Forces replacement when changed.
-* `principal_id` - (Required) Identity Center user or group ID (a UUID). Forces replacement when changed.
-* `principal_type` - (Required) Type of principal. Valid values: `USER`, `GROUP`. Forces replacement when changed.
-* `role_arn` - (Required) ARN of the IAM role in the target AWS account that the principal is granted access to. Forces replacement when changed.
+* `entitlement` - (Required) Entitlement configuration. See [`entitlement` Block](#entitlement-block) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
+### `entitlement` Block
+
+The `entitlement` block supports:
+
+* `principal_role` - (Required) Principal role entitlement configuration. See [`entitlement.principal_role` Block](#entitlementprincipal_role-block) below.
+
+### `entitlement.principal_role` Block
+
+The `entitlement.principal_role` block supports:
+
+* `principal` - (Required) Principal configuration. See [`entitlement.principal_role.principal` Block](#entitlementprincipal_roleprincipal-block) below.
+* `role_arn` - (Required) ARN of the IAM role in the target AWS account that the principal is granted access to.
+
+### `entitlement.principal_role.principal` Block
+
+The `entitlement.principal_role.principal` block supports:
+
+* `identity_center` - (Required) IAM Identity Center principal configuration. See [`entitlement.principal_role.principal.identity_center` Block](#entitlementprincipal_roleprincipalidentity_center-block) below.
+
+### `entitlement.principal_role.principal.identity_center` Block
+
+The `entitlement.principal_role.principal.identity_center` block requires exactly one of the following arguments:
+
+* `group_id` - (Optional) IAM Identity Center group ID.
+* `user_id` - (Optional) IAM Identity Center user ID.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `account_id` - 12-digit AWS account ID extracted from the target role ARN.
 * `entitlement_id` - Service-assigned unique identifier for this Entitlement.
+* `entitlement.principal_role.account_id` - Target AWS account ID.
+* `entitlement.principal_role.account_name` - Target AWS account name.
 
 ## Import
 

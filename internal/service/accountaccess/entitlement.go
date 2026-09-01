@@ -42,6 +42,8 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc=testAccEntitlementImportStateIDFunc)
+// @Testing(importStateIdAttributes="application_arn;entitlement_id", importStateIdAttributesSep="intflex.ResourceIdSeparator")
+// @Testing(importIgnore="entitlement.0.principal_role.0.account_name", plannableImportAction="NoOp")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accountaccess;accountaccess.GetEntitlementOutput")
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
@@ -121,7 +123,7 @@ func (r *entitlementResource) Schema(ctx context.Context, request resource.Schem
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"principal": schema.ListNestedBlock{
+									names.AttrPrincipal: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[principalModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -356,7 +358,7 @@ var (
 func (m *entitlementModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
-	case awstypes.EntitlementMemberPrincipalRole:
+	case awstypes.EntitlementDetailsMemberPrincipalRole:
 		var model principalRoleEntitlementModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -385,7 +387,7 @@ func (m entitlementModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 		if diags.HasError() {
 			return nil, diags
 		}
-		var r awstypes.EntitlementDetailsMemberPrincipalRole
+		var r awstypes.EntitlementMemberPrincipalRole
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
 		if diags.HasError() {
 			return nil, diags
@@ -468,10 +470,10 @@ var (
 func (m *identityCenterPrincipalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
-	case awstypes.IdentityCenterPrincipalFilterMemberGroupId:
+	case awstypes.IdentityCenterPrincipalMemberGroupId:
 		m.GroupID = fwflex.StringValueToFramework(ctx, t.Value)
 
-	case awstypes.IdentityCenterPrincipalFilterMemberUserId:
+	case awstypes.IdentityCenterPrincipalMemberUserId:
 		m.UserID = fwflex.StringValueToFramework(ctx, t.Value)
 
 	default:

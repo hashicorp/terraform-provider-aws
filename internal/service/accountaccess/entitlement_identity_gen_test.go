@@ -78,11 +78,15 @@ func testAccAccountAccessEntitlement_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: testAccEntitlementImportStateIDFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    testAccEntitlementImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "application_arn",
+				ImportStateVerifyIgnore: []string{
+					"entitlement.0.principal_role.0.account_name",
+				},
 			},
 
 			// Step 3: Import block with Import ID

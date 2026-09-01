@@ -51,7 +51,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 // testAccPrerequisitesConfig creates the user, group, and IAM role needed by
-// legacy entitlement acceptance cases. The randomized name is required by the
+// entitlement acceptance cases. The randomized name is required by the
 // Identity Store and IAM APIs; the Identity Center instance is pre-existing.
 func testAccPrerequisitesConfig(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`

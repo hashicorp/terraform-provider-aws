@@ -44,8 +44,9 @@ func testAccAccountAccessEntitlement_user(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntitlementExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "entitlement_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, "entitlement.0.principal_role.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "entitlement.0.principal_role.0.principal.0.identity_center.0.user_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "entitlement.0.principal_role.0.role_arn"),
 				),
 			},
 			{
@@ -54,6 +55,7 @@ func testAccAccountAccessEntitlement_user(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "application_arn",
+				ImportStateVerifyIgnore:              []string{"entitlement.0.principal_role.0.account_name"},
 			},
 		},
 	})
@@ -79,7 +81,7 @@ func testAccAccountAccessEntitlement_group(t *testing.T) {
 				Config: testAccEntitlementConfig_group(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntitlementExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
+					resource.TestCheckResourceAttrSet(resourceName, "entitlement.0.principal_role.0.principal.0.identity_center.0.group_id"),
 				),
 			},
 			{
@@ -88,6 +90,7 @@ func testAccAccountAccessEntitlement_group(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "application_arn",
+				ImportStateVerifyIgnore:              []string{"entitlement.0.principal_role.0.account_name"},
 			},
 		},
 	})
@@ -183,9 +186,18 @@ resource "aws_accountaccess_application" "test" {
 
 resource "aws_accountaccess_entitlement" "test" {
   application_arn = aws_accountaccess_application.test.arn
-  principal_id    = aws_identitystore_user.test.user_id
-  principal_type  = "USER"
-  role_arn        = aws_iam_role.test.arn
+
+  entitlement {
+    principal_role {
+      role_arn = aws_iam_role.test.arn
+
+      principal {
+        identity_center {
+          user_id = aws_identitystore_user.test.user_id
+        }
+      }
+    }
+  }
 }
 `)
 }
@@ -198,9 +210,18 @@ resource "aws_accountaccess_application" "test" {
 
 resource "aws_accountaccess_entitlement" "test" {
   application_arn = aws_accountaccess_application.test.arn
-  principal_id    = aws_identitystore_group.test.group_id
-  principal_type  = "GROUP"
-  role_arn        = aws_iam_role.test.arn
+
+  entitlement {
+    principal_role {
+      role_arn = aws_iam_role.test.arn
+
+      principal {
+        identity_center {
+          group_id = aws_identitystore_group.test.group_id
+        }
+      }
+    }
+  }
 }
 `)
 }
