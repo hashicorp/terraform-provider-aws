@@ -318,6 +318,24 @@ func TestAccRUMAppMonitor_deobfuscationConfiguration_invalidS3URI(t *testing.T) 
 	})
 }
 
+func TestAccRUMAppMonitor_deobfuscationConfiguration_enabledRequiresS3URI(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppMonitorConfig_deobfuscationConfigurationEnabledNoS3URI(rName),
+				ExpectError: regexache.MustCompile("s3_uri is required when status is ENABLED"),
+			},
+		},
+	})
+}
+
 func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
@@ -539,6 +557,20 @@ resource "aws_rum_app_monitor" "test" {
     javascript_source_maps {
       status = "ENABLED"
       s3_uri = "not-a-valid-s3-uri"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppMonitorConfig_deobfuscationConfigurationEnabledNoS3URI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name   = %[1]q
+  domain = "localhost"
+  deobfuscation_configuration {
+    javascript_source_maps {
+      status = "ENABLED"
     }
   }
 }

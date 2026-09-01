@@ -7,6 +7,7 @@ package rum
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -41,6 +42,8 @@ func resourceAppMonitor() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: resourceAppMonitorCustomizeDiff,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -195,6 +198,37 @@ func resourceAppMonitor() *schema.Resource {
 			}
 		},
 	}
+}
+
+// resourceAppMonitorCustomizeDiff enforces the CloudWatch RUM API rule that
+// s3_uri is required when the JavaScript source map status is ENABLED.
+func resourceAppMonitorCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	v, ok := d.GetOk("deobfuscation_configuration")
+	if !ok {
+		return nil
+	}
+
+	tfList := v.([]any)
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	sourceMaps, ok := tfMap["javascript_source_maps"].([]any)
+	if !ok || len(sourceMaps) == 0 || sourceMaps[0] == nil {
+		return nil
+	}
+
+	sourceMap := sourceMaps[0].(map[string]any)
+	if sourceMap[names.AttrStatus].(string) != string(awstypes.DeobfuscationStatusEnabled) {
+		return nil
+	}
+
+	if s3URI, _ := sourceMap["s3_uri"].(string); s3URI == "" {
+		return fmt.Errorf("deobfuscation_configuration.javascript_source_maps.s3_uri is required when status is %s", awstypes.DeobfuscationStatusEnabled)
+	}
+
+	return nil
 }
 
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
