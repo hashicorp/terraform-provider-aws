@@ -17,3 +17,7 @@ resource/aws_bedrockagentcore_harness: Add `skill.aws_skills`, `skill.git`, and 
 ```release-note:enhancement
 resource/aws_bedrockagentcore_harness: Change `skill.path` to Optional
 ```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Change `system_prompt` to Required
+```

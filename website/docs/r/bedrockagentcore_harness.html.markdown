@@ -150,6 +150,7 @@ The following arguments are required:
 * `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
 * `execution_role_arn` - (Required) ARN of the IAM role that the harness assumes to access AWS services.
 * `model` - (Required) Model configuration for the harness. See [`model` Block](#model-block) below.
+* `system_prompt` - (Required) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 
 The following arguments are optional:
 
@@ -163,7 +164,6 @@ The following arguments are optional:
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
-* `system_prompt` - (Optional) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_seconds` - (Optional) Timeout in seconds for the harness execution.
 * `tool` - (Optional) Tool configurations. See [`tool` Block](#tool-block) below.

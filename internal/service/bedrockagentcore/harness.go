@@ -455,16 +455,16 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 											float64validator.Between(0, 2),
 										},
 									},
-									"top_p": schema.Float64Attribute{
-										Optional: true,
-										Validators: []validator.Float64{
-											float64validator.Between(0, 1),
-										},
-									},
 									"top_k": schema.Int32Attribute{
 										Optional: true,
 										Validators: []validator.Int32{
 											int32validator.Between(0, 500),
+										},
+									},
+									"top_p": schema.Float64Attribute{
+										Optional: true,
+										Validators: []validator.Float64{
+											float64validator.Between(0, 1),
 										},
 									},
 								},
@@ -644,6 +644,11 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"system_prompt": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessSystemContentBlockModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Validators: []validator.Object{
 						tfobjectvalidator.ExactlyOneOfChildren(
@@ -1401,8 +1406,8 @@ type harnessGeminiModelConfigModel struct {
 	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
 	ModelID          types.String                           `tfsdk:"model_id"`
 	Temperature      types.Float64                          `tfsdk:"temperature"`
-	TopP             types.Float64                          `tfsdk:"top_p"`
 	TopK             types.Int32                            `tfsdk:"top_k"`
+	TopP             types.Float64                          `tfsdk:"top_p"`
 }
 
 type harnessLiteLLMModelConfigModel struct {
