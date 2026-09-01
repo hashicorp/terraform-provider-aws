@@ -1478,7 +1478,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning_disableOnExisting(t *testin
 				),
 			},
 			{
-				// object_lock_enabled must be explicity set to "false".
+				// object_lock_enabled must be explicitly set to "false".
 				// Removing entirely marks the argument as Computed.
 				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
