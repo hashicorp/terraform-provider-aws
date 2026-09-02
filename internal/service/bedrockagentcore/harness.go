@@ -529,6 +529,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"api_format": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.HarnessOpenAiApiFormat](),
 										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 									"api_key_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,

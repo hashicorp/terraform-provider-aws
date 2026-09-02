@@ -413,7 +413,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 						"litellm_model_config": knownvalue.ListSizeExact(0),
 						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"additional_params": knownvalue.Null(),
-							"api_format":        knownvalue.Null(),
+							"api_format":        knownvalue.NotNull(),
 							"api_key_arn":       knownvalue.NotNull(),
 							"max_tokens":        knownvalue.Null(),
 							"model_id":          knownvalue.StringExact("gpt-5"),
@@ -427,7 +427,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.openai_model_config/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"api_format":    config.StringVariable(string(awstypes.HarnessOpenAiApiFormatResponses)),
+					"api_format":    config.StringVariable(string(awstypes.HarnessOpenAiApiFormatChatCompletions)),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
@@ -444,7 +444,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 						"litellm_model_config": knownvalue.ListSizeExact(0),
 						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"additional_params": knownvalue.Null(),
-							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatResponses),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions),
 							"api_key_arn":       knownvalue.NotNull(),
 							"max_tokens":        knownvalue.Null(),
 							"model_id":          knownvalue.StringExact("gpt-5"),
@@ -474,7 +474,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 						"litellm_model_config": knownvalue.ListSizeExact(0),
 						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"additional_params": knownvalue.NotNull(),
-							"api_format":        knownvalue.Null(),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions),
 							"api_key_arn":       knownvalue.NotNull(),
 							"max_tokens":        knownvalue.Int32Exact(1000),
 							"model_id":          knownvalue.StringExact("gpt-5"),
