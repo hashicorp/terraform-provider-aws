@@ -83,6 +83,7 @@ interpolation.
     * `volume_size` - Size of the volume, in GiB.
     * `volume_type` - Volume type.
 * `ebs_optimized` - Whether the Instance is EBS optimized or not (Boolean).
+* `ena_queue_count` - Number of ENA queues allocated to the Instance's primary network interface.
 * `enclave_options` - Enclave options of the instance.
     * `enabled` - Whether Nitro Enclaves are enabled.
 * `ephemeral_block_device` - Ephemeral block device mappings of the Instance.
