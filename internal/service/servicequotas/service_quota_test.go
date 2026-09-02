@@ -242,7 +242,7 @@ func TestAccServiceQuotasServiceQuota_Value_updateToSameValue(t *testing.T) {
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -317,7 +317,7 @@ func TestAccServiceQuotasServiceQuota_valueLessThanCurrentOnUpdate(t *testing.T)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 	const resourceName = "aws_servicequotas_service_quota.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -431,7 +431,7 @@ func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
 
 	resourceName := "aws_servicequotas_service_quota.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

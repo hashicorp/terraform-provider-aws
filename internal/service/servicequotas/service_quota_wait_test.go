@@ -49,6 +49,8 @@ func (f *fakeServiceQuotaWaitClient) ListRequestedServiceQuotaChangeHistoryByQuo
 }
 
 func TestStatusServiceQuotaRequestUsesRefreshContext(t *testing.T) {
+	t.Parallel()
+
 	client := &fakeServiceQuotaWaitClient{
 		requestedQuota: &awstypes.RequestedServiceQuotaChange{
 			Id:     aws.String("request-id"),
@@ -71,6 +73,8 @@ func TestStatusServiceQuotaRequestUsesRefreshContext(t *testing.T) {
 }
 
 func TestStatusServiceQuotaValueUsesRefreshContext(t *testing.T) {
+	t.Parallel()
+
 	client := &fakeServiceQuotaWaitClient{
 		quota: &awstypes.ServiceQuota{Value: aws.Float64(10)},
 	}
@@ -90,6 +94,8 @@ func TestStatusServiceQuotaValueUsesRefreshContext(t *testing.T) {
 }
 
 func TestStatusServiceQuotaRequestRejectsClosedRequest(t *testing.T) {
+	t.Parallel()
+
 	client := &fakeServiceQuotaWaitClient{
 		requestedQuota: &awstypes.RequestedServiceQuotaChange{
 			Status: awstypes.RequestStatusCaseClosed,
@@ -104,12 +110,16 @@ func TestStatusServiceQuotaRequestRejectsClosedRequest(t *testing.T) {
 }
 
 func TestValidateApprovedServiceQuotaValueRejectsPartialApproval(t *testing.T) {
+	t.Parallel()
+
 	if err := validateApprovedServiceQuotaValue(100, 80); err == nil {
 		t.Fatal("expected partial approval to be rejected")
 	}
 }
 
 func TestFindOpenServiceQuotaRequestByQuotaReturnsOpenRequest(t *testing.T) {
+	t.Parallel()
+
 	client := &fakeServiceQuotaWaitClient{
 		requestedQuotas: []awstypes.RequestedServiceQuotaChange{
 			{Id: aws.String("closed"), Status: awstypes.RequestStatusDenied},
@@ -128,6 +138,8 @@ func TestFindOpenServiceQuotaRequestByQuotaReturnsOpenRequest(t *testing.T) {
 }
 
 func TestFindOpenServiceQuotaRequestByQuotaReturnsNotFound(t *testing.T) {
+	t.Parallel()
+
 	_, err := findOpenServiceQuotaRequestByQuota(context.Background(), &fakeServiceQuotaWaitClient{}, "service", "quota")
 
 	var notFound *retry.NotFoundError
@@ -137,6 +149,8 @@ func TestFindOpenServiceQuotaRequestByQuotaReturnsNotFound(t *testing.T) {
 }
 
 func TestFindServiceQuotaReturnsProviderNotFound(t *testing.T) {
+	t.Parallel()
+
 	client := &fakeServiceQuotaWaitClient{quotaErr: &awstypes.NoSuchResourceException{}}
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String("quota"),
