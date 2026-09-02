@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,6 +62,31 @@ func resourceCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta any) bool {
 				return types.StorageMode(new.(string)) == types.StorageModeLocal
 			}),
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				// ZooKeeper is not part of the architecture for KRaft or Kafka 4.0+
+				// versions, so zookeeper_client_access cannot be configured.
+				version := d.Get("kafka_version").(string)
+				if version == "" || kafkaVersionHasZooKeeper(version) {
+					return nil
+				}
+
+				raw := d.GetRawConfig()
+				if raw.IsNull() || !raw.IsKnown() {
+					return nil
+				}
+				bngi := raw.GetAttr("broker_node_group_info")
+				if bngi.IsNull() || !bngi.IsKnown() || bngi.LengthInt() == 0 {
+					return nil
+				}
+				ci := bngi.Index(cty.NumberIntVal(0)).GetAttr("connectivity_info")
+				if ci.IsNull() || !ci.IsKnown() || ci.LengthInt() == 0 {
+					return nil
+				}
+				if za := ci.Index(cty.NumberIntVal(0)).GetAttr("zookeeper_client_access"); !za.IsNull() && za.IsKnown() {
+					return fmt.Errorf("broker_node_group_info.0.connectivity_info.0.zookeeper_client_access: ZooKeeper is not part of the cluster architecture for Kafka version %q (KRaft or 4.0+); remove this attribute", version)
+				}
+				return nil
+			},
 		),
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -154,6 +180,11 @@ func resourceCluster() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"zookeeper_client_access": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+										},
 										"network_type": {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -713,6 +744,37 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if v := d.GetRawConfig().GetAttr("broker_node_group_info"); !v.IsNull() && v.IsKnown() && v.LengthInt() > 0 {
+		if ci := v.Index(cty.NumberIntVal(0)).GetAttr("connectivity_info"); !ci.IsNull() && ci.IsKnown() && ci.LengthInt() > 0 {
+			// ZooKeeper client access cannot be set on CreateCluster; it is only
+			// controlled via UpdateConnectivity. Enabled is the AWS default, so only
+			// issue an update when the operator explicitly disables it.
+			if za := ci.Index(cty.NumberIntVal(0)).GetAttr("zookeeper_client_access"); !za.IsNull() && za.IsKnown() && za.False() {
+				input := kafka.UpdateConnectivityInput{
+					ClusterArn:      aws.String(d.Id()),
+					CurrentVersion:  aws.String(d.Get("current_version").(string)),
+					ZookeeperAccess: &types.ZookeeperAccess{Enabled: aws.Bool(false)},
+				}
+
+				output, err := conn.UpdateConnectivity(ctx, &input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) ZooKeeper client access: %s", d.Id(), err)
+				}
+
+				clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+				if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+				}
+
+				if err := refreshClusterVersion(ctx, d, meta); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
+		}
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -825,6 +887,33 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.zookeeper_client_access") {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+			ZookeeperAccess: &types.ZookeeperAccess{
+				Enabled: aws.Bool(d.Get("broker_node_group_info.0.connectivity_info.0.zookeeper_client_access").(bool)),
+			},
+		}
+
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) ZooKeeper client access: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
@@ -1184,7 +1273,14 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.ClusterInfo, out
 	d.Set("bootstrap_brokers_sasl_scram_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringSaslScramIpv6)))
 	d.Set("bootstrap_brokers_tls_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringTlsIpv6)))
 	if cluster.BrokerNodeGroupInfo != nil {
-		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+		bngi := flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)
+		// zookeeper_client_access is not returned by DescribeClusterV2 (the API only
+		// exposes it via a cluster operation's MutableClusterInfo), so preserve the
+		// value already in state to avoid spurious diffs.
+		if ci, ok := bngi["connectivity_info"].([]any); ok && len(ci) > 0 && ci[0] != nil {
+			ci[0].(map[string]any)["zookeeper_client_access"] = d.Get("broker_node_group_info.0.connectivity_info.0.zookeeper_client_access")
+		}
+		if err := d.Set("broker_node_group_info", []any{bngi}); err != nil {
 			return fmt.Errorf("setting broker_node_group_info: %w", err)
 		}
 	} else {
@@ -1485,6 +1581,16 @@ func normalizeKafkaVersion(version string) string { // nosemgrep:ci.kafka-in-fun
 		return version
 	}
 	return version[:loc[0]]
+}
+
+// kafkaVersionHasZooKeeper reports whether the given Kafka version runs with
+// ZooKeeper. KRaft-mode versions (".kraft" suffix) and Kafka 4.0+ do not include
+// ZooKeeper in the architecture.
+func kafkaVersionHasZooKeeper(version string) bool { // nosemgrep:ci.kafka-in-func-name
+	if strings.Contains(strings.ToLower(version), "kraft") {
+		return false
+	}
+	return !semver.GreaterThanOrEqual(normalizeKafkaVersion(version), "4.0")
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]any) *types.BrokerNodeGroupInfo {
