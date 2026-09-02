@@ -29,7 +29,6 @@ import (
 
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
-// @Testing(tagsTest=false)
 // @IdentityAttribute("key_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.KeyPairInfo")
 // @Testing(preIdentityVersion="v6.62.0")
