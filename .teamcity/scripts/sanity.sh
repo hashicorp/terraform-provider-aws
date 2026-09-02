@@ -50,6 +50,7 @@ function tester {
         echo "Trying again..."
         sleep 5
         tester "${pkg}" "${tests}"
+        return
     fi
 
     rm -f "${tmp}"
