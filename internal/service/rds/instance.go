@@ -3298,3 +3298,38 @@ func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.Resourc
 	}
 	return false
 }
+
+// surfaceEvents emits one Warning diagnostic per RDS event reported for
+// sourceID/st in the given categories since the operation began, relaying the
+// RDS message verbatim without interpreting it. Best-effort: empty categories
+// or a DescribeEvents error yield no diagnostics and never an error, so
+// surfacing cannot fail an otherwise-successful apply. Always Warning, because
+// the operation itself succeeded.
+func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st types.SourceType, since time.Time, categories []string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if len(categories) == 0 {
+		return diags
+	}
+
+	events, err := findEvents(ctx, conn, &rds.DescribeEventsInput{
+		SourceIdentifier: aws.String(sourceID),
+		SourceType:       st,
+		EventCategories:  categories,
+		StartTime:        aws.Time(since),
+	})
+	if err != nil {
+		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
+		return diags
+	}
+
+	for _, e := range events {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("RDS reported an event during this operation [%s]", strings.Join(e.EventCategories, ", ")),
+			Detail:   aws.ToString(e.Message),
+		})
+	}
+
+	return diags
+}

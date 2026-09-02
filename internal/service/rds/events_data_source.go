@@ -5,12 +5,7 @@ package rds
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -21,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -128,41 +122,6 @@ func findEvents(ctx context.Context, conn *rds.Client, input *rds.DescribeEvents
 	}
 
 	return output, nil
-}
-
-// surfaceEvents emits one Warning diagnostic per RDS event reported for
-// sourceID/st in the given categories since the operation began, relaying the
-// RDS message verbatim without interpreting it. Best-effort: empty categories
-// or a DescribeEvents error yield no diagnostics and never an error, so
-// surfacing cannot fail an otherwise-successful apply. Always Warning, because
-// the operation itself succeeded.
-func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time, categories []string) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if len(categories) == 0 {
-		return diags
-	}
-
-	events, err := findEvents(ctx, conn, &rds.DescribeEventsInput{
-		SourceIdentifier: aws.String(sourceID),
-		SourceType:       st,
-		EventCategories:  categories,
-		StartTime:        aws.Time(since),
-	})
-	if err != nil {
-		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
-		return diags
-	}
-
-	for _, e := range events {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("RDS reported an event during this operation [%s]", strings.Join(e.EventCategories, ", ")),
-			Detail:   aws.ToString(e.Message),
-		})
-	}
-
-	return diags
 }
 
 type eventsDataSourceModel struct {
