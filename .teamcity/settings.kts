@@ -546,6 +546,10 @@ object Sweeper : BuildType({
 object Sanity : BuildType({
     name = "Sanity"
 
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+    }
+
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
 
@@ -646,6 +650,10 @@ object Sanity : BuildType({
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
