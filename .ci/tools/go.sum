@@ -604,8 +604,8 @@ github.com/katbyte/andreyvit-diff v0.0.3 h1:gMfE0xQUKAZb3B2cnnrkLYCCZxnuGCxG4nVc
 github.com/katbyte/andreyvit-diff v0.0.3/go.mod h1:S//wdxNytA9hp598USfO3jHUDuLJug2TqUyvEErbowM=
 github.com/katbyte/sergi-go-diff v1.2.3 h1:z08AHpmtBTYIOCQBInFTHu9KULlvaWP1Iz2RZ9po3pQ=
 github.com/katbyte/sergi-go-diff v1.2.3/go.mod h1:BxkLLDDB1iVQsnURErqoQMjkyXIlR0DefDKzZCUHNEw=
-github.com/katbyte/tctest v1.3.0 h1:Ob6w791V0R7qKm7citAePXHXzOHnG3Ssd/XIeGVAR2o=
-github.com/katbyte/tctest v1.3.0/go.mod h1:wZMkAtEXxjgWqx9TrnsbIDbpJsjCJvLOU+2LaADywwU=
+github.com/katbyte/tctest v1.3.1 h1:CtsSiIZ+hHE8kIVVZwh5z7ddnInYxJILWIPnKfEf8Eg=
+github.com/katbyte/tctest v1.3.1/go.mod h1:ERjQ6FojC40llutBLmgaUQFo1dc+4Y47qHdHxOhrWEA=
 github.com/katbyte/terrafmt v1.0.0 h1:03xDFQpVvejsptiZHvgwm5i8ETV+VpKvraEl8AfqhEI=
 github.com/katbyte/terrafmt v1.0.0/go.mod h1:+EpzsfCK5/pishaCEXMxZo8QlaWAUqkPtsEvfrbVRXE=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
