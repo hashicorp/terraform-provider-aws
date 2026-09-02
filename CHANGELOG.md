@@ -55,6 +55,8 @@ BUG FIXES:
 * resource/aws_rds_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+* resource/aws_s3_bucket: Setting `object_lock_configuration.object_lock_enabled` to `Enabled` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
+* resource/aws_s3_bucket: Setting `object_lock_enabled` to `true` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
 
 ## 6.62.0 (August 26, 2026)
 
