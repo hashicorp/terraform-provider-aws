@@ -711,8 +711,6 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_EngineVersion_updateMajor
 	var v types.GlobalCluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
-	engineVersion := "15.10"
-	engineVersionUpdated := "16.6"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
@@ -721,10 +719,10 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_EngineVersion_updateMajor
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersion),
+				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, engineVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.original", "version_actual"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -733,10 +731,10 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_EngineVersion_updateMajor
 				},
 			},
 			{
-				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersionUpdated),
+				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, engineVersionUpdated),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1380,12 +1378,12 @@ resource "aws_rds_global_cluster" "test" {
 `, rName)
 }
 
-func testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersion string) string {
+func testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  engine              = "aurora-postgresql"
-  engine_version      = %[2]q
+  engine              = local.engine
+  engine_version      = local.engine_version
   master_password     = "mustbeeightcharacters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -1408,10 +1406,27 @@ resource "aws_rds_global_cluster" "test" {
   force_destroy                = true
   global_cluster_identifier    = %[1]q
   engine                       = aws_rds_cluster.test.engine
-  engine_version               = %[2]q
+  engine_version               = local.engine_version
   source_db_cluster_identifier = aws_rds_cluster.test.arn
 }
-`, rName, engineVersion)
+
+data "aws_rds_engine_version" "original" {
+  engine           = "aurora-postgresql"
+  has_major_target = true
+  latest           = true
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine             = local.engine
+  latest             = true
+  preferred_versions = data.aws_rds_engine_version.original.valid_major_targets
+}
+
+locals {
+  engine         = data.aws_rds_engine_version.original.engine
+  engine_version = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.original.version_actual
+}
+`, rName, upgrade)
 }
 
 func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted bool) string {
