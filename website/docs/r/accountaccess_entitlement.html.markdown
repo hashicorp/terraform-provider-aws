@@ -19,12 +19,6 @@ Manages an AWS Account Access Entitlement. An Entitlement grants an IAM Identity
 ### User Principal
 
 ```terraform
-resource "aws_accountaccess_application" "example" {
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
-}
-
-data "aws_ssoadmin_instances" "example" {}
-
 resource "aws_accountaccess_entitlement" "example" {
   application_arn = aws_accountaccess_application.example.arn
 
@@ -70,7 +64,11 @@ The target IAM role must trust the Account Access service. This example provisio
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_accountaccess_application" "example" {
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  identity_source {
+    identity_center {
+      instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+    }
+  }
 }
 
 # The target role must allow the Account Access service to assume it.

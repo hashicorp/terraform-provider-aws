@@ -1,8 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_ssoadmin_instances" "test" {
-}
+data "aws_ssoadmin_instances" "test" {}
 
 locals {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
@@ -18,7 +17,7 @@ resource "aws_accountaccess_entitlement" "test" {
 
       principal {
         identity_center {
-          user_id = aws_identitystore_user.test.user_id
+          group_id = aws_identitystore_group.test.group_id
         }
       }
     }
@@ -33,19 +32,10 @@ resource "aws_accountaccess_application" "test" {
   }
 }
 
-resource "aws_identitystore_user" "test" {
+resource "aws_identitystore_group" "test" {
   identity_store_id = local.identity_store_id
   display_name      = var.rName
-  user_name         = var.rName
-
-  name {
-    given_name  = "Acceptance"
-    family_name = "Test"
-  }
-
-  emails {
-    value = "${var.rName}@example.com"
-  }
+  description       = "Account Access acceptance test group"
 }
 
 resource "aws_iam_role" "test" {
