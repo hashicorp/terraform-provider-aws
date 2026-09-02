@@ -27,8 +27,8 @@ resource "aws_elasticache_user" "test" {
 
 ```terraform
 resource "aws_elasticache_user" "test" {
-  user_id       = "testUserId"
-  user_name     = "testUserName"
+  user_id       = "testuserid"
+  user_name     = "testuserid"
   access_string = "on ~* +@all"
   engine        = "redis"
 
@@ -59,7 +59,7 @@ The following arguments are required:
 * `access_string` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
 * `engine` - (Required) The current supported values are `redis`, `valkey` (case insensitive).
 * `user_id` - (Required) The ID of the user.
-* `user_name` - (Required) The username of the user.
+* `user_name` - (Required) The username of the user. For IAM authentication, this value must match `user_id`.
 
 The following arguments are optional:
 
