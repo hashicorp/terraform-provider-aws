@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func TestServiceDeploymentWaitRefreshStatus(t *testing.T) {
@@ -15,14 +16,14 @@ func TestServiceDeploymentWaitRefreshStatus(t *testing.T) {
 
 	t.Run("successful and in-progress statuses pass through", func(t *testing.T) {
 		t.Parallel()
-		for _, status := range []string{
-			string(awstypes.ServiceDeploymentStatusSuccessful),
-			string(awstypes.ServiceDeploymentStatusRollbackSuccessful),
-			string(awstypes.ServiceDeploymentStatusInProgress),
-			string(awstypes.ServiceDeploymentStatusPending),
-			string(awstypes.ServiceDeploymentStatusRollbackRequested),
-			string(awstypes.ServiceDeploymentStatusRollbackInProgress),
-		} {
+		for _, status := range enum.Slice(
+			awstypes.ServiceDeploymentStatusSuccessful,
+			awstypes.ServiceDeploymentStatusRollbackSuccessful,
+			awstypes.ServiceDeploymentStatusInProgress,
+			awstypes.ServiceDeploymentStatusPending,
+			awstypes.ServiceDeploymentStatusRollbackRequested,
+			awstypes.ServiceDeploymentStatusRollbackInProgress,
+		) {
 			got, err := serviceDeploymentWaitRefreshStatus(status, nil)
 			if err != nil {
 				t.Fatalf("status %s: unexpected err: %v", status, err)
@@ -35,10 +36,10 @@ func TestServiceDeploymentWaitRefreshStatus(t *testing.T) {
 
 	t.Run("failed terminals return errors", func(t *testing.T) {
 		t.Parallel()
-		for _, status := range []string{
-			string(awstypes.ServiceDeploymentStatusStopped),
-			string(awstypes.ServiceDeploymentStatusRollbackFailed),
-		} {
+		for _, status := range enum.Slice(
+			awstypes.ServiceDeploymentStatusStopped,
+			awstypes.ServiceDeploymentStatusRollbackFailed,
+		) {
 			got, err := serviceDeploymentWaitRefreshStatus(status, aws.String("boom"))
 			if err == nil {
 				t.Fatalf("status %s: expected error", status)
