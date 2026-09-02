@@ -546,10 +546,6 @@ object Sweeper : BuildType({
 object Sanity : BuildType({
     name = "Sanity"
 
-    params {
-        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
-    }
-
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
 
