@@ -64,38 +64,38 @@ resource "aws_ses_event_destination" "sns" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the event destination
-* `configuration_set_name` - (Required) The name of the configuration set
-* `enabled` - (Optional) If true, the event destination will be enabled
-* `matching_types` - (Required) A list of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, `"delivery"`, `"open"`, `"click"`, or `"renderingFailure"`.
 * `cloudwatch_destination` - (Optional) CloudWatch destination for the events
+* `configuration_set_name` - (Required) Name of the configuration set
+* `enabled` - (Optional) If true, the event destination will be enabled
 * `kinesis_destination` - (Optional) Send the events to a kinesis firehose destination
+* `matching_types` - (Required) List of matching types. May be any of `"send"`, `"reject"`, `"bounce"`, `"complaint"`, `"delivery"`, `"open"`, `"click"`, or `"renderingFailure"`.
+* `name` - (Required) Name of the event destination
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sns_destination` - (Optional) Send the events to an SNS Topic destination
 
 ~> **NOTE:** You can specify `"cloudwatch_destination"` or `"kinesis_destination"` but not both
 
-### cloudwatch_destination Argument Reference
+### `cloudwatch_destination` Block
 
-* `default_value` - (Required) The default value for the event
-* `dimension_name` - (Required) The name for the dimension
-* `value_source` - (Required) The source for the value. May be any of `"messageTag"`, `"emailHeader"` or `"linkTag"`.
+* `default_value` - (Required) Default value for the event
+* `dimension_name` - (Required) Name for the dimension
+* `value_source` - (Required) Source for the value. May be any of `"messageTag"`, `"emailHeader"` or `"linkTag"`.
 
-### kinesis_destination Argument Reference
+### `kinesis_destination` Block
 
-* `stream_arn` - (Required) The ARN of the Kinesis Stream
-* `role_arn` - (Required) The ARN of the role that has permissions to access the Kinesis Stream
+* `role_arn` - (Required) ARN of the role that has permissions to access the Kinesis Stream
+* `stream_arn` - (Required) ARN of the Kinesis Stream
 
-### sns_destination Argument Reference
+### `sns_destination` Block
 
-* `topic_arn` - (Required) The ARN of the SNS topic
+* `topic_arn` - (Required) ARN of the SNS topic
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The SES event destination name.
-* `arn` - The SES event destination ARN.
+* `arn` - SES event destination ARN.
+* `id` - SES event destination name.
 
 ## Import
 

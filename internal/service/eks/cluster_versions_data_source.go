@@ -138,10 +138,25 @@ type kubeAPIServerVersionConfigModel struct {
 
 type kubeControllerManagerVersionConfigModel struct {
 	HorizontalPodAutoscalerControllerConfig fwtypes.ListNestedObjectValueOf[horizontalPodAutoscalerControllerVersionConfigModel] `tfsdk:"horizontal_pod_autoscaler_controller_config"`
+	PodGcControllerConfig                   fwtypes.ListNestedObjectValueOf[podGcControllerVersionConfigModel]                   `tfsdk:"pod_gc_controller_config"`
 }
 
 type horizontalPodAutoscalerControllerVersionConfigModel struct {
 	HorizontalPodAutoscalerSyncPeriod fwtypes.ListNestedObjectValueOf[durationParameterConfigModel] `tfsdk:"horizontal_pod_autoscaler_sync_period"`
+}
+
+type podGcControllerVersionConfigModel struct {
+	TerminatedPodGcThreshold fwtypes.ListNestedObjectValueOf[integerParameterConfigModel] `tfsdk:"terminated_pod_gc_threshold"`
+}
+
+type integerParameterConfigModel struct {
+	Constraints  fwtypes.ListNestedObjectValueOf[integerConstraintsModel] `tfsdk:"constraints"`
+	DefaultValue types.Int32                                              `tfsdk:"default_value"`
+}
+
+type integerConstraintsModel struct {
+	Max types.Int32 `tfsdk:"max"`
+	Min types.Int32 `tfsdk:"min"`
 }
 
 type kubeSchedulerVersionConfigModel struct {

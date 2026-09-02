@@ -82,6 +82,15 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 	}
 }
 
+// createTags creates accountaccess service tags for new resources.
+func createTags(ctx context.Context, conn *accountaccess.Client, identifier string, tags map[string]string, optFns ...func(*accountaccess.Options)) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
+}
+
 // updateTags updates accountaccess service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

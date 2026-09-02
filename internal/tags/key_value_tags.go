@@ -23,11 +23,10 @@ import (
 )
 
 const (
-	accountAccessResourceARNTagKey              = `resourceArn`
 	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
-	elasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
-	nameTagKey                                  = `Name`
-	serverlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
+	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
+	NameTagKey                                  = `Name`
+	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 
 	// Environment variables with this prefix will be treated as a `default_tags` key value pair
 	//
@@ -127,25 +126,6 @@ func (dc *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
 	return dc.Tags.ContainsAll(tags)
 }
 
-// IgnoreAccountAccess returns non-AWS and non-AccountAccess tag keys.
-func (tags KeyValueTags) IgnoreAccountAccess() KeyValueTags {
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if strings.HasPrefix(k, awsTagKeyPrefix) {
-			continue
-		}
-
-		if k == accountAccessResourceARNTagKey {
-			continue
-		}
-
-		result[k] = v
-	}
-
-	return result
-}
-
 // IgnoreAWS returns non-AWS tag keys.
 func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
 	result := make(KeyValueTags)
@@ -180,11 +160,11 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 			continue
 		}
 
-		if strings.HasPrefix(k, elasticbeanstalkTagKeyPrefix) {
+		if strings.HasPrefix(k, ElasticbeanstalkTagKeyPrefix) {
 			continue
 		}
 
-		if k == nameTagKey {
+		if k == NameTagKey {
 			continue
 		}
 
@@ -227,7 +207,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 			continue
 		}
 
-		if strings.HasPrefix(k, serverlessApplicationRepositoryTagKeyPrefix) {
+		if strings.HasPrefix(k, ServerlessApplicationRepositoryTagKeyPrefix) {
 			continue
 		}
 
@@ -241,8 +221,6 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
-	case names.AccountAccess:
-		return tags.IgnoreAccountAccess()
 	case names.ElasticBeanstalk:
 		return tags.IgnoreElasticbeanstalk()
 	case names.ServerlessRepo:
