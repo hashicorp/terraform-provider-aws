@@ -585,7 +585,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"api_format":  knownvalue.Null(),
+							"api_format":  knownvalue.NotNull(),
 							"max_tokens":  knownvalue.Null(),
 							"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
 							"temperature": knownvalue.Float64Exact(0.8),
@@ -601,7 +601,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"api_format":    config.StringVariable(string(awstypes.HarnessBedrockApiFormatResponses)),
+					"api_format":    config.StringVariable(string(awstypes.HarnessBedrockApiFormatChatCompletions)),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
@@ -614,7 +614,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"api_format":  tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatResponses),
+							"api_format":  tfknownvalue.StringExact(awstypes.HarnessBedrockApiFormatChatCompletions),
 							"max_tokens":  knownvalue.Null(),
 							"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
 							"temperature": knownvalue.Float64Exact(0.8),

@@ -404,6 +404,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									"api_format": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.HarnessBedrockApiFormat](),
 										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 									"max_tokens": schema.Int32Attribute{
 										Optional: true,
