@@ -443,6 +443,106 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 	})
 }
 
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html.
+// This test requires an expensive instance type that supports configurable ENA queue allocation, such as "c6i.4xlarge".
+// Set the environment variable `VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT` to run this test.
+func TestAccVPCNetworkInterface_attachmentEnaQueueCount(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	var attachmentID string
+	resourceName := "aws_network_interface.test"
+	dataSourceName := "data.aws_network_interface.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_attachmentEnaQueueCount(rName, "ena_queue_count = 4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
+						"device_index":    "1",
+						"ena_queue_count": "4",
+					}),
+					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "4"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 4),
+					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_attachmentEnaQueueCount(rName, "ena_queue_count = 16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
+						"device_index":    "1",
+						"ena_queue_count": "16",
+					}),
+					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "16"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 16),
+					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_attachmentEnaQueueCount(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "0"),
+					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 0),
+					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+		},
+	})
+}
+
+func testAccCheckNetworkInterfaceAttachmentEnaQueueCount(conf *awstypes.NetworkInterface, expected int32) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if conf.Attachment == nil {
+			return fmt.Errorf("network interface attachment not found")
+		}
+
+		if got := aws.ToInt32(conf.Attachment.EnaQueueCount); got != expected {
+			return fmt.Errorf("expected ENA queue count %d, got %d", expected, got)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckNetworkInterfaceAttachmentIDStable(conf *awstypes.NetworkInterface, attachmentID *string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if conf.Attachment == nil {
+			return fmt.Errorf("network interface attachment not found")
+		}
+
+		got := aws.ToString(conf.Attachment.AttachmentId)
+		if *attachmentID == "" {
+			*attachmentID = got
+			return nil
+		}
+		if got != *attachmentID {
+			return fmt.Errorf("expected network interface attachment ID %s, got %s", *attachmentID, got)
+		}
+
+		return nil
+	}
+}
+
 func TestAccVPCNetworkInterface_enaSrdSpecification(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1692,6 +1792,65 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_attachmentEnaQueueCount(rName, enaQueueCount string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6i.4xlarge"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_instance_state" "test" {
+  instance_id = aws_instance.test.id
+  state       = "stopped"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance     = aws_instance.test.id
+    device_index = 1
+    %[2]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ec2_instance_state.test]
+}
+
+data "aws_network_interface" "test" {
+  id = aws_network_interface.test.id
+
+  depends_on = [aws_network_interface.test]
+}
+`, rName, enaQueueCount))
 }
 
 func testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
