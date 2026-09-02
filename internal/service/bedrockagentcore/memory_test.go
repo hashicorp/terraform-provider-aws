@@ -6,12 +6,12 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
@@ -28,7 +29,7 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +70,7 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +106,7 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -158,7 +159,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -197,7 +198,7 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -211,7 +212,11 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemoryConfig_indexedKeys(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
@@ -221,17 +226,106 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.ListSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrKey), knownvalue.StringExact("customer_id")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(0).AtMapKey(names.AttrType), knownvalue.StringExact("STRING")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrKey), knownvalue.StringExact("score")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key").AtSliceIndex(1).AtMapKey(names.AttrType), knownvalue.StringExact("NUMBER")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("customer_id"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "score"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				// Reordering indexed_key entries is a no-op: it is modeled as a set, so config order is irrelevant.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("score", "customer_id"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				// Adding an indexed key is applied in place via UpdateMemory (AddIndexedKeys), not a replacement.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("customer_id", "channel", "score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("customer_id"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("channel"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
+				},
+			},
+			{
+				// Removing an indexed key forces replacement: the API cannot remove previously indexed keys.
+				ConfigDirectory: config.StaticDirectory("testdata/Memory/indexed_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"keys":          acctest.ListOfStringsVariable("channel", "score"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("indexed_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("channel"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeString),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:  knownvalue.StringExact("score"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.MetadataValueTypeNumber),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -240,7 +334,7 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := randomMemoryName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	resourceName := "aws_bedrockagentcore_memory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -399,25 +493,6 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func testAccMemoryConfig_indexedKeys(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_memory" "test" {
-  name                  = %[1]q
-  event_expiry_duration = 7
-
-  indexed_key {
-    key  = "customer_id"
-    type = "STRING"
-  }
-
-  indexed_key {
-    key  = "score"
-    type = "NUMBER"
-  }
-}
-`, rName)
-}
-
 func testAccMemoryConfig_streamDeliveryResources(rName string) string {
 	return acctest.ConfigCompose(testAccMemoryConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
@@ -465,8 +540,4 @@ resource "aws_bedrockagentcore_memory" "test" {
   }
 }
 `, rName))
-}
-
-func randomMemoryName(t *testing.T) string {
-	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10)), "-", "_")
 }

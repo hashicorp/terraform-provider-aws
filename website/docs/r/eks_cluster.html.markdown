@@ -397,7 +397,7 @@ The `encryption_config` configuration block supports the following arguments:
 
 The `provider` configuration block supports the following arguments:
 
-* `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
+* `key_arn` - (Required) ARN of the KMS customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
 ### remote_network_config
 
@@ -437,6 +437,7 @@ The `service_node_port_range` configuration block supports the following argumen
 The `kube_controller_manager_config` configuration block supports the following arguments:
 
 * `horizontal_pod_autoscaler_controller_config` - (Optional) Configuration block for the horizontal pod autoscaler controller. [Detailed](#horizontal_pod_autoscaler_controller_config) below.
+* `pod_gc_controller_config` - (Optional) Configuration block for the pod garbage collection controller. [Detailed](#pod_gc_controller_config) below.
 
 ~> **NOTE:** The `horizontal_pod_autoscaler_controller_config` requires a Provisioned Control Plane scaling tier (e.g., `tier-xl` or higher). It cannot be configured on clusters using the `standard` tier.
 
@@ -445,6 +446,12 @@ The `kube_controller_manager_config` configuration block supports the following 
 The `horizontal_pod_autoscaler_controller_config` configuration block supports the following arguments:
 
 * `horizontal_pod_autoscaler_sync_period` - (Optional) The interval between each sync of the horizontal pod autoscaler. Must be a single-unit duration (e.g., `10s`, `15s`). Valid range: `10s` to `15s`. Default is `15s`.
+
+#### pod_gc_controller_config
+
+The `pod_gc_controller_config` configuration block supports the following arguments:
+
+* `terminated_pod_gc_threshold` - (Optional) The number of terminated pods that can exist before the pod garbage collector starts deleting them. Valid range: `0` to `12500`. Refer to the `aws_eks_cluster_versions` data source for any version-specific constraints.
 
 ### kube_scheduler_config
 

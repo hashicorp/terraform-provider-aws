@@ -108,7 +108,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the refresh schedule.
+* `arn` - ARN of the refresh schedule.
 * `id` - A comma-delimited string joining AWS account ID, data set ID & refresh schedule ID.
 
 ## Import

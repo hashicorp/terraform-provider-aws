@@ -7,7 +7,7 @@ description: |-
 ---
 # Resource: aws_vpc_endpoint_private_dns
 
-Terraform resource for enabling private DNS on an AWS VPC (Virtual Private Cloud) Endpoint.
+Terraform resource for enabling private DNS on an AWS VPC Endpoint.
 
 ~> When using this resource, the `private_dns_enabled` argument should be omitted on the parent `aws_vpc_endpoint` resource.
 Setting the value both places can lead to unintended behavior and persistent differences.
@@ -37,7 +37,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a VPC (Virtual Private Cloud) Endpoint Private DNS using the `vpc_endpoint_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a VPC Endpoint Private DNS using the `vpc_endpoint_id`. For example:
 
 ```terraform
 import {
@@ -46,7 +46,7 @@ import {
 }
 ```
 
-Using `terraform import`, import a VPC (Virtual Private Cloud) Endpoint Private DNS using the `vpc_endpoint_id`. For example:
+Using `terraform import`, import a VPC Endpoint Private DNS using the `vpc_endpoint_id`. For example:
 
 ```console
 % terraform import aws_vpc_endpoint_private_dns.example vpce-abcd-1234

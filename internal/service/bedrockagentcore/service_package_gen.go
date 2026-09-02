@@ -129,6 +129,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_bedrockagentcore_gateway_target",
 			Name:     "Gateway Target",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("gateway_identifier", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayTargetImportID{},
+			},
 		},
 		{
 			Factory:  newHarnessResource,
@@ -150,13 +158,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newResourceMemoryStrategy,
 			TypeName: "aws_bedrockagentcore_memory_strategy",
 			Name:     "Memory Strategy",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("memory_id", true),
+				inttypes.StringIdentityAttribute("memory_strategy_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      memoryStrategyImportID{},
+			},
 		},
 		{
 			Factory:  newOAuth2CredentialProviderResource,

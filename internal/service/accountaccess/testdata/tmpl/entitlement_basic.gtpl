@@ -48,8 +48,17 @@ resource "aws_accountaccess_application" "test" {
 
 resource "aws_accountaccess_entitlement" "test" {
   application_arn = aws_accountaccess_application.test.arn
-  principal_id    = aws_identitystore_user.test.user_id
-  principal_type  = "USER"
-  role_arn        = aws_iam_role.test.arn
+
+  entitlement {
+    principal_role {
+      role_arn = aws_iam_role.test.arn
+
+      principal {
+        identity_center {
+          user_id = aws_identitystore_user.test.user_id
+        }
+      }
+    }
+  }
 {{- template "region" }}
 }

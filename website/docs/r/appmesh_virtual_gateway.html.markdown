@@ -93,11 +93,11 @@ This resource supports the following arguments:
 
 ### `client_policy` Block
 
-* `tls` - (Optional) Transport Layer Security (TLS) client policy. See [`spec.backend_defaults.client_policy.tls` Block](#specbackend_defaultsclient_policytls-block) for details.
+* `tls` - (Optional) TLS client policy. See [`spec.backend_defaults.client_policy.tls` Block](#specbackend_defaultsclient_policytls-block) for details.
 
 ### `spec.backend_defaults.client_policy.tls` Block
 
-* `certificate` (Optional) Virtual gateway's client's Transport Layer Security (TLS) certificate.
+* `certificate` (Optional) Virtual gateway's client's TLS certificate.
 * `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
 * `validation` - (Required) TLS validation context.
@@ -114,11 +114,11 @@ This resource supports the following arguments:
 
 ### `spec.backend_defaults.client_policy.tls.certificate.sds` Block
 
-* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.backend_defaults.client_policy.tls.validation` Block
 
-* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
+* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's TLS validation context.
 * `trust` - (Required) TLS validation context trust.
 
 ### `spec.backend_defaults.client_policy.tls.validation.subject_alternative_names` Block
@@ -145,14 +145,14 @@ This resource supports the following arguments:
 
 ### `spec.backend_defaults.client_policy.tls.validation.trust.sds` Block
 
-* `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - (Required) Name of the secret for a virtual gateway's TLS Secret Discovery Service validation context trust.
 
 ### `listener` Block
 
 * `connection_pool` - (Optional) Connection pool information for the listener. See [`connection_pool` Block](#connection_pool-block) for details.
 * `health_check` - (Optional) Health check information for the listener. See [`health_check` Block](#health_check-block) for details.
 * `port_mapping` - (Required) Port mapping information for the listener. See [`port_mapping` Block](#port_mapping-block) for details.
-* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener. See [`spec.listener.tls` Block](#speclistenertls-block) for details.
+* `tls` - (Optional) TLS properties for the listener. See [`spec.listener.tls` Block](#speclistenertls-block) for details.
 
 ### `logging` Block
 
@@ -215,7 +215,7 @@ This resource supports the following arguments:
 
 * `certificate` - (Required) Listener's TLS certificate.
 * `mode` - (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
-* `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
+* `validation`- (Optional) Listener's TLS validation context.
 
 ### `spec.listener.tls.certificate` Block
 
@@ -234,11 +234,11 @@ This resource supports the following arguments:
 
 ### `spec.listener.tls.certificate.sds` Block
 
-* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.listener.tls.validation` Block
 
-* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
+* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's TLS validation context.
 * `trust` - (Required) TLS validation context trust.
 
 ### `spec.listener.tls.validation.subject_alternative_names` Block
@@ -260,7 +260,7 @@ This resource supports the following arguments:
 
 ### `spec.listener.tls.validation.trust.sds` Block
 
-* `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - (Required) Name of the secret for a virtual gateway's TLS Secret Discovery Service validation context trust.
 
 ## Attribute Reference
 

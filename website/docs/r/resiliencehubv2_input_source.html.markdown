@@ -18,7 +18,7 @@ An input source defines where Resilience Hub discovers AWS resources for a servi
 
 ### CloudFormation Stack
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_input_source" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
 
@@ -30,7 +30,7 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ### Terraform State File
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_input_source" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
 
@@ -42,7 +42,7 @@ resource "aws_resiliencehubv2_input_source" "example" {
 
 ### EKS Cluster
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_input_source" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
 
@@ -68,15 +68,13 @@ The following arguments are optional:
 
 ### `resource_configuration` Block
 
-The `resource_configuration` block supports:
+The `resource_configuration` block supports exactly one of the following:
 
 * `cfn_stack_arn` - (Optional) CloudFormation stack ARN.
 * `design_file_s3_url` - (Optional) S3 URL.
 * `eks` - (Optional) EKS configuration. See [`eks` Block](#eks-block) below.
 * `resource_tag` - (Optional) Resource tags used for discovery. See [`resource_tag` Block](#resource_tag-block) below.
 * `tf_state_file_url` - (Optional) S3 URL.
-
-Exactly one attribute must be configured.
 
 ### `eks` Block
 

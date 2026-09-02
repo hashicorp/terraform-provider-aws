@@ -249,6 +249,7 @@ func (r *telemetryRuleForOrganizationResource) Update(ctx context.Context, reque
 		if response.Diagnostics.HasError() {
 			return
 		}
+		normalizeTelemetryRuleRegionSelection(input.Rule)
 
 		// Additional fields.
 		input.RuleIdentifier = aws.String(ruleName)

@@ -79,7 +79,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 			"agent_runtime_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -534,9 +534,14 @@ func privateEndpointSchema(ctx context.Context, extraValidators ...validator.Lis
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("resource_configuration_identifier"),
+							),
+						},
 						Attributes: map[string]schema.Attribute{
 							"resource_configuration_identifier": schema.StringAttribute{
-								Required: true,
+								Optional: true,
 							},
 						},
 					},

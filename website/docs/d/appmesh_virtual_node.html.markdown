@@ -58,11 +58,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend.virtual_service.client_policy` Block
 
-* `tls` - Transport Layer Security (TLS) client policy. See [`spec.backend.virtual_service.client_policy.tls` Block](#specbackendvirtual_serviceclient_policytls-block) for details.
+* `tls` - TLS client policy. See [`spec.backend.virtual_service.client_policy.tls` Block](#specbackendvirtual_serviceclient_policytls-block) for details.
 
 ### `spec.backend.virtual_service.client_policy.tls` Block
 
-* `certificate` - Virtual node's client's Transport Layer Security (TLS) certificate. See [`spec.backend.virtual_service.client_policy.tls.certificate` Block](#specbackendvirtual_serviceclient_policytlscertificate-block) for details.
+* `certificate` - Virtual node's client's TLS certificate. See [`spec.backend.virtual_service.client_policy.tls.certificate` Block](#specbackendvirtual_serviceclient_policytlscertificate-block) for details.
 * `enforce` - Whether the policy is enforced.
 * `ports` - One or more ports that the policy is enforced for.
 * `validation` - TLS validation context. See [`spec.backend.virtual_service.client_policy.tls.validation` Block](#specbackendvirtual_serviceclient_policytlsvalidation-block) for details.
@@ -79,7 +79,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend.virtual_service.client_policy.tls.certificate.sds` Block
 
-* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.backend.virtual_service.client_policy.tls.validation` Block
 
@@ -110,7 +110,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend.virtual_service.client_policy.tls.validation.trust.sds` Block
 
-* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.backend_defaults` Block
 
@@ -118,11 +118,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend_defaults.client_policy` Block
 
-* `tls` - Transport Layer Security (TLS) client policy. See [`spec.backend_defaults.client_policy.tls` Block](#specbackend_defaultsclient_policytls-block) for details.
+* `tls` - TLS client policy. See [`spec.backend_defaults.client_policy.tls` Block](#specbackend_defaultsclient_policytls-block) for details.
 
 ### `spec.backend_defaults.client_policy.tls` Block
 
-* `certificate` - Virtual node's client's Transport Layer Security (TLS) certificate. See [`spec.backend_defaults.client_policy.tls.certificate` Block](#specbackend_defaultsclient_policytlscertificate-block) for details.
+* `certificate` - Virtual node's client's TLS certificate. See [`spec.backend_defaults.client_policy.tls.certificate` Block](#specbackend_defaultsclient_policytlscertificate-block) for details.
 * `enforce` - Whether the policy is enforced.
 * `ports` - One or more ports that the policy is enforced for.
 * `validation` - TLS validation context. See [`spec.backend_defaults.client_policy.tls.validation` Block](#specbackend_defaultsclient_policytlsvalidation-block) for details.
@@ -139,7 +139,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend_defaults.client_policy.tls.certificate.sds` Block
 
-* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.backend_defaults.client_policy.tls.validation` Block
 
@@ -170,7 +170,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.backend_defaults.client_policy.tls.validation.trust.sds` Block
 
-* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.listener` Block
 
@@ -179,7 +179,7 @@ This data source exports the following attributes in addition to the arguments a
 * `outlier_detection` - Outlier detection information for the listener. See [`spec.listener.outlier_detection` Block](#speclisteneroutlier_detection-block) for details.
 * `port_mapping` - Port mapping information for the listener. See [`spec.listener.port_mapping` Block](#speclistenerport_mapping-block) for details.
 * `timeout` - Timeouts for different protocols. See [`spec.listener.timeout` Block](#speclistenertimeout-block) for details.
-* `tls` - Transport Layer Security (TLS) properties for the listener. See [`spec.listener.tls` Block](#speclistenertls-block) for details.
+* `tls` - TLS properties for the listener. See [`spec.listener.tls` Block](#speclistenertls-block) for details.
 
 ### `spec.listener.connection_pool` Block
 
@@ -302,7 +302,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `certificate` - Listener's TLS certificate. See [`spec.listener.tls.certificate` Block](#speclistenertlscertificate-block) for details.
 * `mode` - Listener's TLS mode.
-* `validation` - Listener's Transport Layer Security (TLS) validation context. See [`spec.listener.tls.validation` Block](#speclistenertlsvalidation-block) for details.
+* `validation` - Listener's TLS validation context. See [`spec.listener.tls.validation` Block](#speclistenertlsvalidation-block) for details.
 
 ### `spec.listener.tls.certificate` Block
 
@@ -321,7 +321,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.listener.tls.certificate.sds` Block
 
-* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - Name of the secret requested from the Secret Discovery Service provider representing TLS materials like a certificate or certificate chain.
 
 ### `spec.listener.tls.validation` Block
 
@@ -347,7 +347,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `spec.listener.tls.validation.trust.sds` Block
 
-* `secret_name` - Name of the secret for a virtual node's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - Name of the secret for a virtual node's TLS Secret Discovery Service validation context trust.
 
 ### `spec.logging` Block
 
