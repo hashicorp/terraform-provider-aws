@@ -7,7 +7,16 @@ list "aws_accountaccess_entitlement" "test" {
   include_resource = true
 
   config {
-    account_id      = split(":", aws_iam_role.test.arn)[4]
     application_arn = aws_accountaccess_application.test.arn
+
+    filter {
+      principal_role {
+        principal {
+          identity_center {
+            user_id = aws_identitystore_user.test.user_id
+          }
+        }
+      }
+    }
   }
 }

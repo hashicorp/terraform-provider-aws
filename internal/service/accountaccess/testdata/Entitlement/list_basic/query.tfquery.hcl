@@ -5,7 +5,12 @@ list "aws_accountaccess_entitlement" "test" {
   provider = aws
 
   config {
-    account_id      = split(":", aws_iam_role.test.arn)[4]
     application_arn = aws_accountaccess_application.test.arn
+
+    filter {
+      principal_role {
+        account_id = split(":", aws_iam_role.test.arn)[4]
+      }
+    }
   }
 }

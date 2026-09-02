@@ -11,14 +11,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accountaccess/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -26,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @FrameworkListResource("aws_accountaccess_entitlement")
 func newEntitlementResourceAsListResource() list.ListResourceWithConfigure {
 	return &entitlementListResource{}
@@ -39,17 +44,90 @@ type entitlementListResource struct {
 	framework.WithList
 }
 
-func (l *entitlementListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (l *entitlementListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			names.AttrAccountID: listschema.StringAttribute{
-				Required:    true,
-				Description: "AWS account ID to filter Entitlements by.",
-			},
 			"application_arn": listschema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
-				Required:    true,
-				Description: "ARN of the parent Account Access Application to list Entitlements from.",
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: listschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[entitlementFilterModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: listschema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("principal_role"),
+						),
+					},
+					Blocks: map[string]listschema.Block{
+						"principal_role": listschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[principalRoleEntitlementFilterModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: listschema.NestedBlockObject{
+								Attributes: map[string]listschema.Attribute{
+									names.AttrAccountID: listschema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											fwvalidators.AWSAccountID(),
+										},
+									},
+									names.AttrRoleARN: listschema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+								},
+								Blocks: map[string]listschema.Block{
+									names.AttrPrincipal: listschema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[principalFilterModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: listschema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("identity_center"),
+												),
+											},
+											Blocks: map[string]listschema.Block{
+												"identity_center": listschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[identityCenterPrincipalFilterModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: listschema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("group_id"),
+																path.MatchRelative().AtName("user_id"),
+															),
+														},
+														Attributes: map[string]listschema.Attribute{
+															"group_id": listschema.StringAttribute{
+																Optional: true,
+															},
+															"user_id": listschema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -67,13 +145,10 @@ func (l *entitlementListResource) List(ctx context.Context, request list.ListReq
 	}
 
 	applicationARN := fwflex.StringValueFromFramework(ctx, query.ApplicationARN)
-	input := accountaccess.ListEntitlementsInput{
-		ApplicationArn: aws.String(applicationARN),
-		Filter: &awstypes.EntitlementFilter{
-			PrincipalRole: &awstypes.PrincipalRoleEntitlementFilter{
-				Account: query.AccountID.ValueStringPointer(),
-			},
-		},
+	var input accountaccess.ListEntitlementsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -144,6 +219,72 @@ func listEntitlementPages(ctx context.Context, conn *accountaccess.Client, input
 
 type listEntitlementModel struct {
 	framework.WithRegionModel
-	AccountID      types.String `tfsdk:"account_id"`
-	ApplicationARN fwtypes.ARN  `tfsdk:"application_arn"`
+	ApplicationARN fwtypes.ARN                                             `tfsdk:"application_arn"`
+	Filter         fwtypes.ListNestedObjectValueOf[entitlementFilterModel] `tfsdk:"filter"`
+}
+
+type entitlementFilterModel struct {
+	PrincipalRole fwtypes.ListNestedObjectValueOf[principalRoleEntitlementFilterModel] `tfsdk:"principal_role"`
+}
+
+type principalRoleEntitlementFilterModel struct {
+	Account   types.String                                          `tfsdk:"account_id"`
+	Principal fwtypes.ListNestedObjectValueOf[principalFilterModel] `tfsdk:"principal"`
+	RoleARN   fwtypes.ARN                                           `tfsdk:"role_arn"`
+}
+
+type principalFilterModel struct {
+	IdentityCenter fwtypes.ListNestedObjectValueOf[identityCenterPrincipalFilterModel] `tfsdk:"identity_center"`
+}
+
+var (
+	_ fwflex.Expander = principalFilterModel{}
+)
+
+func (m principalFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.IdentityCenter.IsNull():
+		model, d := m.IdentityCenter.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.PrincipalFilterMemberIdentityCenter
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type identityCenterPrincipalFilterModel struct {
+	GroupID types.String `tfsdk:"group_id"`
+	UserID  types.String `tfsdk:"user_id"`
+}
+
+var (
+	_ fwflex.Expander = identityCenterPrincipalFilterModel{}
+)
+
+func (m identityCenterPrincipalFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.GroupID.IsNull():
+		r := awstypes.IdentityCenterPrincipalFilterMemberGroupId{
+			Value: fwflex.StringValueFromFramework(ctx, m.GroupID),
+		}
+		return &r, diags
+
+	case !m.UserID.IsNull():
+		r := awstypes.IdentityCenterPrincipalFilterMemberUserId{
+			Value: fwflex.StringValueFromFramework(ctx, m.UserID),
+		}
+		return &r, diags
+	}
+
+	return nil, diags
 }
