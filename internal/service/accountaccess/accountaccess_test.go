@@ -18,7 +18,7 @@ import (
 // smooths the delete→create transition on the shared instance.
 const serializeDelay = 5 * time.Second
 
-// TestAccAccountAccess_serial runs every Application acceptance group
+// TestAccAccountAccess_serial runs every Application-related acceptance group
 // sequentially. AWS Account Access enforces a 1:1 Application-to-Identity-
 // Center-instance constraint, so concurrent CreateApplication calls against the
 // shared organization instance can fail with AlreadyCreatedException. Each
@@ -39,6 +39,7 @@ func TestAccAccountAccess_serial(t *testing.T) {
 		"ApplicationDataSource": {
 			"byInstance": testAccAccountAccessApplicationDataSource_byInstance,
 			"byARN":      testAccAccountAccessApplicationDataSource_byARN,
+			"tags":       testAccAccountAccessApplicationDataSource_tagsSerial,
 		},
 	}
 

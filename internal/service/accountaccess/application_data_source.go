@@ -24,6 +24,9 @@ import (
 )
 
 // @FrameworkDataSource("aws_accountaccess_application", name="Application")
+// @Tags(identifierAttribute="arn")
+// @Testing(generator=false)
+// @Testing(preCheck="testAccPreCheck", serialize=true)
 func newApplicationDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &applicationDataSource{}, nil
 }
@@ -128,10 +131,6 @@ func (d *applicationDataSource) Read(ctx context.Context, request datasource.Rea
 		data.IdentityCenterInstanceARN = fwtypes.ARNValue(aws.ToString(details.Value.InstanceArn))
 		data.IdentityCenterApplicationARN = fwtypes.ARNValue(aws.ToString(details.Value.ApplicationArn))
 	}
-
-	// Account Access includes its resource ARN as an AWS system tag. Do not
-	// expose that service-owned tag through the user-facing data source schema.
-	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, app.Tags).IgnoreSystem(names.AccountAccess).Map())
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
