@@ -196,9 +196,13 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				Config: testAccGlobalClusterConfig_databaseName(rName, "database2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster2),
-					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -667,9 +671,13 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster2),
-					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -769,16 +777,6 @@ func testAccCheckGlobalClusterNotRecreated(i, j *types.GlobalCluster) resource.T
 	return func(s *terraform.State) error {
 		if aws.ToString(i.GlobalClusterArn) != aws.ToString(j.GlobalClusterArn) {
 			return fmt.Errorf("RDS Global Cluster was recreated. got: %s, expected: %s", aws.ToString(i.GlobalClusterArn), aws.ToString(j.GlobalClusterArn))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGlobalClusterRecreated(i, j *types.GlobalCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(i.GlobalClusterResourceId) == aws.ToString(j.GlobalClusterResourceId) {
-			return errors.New("RDS Global Cluster was not recreated")
 		}
 
 		return nil
