@@ -1467,8 +1467,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	// Surface any RDS events reported for this cluster during create, in the
-	// categories the user opted into (warning_event_categories).
 	if v, ok := d.GetOk("warning_event_categories"); ok {
 		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, createStart,
 			flex.ExpandStringValueSet(v.(*schema.Set)))...)
@@ -1791,8 +1789,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 
-		// Surface any RDS events reported for this cluster during update, in
-		// the categories the user opted into (warning_event_categories).
 		if v, ok := d.GetOk("warning_event_categories"); ok {
 			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart,
 				flex.ExpandStringValueSet(v.(*schema.Set)))...)

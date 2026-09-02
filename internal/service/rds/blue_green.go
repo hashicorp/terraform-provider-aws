@@ -170,11 +170,8 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 		}
 
 		if v, ok := d.GetOk("warning_event_categories"); ok {
-			// dbInstanceModify's internal wait polls d.Id() (the blue/source
-			// instance), not identifier (the green target). Wait on the
-			// green instance explicitly, here, before switchover, so the
-			// events query below runs against a settled state rather than
-			// mid-flight.
+			// dbInstanceModify's wait polls d.Id() (blue), not the green
+			// target, so settle green explicitly before querying its events.
 			if _, err := waitDBInstanceAvailable(ctx, h.conn, identifier, timeout); err == nil {
 				diags = append(diags, surfaceEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart,
 					flex.ExpandStringValueSet(v.(*schema.Set)))...)

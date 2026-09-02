@@ -1943,10 +1943,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	// Surface any RDS events reported for this instance during create, in the
-	// categories the user opted into (warning_event_categories). No default
-	// and no interpretation of why: RDS already reports what happened, in
-	// the event message, for whichever categories the user asked about.
 	if v, ok := d.GetOk("warning_event_categories"); ok {
 		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
 			flex.ExpandStringValueSet(v.(*schema.Set)))...)
@@ -2375,12 +2371,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			// Surface any RDS events reported for this instance during
-			// update, in the categories the user opted into
-			// (warning_event_categories). Use the identifier attribute (the
-			// current, post-rename value on this success path), not d.Id()
-			// (the DbiResourceId) — DescribeEvents does not accept the
-			// DbiResourceId as a db-instance SourceIdentifier.
+			// Key on the identifier, not d.Id() (the DbiResourceId), which
+			// DescribeEvents rejects as a db-instance SourceIdentifier.
 			if v, ok := d.GetOk("warning_event_categories"); ok {
 				diags = append(diags, surfaceEvents(ctx, conn, d.Get(names.AttrIdentifier).(string), types.SourceTypeDbInstance, modifyStart,
 					flex.ExpandStringValueSet(v.(*schema.Set)))...)

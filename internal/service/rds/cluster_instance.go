@@ -369,8 +369,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	// Surface any RDS events reported for this instance during create, in
-	// the categories the user opted into (warning_event_categories).
 	if v, ok := d.GetOk("warning_event_categories"); ok {
 		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, createStart,
 			flex.ExpandStringValueSet(v.(*schema.Set)))...)
@@ -542,8 +540,6 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 
-		// Surface any RDS events reported for this instance during update, in
-		// the categories the user opted into (warning_event_categories).
 		if v, ok := d.GetOk("warning_event_categories"); ok {
 			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart,
 				flex.ExpandStringValueSet(v.(*schema.Set)))...)

@@ -130,21 +130,12 @@ func findEvents(ctx context.Context, conn *rds.Client, input *rds.DescribeEvents
 	return output, nil
 }
 
-// surfaceEvents emits one warning diagnostic per RDS event found for
-// sourceID/st in the given categories since the operation started. No-op if
-// categories is empty — callers should check this themselves to avoid an
-// unnecessary API call, but this is also safe to call unconditionally.
-// Best-effort: a DescribeEvents error is logged, never fatal — event
-// enrichment must never fail an otherwise-successful apply.
-//
-// The provider does not interpret why an operation may have been rejected or
-// deferred; it relays exactly what RDS reported, for exactly the categories
-// the user opted into via warning_event_categories. Uses findEvents (not a
-// message-only helper) so the event's own category list can be shown
-// alongside the message — that category list is the only severity signal
-// DescribeEvents provides. Severity is always Warning: the CRUD operation
-// itself succeeded, so escalating to Error would fail an otherwise-successful
-// apply.
+// surfaceEvents emits one Warning diagnostic per RDS event reported for
+// sourceID/st in the given categories since the operation began, relaying the
+// RDS message verbatim without interpreting it. Best-effort: empty categories
+// or a DescribeEvents error yield no diagnostics and never an error, so
+// surfacing cannot fail an otherwise-successful apply. Always Warning, because
+// the operation itself succeeded.
 func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time, categories []string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
