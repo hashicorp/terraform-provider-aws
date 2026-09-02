@@ -17,3 +17,7 @@ import (
 func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
 	return tfstatecheck.ExpectFullResourceTags(tfagentregistry.ServicePackage(ctx), resourceAddress, knownValue)
 }
+
+func expectFullDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfagentregistry.ServicePackage(ctx), resourceAddress, knownValue)
+}
