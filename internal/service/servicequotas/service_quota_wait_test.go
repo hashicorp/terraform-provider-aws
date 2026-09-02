@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 type serviceQuotaWaitContextKey string
@@ -130,13 +130,13 @@ func TestFindOpenServiceQuotaRequestByQuotaReturnsOpenRequest(t *testing.T) {
 func TestFindOpenServiceQuotaRequestByQuotaReturnsNotFound(t *testing.T) {
 	_, err := findOpenServiceQuotaRequestByQuota(context.Background(), &fakeServiceQuotaWaitClient{}, "service", "quota")
 
-	var notFound *sdkretry.NotFoundError
+	var notFound *retry.NotFoundError
 	if !errors.As(err, &notFound) {
-		t.Fatalf("expected SDK not-found error, got %T: %v", err, err)
+		t.Fatalf("expected provider not-found error, got %T: %v", err, err)
 	}
 }
 
-func TestFindServiceQuotaReturnsSDKNotFoundWithLastRequest(t *testing.T) {
+func TestFindServiceQuotaReturnsProviderNotFound(t *testing.T) {
 	client := &fakeServiceQuotaWaitClient{quotaErr: &awstypes.NoSuchResourceException{}}
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String("quota"),
@@ -145,11 +145,8 @@ func TestFindServiceQuotaReturnsSDKNotFoundWithLastRequest(t *testing.T) {
 
 	_, err := findServiceQuota(context.Background(), client, input)
 
-	var notFound *sdkretry.NotFoundError
+	var notFound *retry.NotFoundError
 	if !errors.As(err, &notFound) {
-		t.Fatalf("expected SDK not-found error, got %T: %v", err, err)
-	}
-	if notFound.LastRequest != input {
-		t.Fatalf("expected LastRequest to retain the AWS input, got %T", notFound.LastRequest)
+		t.Fatalf("expected provider not-found error, got %T: %v", err, err)
 	}
 }

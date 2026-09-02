@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -445,10 +444,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -475,10 +471,7 @@ func findServiceQuota(ctx context.Context, conn serviceQuotaReader, input *servi
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -512,10 +505,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn serviceQuotaReque
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -538,10 +528,7 @@ func findOpenServiceQuotaRequestByQuota(ctx context.Context, conn serviceQuotaRe
 		output, err := conn.ListRequestedServiceQuotaChangeHistoryByQuota(ctx, &input)
 
 		if errs.IsA[*awstypes.NoSuchResourceException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+			return nil, &retry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -549,7 +536,7 @@ func findOpenServiceQuotaRequestByQuota(ctx context.Context, conn serviceQuotaRe
 		}
 
 		if output == nil {
-			return nil, &sdkretry.NotFoundError{LastRequest: input}
+			return nil, &retry.NotFoundError{}
 		}
 
 		for i := range output.RequestedQuotas {
@@ -568,7 +555,7 @@ func findOpenServiceQuotaRequestByQuota(ctx context.Context, conn serviceQuotaRe
 		input.NextToken = output.NextToken
 	}
 
-	return nil, &sdkretry.NotFoundError{LastRequest: input}
+	return nil, &retry.NotFoundError{}
 }
 
 func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
