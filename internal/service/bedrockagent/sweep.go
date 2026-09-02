@@ -100,6 +100,14 @@ func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		// The BedRock Agent API returns an InternalServerException in unsupported regions
+		if errs.IsA[*types.InternalServerException](err) {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
+			return sweepResources, nil
+		}
 		if err != nil {
 			return nil, err
 		}
