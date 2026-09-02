@@ -27,7 +27,7 @@ func RegisterSweepers() {
 func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := &bedrockagent.ListAgentsInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
 	pages := bedrockagent.NewListAgentsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -49,7 +49,7 @@ func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := &bedrockagent.ListKnowledgeBasesInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
 	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -94,7 +94,7 @@ func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := &bedrockagent.ListKnowledgeBasesInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
 	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
 	for pages.HasMorePages() {
