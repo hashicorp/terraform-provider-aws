@@ -1380,6 +1380,14 @@ resource "aws_rds_global_cluster" "test" {
 
 func testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  force_destroy                = true
+  global_cluster_identifier    = %[1]q
+  engine                       = aws_rds_cluster.test.engine
+  engine_version               = local.engine_version
+  source_db_cluster_identifier = aws_rds_cluster.test.arn
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = local.engine
@@ -1400,14 +1408,6 @@ resource "aws_rds_cluster_instance" "test" {
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
   instance_class     = "db.r5.large"
-}
-
-resource "aws_rds_global_cluster" "test" {
-  force_destroy                = true
-  global_cluster_identifier    = %[1]q
-  engine                       = aws_rds_cluster.test.engine
-  engine_version               = local.engine_version
-  source_db_cluster_identifier = aws_rds_cluster.test.arn
 }
 
 data "aws_rds_engine_version" "original" {
