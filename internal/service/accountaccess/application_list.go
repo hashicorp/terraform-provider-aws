@@ -65,7 +65,7 @@ func (l *applicationListResource) List(ctx context.Context, request list.ListReq
 			result := request.NewListResult(ctx)
 			var data applicationResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.ARN = fwflex.StringValueToFramework(ctx, arn)
+				data.ApplicationARN = fwflex.StringValueToFramework(ctx, arn)
 
 				if request.IncludeResource {
 					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, app, &data))

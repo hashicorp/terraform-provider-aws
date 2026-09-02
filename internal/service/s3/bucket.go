@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -86,6 +87,11 @@ func resourceBucket() *schema.Resource {
 				return []*schema.ResourceData{rd}, nil
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIf("object_lock_enabled", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+			o, n := diff.GetChange("object_lock_enabled")
+			return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
+		}),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -372,7 +378,6 @@ func resourceBucket() *schema.Resource {
 							"object_lock_enabled": {
 								Type:             schema.TypeString,
 								Optional:         true,
-								ForceNew:         true,
 								ConflictsWith:    []string{"object_lock_enabled"},
 								ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 								Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
@@ -419,7 +424,6 @@ func resourceBucket() *schema.Resource {
 					Type:          schema.TypeBool,
 					Optional:      true,
 					Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
-					ForceNew:      true,
 					ConflictsWith: []string{"object_lock_configuration"},
 				},
 				names.AttrPolicy: {
@@ -1629,6 +1633,26 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Object Lock Configuration.
 	//
+	// Handle modifications to either the object_lock_enabled argument, or the
+	// deprecated object_lock_configuration block.
+
+	// Only act when object_lock_enabled has changed to "true".
+	if v, ok := d.GetOk("object_lock_enabled"); ok && v.(bool) && d.HasChange("object_lock_enabled") {
+		// S3 Object Lock configuration cannot be deleted, only updated.
+		input := &s3.PutObjectLockConfigurationInput{
+			Bucket:                  aws.String(d.Id()),
+			ObjectLockConfiguration: &types.ObjectLockConfiguration{ObjectLockEnabled: types.ObjectLockEnabledEnabled},
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutObjectLockConfiguration(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+		}
+	}
+
 	// Only act if the practitioner has explicitly configured `object_lock_configuration` in HCL.
 	// When unset, defer to the dedicated `aws_s3_bucket_object_lock_configuration` resource.
 	if d.HasChange("object_lock_configuration") && deprecatedAttributeInRawConfig(d, "object_lock_configuration") {
