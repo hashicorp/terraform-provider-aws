@@ -15,11 +15,13 @@ Creates a copy of an existing Amazon EBS volume.
 ```terraform
 resource "aws_ebs_volume" "source" {
   availability_zone = "us-west-2a"
+  encrypted         = true
   size              = 8
 }
 
 resource "aws_ebs_volume_copy" "example" {
   source_volume_id = aws_ebs_volume.source.id
+  encrypted        = true
   volume_type      = "gp3"
   size             = 20
   iops             = 3000
@@ -35,7 +37,9 @@ resource "aws_ebs_volume_copy" "example" {
 
 This resource supports the following arguments:
 
+- `encrypted` - (Optional) Whether to encrypt the copied volume. When omitted, Amazon EBS determines the encryption settings from the source volume and destination account. Changing this value forces replacement of the resource.
 - `iops` - (Optional) Provisioned IOPS for the copied volume. Use only with volume types that support provisioned IOPS, such as `gp3`.
+- `kms_key_id` - (Optional) The identifier of the KMS key to use for encryption of the volume copy. Specify a symmetric encryption KMS key. You can specify a KMS key using the key ID, key ARN, alias name, or alias ARN. If you set Encrypted to true but do not specify this parameter, the service uses the default KMS key for EBS encryption in your account. For cross-account volume copies, this must be a KMS key in the calling account. 
 - `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference). This must match the Region of the source EBS volume referenced by `source_volume_id`.
 - `size` - (Optional) Size of the copied volume, in GiB.
 - `source_volume_id` - (Required) ID of the source EBS volume to copy. Changing this value forces replacement of the resource.
@@ -51,7 +55,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `arn` - ARN of the copied EBS volume.
 - `availability_zone` - Availability Zone for the copied volume.
+- `encrypted` - Whether the copied volume is encrypted.
 - `id` - ID of the copied EBS volume.
+- `kms_key_id` - ARN of the KMS key for the copied volume.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
