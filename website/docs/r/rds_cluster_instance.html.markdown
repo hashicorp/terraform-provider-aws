@@ -77,6 +77,7 @@ This resource supports the following arguments:
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this instance during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events.
 
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
