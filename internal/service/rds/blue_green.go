@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -168,19 +169,15 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 			return nil, fmt.Errorf("updating Green environment: %w", err)
 		}
 
-		if d.HasChange(names.AttrEngineVersion) {
+		if v, ok := d.GetOk("warning_event_categories"); ok {
 			// dbInstanceModify's internal wait polls d.Id() (the blue/source
-			// instance), not identifier (the green target), so it cannot be
-			// used to gate on the green instance's post-modify state. Wait
-			// on the green instance explicitly, here, before switchover.
-			instance, err := waitDBInstanceAvailable(ctx, h.conn, identifier, timeout)
-			if err == nil {
-				requested := d.Get(names.AttrEngineVersion).(string)
-				pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
-
-				if !pending && requested != aws.ToString(instance.EngineVersion) {
-					diags = append(diags, surfaceUpgradeEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart)...)
-				}
+			// instance), not identifier (the green target). Wait on the
+			// green instance explicitly, here, before switchover, so the
+			// events query below runs against a settled state rather than
+			// mid-flight.
+			if _, err := waitDBInstanceAvailable(ctx, h.conn, identifier, timeout); err == nil {
+				diags = append(diags, surfaceEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart,
+					flex.ExpandStringValueSet(v.(*schema.Set)))...)
 			}
 		}
 	}

@@ -5,7 +5,9 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -129,86 +130,44 @@ func findEvents(ctx context.Context, conn *rds.Client, input *rds.DescribeEvents
 	return output, nil
 }
 
-// findEventMessagesAfter returns message text for one source, in the given
-// categories, since a start time. Categories are a parameter (not hardcoded)
-// because the relevant categories differ per scenario.
-func findEventMessagesAfter(ctx context.Context, conn *rds.Client, sourceID string, sourceType awstypes.SourceType, since time.Time, categories []string) ([]string, error) {
-	input := &rds.DescribeEventsInput{
-		SourceIdentifier: aws.String(sourceID),
-		SourceType:       sourceType,
-		EventCategories:  categories,
-		StartTime:        aws.Time(since),
-	}
-
-	events, err := findEvents(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return tfslices.ApplyToAll(events, func(e awstypes.Event) string {
-		return aws.ToString(e.Message)
-	}), nil
-}
-
-var (
-	// upgradeEventCategories covers both source types' upgrade-failure events.
-	// The Aurora cluster pre-check failure (RDS-EVENT-0412) and the db-instance
-	// upgrade-failed/rollback event (RDS-EVENT-0270) are both "maintenance";
-	// some db-instance rollbacks (RDS-EVENT-0188) are "failure". A plain
-	// "failure"-only filter would miss the Aurora pre-check case.
-	upgradeEventCategories = []string{"failure", "maintenance"}
-
-	// createTimeEventCategories is deliberately narrower than
-	// upgradeEventCategories: the create-time enhanced-monitoring
-	// configuration failure (#41037) is confirmed "failure"-only.
-	createTimeEventCategories = []string{"failure"}
-)
-
-// surfaceUpgradeEvents is the update-path upgrade gate's warning emitter,
-// shared by aws_rds_cluster_instance, aws_rds_cluster, and aws_db_instance.
+// surfaceEvents emits one warning diagnostic per RDS event found for
+// sourceID/st in the given categories since the operation started. No-op if
+// categories is empty — callers should check this themselves to avoid an
+// unnecessary API call, but this is also safe to call unconditionally.
 // Best-effort: a DescribeEvents error is logged, never fatal — event
 // enrichment must never fail an otherwise-successful apply.
-func surfaceUpgradeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
+//
+// The provider does not interpret why an operation may have been rejected or
+// deferred; it relays exactly what RDS reported, for exactly the categories
+// the user opted into via warning_event_categories. Uses findEvents (not a
+// message-only helper) so the event's own category list can be shown
+// alongside the message — that category list is the only severity signal
+// DescribeEvents provides. Severity is always Warning: the CRUD operation
+// itself succeeded, so escalating to Error would fail an otherwise-successful
+// apply.
+func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time, categories []string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, upgradeEventCategories)
+	if len(categories) == 0 {
+		return diags
+	}
+
+	events, err := findEvents(ctx, conn, &rds.DescribeEventsInput{
+		SourceIdentifier: aws.String(sourceID),
+		SourceType:       st,
+		EventCategories:  categories,
+		StartTime:        aws.Time(since),
+	})
 	if err != nil {
 		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
 		return diags
 	}
 
-	for _, m := range msgs {
+	for _, e := range events {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  "RDS reported an event during update that may explain why the change did not take effect",
-			Detail:   m + "\n\nReview RDS events (aws rds describe-events) and any pre-upgrade check log for details.",
-		})
-	}
-
-	return diags
-}
-
-// surfaceCreateTimeEvents is the create-time gate's warning emitter
-// (aws_db_instance only, #41037). Deliberately distinct from
-// surfaceUpgradeEvents: different category set (createTimeEventCategories,
-// confirmed failure-only by the #41037 repro), different summary text, and no
-// shared triggering condition — the create-time gate is non-comparative (no
-// prior state) and has no PendingModifiedValues concept. Best-effort: a
-// DescribeEvents error is logged, never fatal.
-func surfaceCreateTimeEvents(ctx context.Context, conn *rds.Client, sourceID string, st awstypes.SourceType, since time.Time) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	msgs, err := findEventMessagesAfter(ctx, conn, sourceID, st, since, createTimeEventCategories)
-	if err != nil {
-		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
-		return diags
-	}
-
-	for _, m := range msgs {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "RDS reported a failure event during create that may explain an unapplied setting",
-			Detail:   m + "\n\nReview RDS events (aws rds describe-events) for details.",
+			Summary:  fmt.Sprintf("RDS reported an event during this operation [%s]", strings.Join(e.EventCategories, ", ")),
+			Detail:   aws.ToString(e.Message),
 		})
 	}
 

@@ -693,6 +693,11 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrUsername: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -1938,28 +1943,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	// Create-time gate (#41037): monitoring_interval/monitoring_role_arn can
-	// reach the instance via several create sub-paths (plain create input,
-	// read replica input, or the restore-path requiresModifyDbInstance block
-	// above), and RDS can silently fail to configure enhanced monitoring
-	// without returning an API error. Describe fresh here, after any
-	// requiresModifyDbInstance/requiresRebootDbInstance modify, since the
-	// instance variable from the initial create wait may be stale by this
-	// point. This gate is deliberately separate from the upgrade gate: no
-	// prior state to compare against, no PendingModifiedValues concept, and
-	// a narrower (failure-only) category set confirmed by the #41037 repro.
-	requestedInterval, intOK := d.GetOk("monitoring_interval")
-	requestedRoleARN, arnOK := d.GetOk("monitoring_role_arn")
-	monitoringRequested := arnOK && requestedRoleARN.(string) != "" && intOK && requestedInterval.(int) > 0
-
-	if monitoringRequested {
-		if instance, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
-			monitoringDropped := instance.MonitoringInterval == nil || aws.ToInt32(instance.MonitoringInterval) == 0
-
-			if monitoringDropped {
-				diags = append(diags, surfaceCreateTimeEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart)...)
-			}
-		}
+	// Surface any RDS events reported for this instance during create, in the
+	// categories the user opted into (warning_event_categories). No default
+	// and no interpretation of why: RDS already reports what happened, in
+	// the event message, for whichever categories the user asked about.
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
 	}
 
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
@@ -2385,18 +2375,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			if d.HasChange(names.AttrEngineVersion) {
-				// d.Id() is the stable DbiResourceId, which still resolves
-				// after a rename; oldID (input.DBInstanceIdentifier) may not
-				// if this update also renamed the instance.
-				if instance, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
-					requested := d.Get(names.AttrEngineVersion).(string)
-					pending := instance.PendingModifiedValues != nil && instance.PendingModifiedValues.EngineVersion != nil
-
-					if !pending && requested != aws.ToString(instance.EngineVersion) {
-						diags = append(diags, surfaceUpgradeEvents(ctx, conn, oldID, types.SourceTypeDbInstance, modifyStart)...)
-					}
-				}
+			// Surface any RDS events reported for this instance during
+			// update, in the categories the user opted into
+			// (warning_event_categories). Use the identifier attribute (the
+			// current, post-rename value on this success path), not d.Id()
+			// (the DbiResourceId) — DescribeEvents does not accept the
+			// DbiResourceId as a db-instance SourceIdentifier.
+			if v, ok := d.GetOk("warning_event_categories"); ok {
+				diags = append(diags, surfaceEvents(ctx, conn, d.Get(names.AttrIdentifier).(string), types.SourceTypeDbInstance, modifyStart,
+					flex.ExpandStringValueSet(v.(*schema.Set)))...)
 			}
 		}
 	}
