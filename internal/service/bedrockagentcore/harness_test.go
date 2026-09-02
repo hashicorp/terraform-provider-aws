@@ -406,21 +406,19 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListSizeExact(0),
-							"gemini_model_config":  knownvalue.ListSizeExact(0),
-							"litellm_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"additional_params": knownvalue.Null(),
-								"api_key_arn":       knownvalue.NotNull(),
-								"max_tokens":        knownvalue.Null(),
-								"model_id":          knownvalue.StringExact("gpt-5"),
-								"temperature":       knownvalue.Null(),
-								"top_p":             knownvalue.Null(),
-							})}),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gpt-5"),
+							"temperature":       knownvalue.Null(),
+							"top_p":             knownvalue.Null(),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -437,21 +435,19 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListSizeExact(0),
-							"gemini_model_config":  knownvalue.ListSizeExact(0),
-							"litellm_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"additional_params": knownvalue.NotNull(),
-								"api_key_arn":       knownvalue.NotNull(),
-								"max_tokens":        knownvalue.Int32Exact(1000),
-								"model_id":          knownvalue.StringExact("gpt-5"),
-								"temperature":       knownvalue.Float64Exact(0.95),
-								"top_p":             knownvalue.Float64Exact(0.75),
-							})}),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Int32Exact(1000),
+							"model_id":          knownvalue.StringExact("gpt-5"),
+							"temperature":       knownvalue.Float64Exact(0.95),
+							"top_p":             knownvalue.Float64Exact(0.75),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -468,21 +464,19 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListSizeExact(0),
-							"gemini_model_config":  knownvalue.ListSizeExact(0),
-							"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"api_base":    knownvalue.StringExact("https://api.example.com/v1"),
-								"api_key_arn": knownvalue.Null(),
-								"max_tokens":  knownvalue.Null(),
-								"model_id":    knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
-								"temperature": knownvalue.Float64Exact(0.7),
-								"top_p":       knownvalue.Float64Exact(0.9),
-							})}),
-							"openai_model_config": knownvalue.ListSizeExact(0),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"api_base":    knownvalue.StringExact("https://api.example.com/v1"),
+							"api_key_arn": knownvalue.Null(),
+							"max_tokens":  knownvalue.Null(),
+							"model_id":    knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
+							"temperature": knownvalue.Float64Exact(0.7),
+							"top_p":       knownvalue.Float64Exact(0.9),
+						})}),
+						"openai_model_config": knownvalue.ListSizeExact(0),
+					})})),
 				},
 			},
 			{
@@ -499,22 +493,20 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListSizeExact(0),
-							"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"additional_params": knownvalue.Null(),
-								"api_key_arn":       knownvalue.NotNull(),
-								"max_tokens":        knownvalue.Null(),
-								"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
-								"temperature":       knownvalue.Null(),
-								"top_k":             knownvalue.Null(),
-								"top_p":             knownvalue.Null(),
-							})}),
-							"litellm_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config":  knownvalue.ListSizeExact(0),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.Null(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
+							"temperature":       knownvalue.Null(),
+							"top_k":             knownvalue.Null(),
+							"top_p":             knownvalue.Null(),
+						})}),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
 				},
 			},
 			{
@@ -531,22 +523,20 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListSizeExact(0),
-							"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"additional_params": knownvalue.NotNull(),
-								"api_key_arn":       knownvalue.NotNull(),
-								"max_tokens":        knownvalue.Null(),
-								"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
-								"temperature":       knownvalue.Null(),
-								"top_k":             knownvalue.Int32Exact(235),
-								"top_p":             knownvalue.Null(),
-							})}),
-							"litellm_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config":  knownvalue.ListSizeExact(0),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_key_arn":       knownvalue.NotNull(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("gemini-2.5-pro"),
+							"temperature":       knownvalue.Null(),
+							"top_k":             knownvalue.Int32Exact(235),
+							"top_p":             knownvalue.Null(),
+						})}),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
 				},
 			},
 			{
@@ -563,19 +553,165 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"max_tokens":  knownvalue.Null(),
-								"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
-								"temperature": knownvalue.Float64Exact(0.8),
-								"top_p":       knownvalue.Float64Exact(0.7),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"max_tokens":  knownvalue.Null(),
+							"model_id":    knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
+							"temperature": knownvalue.Float64Exact(0.8),
+							"top_p":       knownvalue.Float64Exact(0.7),
+						})}),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListSizeExact(0),
+						"openai_model_config":  knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_skill(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := testAccRandomHarnessName(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.path/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills":   knownvalue.ListSizeExact(0),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.StringExact("/skills"),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.git/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListSizeExact(0),
+						"git": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"auth":         knownvalue.ListSizeExact(0),
+							names.AttrPath: knownvalue.Null(),
+							names.AttrURL:  knownvalue.StringExact("https://github.com/example/skill.git"),
+						})}),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.git.auth/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListSizeExact(0),
+						"git": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"auth": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"credential_arn":   knownvalue.NotNull(),
+								names.AttrUsername: knownvalue.Null(),
 							})}),
-							"gemini_model_config":  knownvalue.ListSizeExact(0),
-							"litellm_model_config": knownvalue.ListSizeExact(0),
-							"openai_model_config":  knownvalue.ListSizeExact(0),
-						}),
-					})),
+							names.AttrPath: knownvalue.StringExact("/test"),
+							names.AttrURL:  knownvalue.StringExact("https://github.com/example/skill.git"),
+						})}),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.aws_skills/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"paths": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("/test/skills"),
+								knownvalue.StringExact("/skills"),
+							}),
+						})}),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.Null(),
+						"s3":           knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/skill.s3/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("skill"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"aws_skills":   knownvalue.ListSizeExact(0),
+						"git":          knownvalue.ListSizeExact(0),
+						names.AttrPath: knownvalue.Null(),
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrURI: knownvalue.NotNull(),
+						})}),
+					})})),
 				},
 			},
 		},
@@ -2530,38 +2666,6 @@ func TestAccBedrockAgentCoreHarness_Environment_Network_updateVPCToPublic(t *tes
 	})
 }
 
-func TestAccBedrockAgentCoreHarness_skill_git(t *testing.T) {
-	ctx := acctest.Context(t)
-	var harness awstypes.Harness
-	rName := testAccRandomHarnessName(t)
-	resourceName := "aws_bedrockagentcore_harness.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckHarness(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccHarnessConfig_skillGit(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
-					resource.TestCheckResourceAttr(resourceName, "skill.0.git.0.url", "https://github.com/example/skill.git"),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
-
 // Helper functions.
 
 func testAccCheckHarnessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -3954,32 +4058,6 @@ resource "aws_bedrockagentcore_harness" "test" {
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
-}
-`, rName))
-}
-
-func testAccHarnessConfig_skillGit(rName string) string {
-	return acctest.ConfigCompose(testAccHarnessConfig_iamRole(rName), fmt.Sprintf(`
-resource "aws_bedrockagentcore_harness" "test" {
-  harness_name       = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
-
-  model {
-    bedrock_model_config {
-      model_id = "anthropic.claude-sonnet-4-20250514"
-    }
-  }
-
-  skill {
-    git {
-      url  = "https://github.com/example/skill.git"
-      path = "skills"
-    }
-  }
-
-  system_prompt {
-    text = "You are a helpful assistant."
-  }
 }
 `, rName))
 }
