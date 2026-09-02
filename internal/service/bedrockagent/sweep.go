@@ -8,7 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -52,6 +55,14 @@ func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		// The BedRock Agent API returns an InternalServerException in unsupported regions
+		if errs.IsA[*types.InternalServerException](err) {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
+			return sweepResources, nil
+		}
 		if err != nil {
 			return nil, err
 		}
