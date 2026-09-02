@@ -135,7 +135,6 @@ func resourceDefaultRouteTable() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-
 						},
 					},
 					Set: resourceRouteTableHash,
