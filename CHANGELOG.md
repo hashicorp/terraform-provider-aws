@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_accountaccess_application` ([#49553](https://github.com/hashicorp/terraform-provider-aws/issues/49553))
 * **New List Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
 * **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
 * **New Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
