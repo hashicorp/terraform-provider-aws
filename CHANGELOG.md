@@ -1,3 +1,10 @@
+## 6.64.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+* **New Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+
 ## 6.63.0 (September 3, 2026)
 
 FEATURES:
