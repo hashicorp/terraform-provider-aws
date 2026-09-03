@@ -281,7 +281,7 @@ func sweepInstanceProfiles(ctx context.Context, client *conns.AWSClient) ([]swee
 
 		for _, v := range page.InstanceProfiles {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newInstanceProfileResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.InstanceProfileArn))),
+				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.InstanceProfileArn))),
 			)
 		}
 	}
