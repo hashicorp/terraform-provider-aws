@@ -63,11 +63,12 @@ func testAccFISSafetyLeverState_Identity_basic(t *testing.T) {
 				},
 			},
 
-			// Step 3: import round-trip, matching the single instance on arn.
+			// Step 3: import round-trip by Region ID, matching the single instance on arn.
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 

@@ -76,11 +76,12 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 				),
 			},
 			{
-				// The safety lever has no "id" attribute; import resolves it from resource
-				// identity ({account_id, region}), and verify matches the single instance on arn.
+				// The safety lever has no "id" attribute: the import ID is the Region (consumed
+				// by the RegionalSingleton importer), and verify matches the single instance on arn.
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
