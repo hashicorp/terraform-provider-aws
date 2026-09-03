@@ -1,13 +1,26 @@
-## 6.63.0 (Unreleased)
+## 6.64.0 (Unreleased)
 
 FEATURES:
 
+* **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+* **New Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+
+## 6.63.0 (September 3, 2026)
+
+FEATURES:
+
+* **New List Resource:** `aws_accountaccess_application` ([#49551](https://github.com/hashicorp/terraform-provider-aws/issues/49551))
 * **New List Resource:** `aws_key_pair` ([#49712](https://github.com/hashicorp/terraform-provider-aws/issues/49712))
 * **New List Resource:** `aws_lambdamicrovms_image` ([#49724](https://github.com/hashicorp/terraform-provider-aws/issues/49724))
 * **New List Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New List Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
 * **New List Resource:** `aws_opensearchserverless_access_policy` ([#49717](https://github.com/hashicorp/terraform-provider-aws/issues/49717))
 * **New List Resource:** `aws_opensearchserverless_lifecycle_policy` ([#49718](https://github.com/hashicorp/terraform-provider-aws/issues/49718))
+* **New List Resource:** `aws_opensearchserverless_security_config` ([#49769](https://github.com/hashicorp/terraform-provider-aws/issues/49769))
+* **New List Resource:** `aws_opensearchserverless_security_policy` ([#49770](https://github.com/hashicorp/terraform-provider-aws/issues/49770))
+* **New List Resource:** `aws_opensearchserverless_vpc_endpoint` ([#49774](https://github.com/hashicorp/terraform-provider-aws/issues/49774))
+* **New Resource:** `aws_accountaccess_application` ([#49551](https://github.com/hashicorp/terraform-provider-aws/issues/49551))
+* **New Resource:** `aws_datazone_policy_grant` ([#47050](https://github.com/hashicorp/terraform-provider-aws/issues/47050))
 * **New Resource:** `aws_lambdamicrovms_microvm` ([#48984](https://github.com/hashicorp/terraform-provider-aws/issues/48984))
 * **New Resource:** `aws_mailmanager_archive` ([#49580](https://github.com/hashicorp/terraform-provider-aws/issues/49580))
 
@@ -49,6 +62,8 @@ BUG FIXES:
 * resource/aws_rds_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+* resource/aws_s3_bucket: Setting `object_lock_configuration.object_lock_enabled` to `Enabled` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
+* resource/aws_s3_bucket: Setting `object_lock_enabled` to `true` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
 
 ## 6.62.0 (August 26, 2026)
 
