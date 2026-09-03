@@ -71,7 +71,7 @@ func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.Sche
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"state": schema.ListNestedBlock{
+			names.AttrState: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[safetyLeverStateStateModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 1),
@@ -254,7 +254,7 @@ func findSafetyLever(ctx context.Context, conn *fis.Client, id string) (*awstype
 
 func waitSafetyLeverStatus(ctx context.Context, conn *fis.Client, id, target string, timeout time.Duration) (*awstypes.SafetyLever, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.SafetyLeverStatusEngaging)},
+		Pending: enum.Slice(awstypes.SafetyLeverStatusEngaging),
 		Target:  []string{target},
 		Refresh: statusSafetyLever(conn, id),
 		Timeout: timeout,

@@ -27,7 +27,7 @@ func TestAccFISSafetyLeverState_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                   testAccFISSafetyLeverState_basic,
+		acctest.CtBasic:           testAccFISSafetyLeverState_basic,
 		"update":                  testAccFISSafetyLeverState_update,
 		"Identity_basic":          testAccFISSafetyLeverState_Identity_basic,
 		"Identity_regionOverride": testAccFISSafetyLeverState_Identity_regionOverride,
@@ -189,25 +189,25 @@ func testAccSafetyLeverStateOppositeStatus(ctx context.Context, t *testing.T, re
 }
 
 func testAccSafetyLeverStateConfig_basic(status, reason string) string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_fis_safety_lever_state" "test" {
   state {
-    status = "` + status + `"
-    reason = "` + reason + `"
+    status = %[1]q
+    reason = %[2]q
   }
 }
-`
+`, status, reason)
 }
 
 func testAccSafetyLeverStateConfig_region(region, status, reason string) string {
-	return `
+	return fmt.Sprintf(`
 resource "aws_fis_safety_lever_state" "test" {
-  region = "` + region + `"
+  region = %[1]q
 
   state {
-    status = "` + status + `"
-    reason = "` + reason + `"
+    status = %[2]q
+    reason = %[3]q
   }
 }
-`
+`, region, status, reason)
 }
