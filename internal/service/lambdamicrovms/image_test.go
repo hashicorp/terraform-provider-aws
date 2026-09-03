@@ -186,6 +186,19 @@ func TestAccLambdaMicroVMsImage_hooks(t *testing.T) {
 					},
 				},
 			},
+			{
+				// Removing the block must build a new image version without hooks.
+				Config: testAccImageConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "hooks.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -229,6 +242,19 @@ func TestAccLambdaMicroVMsImage_logging(t *testing.T) {
 					},
 				},
 			},
+			{
+				// Removing the block must build a new image version with the default logging configuration.
+				Config: testAccImageConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -255,6 +281,19 @@ func TestAccLambdaMicroVMsImage_resources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resources.0.minimum_memory_in_mib", "512"),
 				),
+			},
+			{
+				Config: testAccImageConfig_resources(rName, 1024),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckImageExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resources.0.minimum_memory_in_mib", "1024"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})

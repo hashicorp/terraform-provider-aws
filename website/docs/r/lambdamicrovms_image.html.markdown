@@ -116,7 +116,7 @@ The following arguments are optional:
 * `egress_network_connectors` - (Optional) List of egress network connectors available to the MicroVM at runtime. Defaults to `["INTERNET_EGRESS"]`.
 * `environment_variables` - (Optional) Map of environment variables set in the MicroVM runtime environment.
 * `hooks` - (Optional) Lifecycle hook configuration for MicroVMs and MicroVM image builds. See [`hooks` Block](#hooks-block) below.
-* `logging` - (Optional) Logging output configuration for MicroVMs launched from this image. See [`logging` Block](#logging-block) below.
+* `logging` - (Optional) Logging configuration for the image's build-time logs and the runtime logs of MicroVMs launched from it. See [`logging` Block](#logging-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resources` - (Optional) Resource requirements for MicroVMs launched from this image. If omitted, the service default is used. See [`resources` Block](#resources-block) below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -139,7 +139,7 @@ The `hooks` block supports the following:
 
 * `microvm_hooks` - (Optional) Lifecycle hooks invoked during MicroVM events. [See below](#microvm_hooks-block).
 * `microvm_image_hooks` - (Optional) Hooks invoked during MicroVM image build events. [See below](#microvm_image_hooks-block).
-* `port` - (Required) Port number on which the hooks listener runs in the MicroVM. The API requires a port whenever any hook is enabled. Valid values: `1`-`65535`.
+* `port` - (Required) Port number on which the hooks listener runs in the MicroVM. Valid values: `1`-`65535`. `port` must be set whenever the `hooks` block is configured, which is stricter than the API, which only requires a port when a hook is enabled.
 
 ### `microvm_hooks` Block
 
@@ -168,7 +168,7 @@ The `microvm_image_hooks` block supports the following:
 The `logging` block supports exactly one of the following:
 
 * `cloudwatch` - (Optional) Send MicroVM runtime logs to Amazon CloudWatch Logs. [See below](#cloudwatch-block).
-* `disabled` - (Optional) Disable logging for MicroVMs launched from this image. Specify an empty block: `disabled {}`.
+* `disabled` - (Optional) Disable build-time and runtime logging. Specify an empty block: `disabled {}`.
 
 ### `cloudwatch` Block
 
