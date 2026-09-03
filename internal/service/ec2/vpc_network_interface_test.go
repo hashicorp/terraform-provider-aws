@@ -474,7 +474,7 @@ func TestAccVPCNetworkInterface_attachmentEnaQueueCount(t *testing.T) {
 						"ena_queue_count": "4",
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "4"),
-					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 4),
+					testAccCheckNetworkInterfaceInlineAttachmentEnaQueueCount(&conf, 4),
 					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
 				),
 			},
@@ -487,7 +487,7 @@ func TestAccVPCNetworkInterface_attachmentEnaQueueCount(t *testing.T) {
 						"ena_queue_count": "16",
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "16"),
-					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 16),
+					testAccCheckNetworkInterfaceInlineAttachmentEnaQueueCount(&conf, 16),
 					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
 				),
 			},
@@ -496,7 +496,7 @@ func TestAccVPCNetworkInterface_attachmentEnaQueueCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(dataSourceName, "attachment.0.ena_queue_count", "0"),
-					testAccCheckNetworkInterfaceAttachmentEnaQueueCount(&conf, 0),
+					testAccCheckNetworkInterfaceInlineAttachmentEnaQueueCount(&conf, 0),
 					testAccCheckNetworkInterfaceAttachmentIDStable(&conf, &attachmentID),
 				),
 			},
@@ -510,7 +510,7 @@ func TestAccVPCNetworkInterface_attachmentEnaQueueCount(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkInterfaceAttachmentEnaQueueCount(conf *awstypes.NetworkInterface, expected int32) resource.TestCheckFunc {
+func testAccCheckNetworkInterfaceInlineAttachmentEnaQueueCount(conf *awstypes.NetworkInterface, expected int32) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if conf.Attachment == nil {
 			return fmt.Errorf("network interface attachment not found")
