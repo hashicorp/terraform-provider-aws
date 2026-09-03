@@ -16,7 +16,7 @@ Three forces pull this repository away from Go's conventions: existing code that
 - `MixedCaps`, not underscores: `maxRetries`, not `MAX_RETRIES`. Test names (`TestAccFoo_basic`) are the exception.
 - Getters drop `Get`: `Owner()`, not `GetOwner()`.
 - Short locals (`c`, `i`). Receivers are one or two letters, consistent across the type, never `this` or `self`.
-- Don't create packages named `util`, `common`, `misc`, `api`, `types`, or `interfaces`. If callers must alias your package, the name failed. (We ship `internal/types`; it's a known fail, not precedent.)
+- Don't create packages named `util`, `common`, `misc`, `api`, `types`, or `interfaces`. If callers must alias your package, the name failed. (We ship `internal/types`, `internal/framework/types`, `internal/sdkv2/types`; these are known fails, not precedent.)
 
 ## Comments
 

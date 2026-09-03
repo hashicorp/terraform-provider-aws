@@ -52,21 +52,22 @@ Right on the right, wrong on the left, one statement. Nobody was being sloppy. `
 !!! tip "What we should have done"
     `applicationID := d.Get(names.AttrApplicationID).(string)`, and `findADMChannelByApplicationID`. Every one of these is an unexported local or an unexported function, so renaming breaks nothing outside its own package. This is the cheapest fix in the document. Do it in files you're already editing, and skip the 51-file rename PR; that's churn, and reviewers can't see the real change underneath it.
 
-**Exhibit B: the package name we rename 1,368 times.** *Go Code Review Comments* lists the package names to avoid, by name: "util, common, misc, api, types, and interfaces." We ship two of them, `internal/types` and `internal/framework/types`.
+**Exhibit B: the package name we rename 1,372 times.** *Go Code Review Comments* lists the package names to avoid, by name: "util, common, misc, api, types, and interfaces." We ship three packages named `types`.
 
-You don't have to take Go's word for it, because our own import blocks testify against us. Our `types` collides with the AWS SDK's `types` and with the Plugin Framework's, so almost nobody can import ours under its real name:
+You don't have to take Go's word for it, because our own import blocks testify against us. Our `types` collides with the AWS SDK's `types` and with the Plugin Framework's, so nobody imports ours under the name we gave it:
 
 ```go
 inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 fwtypes  "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 ```
 
-That aliasing appears on 708 and 660 import lines. The same document that warns against the name also says to avoid renaming imports, because "good package names should not require renaming." We rename these on the way in 1,368 times, which is the codebase reporting a naming defect once per file.
+Those account for 708, 662, and 2 import lines, and all 1,372 of them are aliased. Not one file in the repository imports any of the three by its real name. The same document that warns against the name also says to avoid renaming imports, because "good package names should not require renaming." So the codebase reports the defect once per file, 1,372 times, with no dissent.
 
 This one belongs to maintainers rather than to some first-time contributor, and it's the most expensive mistake in this guide, because a package name is load-bearing at every call site. Renaming now would touch well over a thousand files, so it stays.
 
 !!! tip "What we should have done"
-    Name the package what every caller already calls it. 1,368 import lines voted independently for `inttypes` and `fwtypes`; those are the names, discovered the hard way. A package that every consumer renames on the way in has told you its real name, so believe it. Better still, much of `internal/types` is specific enough to live in the package that uses it, which deletes the import instead of renaming it. The test is simple: if you have to alias a package to use it, the name failed.
+    Name the package what every caller already calls it. 1,372 import lines voted independently for `inttypes`, `fwtypes`, and `sdktypes`; those are the names, discovered the hard way. A package that every consumer renames on the way in has told you its real name, so believe it. Better still, much of `internal/types` is specific enough to live in the package that uses it, which deletes the import instead of renaming it. The test is simple: if you have to alias a package to use it, the name failed.
 
 **Exhibit C: the generic filename with no generic content.** `internal/service/networkfirewall/helpers.go` exists, and its name promises the miscellany this guide warns you off. Open it, and every function (`expandEncryptionConfiguration`, `flattenCustomActions`, `expandIPSets`) is Network Firewall-specific expand, flatten, and schema code that belongs to that resource as much as any other line in the package. The problem isn't the file, it's the label. The name tells the next reader "generic, skippable," and the contents aren't either. `internal/service/comprehend/common_model.go` earns the same citation.
 
@@ -233,8 +234,8 @@ Packages are the real boundary, and the more expensive one. *Organizing Go Code*
 - Don't create a package just because functionality can be independently named. "Single responsibility" doesn't mean one responsibility per package.
 - Closely related functionality that callers use together usually belongs together.
 
-!!! warning "A tension we haven't resolved"
-    We ship `internal/types` and `internal/framework/types`, which Go's own guidance lists among the package names to avoid. See [Exhibit B](#hall-of-shame) for the full accounting. They're load-bearing and renaming them now would touch over a thousand files, so treat them as a known deviation rather than a pattern to copy.
+!!! warning "Known fails"
+    We ship three packages named `types`: `internal/types`, `internal/framework/types`, and `internal/sdkv2/types`. Go's own guidance lists `types` among the names to avoid, and every one of our 1,372 imports of them is aliased. See [Exhibit B](#hall-of-shame) for the accounting. They're load-bearing and renaming them now would touch over a thousand files, so they stay. These are known fails, not precedent.
 
 !!! tip "Two diagnostics for over-decomposition"
     1. If ordinary code repeatedly imports several narrow sibling packages sharing one repo path prefix, the functionality was fragmented rather than decomposed.
