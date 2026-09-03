@@ -347,12 +347,8 @@ object SetUp : BuildType({
     steps {
         ConfigureGoEnv()
         script {
-            name = "Run provider unit tests"
-            scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
-        }
-        script {
-            name = "Run provider acceptance tests"
-            scriptContent = File("./scripts/provider_tests/acceptance_tests.sh").readText()
+            name = "Run provider tests"
+            scriptContent = File("./scripts/provider_tests/tests.sh").readText()
         }
         script {
             name = "Pre-Sweeper"
