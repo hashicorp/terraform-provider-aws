@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/acctest/config"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -423,7 +424,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.openai_model_config/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"api_format":    config.StringVariable(string(awstypes.HarnessOpenAiApiFormatChatCompletions)),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessOpenAiApiFormatChatCompletions),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
@@ -470,7 +471,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 						"litellm_model_config": knownvalue.ListSizeExact(0),
 						"openai_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"additional_params": knownvalue.NotNull(),
-							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions),
+							"api_format":        tfknownvalue.StringExact(awstypes.HarnessOpenAiApiFormatChatCompletions), // Prior state value.
 							"api_key_arn":       knownvalue.NotNull(),
 							"max_tokens":        knownvalue.Int32Exact(1000),
 							"model_id":          knownvalue.StringExact("gpt-5"),
@@ -601,7 +602,7 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.bedrock_model_config/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"api_format":    config.StringVariable(string(awstypes.HarnessBedrockApiFormatChatCompletions)),
+					"api_format":    tfconfig.StringVariable(awstypes.HarnessBedrockApiFormatChatCompletions),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
