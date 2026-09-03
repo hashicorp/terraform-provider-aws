@@ -6,15 +6,18 @@ package accountaccess_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAccountAccessApplicationDataSource_byInstance(t *testing.T) {
+func testAccApplicationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	dataSourceName := "data.aws_accountaccess_application.test"
 	resourceName := "aws_accountaccess_application.test"
 
@@ -28,27 +31,24 @@ func testAccAccountAccessApplicationDataSource_byInstance(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ApplicationDataSource/by_instance/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Application/data.basic/"),
 				ConfigVariables: config.Variables{},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "identity_center_application_arn", resourceName, "identity_center_application_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "identity_center_instance_arn", resourceName, "identity_center_instance_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tenant_id", resourceName, "tenant_id"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.test", names.AttrValue),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(dataSourceName, "updated_at"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_instance_arn"), knownvalue.Null()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("identity_source"), resourceName, tfjsonpath.New("identity_source"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("tenant_id"), resourceName, tfjsonpath.New("tenant_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
 }
 
-func testAccAccountAccessApplicationDataSource_byARN(t *testing.T) {
+func testAccApplicationDataSource_identityCenterInstanceARN(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	dataSourceName := "data.aws_accountaccess_application.test"
 	resourceName := "aws_accountaccess_application.test"
 
@@ -62,19 +62,17 @@ func testAccAccountAccessApplicationDataSource_byARN(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ApplicationDataSource/by_arn/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Application/data.identity_center_instance_arn/"),
 				ConfigVariables: config.Variables{},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "identity_center_application_arn", resourceName, "identity_center_application_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "identity_center_instance_arn", resourceName, "identity_center_instance_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tenant_id", resourceName, "tenant_id"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.test", names.AttrValue),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(dataSourceName, "updated_at"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("identity_center_instance_arn"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("identity_source"), resourceName, tfjsonpath.New("identity_source"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("tenant_id"), resourceName, tfjsonpath.New("tenant_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})

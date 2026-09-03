@@ -43,8 +43,21 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `created_at` - Date and time, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339), when the Application was created.
-* `identity_center_application_arn` - ARN of the IAM Identity Center Application that Account Access provisioned for this resource.
+* `identity_source` - Identity source for the application. Forces replacement when changed. See [`identity_source` Block](#identity_source-block) below.
 * `status` - Current lifecycle status. One of `CREATE_IN_PROGRESS`, `ACTIVE`, `DELETE_IN_PROGRESS`, `CREATE_FAILED`, `DELETE_FAILED`.
 * `tags` - Map of tags assigned to the Application.
 * `tenant_id` - Internal tenant identifier returned by the service.
 * `updated_at` - Date and time, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339), when the Application was last updated.
+
+### `identity_source` Block
+
+The `identity_source` block supports:
+
+* `identity_center` - IAM Identity Center instance used as the identity source. See [`identity_center` Block](#identity_center-block) below.
+
+### `identity_center` Block
+
+The `identity_center` block supports:
+
+* `application_arn` - ARN of the IAM Identity Center application for this account access manager application.
+* `instance_arn` - ARN of the IAM Identity Center instance.

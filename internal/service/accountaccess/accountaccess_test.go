@@ -37,9 +37,9 @@ func TestAccAccountAccess_serial(t *testing.T) {
 			"List_includeResource": testAccAccountAccessApplication_List_includeResource,
 		},
 		"ApplicationDataSource": {
-			"byInstance": testAccAccountAccessApplicationDataSource_byInstance,
-			"byARN":      testAccAccountAccessApplicationDataSource_byARN,
-			"tags":       testAccAccountAccessApplicationDataSource_tagsSerial,
+			acctest.CtBasic:             testAccApplicationDataSource_basic,
+			"IdentityCenterInstanceARN": testAccApplicationDataSource_identityCenterInstanceARN,
+			"tags":                      testAccAccountAccessApplicationDataSource_tagsSerial,
 		},
 	}
 
