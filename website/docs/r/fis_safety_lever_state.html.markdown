@@ -12,10 +12,7 @@ Manages the state of the AWS FIS (Fault Injection Simulator) safety lever for th
 
 There is exactly one safety lever per account and Region, and it always exists — AWS does not provide APIs to create or delete it. Because of this, deleting this resource only removes it from Terraform state; it does not change the live value in AWS, so it never risks silently disengaging a safety control.
 
-~> **Note:** AWS rejects a `reason` change unless `status` is also actually transitioning (for example, `engaged` to `disengaged`). This means:
->
-> * Creating this resource fails with an error if the safety lever's live status already matches the configured `status`. Use [`terraform import`](#import) instead to bring an existing safety lever under management without changing its status.
-> * Changing only `reason` while `status` stays the same fails at apply time. Pair a `reason` change with an actual `status` change.
+~> **Note:** AWS rejects a `reason` change unless `status` is also actually transitioning (for example, `engaged` to `disengaged`). Creating or updating this resource with a `status` that already matches the live safety lever succeeds only if the configured `reason` also matches the live `reason`; otherwise it fails at apply time. Pair a `reason` change with an actual `status` change.
 
 ## Example Usage
 
@@ -48,7 +45,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the safety lever.
-* `id` - ID of the safety lever. Always `default`.
 
 ## Timeouts
 
@@ -59,17 +55,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the FIS safety lever state using `default`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_fis_safety_lever_state.example
-  id = "default"
+  identity = {
+    region = "us-west-2"
+  }
+}
+
+resource "aws_fis_safety_lever_state" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import the FIS safety lever state using `default`. For example:
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the FIS safety lever state using the Region. For example:
+
+```terraform
+import {
+  to = aws_fis_safety_lever_state.example
+  id = "us-west-2"
+}
+```
+
+Using `terraform import`, import the FIS safety lever state using the Region. For example:
 
 ```console
-% terraform import aws_fis_safety_lever_state.example default
+% terraform import aws_fis_safety_lever_state.example us-west-2
 ```
