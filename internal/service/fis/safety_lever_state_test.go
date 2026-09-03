@@ -76,8 +76,6 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 				),
 			},
 			{
-				// The safety lever has no "id" attribute: the import ID is the Region (consumed
-				// by the RegionalSingleton importer), and verify matches the single instance on arn.
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
