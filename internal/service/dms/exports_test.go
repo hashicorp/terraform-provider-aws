@@ -18,7 +18,7 @@ var (
 	FindCertificateByID            = findCertificateByID
 	FindEndpointByID               = findEndpointByID
 	FindEventSubscriptionByName    = findEventSubscriptionByName
-	FindInstanceProfileByID        = findInstanceProfileByID
+	FindInstanceProfileByARN       = findInstanceProfileByARN
 	FindReplicationConfigByARN     = findReplicationConfigByARN
 	FindReplicationInstanceByID    = findReplicationInstanceByID
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID

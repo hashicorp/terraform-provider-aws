@@ -34,7 +34,7 @@ import (
 
 // @FrameworkResource("aws_dms_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Testing(generator=false)
 // @Testing(hasNoPreExistingResource=true)
 func newInstanceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -60,7 +60,6 @@ func (r *instanceProfileResource) Schema(ctx context.Context, req resource.Schem
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -144,7 +143,6 @@ func (r *instanceProfileResource) Create(ctx context.Context, req resource.Creat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = fwflex.StringToFramework(ctx, out.InstanceProfile.InstanceProfileArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -158,14 +156,14 @@ func (r *instanceProfileResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := findInstanceProfileByID(ctx, conn, state.ID.ValueString())
+	out, err := findInstanceProfileByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 
@@ -173,7 +171,6 @@ func (r *instanceProfileResource) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.ID = fwflex.StringToFramework(ctx, out.InstanceProfileArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -200,15 +197,15 @@ func (r *instanceProfileResource) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		input.InstanceProfileIdentifier = state.ID.ValueStringPointer()
+		input.InstanceProfileIdentifier = state.ARN.ValueStringPointer()
 
 		out, err := conn.ModifyInstanceProfile(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 			return
 		}
 		if out == nil || out.InstanceProfile == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.ValueString())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.ValueString())
 			return
 		}
 
@@ -216,7 +213,6 @@ func (r *instanceProfileResource) Update(ctx context.Context, req resource.Updat
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.ID = fwflex.StringToFramework(ctx, out.InstanceProfile.InstanceProfileArn)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -232,7 +228,7 @@ func (r *instanceProfileResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	input := databasemigrationservice.DeleteInstanceProfileInput{
-		InstanceProfileIdentifier: state.ID.ValueStringPointer(),
+		InstanceProfileIdentifier: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteInstanceProfile(ctx, &input)
@@ -241,17 +237,17 @@ func (r *instanceProfileResource) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 }
 
-func findInstanceProfileByID(ctx context.Context, conn *databasemigrationservice.Client, id string) (*awstypes.InstanceProfile, error) {
+func findInstanceProfileByARN(ctx context.Context, conn *databasemigrationservice.Client, arn string) (*awstypes.InstanceProfile, error) {
 	input := databasemigrationservice.DescribeInstanceProfilesInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("instance-profile-identifier"),
-				Values: []string{id},
+				Values: []string{arn},
 			},
 		},
 	}
@@ -294,7 +290,6 @@ type instanceProfileResourceModel struct {
 	ARN                   types.String        `tfsdk:"arn"`
 	AvailabilityZone      types.String        `tfsdk:"availability_zone"`
 	Description           types.String        `tfsdk:"description"`
-	ID                    types.String        `tfsdk:"id"`
 	KMSKeyARN             fwtypes.ARN         `tfsdk:"kms_key_arn"`
 	Name                  types.String        `tfsdk:"name"`
 	NetworkType           types.String        `tfsdk:"network_type"`

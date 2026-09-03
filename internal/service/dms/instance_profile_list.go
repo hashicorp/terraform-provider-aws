@@ -70,7 +70,6 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 					return
 				}
 
-				data.ID = fwflex.StringToFramework(ctx, instanceProfile.InstanceProfileArn)
 				result.DisplayName = data.Name.ValueString()
 
 				if request.IncludeResource {

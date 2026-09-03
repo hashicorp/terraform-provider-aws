@@ -39,14 +39,15 @@ func TestAccDMSInstanceProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCSecurityGroupIDs+".#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTagsAll+".%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`instance-profile:.+$`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -108,9 +109,11 @@ func TestAccDMSInstanceProfile_full(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccInstanceProfileConfig_full(rName, "second instance profile", false),
@@ -140,7 +143,7 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context, t *testing.T) resou
 			ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 			conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
-			_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
+			_, err := tfdms.FindInstanceProfileByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if retry.NotFound(err) {
 				continue
@@ -150,7 +153,7 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context, t *testing.T) resou
 				return err
 			}
 
-			return fmt.Errorf("DMS Instance Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("DMS Instance Profile %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
@@ -167,7 +170,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, t *testing.T, name s
 		ctx = conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 
-		_, err := tfdms.FindInstanceProfileByID(ctx, conn, rs.Primary.ID)
+		_, err := tfdms.FindInstanceProfileByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		return err
 	}
