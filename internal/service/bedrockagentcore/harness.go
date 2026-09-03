@@ -410,7 +410,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										Optional:   true,
 										Computed:   true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"max_tokens": schema.Int32Attribute{
@@ -543,7 +543,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										Optional:   true,
 										Computed:   true,
 										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.UseNonNullStateForUnknown(),
 										},
 									},
 									"api_key_arn": schema.StringAttribute{
