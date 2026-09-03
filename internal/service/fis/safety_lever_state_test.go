@@ -5,7 +5,7 @@ package fis_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -149,21 +148,19 @@ func testAccCheckSafetyLeverStateDestroy(ctx context.Context, t *testing.T) reso
 	}
 }
 
-func testAccCheckSafetyLeverStateExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckSafetyLeverStateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if _, ok := s.RootModule().Resources[name]; !ok {
-			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, name, errors.New("not found"))
+		if _, ok := s.RootModule().Resources[n]; !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
 		// The safety lever is a singleton addressed by the fixed literal "default"; the resource
 		// carries no "id" attribute (identity is {account_id, region}).
-		if _, err := tffis.FindSafetyLever(ctx, conn, "default"); err != nil {
-			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, name, err)
-		}
+		_, err := tffis.FindSafetyLever(ctx, conn, "default")
 
-		return nil
+		return err
 	}
 }
 
