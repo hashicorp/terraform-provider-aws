@@ -305,34 +305,35 @@ func customizeDiffValidateEngineVersionAvailable(ctx context.Context, diff *sche
 	return nil
 }
 
-// configuredEngineVersion returns engine and engine_version when both are known; an unset engine defaults to redis, while a set-but-unknown (interpolated) engine or engine_version yields ok=false so validation is skipped.
+// configuredEngineVersion returns engine and an explicitly-set, known engine_version; a null (computed/carried-over) engine_version is skipped, an unset engine defaults to redis, and set-but-unknown values yield ok=false.
 func configuredEngineVersion(diff *schema.ResourceDiff) (engine, engineVersion string, ok bool) {
-	if !rawConfigAttrKnown(diff, names.AttrEngineVersion) {
+	rawConfig := diff.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
 		return "", "", false
 	}
-	engineVersion, _ = diff.Get(names.AttrEngineVersion).(string)
+
+	// Only validate an engine_version the user explicitly set; a null value here is the computed version carried from state (e.g. when only engine changes) and is not the user's intent.
+	ev := rawConfig.GetAttr(names.AttrEngineVersion)
+	if ev.IsNull() || !ev.IsKnown() {
+		return "", "", false
+	}
+	engineVersion = ev.AsString()
 	if engineVersion == "" {
 		return "", "", false
 	}
 
-	if !rawConfigAttrKnown(diff, names.AttrEngine) {
+	// engine is Optional+Computed: unset defaults to redis; set-but-unknown cannot be validated yet.
+	e := rawConfig.GetAttr(names.AttrEngine)
+	if !e.IsKnown() {
 		return "", "", false
 	}
-	engine, _ = diff.Get(names.AttrEngine).(string)
-	if engine == "" {
+	if e.IsNull() {
 		engine = engineRedis
+	} else {
+		engine = e.AsString()
 	}
 
 	return engine, engineVersion, true
-}
-
-func rawConfigAttrKnown(diff *schema.ResourceDiff, attr string) bool {
-	rawConfig := diff.GetRawConfig()
-	if rawConfig.IsNull() || !rawConfig.IsKnown() {
-		return false
-	}
-
-	return rawConfig.GetAttr(attr).IsKnown()
 }
 
 func findAvailableCacheEngineVersion(engine, engineVersion string, available []awstypes.CacheEngineVersion) bool {
