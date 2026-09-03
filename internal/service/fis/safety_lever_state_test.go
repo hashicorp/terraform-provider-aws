@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,24 +28,24 @@ func TestAccFISSafetyLeverState_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccFISSafetyLeverState_basic,
-		"update": testAccFISSafetyLeverState_update,
+		"basic":                   testAccFISSafetyLeverState_basic,
+		"update":                  testAccFISSafetyLeverState_update,
+		"Identity_basic":          testAccFISSafetyLeverState_Identity_basic,
+		"Identity_regionOverride": testAccFISSafetyLeverState_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-// It also cannot simply declare a fixed starting status: AWS's UpdateSafetyLeverState rejects a
-// call whenever the requested status already matches the account's live status ("Cannot update
-// Safety Lever reason without a status change"), so the resource's Create deliberately errors in
-// that case instead of silently no-op'ing. testAccSafetyLeverStateOppositeStatus reads the live
-// status first so the initial apply is always a genuine transition.
+// AWS's UpdateSafetyLeverState rejects any call whose requested status already matches the
+// account's live status ("Cannot update Safety Lever reason without a status change"), so
+// testAccSafetyLeverStateOppositeStatus reads the live status first and the initial apply is
+// always a genuine transition.
 func testAccFISSafetyLeverState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var safetyLever awstypes.SafetyLever
 	resourceName := "aws_fis_safety_lever_state.test"
-	startStatus := testAccSafetyLeverStateOppositeStatus(ctx, t)
+	startStatus := testAccSafetyLeverStateOppositeStatus(ctx, t, acctest.Region())
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -60,8 +59,7 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 			{
 				Config: testAccSafetyLeverStateConfig_basic(startStatus, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSafetyLeverStateExists(ctx, t, resourceName, &safetyLever),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, "default"),
+					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", startStatus),
 					resource.TestCheckResourceAttr(resourceName, "state.0.reason", "Managed by Terraform acceptance test"),
@@ -73,14 +71,17 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 				// no-op (no diff, no API call) if startStatus was already "disengaged".
 				Config: testAccSafetyLeverStateConfig_basic("disengaged", "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSafetyLeverStateExists(ctx, t, resourceName, &safetyLever),
+					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", "disengaged"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				// The safety lever has no "id" attribute; import resolves it from resource
+				// identity ({account_id, region}), and verify matches the single instance on arn.
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -89,9 +90,8 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 func testAccFISSafetyLeverState_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var before, after awstypes.SafetyLever
 	resourceName := "aws_fis_safety_lever_state.test"
-	startStatus := testAccSafetyLeverStateOppositeStatus(ctx, t)
+	startStatus := testAccSafetyLeverStateOppositeStatus(ctx, t, acctest.Region())
 	otherStatus := "engaged"
 	if startStatus == "engaged" {
 		otherStatus = "disengaged"
@@ -115,14 +115,14 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 			{
 				Config: testAccSafetyLeverStateConfig_basic(startStatus, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSafetyLeverStateExists(ctx, t, resourceName, &before),
+					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", startStatus),
 				),
 			},
 			{
 				Config: testAccSafetyLeverStateConfig_basic(otherStatus, "Blocked for scheduled maintenance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSafetyLeverStateExists(ctx, t, resourceName, &after),
+					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", otherStatus),
 					resource.TestCheckResourceAttr(resourceName, "state.0.reason", "Blocked for scheduled maintenance"),
 				),
@@ -134,7 +134,7 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 				// itself be an invalid reason-only change, since status wouldn't be transitioning.
 				Config: testAccSafetyLeverStateConfig_basic("disengaged", cleanupReason),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSafetyLeverStateExists(ctx, t, resourceName, &after),
+					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", "disengaged"),
 				),
 			},
@@ -142,47 +142,40 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 	})
 }
 
-// There is no DeleteSafetyLever API and the resource's Delete implementation intentionally makes
-// no AWS API call (see the comment on safetyLeverStateResource.Delete), so there is nothing to
-// verify here beyond the state being removed from Terraform.
+// There is no DeleteSafetyLever API and the resource's Delete is a no-op (framework.WithNoOpDelete),
+// so there is nothing to verify here beyond the state being removed from Terraform.
 func testAccCheckSafetyLeverStateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return nil
 	}
 }
 
-func testAccCheckSafetyLeverStateExists(ctx context.Context, t *testing.T, name string, safetyLever *awstypes.SafetyLever) resource.TestCheckFunc {
+func testAccCheckSafetyLeverStateExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
+		if _, ok := s.RootModule().Resources[name]; !ok {
 			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
-		resp, err := tffis.FindSafetyLever(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, rs.Primary.ID, err)
+		// The safety lever is a singleton addressed by the fixed literal "default"; the resource
+		// carries no "id" attribute (identity is {account_id, region}).
+		if _, err := tffis.FindSafetyLever(ctx, conn, "default"); err != nil {
+			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameSafetyLeverState, name, err)
 		}
-
-		*safetyLever = *resp
 
 		return nil
 	}
 }
 
-// testAccSafetyLeverStateOppositeStatus reads the account's live safety lever status using a
-// standalone SDK client (rather than acctest.ProviderMeta, which is not guaranteed configured
-// this early - before resource.ParallelTest has run) and returns the opposite value, so the
-// caller's first apply is guaranteed to be a genuine status transition.
-func testAccSafetyLeverStateOppositeStatus(ctx context.Context, t *testing.T) string {
+// testAccSafetyLeverStateOppositeStatus reads the live safety lever status in the given Region
+// using a standalone SDK client (rather than acctest.ProviderMeta, which is not guaranteed
+// configured this early - before resource.ParallelTest has run) and returns the opposite value,
+// so the caller's first apply is guaranteed to be a genuine status transition.
+func testAccSafetyLeverStateOppositeStatus(ctx context.Context, t *testing.T, region string) string {
 	t.Helper()
 
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(acctest.Region()))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 	if err != nil {
 		t.Fatalf("loading AWS config: %s", err)
 	}
@@ -202,6 +195,19 @@ func testAccSafetyLeverStateOppositeStatus(ctx context.Context, t *testing.T) st
 func testAccSafetyLeverStateConfig_basic(status, reason string) string {
 	return `
 resource "aws_fis_safety_lever_state" "test" {
+  state {
+    status = "` + status + `"
+    reason = "` + reason + `"
+  }
+}
+`
+}
+
+func testAccSafetyLeverStateConfig_region(region, status, reason string) string {
+	return `
+resource "aws_fis_safety_lever_state" "test" {
+  region = "` + region + `"
+
   state {
     status = "` + status + `"
     reason = "` + reason + `"
