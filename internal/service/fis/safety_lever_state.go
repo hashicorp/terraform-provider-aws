@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -109,18 +110,7 @@ func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *safetyLeverStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan safetyLeverStateResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.upsert(ctx, &plan, r.CreateTimeout(ctx, plan.Timeouts), &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	r.upsert(ctx, req.Plan, &resp.State, &resp.Diagnostics, r.CreateTimeout)
 }
 
 func (r *safetyLeverStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -152,22 +142,12 @@ func (r *safetyLeverStateResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *safetyLeverStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan safetyLeverStateResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	r.upsert(ctx, &plan, r.UpdateTimeout(ctx, plan.Timeouts), &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	r.upsert(ctx, req.Plan, &resp.State, &resp.Diagnostics, r.UpdateTimeout)
 }
 
-// upsert is the single code path behind both Create and Update. The safety lever always
-// exists, so both operations are really "drive the lever to the configured state".
+// upsert is the single code path behind both Create and Update - the safety lever always exists,
+// so both operations are really "drive the lever to the configured state". Create and Update stay
+// as thin wrappers only because the Framework requires distinct methods.
 //
 // AWS rejects UpdateSafetyLeverState with a ConflictException whenever the requested status
 // already matches the live status - it will not accept a reason-only change. Rather than read
@@ -178,10 +158,16 @@ func (r *safetyLeverStateResource) Update(ctx context.Context, req resource.Upda
 //   - configured reason differs -> the change is genuinely unsatisfiable; fail with the live
 //     reason surfaced so the practitioner can reconcile their config. The configured value is
 //     never silently overwritten in state.
-func (r *safetyLeverStateResource) upsert(ctx context.Context, plan *safetyLeverStateResourceModel, timeout time.Duration, diags *diag.Diagnostics) {
+func (r *safetyLeverStateResource) upsert(ctx context.Context, plan tfsdk.Plan, state *tfsdk.State, diags *diag.Diagnostics, resolveTimeout func(context.Context, timeouts.Value) time.Duration) {
 	conn := r.Meta().FISClient(ctx)
 
-	planState, d := plan.State.ToPtr(ctx)
+	var data safetyLeverStateResourceModel
+	smerr.AddEnrich(ctx, diags, plan.Get(ctx, &data))
+	if diags.HasError() {
+		return
+	}
+
+	planState, d := data.State.ToPtr(ctx)
 	smerr.AddEnrich(ctx, diags, d)
 	if diags.HasError() {
 		return
@@ -194,9 +180,7 @@ func (r *safetyLeverStateResource) upsert(ctx context.Context, plan *safetyLever
 	_, err := updateSafetyLeverState(ctx, conn, safetyLeverDefaultID, status, reason)
 	switch {
 	case err == nil:
-		// A real status transition was accepted - wait out the transient "engaging" status
-		// so Terraform never persists a non-terminal value.
-		out, err = waitSafetyLeverStatus(ctx, conn, safetyLeverDefaultID, status, timeout)
+		out, err = waitSafetyLeverStatus(ctx, conn, safetyLeverDefaultID, status, resolveTimeout(ctx, data.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, diags, err, smerr.ID, safetyLeverDefaultID)
 			return
@@ -227,14 +211,19 @@ func (r *safetyLeverStateResource) upsert(ctx context.Context, plan *safetyLever
 			return
 		}
 
-		// Configured status and reason already match reality: nothing to do.
+		// Configured status and reason already match reality - nothing to do.
 		out = current
 	default:
 		smerr.AddError(ctx, diags, err, smerr.ID, safetyLeverDefaultID)
 		return
 	}
 
-	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, out, plan))
+	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, out, &data))
+	if diags.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, diags, state.Set(ctx, &data))
 }
 
 func updateSafetyLeverState(ctx context.Context, conn *fis.Client, id, status, reason string) (*awstypes.SafetyLever, error) {
@@ -280,8 +269,6 @@ func findSafetyLever(ctx context.Context, conn *fis.Client, id string) (*awstype
 	return out.SafetyLever, nil
 }
 
-// waitSafetyLeverStatus waits out the transitional "engaging" status (see
-// awstypes.SafetyLeverStatusEngaging) so Terraform never persists a non-terminal value to state.
 func waitSafetyLeverStatus(ctx context.Context, conn *fis.Client, id, target string, timeout time.Duration) (*awstypes.SafetyLever, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{string(awstypes.SafetyLeverStatusEngaging)},
