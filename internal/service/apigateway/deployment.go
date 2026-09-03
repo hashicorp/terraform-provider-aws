@@ -32,7 +32,7 @@ import (
 // @IdentityAttribute("id")
 // @ImportIDHandler("deploymentImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDeploymentOutput")
-// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(preIdentityVersion="v6.63.0")
 // @Testing(importStateIdFunc="testAccDeploymentImportStateIdFunc")
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
