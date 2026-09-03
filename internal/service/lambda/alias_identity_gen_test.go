@@ -67,6 +67,7 @@ func TestAccLambdaAlias_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -78,9 +79,10 @@ func TestAccLambdaAlias_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
@@ -154,7 +156,7 @@ func TestAccLambdaAlias_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccAliasImportStateIDFunc),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -170,7 +172,7 @@ func TestAccLambdaAlias_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccAliasImportStateIDFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
