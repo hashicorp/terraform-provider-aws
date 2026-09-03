@@ -51,18 +51,12 @@ func newSafetyLeverStateResource(_ context.Context) (resource.ResourceWithConfig
 const (
 	// The FIS safety lever is an account/Region singleton: AWS always exposes exactly one,
 	// and every GetSafetyLever/UpdateSafetyLeverState call addresses it by the fixed literal
-	// "default". Terraform identifies it by resource identity ({account_id, region}) - see
-	// @SingletonIdentity - so there is no "id" attribute.
+	// "default".
 	safetyLeverDefaultID = "default"
-
-	// Substring of the ConflictException AWS returns from UpdateSafetyLeverState when the
-	// requested status already matches the live status ("Cannot update Safety Lever reason
-	// without a status change").
-	safetyLeverReasonWithoutStatusChange = "without a status change"
 )
 
 // The safety lever has no Create or Delete API - it always exists. Delete is intentionally a
-// no-op (framework.WithNoOpDelete): it only stops Terraform tracking the lever and never
+// no-op. It only stops Terraform tracking the lever and never
 // touches the live value, so destroying this resource can't silently disengage a safety control.
 type safetyLeverStateResource struct {
 	framework.ResourceWithModel[safetyLeverStateResourceModel]
@@ -146,18 +140,7 @@ func (r *safetyLeverStateResource) Update(ctx context.Context, req resource.Upda
 }
 
 // upsert is the single code path behind both Create and Update - the safety lever always exists,
-// so both operations are really "drive the lever to the configured state". Create and Update stay
-// as thin wrappers only because the Framework requires distinct methods.
-//
-// AWS rejects UpdateSafetyLeverState with a ConflictException whenever the requested status
-// already matches the live status - it will not accept a reason-only change. Rather than read
-// first to avoid that call, upsert attempts it and interprets the conflict:
-//
-//   - configured reason already matches the live reason -> the declared config matches reality,
-//     so this is a legitimate provider no-op (mirrors how Delete swallows NotFound).
-//   - configured reason differs -> the change is genuinely unsatisfiable; fail with the live
-//     reason surfaced so the practitioner can reconcile their config. The configured value is
-//     never silently overwritten in state.
+// so both operations are really "drive the lever to the configured state".
 func (r *safetyLeverStateResource) upsert(ctx context.Context, plan tfsdk.Plan, state *tfsdk.State, diags *diag.Diagnostics, resolveTimeout func(context.Context, timeouts.Value) time.Duration) {
 	conn := r.Meta().FISClient(ctx)
 
@@ -185,7 +168,7 @@ func (r *safetyLeverStateResource) upsert(ctx context.Context, plan tfsdk.Plan, 
 			smerr.AddError(ctx, diags, err, smerr.ID, safetyLeverDefaultID)
 			return
 		}
-	case errs.IsAErrorMessageContains[*awstypes.ConflictException](err, safetyLeverReasonWithoutStatusChange):
+	case errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "without a status change"):
 		current, findErr := findSafetyLever(ctx, conn, safetyLeverDefaultID)
 		if findErr != nil {
 			smerr.AddError(ctx, diags, findErr, smerr.ID, safetyLeverDefaultID)
