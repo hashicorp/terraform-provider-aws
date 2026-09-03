@@ -38,9 +38,7 @@ import (
 // @FrameworkResource("aws_fis_safety_lever_state", name="Safety Lever State")
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
-// Generated identity tests use static testdata configs, which can't drive the live
-// status transition this resource requires (a fixed status would hit the "without a
-// status change" ConflictException); hand-written in safety_lever_state_identity_test.go.
+// Identity Tests are hand-written in safety_lever_state_identity_test.go.
 // @Testing(identityTest=false)
 func newSafetyLeverStateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &safetyLeverStateResource{}
