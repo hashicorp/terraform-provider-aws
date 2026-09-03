@@ -3,9 +3,6 @@
 
 provider "null" {}
 
-data "aws_ssoadmin_instances" "test" {
-}
-
 resource "aws_accountaccess_application" "test" {
   identity_source {
     identity_center {
@@ -16,6 +13,9 @@ resource "aws_accountaccess_application" "test" {
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
+}
+
+data "aws_ssoadmin_instances" "test" {
 }
 
 resource "null_resource" "test" {}
