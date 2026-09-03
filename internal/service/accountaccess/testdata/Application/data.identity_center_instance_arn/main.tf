@@ -1,6 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_accountaccess_application" "test" {
   identity_center_instance_arn = aws_accountaccess_application.test.identity_source[0].identity_center[0].instance_arn
 }
