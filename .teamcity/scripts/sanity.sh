@@ -43,8 +43,13 @@ function tester {
 
     # When `-json` flag is set, some error conditions show no output if output is captured and then `echo`ed.
     # `tee` results to a temp file so that the "text file busy" error case can be handled correctly.
+    #
+    # Disable errexit around the pipeline so that a non-zero exit from `go test` does not
+    # abort the script before PIPESTATUS can be read and handled explicitly below.
+    set +e
     TF_ACC=1 go test ./"${pkg}"/... -v -json -parallel 4 -run="${tests}" -timeout 60m -count 1 -vet=off -buildvcs=false 2>&1 | tee "${tmp}"
     local exit_code=${PIPESTATUS[0]}
+    set -e
 
     if grep -qF "text file busy" "${tmp}"; then
         rm -f "${tmp}"
