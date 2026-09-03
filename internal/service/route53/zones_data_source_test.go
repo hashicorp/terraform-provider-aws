@@ -26,6 +26,11 @@ func TestAccRoute53ZonesDataSource_basic(t *testing.T) {
 				Config: testAccZonesDataSourceConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "ids.#", 1),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "zones.#", 1),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "zones.*", map[string]string{
+						names.AttrName: zoneName,
+						"private_zone": acctest.CtFalse,
+					}),
 				),
 			},
 		},
