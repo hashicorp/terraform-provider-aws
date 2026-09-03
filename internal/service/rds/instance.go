@@ -1449,11 +1449,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
 		// RestoreDBInstanceFromDBSnapshot and you receive an error. e.g.
-		// InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
+		// InvalidParameterValue: Mirroring or AlwaysOn cannot be applied to instances with backup retention set to zero.
 		// Since engine is not a required argument when using snapshot_identifier
 		// and the RDS API determines this condition, we catch the error
 		// and remove the invalid configuration for it to be fixed afterwards.
-		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Mirroring cannot be applied to instances with backup retention set to zero") {
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "cannot be applied to instances with backup retention set to zero") {
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
