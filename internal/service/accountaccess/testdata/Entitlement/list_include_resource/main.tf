@@ -1,6 +1,22 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_accountaccess_entitlement" "test" {
+  application_arn = aws_accountaccess_application.test.arn
+
+  entitlement {
+    principal_role {
+      role_arn = aws_iam_role.test.arn
+
+      principal {
+        identity_center {
+          user_id = aws_identitystore_user.test.user_id
+        }
+      }
+    }
+  }
+}
+
 data "aws_ssoadmin_instances" "test" {}
 
 locals {
@@ -8,11 +24,18 @@ locals {
   instance_arn      = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
+resource "aws_accountaccess_application" "test" {
+  identity_source {
+    identity_center {
+      instance_arn = local.instance_arn
+    }
+  }
+}
+
 resource "aws_identitystore_user" "test" {
   identity_store_id = local.identity_store_id
-
-  display_name = var.rName
-  user_name    = var.rName
+  display_name      = var.rName
+  user_name         = var.rName
 
   name {
     given_name  = "Acceptance"
@@ -43,26 +66,6 @@ resource "aws_iam_role" "test" {
       },
     ]
   })
-}
-
-resource "aws_accountaccess_application" "test" {
-  identity_center_instance_arn = local.instance_arn
-}
-
-resource "aws_accountaccess_entitlement" "test" {
-  application_arn = aws_accountaccess_application.test.arn
-
-  entitlement {
-    principal_role {
-      role_arn = aws_iam_role.test.arn
-
-      principal {
-        identity_center {
-          user_id = aws_identitystore_user.test.user_id
-        }
-      }
-    }
-  }
 }
 
 variable "rName" {

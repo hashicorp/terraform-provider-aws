@@ -25,6 +25,15 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newApplicationDataSource,
+			TypeName: "aws_accountaccess_application",
+			Name:     "Application",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newEntitlementsDataSource,
 			TypeName: "aws_accountaccess_entitlements",
 			Name:     "Entitlements",

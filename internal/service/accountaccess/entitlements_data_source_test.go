@@ -135,7 +135,7 @@ func testAccAccountAccessEntitlementsDataSource_byAccount(t *testing.T) {
 }
 
 func testAccEntitlementsDataSourceConfig_byPrincipal(rName string) string {
-	return acctest.ConfigCompose(testAccEntitlementConfig_user(rName), `
+	return acctest.ConfigCompose( /*testAccEntitlementConfig_user(rName),*/ `
 data "aws_accountaccess_entitlements" "test" {
   application_arn = aws_accountaccess_entitlement.test.application_arn
 
@@ -149,7 +149,7 @@ data "aws_accountaccess_entitlements" "test" {
 }
 
 func testAccEntitlementsDataSourceConfig_byRole(rName string) string {
-	return acctest.ConfigCompose(testAccEntitlementConfig_user(rName), `
+	return acctest.ConfigCompose( /*testAccEntitlementConfig_user(rName),*/ `
 data "aws_accountaccess_entitlements" "test" {
   application_arn = aws_accountaccess_entitlement.test.application_arn
   role_arn        = aws_accountaccess_entitlement.test.entitlement[0].principal_role[0].role_arn
@@ -158,7 +158,7 @@ data "aws_accountaccess_entitlements" "test" {
 }
 
 func testAccEntitlementsDataSourceConfig_byAccount(rName string) string {
-	return acctest.ConfigCompose(testAccEntitlementConfig_user(rName), `
+	return acctest.ConfigCompose( /*testAccEntitlementConfig_user(rName),*/ `
 data "aws_accountaccess_entitlements" "test" {
   application_arn = aws_accountaccess_entitlement.test.application_arn
   account_id      = aws_accountaccess_entitlement.test.entitlement[0].principal_role[0].account_id

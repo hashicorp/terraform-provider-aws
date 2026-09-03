@@ -83,7 +83,7 @@ func testAccAccountAccessEntitlement_Identity_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "application_arn",
+				ImportStateVerifyIdentifierAttribute: "entitlement_id",
 				ImportStateVerifyIgnore: []string{
 					"entitlement.0.principal_role.0.account_name",
 				},

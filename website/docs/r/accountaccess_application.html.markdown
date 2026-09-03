@@ -22,7 +22,11 @@ Manages an AWS Account Access Application. An Application binds Account Access t
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_accountaccess_application" "example" {
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  identity_source {
+    identity_center {
+      instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+    }
+  }
 }
 ```
 
@@ -30,7 +34,11 @@ resource "aws_accountaccess_application" "example" {
 
 ```terraform
 resource "aws_accountaccess_application" "example" {
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  identity_source {
+    identity_center {
+      instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+    }
+  }
 
   tags = {
     Environment = "production"
@@ -43,21 +51,39 @@ resource "aws_accountaccess_application" "example" {
 
 The following arguments are required:
 
-* `identity_center_instance_arn` - (Required) ARN of the IAM Identity Center instance to bind this Application to. Forces replacement when changed.
+* `identity_source` - (Required) Identity source for the application. Forces replacement when changed. See [`identity_source` Block](#identity_source-block) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
 
+### `identity_source` Block
+
+Exactly one argument must be configured.
+The `identity_source` block supports:
+
+* `identity_center` - (Optional) IAM Identity Center instance to use as the identity source. See [`identity_center` Block](#identity_center-block) below.
+
+### `identity_center` Block
+
+The `identity_center` block supports:
+
+* `instance_arn` - (Required) ARN of the IAM Identity Center instance.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Application. Used as the resource ID.
-* `identity_center_application_arn` - ARN of the IAM Identity Center Application that Account Access provisioned for this resource.
 * `tags_all` - Map of tags assigned to the Application, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `tenant_id` - Internal tenant identifier returned by the service.
+
+### `identity_source.identity_center` Block
+
+The `identity_source.identity_center` block exports the following attributes in addition to the arguments above:
+
+* `application_arn` - ARN of the IAM Identity Center application created for this account access manager application.
 
 ## Timeouts
 

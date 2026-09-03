@@ -42,7 +42,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc=testAccEntitlementImportStateIDFunc)
-// @Testing(importStateIdAttributes="application_arn;entitlement_id", importStateIdAttributesSep="intflex.ResourceIdSeparator")
+// @Testing(importStateIdAttribute="entitlement_id")
 // @Testing(importIgnore="entitlement.0.principal_role.0.account_name", plannableImportAction="NoOp")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accountaccess;accountaccess.GetEntitlementOutput")
 // @Testing(identityRegionOverrideTest=false)

@@ -3,15 +3,19 @@
 
 provider "null" {}
 
-data "aws_ssoadmin_instances" "test" {
-}
-
 resource "aws_accountaccess_application" "test" {
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  identity_source {
+    identity_center {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+    }
+  }
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
+}
+
+data "aws_ssoadmin_instances" "test" {
 }
 
 resource "null_resource" "test" {}
