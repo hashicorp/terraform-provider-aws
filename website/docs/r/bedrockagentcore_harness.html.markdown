@@ -199,6 +199,7 @@ The `model` block supports exactly one of the following:
 
 ### `litellm_model_config` Block
 
+* `additional_params` - (Optional) JSON string containing provider-specific parameters to pass through to the LiteLLM model provider unchanged.
 * `api_base` - (Optional) Base URL of the LiteLLM-compatible API endpoint.
 * `api_key_arn` - (Optional) ARN of the secret containing the API key.
 * `max_tokens` - (Optional) Maximum number of tokens to generate.

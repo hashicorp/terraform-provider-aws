@@ -489,6 +489,10 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"additional_params": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
 									"api_base": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
@@ -1320,6 +1324,16 @@ func (m *harnessModelConfigurationModel) Flatten(ctx context.Context, v any) dia
 		if diags.HasError() {
 			return diags
 		}
+		if v := t.Value.AdditionalParams; v != nil {
+			json, err := tfsmithy.DocumentToJSONString(v)
+			if err != nil {
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
+				return diags
+			}
+			model.AdditionalParams = fwtypes.NewSmithyJSONValue(json, document.NewLazyDocument)
+		} else {
+			model.AdditionalParams = fwtypes.NewSmithyJSONNull[document.Interface]()
+		}
 		var d diag.Diagnostics
 		m.LiteLLMModelConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1407,6 +1421,17 @@ func (m harnessModelConfigurationModel) Expand(ctx context.Context) (any, diag.D
 		}
 		var r awstypes.HarnessModelConfigurationMemberLiteLlmModelConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		if !model.AdditionalParams.IsNull() {
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, model.AdditionalParams), document.NewLazyDocument)
+			if err != nil {
+				diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+				return nil, diags
+			}
+			r.Value.AdditionalParams = json
+		}
 		return &r, diags
 
 	case !m.OpenAIModelConfig.IsNull():
@@ -1454,12 +1479,13 @@ type harnessGeminiModelConfigModel struct {
 }
 
 type harnessLiteLLMModelConfigModel struct {
-	APIBase     types.String  `tfsdk:"api_base"`
-	APIKeyARN   fwtypes.ARN   `tfsdk:"api_key_arn"`
-	MaxTokens   types.Int32   `tfsdk:"max_tokens"`
-	ModelID     types.String  `tfsdk:"model_id"`
-	Temperature types.Float64 `tfsdk:"temperature"`
-	TopP        types.Float64 `tfsdk:"top_p"`
+	AdditionalParams fwtypes.SmithyJSON[document.Interface] `tfsdk:"additional_params" autoflex:"-"`
+	APIBase          types.String                           `tfsdk:"api_base"`
+	APIKeyARN        fwtypes.ARN                            `tfsdk:"api_key_arn"`
+	MaxTokens        types.Int32                            `tfsdk:"max_tokens"`
+	ModelID          types.String                           `tfsdk:"model_id"`
+	Temperature      types.Float64                          `tfsdk:"temperature"`
+	TopP             types.Float64                          `tfsdk:"top_p"`
 }
 
 type harnessOpenAIModelConfigModel struct {

@@ -500,12 +500,43 @@ func TestAccBedrockAgentCoreHarness_model(t *testing.T) {
 						"bedrock_model_config": knownvalue.ListSizeExact(0),
 						"gemini_model_config":  knownvalue.ListSizeExact(0),
 						"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"api_base":    knownvalue.StringExact("https://api.example.com/v1"),
-							"api_key_arn": knownvalue.Null(),
-							"max_tokens":  knownvalue.Null(),
-							"model_id":    knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
-							"temperature": knownvalue.Float64Exact(0.7),
-							"top_p":       knownvalue.Float64Exact(0.9),
+							"additional_params": knownvalue.Null(),
+							"api_base":          knownvalue.StringExact("https://api.example.com/v1"),
+							"api_key_arn":       knownvalue.Null(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.7),
+							"top_p":             knownvalue.Float64Exact(0.9),
+						})}),
+						"openai_model_config": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/model.litellm_model_config.additional_params/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"bedrock_model_config": knownvalue.ListSizeExact(0),
+						"gemini_model_config":  knownvalue.ListSizeExact(0),
+						"litellm_model_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"additional_params": knownvalue.NotNull(),
+							"api_base":          knownvalue.StringExact("https://api.example.com/v1"),
+							"api_key_arn":       knownvalue.Null(),
+							"max_tokens":        knownvalue.Null(),
+							"model_id":          knownvalue.StringExact("anthropic/claude-sonnet-4-20250514"),
+							"temperature":       knownvalue.Float64Exact(0.7),
+							"top_p":             knownvalue.Float64Exact(0.9),
 						})}),
 						"openai_model_config": knownvalue.ListSizeExact(0),
 					})})),
