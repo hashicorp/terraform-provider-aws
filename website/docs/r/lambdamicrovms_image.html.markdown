@@ -69,6 +69,35 @@ resource "aws_lambdamicrovms_image" "example" {
 }
 ```
 
+### Lifecycle Hooks and Logging
+
+```terraform
+resource "aws_lambdamicrovms_image" "example" {
+  # ... other configuration ...
+
+  hooks {
+    port = 9000
+
+    microvm_hooks {
+      run                          = "ENABLED"
+      run_timeout_in_seconds       = 60
+      terminate                    = "ENABLED"
+      terminate_timeout_in_seconds = 60
+    }
+
+    microvm_image_hooks {
+      ready = "ENABLED"
+    }
+  }
+
+  logging {
+    cloudwatch {
+      log_group = "/aws/lambda/microvms/example"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -86,7 +115,10 @@ The following arguments are optional:
 * `description` - (Optional) Description of the MicroVM image.
 * `egress_network_connectors` - (Optional) List of egress network connectors available to the MicroVM at runtime. Defaults to `["INTERNET_EGRESS"]`.
 * `environment_variables` - (Optional) Map of environment variables set in the MicroVM runtime environment.
+* `hooks` - (Optional) Lifecycle hook configuration for MicroVMs and MicroVM image builds. See [`hooks` Block](#hooks-block) below.
+* `logging` - (Optional) Logging output configuration for MicroVMs launched from this image. See [`logging` Block](#logging-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resources` - (Optional) Resource requirements for MicroVMs launched from this image. If omitted, the service default is used. See [`resources` Block](#resources-block) below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `code_artifact` Block
@@ -100,6 +132,56 @@ The `code_artifact` block supports the following:
 The `cpu_configuration` block supports the following:
 
 * `architecture` - (Required) CPU architecture for the MicroVM. Valid values are `x86_64` and `arm64`.
+
+### `hooks` Block
+
+The `hooks` block supports the following:
+
+* `port` - (Required) Port number on which the hooks listener runs in the MicroVM. The API requires a port whenever any hook is enabled. Valid values: `1`-`65535`.
+* `microvm_hooks` - (Optional) Lifecycle hooks invoked during MicroVM events. [See below](#microvm_hooks-block).
+* `microvm_image_hooks` - (Optional) Hooks invoked during MicroVM image build events. [See below](#microvm_image_hooks-block).
+
+### `microvm_hooks` Block
+
+The `microvm_hooks` block supports the following:
+
+* `resume` - (Optional) Whether the hook invoked when the MicroVM resumes from a suspended state is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `resume_timeout_in_seconds` - (Optional) Maximum time in seconds for the resume hook to complete. Valid values: `1`-`60`.
+* `run` - (Optional) Whether the hook invoked when the MicroVM starts running is enabled. Valid values: `ENABLED`, `DISABLED`. Enabling any MicroVM hook requires the `ready` MicroVM image hook to be enabled.
+* `run_timeout_in_seconds` - (Optional) Maximum time in seconds for the run hook to complete. Valid values: `1`-`60`.
+* `suspend` - (Optional) Whether the hook invoked when the MicroVM is suspended is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `suspend_timeout_in_seconds` - (Optional) Maximum time in seconds for the suspend hook to complete. Valid values: `1`-`60`.
+* `terminate` - (Optional) Whether the hook invoked when the MicroVM is terminated is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `terminate_timeout_in_seconds` - (Optional) Maximum time in seconds for the terminate hook to complete. Valid values: `1`-`60`.
+
+### `microvm_image_hooks` Block
+
+The `microvm_image_hooks` block supports the following:
+
+* `ready` - (Optional) Whether the hook invoked when the MicroVM image build is ready is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `ready_timeout_in_seconds` - (Optional) Maximum time in seconds for the ready hook to complete. Valid values: `1`-`3600`.
+* `validate` - (Optional) Whether the hook invoked to validate the MicroVM image build is enabled. Valid values: `ENABLED`, `DISABLED`.
+* `validate_timeout_in_seconds` - (Optional) Maximum time in seconds for the validate hook to complete. Valid values: `1`-`3600`.
+
+### `logging` Block
+
+The `logging` block supports exactly one of the following:
+
+* `cloudwatch` - (Optional) Send MicroVM runtime logs to Amazon CloudWatch Logs. [See below](#cloudwatch-block).
+* `disabled` - (Optional) Disable logging for MicroVMs launched from this image. Specify an empty block: `disabled {}`.
+
+### `cloudwatch` Block
+
+The `cloudwatch` block supports the following:
+
+* `log_group` - (Optional) Name of the CloudWatch Logs log group to send logs to.
+* `log_stream` - (Optional) Name of the CloudWatch Logs log stream within the log group.
+
+### `resources` Block
+
+The `resources` block supports the following:
+
+* `minimum_memory_in_mib` - (Required) Minimum amount of memory in MiB to allocate to the MicroVM.
 
 ## Attribute Reference
 
