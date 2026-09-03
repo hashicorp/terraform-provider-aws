@@ -922,7 +922,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 
 		harnessID = aws.ToString(out.Harness.HarnessId)
 		harness, err = waitHarnessCreated(ctx, conn, harnessID, createTimeout)
-		if err != nil {
+		if waitErr := err; waitErr != nil {
 			// Only retry IAM eventual consistency errors up to that timeout.
 			// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service".
 			if iamwaiterDeadline.Remaining() == 0 || !errs.Contains(err, "verify that the role exists and its trust policy allows assumption") {
@@ -934,6 +934,8 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 			if err != nil {
 				return tfresource.NonRetryableError(err)
 			}
+
+			return tfresource.RetryableError(waitErr)
 		}
 
 		return nil
