@@ -1,6 +1,6 @@
 ---
 name: go-conventions
-description: "Fundamental Go conventions for the Terraform AWS provider. Use whenever writing or editing Go in internal/**/*.go — any resource, data source, ephemeral resource, action, test, or helper — before making the change, not only when asked about Go."
+description: "Fundamental Go conventions for the Terraform AWS provider. Use whenever writing or editing Go in internal/**/*.go (any resource, data source, ephemeral resource, action, test, or helper) before making the change, not only when asked about Go."
 ---
 
 <!-- Copyright IBM Corp. 2014, 2026 -->
@@ -8,94 +8,73 @@ description: "Fundamental Go conventions for the Terraform AWS provider. Use whe
 
 # Skill: Go Conventions
 
-The provider already contains anti-patterns. Three forces pull code away from Go's conventions: existing code that violates them, human habits carried from other languages, and agent instincts trained on other ecosystems. Follow established provider practices where they do not contradict these conventions; where existing code violates them, do not treat it as precedent — apply these conventions to new and edited code regardless of what surrounds it.
+Three forces pull this repository away from Go's conventions: existing code that violates them, human habits from other languages, and agent instincts trained on other ecosystems. Follow provider practice where it doesn't contradict this skill; where existing code violates this skill, it isn't precedent. Rationale and evidence: [docs/go-for-contributors.md](../../../docs/go-for-contributors.md).
 
-## Code comments
+## Naming
 
-Clarity comes from code first. Comments document the API or explain the non-obvious. They never compensate for code that is hard to read.
+- Initialisms keep one case: `ID`, `ARN`, `API`, `VPC`, `KMS`, `URL`, `HTTP`. Write `applicationID`, never `applicationId`, `Arn`, or `Url`.
+- `MixedCaps`, not underscores: `maxRetries`, not `MAX_RETRIES`. Test names (`TestAccFoo_basic`) are the exception.
+- Getters drop `Get`: `Owner()`, not `GetOwner()`.
+- Short locals (`c`, `i`). Receivers are one or two letters, consistent across the type, never `this` or `self`.
+- Don't create packages named `util`, `common`, `misc`, `api`, `types`, or `interfaces`. If callers must alias your package, the name failed. (We ship `internal/types`; it's a known fail, not precedent.)
 
-- Make the code self-explanatory before reaching for a comment. Prefer good names, small functions, and obvious structure over implementation comments.
-- Comment intent, constraints, invariants, surprising behavior, or context the code cannot express. Never narrate syntax.
-- Document every exported declaration. Doc comments are the package's public API — write them even when the implementation is obvious. Begin with the declaration's name.
-- Delete comments that restate the code.
+## Comments
 
-## Code organization: function, file, package
+- Names and structure first. A comment never compensates for code that is hard to read.
+- Delete a comment that restates the line, names the obvious operation, acts as an in-function section header, paraphrases the signature, teaches Go, or explains a name you should rename instead.
+- Keep comments that record constraints, invariants, surprising AWS behavior, or why an obvious approach was rejected.
+- Document every exported declaration: full sentence, begins with the name, ends with a period.
 
-Three units, three costs. Match the boundary to the cost — noticing a separately nameable concept does not imply it deserves its own structural boundary.
+## Organization: function, file, package
 
-- **Function** — cheap. Create freely when it improves the code.
-- **File** — lightweight organization inside a package. Default to modifying an existing file; a new file creates no encapsulation, ownership, or architecture.
-- **Package** — a significant API and dependency boundary (visibility, imports, call-site vocabulary, docs). Creation is uncommon and strongly justified.
+Three units, three costs. A separately nameable concept does not earn a boundary.
 
-Files:
+- **Function**: cheap. Create freely when it improves the code.
+- **File**: organization for humans. Default to editing an existing file; a new file creates no encapsulation, ownership, or API boundary.
+- **Package**: a real API and dependency boundary. Rare, and strongly justified.
 
-- Do not introduce `helpers.go`, `common.go`, `utils.go`, or similar generic catch-alls for a small amount of shared code.
-- Two or three callers, or "separation of concerns," do not justify a new file.
-- Do not carry one-class-per-file or one-concern-per-file habits from Java or Python into Go. Keep closely related code physically close; do not trade locality for organizational purity.
+Then:
 
-Packages:
-
-- Prefer adding cohesive functionality to an existing package over creating a narrowly scoped one. A healthy package holds multiple types, files, and responsibilities that naturally belong together (`net/http`, `os`, `flag`).
-- A nameable concept or "this code does one thing" is not sufficient justification for a package.
-- Decisive test: if callers will almost always need the new package together with its parent or neighbor, it should not be separate.
-- Do not recursively decompose code into smaller packages. Create one only when it forms a meaningful standalone API or dependency boundary.
-- Diagnostic signal: if ordinary implementation code routinely imports several sibling packages sharing a project-specific path prefix, those are probably not meaningful independent boundaries. Code normally used together should live together. Prefer a cohesive package with unexported implementation details over a constellation of tiny packages that callers must assemble.
+- No `helpers.go`, `common.go`, or `utils.go`. Two or three callers, or "separation of concerns," don't justify a new file.
+- No one-class-per-file or one-concern-per-file habits from Java or Python. Keep related code physically close.
+- Prefer growing an existing package. A healthy one holds several types, files, and responsibilities (`net/http`, `os`, `flag`).
+- If callers will almost always need the new package alongside its parent or neighbor, don't split it.
+- If implementation code routinely imports several sibling packages sharing a path prefix, those aren't meaningful boundaries.
+- If a split forces you to export what used to be unexported, the split is the mistake.
 
 ## Abstraction
 
-Every abstraction must earn its existence. Prefer concrete code until multiple real uses demonstrate the need.
+- Stay concrete until multiple real uses demand otherwise. Similarity is evidence to examine, not an instruction to abstract.
+- Define interfaces where they're consumed, as small as the consumer needs. Never pair an interface with its implementation by default, and never add one so it "could be mocked."
+- A little copying beats a little dependency. Modest duplication is better than an abstraction that obscures control flow.
+- Prefer functions and ordinary data structures over types, builders, managers, registries, and frameworks.
 
-- Do not introduce an abstraction merely because one could exist; stay concrete until there is an actual need to generalize.
-- Premature interfaces are a well-known Go mistake — do not add an interface before there are multiple real implementations.
-- Unlike Java, do not create an interface alongside an implementation by default. Define interfaces where they are consumed, and keep them as small as the consumer requires.
+## Control flow and errors
 
-## Duplication
+- Linear and top-to-bottom. Handle the exceptional case early and return. No unnecessary `else`.
+- Errors are values: return them, wrap with useful context, inspect deliberately. No exception-like infrastructure or custom error hierarchies.
+- Error strings are lowercase and unpunctuated: `"reading bucket policy"`.
+- Never discard an error with `_`. Never panic for an ordinary failure.
 
-Go tolerates modest repetition when the alternative obscures control flow or introduces machinery. Favor simple, top-to-bottom-readable code over unnecessary abstraction.
+## Context
 
-- Do not deduplicate mechanically.
-- Small amounts of obvious duplication are preferable to an abstraction that makes the code harder to follow.
-
-## Functions over frameworks
-
-Functions are cheap; frameworks are expensive. Where another ecosystem invents an object hierarchy or subsystem, Go uses a couple of plain functions. Write code, don't design types.
-
-- Prefer functions and ordinary data structures over new architectural constructs.
-- Do not reach for types, builders, managers, registries, or frameworks when a function will do.
-
-## Control flow
-
-Control flow should be boring and visible. Favor early returns, especially for errors, over deep nesting or elaborate control-flow abstractions. The normal path continues down the left edge.
-
-- Prefer explicit, linear control flow.
-- Handle exceptional conditions early and return.
-- Do not hide simple branching behind abstractions or unnecessary `else` blocks.
-
-## Errors are values
-
-Errors are ordinary values, not an exception subsystem. Return an error, wrap it with useful context where appropriate, and handle it at the level that can act on it.
-
-- Return, wrap, inspect, or handle errors deliberately.
-- Do not invent exception-like infrastructure or custom error hierarchies around routine failures.
+- `ctx context.Context` is the first parameter, always.
+- Never store a `Context` in a struct field; pass it to each method that needs it.
 
 ## Commit messages
 
-Same ethos, applied to prose: state what changed and why, not every thought that led there.
-
-- Concise subject; add a short body only for intent or non-obvious constraints. Skip narration the diff already shows — a large mechanical change may need barely a word.
+- Concise subject. Add a body only for intent or non-obvious constraints. A large mechanical change may need barely a word.
 
 ## Above all: don't import other languages' architecture
 
-Go prefers concrete code, explicit control flow, locality, small consumer-driven interfaces, and modest repetition over abstraction, indirection, decomposition, and machinery. When two implementations are equally correct, prefer the one with fewer concepts.
+Go prefers concrete code, explicit control flow, locality, small consumer-driven interfaces, and modest repetition over abstraction, indirection, and machinery. When two implementations are equally correct, choose the one with fewer concepts. Absence of machinery is not unfinished work; the machinery is usually the defect.
 
-Fewer moving parts is not missing architecture — in Go it often *is* the architecture. Absence of machinery is not unfinished work; added machinery is usually the defect.
+Resist:
 
-Resist these imported instincts:
-
-- **Generics to remove duplication** — use them only when the problem itself is genuinely generic.
-- **DI frameworks** — a function parameter, struct field, or tiny consumer-defined interface already is dependency injection. No containers, providers, factories, registries, or service locators.
-- **Redesigning production code to enable mocking** — test real behavior; add seams only when they have genuine production value.
-- **Tiny single-use helpers** — extract only when the result is a meaningful operation, not merely to shorten a function.
-- **Named wrapper types** (`Config`, `Options`, `Manager`, `Processor`, `Result`) for tiny concepts — leave a string a string. Add a type when it provides behavior, semantics, safety, or API clarity.
-- **Reflex accessors and constructors** — prefer useful zero values; add methods for behavior or a real API boundary, not to wrap fields (and it's `Owner()`, not `GetOwner()`).
-- **Clever reuse** (map/filter/reduce pipelines, reflection, functional composition) where a straightforward loop reads directly.
+- Generics to remove duplication. Use them when the problem itself is generic.
+- DI infrastructure. A function parameter or struct field already is dependency injection.
+- Redesigning production code to enable mocking.
+- Extracting tiny single-use helpers merely to shorten a function.
+- Wrapper types (`Config`, `Options`, `Manager`, `Result`) for tiny concepts. Leave a string a string.
+- Constructors where a useful zero value works.
+- map/filter/reduce pipelines, reflection, or functional composition where a plain loop reads directly.
