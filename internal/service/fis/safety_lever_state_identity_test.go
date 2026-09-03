@@ -51,7 +51,30 @@ func testAccFISSafetyLeverState_Identity_basic(t *testing.T) {
 				},
 			},
 
-			// Step 2: import using the identity block - must produce a no-op plan.
+			// Step 2: import by Region ID and verify state round-trips (matched on arn).
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+
+			// Step 3: import block keyed by the Region ID - plan must be a clean no-op.
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: import block keyed by the resource identity - plan must be a clean no-op.
 			{
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -63,16 +86,7 @@ func testAccFISSafetyLeverState_Identity_basic(t *testing.T) {
 				},
 			},
 
-			// Step 3: import round-trip by Region ID, matching the single instance on arn.
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-
-			// Step 4: leave the account's safety lever disengaged.
+			// Step 5: leave the account's safety lever disengaged.
 			{
 				Config: testAccSafetyLeverStateConfig_basic(safetyLeverStatusDisengaged, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -119,7 +133,30 @@ func testAccFISSafetyLeverState_Identity_regionOverride(t *testing.T) {
 				},
 			},
 
-			// Step 2: import using the identity block - must produce a no-op plan in that Region.
+			// Step 2: import by "<region>@<region>" ID and verify state round-trips (matched on arn).
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrRegion),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+
+			// Step 3: import block keyed by the "<region>@<region>" ID - plan must be a clean no-op.
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrRegion),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(altRegion)),
+					},
+				},
+			},
+
+			// Step 4: import block keyed by the resource identity - plan must be a clean no-op in that Region.
 			{
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -131,7 +168,7 @@ func testAccFISSafetyLeverState_Identity_regionOverride(t *testing.T) {
 				},
 			},
 
-			// Step 3: leave the alternate Region's safety lever disengaged.
+			// Step 5: leave the alternate Region's safety lever disengaged.
 			{
 				Config: testAccSafetyLeverStateConfig_region(altRegion, safetyLeverStatusDisengaged, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
