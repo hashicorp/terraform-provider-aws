@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -35,6 +34,7 @@ import (
 // @ImportIDHandler("aliasImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetAliasOutput")
 // @Testing(preIdentityVersion="v6.63.0")
+// @Testing(importStateIdFunc="testAccAliasImportStateIDFunc")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
@@ -315,25 +315,13 @@ func (aliasImportID) Create(d *schema.ResourceData) string {
 }
 
 func (aliasImportID) Parse(id string) (string, map[string]any, error) {
-	if arn.IsARN(id) {
-		functionName, fnErr := getFunctionNameFromARN(id)
-		aliasName, qualErr := getQualifierFromAliasOrVersionARN(id)
-		if fnErr == nil && qualErr == nil {
-			return id, map[string]any{
-				"function_name": functionName,
-				names.AttrName:  aliasName,
-			}, nil
-		}
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", id)
 	}
 
-	idx := strings.LastIndex(id, "/")
-	if idx < 1 || idx == len(id)-1 {
-		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", id)
-	}
-	functionName := id[:idx]
-	aliasName := id[idx+1:]
 	return id, map[string]any{
-		"function_name": functionName,
-		names.AttrName:  aliasName,
+		"function_name": idParts[0],
+		names.AttrName:  idParts[1],
 	}, nil
 }
