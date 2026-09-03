@@ -48,8 +48,6 @@ func newSafetyLeverStateResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameSafetyLeverState = "Safety Lever State"
-
 	// The FIS safety lever is an account/Region singleton: AWS always exposes exactly one,
 	// and every GetSafetyLever/UpdateSafetyLeverState call addresses it by the fixed literal
 	// "default". Terraform identifies it by resource identity ({account_id, region}) - see
