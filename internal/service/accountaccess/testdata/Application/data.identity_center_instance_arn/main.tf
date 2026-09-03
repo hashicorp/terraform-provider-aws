@@ -5,8 +5,6 @@ data "aws_accountaccess_application" "test" {
   identity_center_instance_arn = aws_accountaccess_application.test.identity_source[0].identity_center[0].instance_arn
 }
 
-data "aws_ssoadmin_instances" "test" {}
-
 resource "aws_accountaccess_application" "test" {
   identity_source {
     identity_center {
@@ -15,3 +13,4 @@ resource "aws_accountaccess_application" "test" {
   }
 }
 
+data "aws_ssoadmin_instances" "test" {}

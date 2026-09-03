@@ -1,14 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_ssoadmin_instances" "test" {
-}
-
-locals {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  instance_arn      = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-
 resource "aws_accountaccess_entitlement" "test" {
   application_arn = aws_accountaccess_application.test.arn
 
@@ -23,6 +15,14 @@ resource "aws_accountaccess_entitlement" "test" {
       }
     }
   }
+}
+
+data "aws_ssoadmin_instances" "test" {
+}
+
+locals {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  instance_arn      = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
 resource "aws_accountaccess_application" "test" {

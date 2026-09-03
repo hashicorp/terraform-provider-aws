@@ -6,9 +6,6 @@ data "aws_accountaccess_application" "test" {
   arn = aws_accountaccess_application.test.arn
 }
 
-data "aws_ssoadmin_instances" "test" {
-}
-
 resource "aws_accountaccess_application" "test" {
   identity_source {
     identity_center {
@@ -17,6 +14,9 @@ resource "aws_accountaccess_application" "test" {
   }
 
   tags = var.resource_tags
+}
+
+data "aws_ssoadmin_instances" "test" {
 }
 
 variable "resource_tags" {
