@@ -182,16 +182,7 @@ func (r *safetyLeverStateResource) upsert(ctx context.Context, plan tfsdk.Plan, 
 		}
 
 		if liveReason != reason {
-			diags.AddError(
-				"Cannot Change FIS Safety Lever Reason Without a Status Change",
-				fmt.Sprintf("The account's safety lever is already %q, and AWS does not allow changing its "+
-					"reason without also changing its status.\n\n"+
-					"  configured reason: %q\n"+
-					"  actual reason:     %q\n\n"+
-					"Pair the reason change with an actual status transition, or set reason to %q to match "+
-					"the live value.",
-					status, reason, liveReason, liveReason),
-			)
+			smerr.AddError(ctx, diags, fmt.Errorf("cannot change FIS safety lever reason without a status change (status %q): configured reason %q, actual reason %q; set reason to %q to match the live value or change status", status, reason, liveReason, liveReason), smerr.ID, safetyLeverDefaultID)
 			return
 		}
 
