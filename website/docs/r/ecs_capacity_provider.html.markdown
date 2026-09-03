@@ -234,7 +234,7 @@ This resource supports the following arguments:
 
 ### `auto_repair_configuration` Block
 
-* `actions_status` - (Optional) Determines whether to use Amazon ECS managed auto repair. Valid values are `ENABLED` and `DISABLED`.
+* `actions_status` - (Optional) Whether to use Amazon ECS managed auto repair. Valid values are `ENABLED` and `DISABLED`.
 
 ## Attribute Reference
 
