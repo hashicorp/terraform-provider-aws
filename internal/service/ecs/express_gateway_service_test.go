@@ -1123,7 +1123,7 @@ resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
   service_name            = %[1]q
-  
+
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
