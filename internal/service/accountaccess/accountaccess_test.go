@@ -13,17 +13,12 @@ import (
 
 // serializeDelay is applied between serialized subtests. Account Access allows
 // only one Application per IAM Identity Center instance, and a test account has
-// a single instance, so every Application-creating test contends for it. The
-// tests must run serially (via TestAccAccountAccess_serial), and a short delay
-// smooths the delete→create transition on the shared instance.
+// a single instance, so every Application-creating test contends for it.
 const serializeDelay = 5 * time.Second
 
-// TestAccAccountAccess_serial runs every Application acceptance group
-// sequentially. AWS Account Access enforces a 1:1 Application-to-Identity-
-// Center-instance constraint, so concurrent CreateApplication calls against the
-// shared organization instance can fail with AlreadyCreatedException. Each
-// group is independently runnable and its CheckDestroy verifies cleanup before
-// the next group begins.
+// TestAccAccountAccess_serial runs all Account Access acceptance tests
+// sequentially because Account Access permits only one Application per IAM
+// Identity Center instance.
 func TestAccAccountAccess_serial(t *testing.T) {
 	t.Parallel()
 
@@ -35,6 +30,14 @@ func TestAccAccountAccess_serial(t *testing.T) {
 			"Identity":             testAccAccountAccessApplication_identitySerial,
 			"List_basic":           testAccAccountAccessApplication_List_basic,
 			"List_includeResource": testAccAccountAccessApplication_List_includeResource,
+		},
+		"Entitlement": {
+			acctest.CtBasic:        testAccAccountAccessEntitlement_basic,
+			acctest.CtDisappears:   testAccAccountAccessEntitlement_disappears,
+			"group":                testAccAccountAccessEntitlement_group,
+			"Identity":             testAccAccountAccessEntitlement_identitySerial,
+			"List_basic":           testAccAccountAccessEntitlement_List_basic,
+			"List_includeResource": testAccAccountAccessEntitlement_List_includeResource,
 		},
 	}
 

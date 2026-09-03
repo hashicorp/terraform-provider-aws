@@ -11,3 +11,8 @@ import (
 func isResourceNotFoundError(err error) bool {
 	return errs.IsA[*awstypes.ResourceNotFoundException](err)
 }
+
+func isEntitlementNotFoundError(err error) bool {
+	return isResourceNotFoundError(err) ||
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Entitlement not found")
+}
