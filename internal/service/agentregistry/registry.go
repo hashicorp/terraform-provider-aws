@@ -65,10 +65,6 @@ type registryResource struct {
 	framework.WithImportByIdentity
 }
 
-func (r *registryResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_agentregistry_registry"
-}
-
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -718,6 +714,10 @@ func statusRegistry(conn *agentregistrycontrol.Client, id string) retry.StateRef
 	}
 }
 
+// The approval and discovery configurations are flattened by hand because an
+// omitted block and an explicitly empty one both map to no auto-approval rules,
+// a distinction that has to be preserved across refresh.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenApprovalConfiguration(ctx context.Context, apiObject *awstypes.ApprovalConfiguration, model *registryResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -755,6 +755,7 @@ func flattenApprovalConfiguration(ctx context.Context, apiObject *awstypes.Appro
 	return diags
 }
 
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenDiscoveryConfiguration(ctx context.Context, apiObject *awstypes.DiscoveryConfiguration, model *registryResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
