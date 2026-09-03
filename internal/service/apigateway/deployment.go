@@ -23,20 +23,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_deployment", name="Deployment")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("deploymentImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDeploymentOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccDeploymentImportStateIdFunc")
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
 		ReadWithoutTimeout:   resourceDeploymentRead,
 		UpdateWithoutTimeout: resourceDeploymentUpdate,
 		DeleteWithoutTimeout: resourceDeploymentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceDeploymentImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -108,10 +111,14 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Deployment (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, deployment.Description)
+	resourceDeploymentFlatten(d, deployment)
 
 	return diags
+}
+
+func resourceDeploymentFlatten(d *schema.ResourceData, deployment *apigateway.GetDeploymentOutput) {
+	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, deployment.Description)
 }
 
 func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -176,21 +183,6 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	if len(idParts) != 2 {
-		return nil, fmt.Errorf("Unexpected format of ID (%s), use: 'REST-API-ID/DEPLOYMENT-ID'", d.Id())
-	}
-
-	restApiID := idParts[0]
-	deploymentID := idParts[1]
-
-	d.SetId(deploymentID)
-	d.Set(attrRestAPIID, restApiID)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPIID, deploymentID string) (*apigateway.GetDeploymentOutput, error) {
 	input := apigateway.GetDeploymentInput{
 		DeploymentId: aws.String(deploymentID),
@@ -214,4 +206,25 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = deploymentImportID{}
+
+type deploymentImportID struct{}
+
+func (deploymentImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (deploymentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<deployment-id>", id)
+	}
+
+	result := map[string]any{
+		attrRestAPIID: parts[0],
+	}
+
+	return parts[1], result, nil
 }
