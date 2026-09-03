@@ -86,18 +86,17 @@ func (d *applicationDataSource) Read(ctx context.Context, request datasource.Rea
 	conn := d.Meta().AccountAccessClient(ctx)
 
 	var (
-		arn string
-		app *accountaccess.GetApplicationOutput
-		err error
+		arn, applicationARN string
+		app                 *accountaccess.GetApplicationOutput
+		err                 error
 	)
-
 	switch {
 	case !config.ApplicationARN.IsNull():
 		arn = fwflex.StringValueFromFramework(ctx, config.ApplicationARN)
 		app, err = findApplicationByARN(ctx, conn, arn)
 	case !config.IdentityCenterInstanceARN.IsNull():
 		arn = fwflex.StringValueFromFramework(ctx, config.IdentityCenterInstanceARN)
-		app, err = findApplicationByIdentityCenterInstanceARN(ctx, conn, arn)
+		applicationARN, app, err = findApplicationByIdentityCenterInstanceARN(ctx, conn, arn)
 	}
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
@@ -109,31 +108,35 @@ func (d *applicationDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
+	if config.ApplicationARN.IsNull() {
+		config.ApplicationARN = fwtypes.ARNValue(applicationARN)
+	}
+
 	// The tags returned from GetApplication are not to be trusted.
 	// setTagsOut(ctx, app.Tags)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &config))
 }
 
-func findApplicationByIdentityCenterInstanceARN(ctx context.Context, conn *accountaccess.Client, identityCenterInstanceARN string) (*accountaccess.GetApplicationOutput, error) {
+func findApplicationByIdentityCenterInstanceARN(ctx context.Context, conn *accountaccess.Client, identityCenterInstanceARN string) (string, *accountaccess.GetApplicationOutput, error) {
 	var input accountaccess.ListApplicationsInput
 	for item, err := range listApplications(ctx, conn, &input) {
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
 
 		applicationARN := aws.ToString(item.ApplicationArn)
 		app, err := findApplicationByARN(ctx, conn, applicationARN)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
 
 		if v, ok := app.IdentitySource.(*awstypes.IdentitySourceDetailsMemberIdentityCenter); ok && aws.ToString(v.Value.InstanceArn) == identityCenterInstanceARN {
-			return app, nil
+			return applicationARN, app, nil
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError()
+	return "", nil, tfresource.NewEmptyResultError()
 }
 
 type applicationDataSourceModel struct {
