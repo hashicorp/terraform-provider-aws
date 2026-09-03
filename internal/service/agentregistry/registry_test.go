@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -399,5 +398,5 @@ resource "aws_agentregistry_registry" "test" {
 func randomWithPrefixAndUnderscore(t *testing.T) string {
 	// Several descriptive test names exceed the API's 64-character registry
 	// name limit before the random suffix is appended.
-	return sdkacctest.RandomWithPrefix("tf-acc-agentregistry")
+	return acctest.RandomWithPrefix(t, "tf-acc-agentregistry")
 }
