@@ -52,6 +52,7 @@ import (
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -892,38 +893,59 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
+	// Underlying IAM eventual consistency errors can occur after the CreateHarness API call.
+	// The goal is only retry these types of errors up to the IAM eventual consistency timeout.
+	// Real-life experience shows that double the standard IAM propagation time is required.
+	propagationTimeout := propagationTimeout * 2
+	iamwaiterDeadline := inttypes.NewDeadline(propagationTimeout)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	var (
-		out *bedrockagentcorecontrol.CreateHarnessOutput
-		err error
+		harnessID string
+		harness   *awstypes.Harness
 	)
-	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
-		out, err = conn.CreateHarness(ctx, &input)
+	err := tfresource.Retry(ctx, propagationTimeout+createTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err := conn.CreateHarness(ctx, &input)
 
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
-			return tfresource.RetryableError(err)
-		}
-		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Access denied") {
-			return tfresource.RetryableError(err)
+		// Only retry IAM eventual consistency errors up to that timeout.
+		if iamwaiterDeadline.Remaining() > 0 {
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Role validation failed") {
+				return tfresource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Access denied") {
+				return tfresource.RetryableError(err)
+			}
 		}
 
 		if err != nil {
 			return tfresource.NonRetryableError(err)
 		}
 
+		harnessID = aws.ToString(out.Harness.HarnessId)
+		harness, err = waitHarnessCreated(ctx, conn, harnessID, createTimeout)
+		if err != nil {
+			// Only retry IAM eventual consistency errors up to that timeout.
+			// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service".
+			if iamwaiterDeadline.Remaining() == 0 || !errs.Contains(err, "verify that the role exists and its trust policy allows assumption") {
+				return tfresource.NonRetryableError(err)
+			}
+
+			err := r.deleteSync(ctx, harnessID, r.DeleteTimeout(ctx, data.Timeouts))
+			harnessID, harness = "", nil
+			if err != nil {
+				return tfresource.NonRetryableError(err)
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.HarnessName.String())
-		return
-	}
-
-	harnessID := aws.ToString(out.Harness.HarnessId)
-
-	harness, err := waitHarnessCreated(ctx, conn, harnessID, r.CreateTimeout(ctx, data.Timeouts))
-	if err != nil {
-		// Taint the resource.
-		response.State.SetAttribute(ctx, path.Root("harness_id"), harnessID)
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
+		if harnessID == "" {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, fwflex.StringValueFromFramework(ctx, data.HarnessName))
+		} else {
+			// Taint the resource.
+			response.State.SetAttribute(ctx, path.Root("harness_id"), harnessID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
+		}
 		return
 	}
 
@@ -1055,26 +1077,32 @@ func (r *harnessResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
+	harnessID := fwflex.StringValueFromFramework(ctx, data.HarnessID)
+	if err := r.deleteSync(ctx, harnessID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
+		return
+	}
+}
+
+func (r *harnessResource) deleteSync(ctx context.Context, harnessID string, timeout time.Duration) error {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	harnessID := fwflex.StringValueFromFramework(ctx, data.HarnessID)
 	input := bedrockagentcorecontrol.DeleteHarnessInput{
 		HarnessId: aws.String(harnessID),
 	}
-
 	_, err := conn.DeleteHarness(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
+		return nil
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
-		return
+		return err
 	}
 
-	if _, err := waitHarnessDeleted(ctx, conn, harnessID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
-		return
+	if _, err := waitHarnessDeleted(ctx, conn, harnessID, timeout); err != nil {
+		return err
 	}
+
+	return nil
 }
 
 func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness, data *harnessResourceModel, populateEnvironment, populateMemory bool) diag.Diagnostics {

@@ -21,3 +21,7 @@ resource/aws_bedrockagentcore_harness: Change `skill.path` to Optional
 ```release-note:enhancement
 resource/aws_bedrockagentcore_harness: Change `system_prompt` to Required
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Retry `Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service` IAM eventual consistency errors on Create. Because this error is returned while waiting for a newly-created harness to stabilize, the failed harness is deleted and creation is restarted. You may see CloudTrail events that reflect this sequence of operations
+```
