@@ -53,6 +53,10 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 // Set the environment variable `VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT` to run this test.
 func TestAccVPCNetworkInterfaceAttachment_enaQueueCount(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_ENA_QUEUE_COUNT")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface_attachment.test"
