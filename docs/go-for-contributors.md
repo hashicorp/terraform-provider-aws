@@ -146,10 +146,11 @@ The standard library hit the identical problem and answered it the other way, wh
 
 Same problem, one package, slightly longer function names. Nobody has ever complained that `strconv.ParseBool` is hard to read.
 
-!!! tip "What should have been done, and what we do now"
-    Upstream: one `validator` package with type-qualified function names (`validator.StringLengthBetween`, `validator.Int64Between`), or one generic API now that generics exist. Thirteen packages to save six characters is a bad trade, and it pushes the cost onto every caller forever.
+!!! tip "What upstream should have done"
+    One `validator` package with type-qualified function names (`validator.StringLengthBetween`, `validator.Int64Between`), or one generic API now that generics exist. Thirteen packages to save six characters is a bad trade, and it pushes the cost onto every caller forever.
 
-    Us: stop mirroring it. Our `internal/framework/planmodifiers` copied a shape we had no obligation to copy. One `planmodifiers` package exposing `LegacyValueString()`, `LegacyValueBool()`, `LegacyValueInt32()`, and `LegacyValueInt64()` would have fit in a single file. Consume a fragmented library at its edges, and don't reproduce its fragmentation in the code you own. Upstream's layout is a constraint to absorb, not a template to follow.
+!!! tip "What we do now"
+    Stop mirroring it. Our `internal/framework/planmodifiers` copied a shape we had no obligation to copy. One `planmodifiers` package exposing `LegacyValueString()`, `LegacyValueBool()`, `LegacyValueInt32()`, and `LegacyValueInt64()` would have fit in a single file. Consume a fragmented library at its edges, and don't reproduce its fragmentation in the code you own. Upstream's layout is a constraint to absorb, not a template to follow.
 
 ## Clarity comes from the code, not the commentary
 
@@ -157,9 +158,9 @@ Same problem, one package, slightly longer function names. Nobody has ever compl
 
 The provider's own [Naming](naming.md) guidance makes the case better than a comment could. It calls out `helper` by name as a package name that "conveys zero information," and holds up `verify` as good because it tells you what the package does. Apply that test before reaching for a comment. If you have to explain what a name means, the name is the bug.
 
-Implementation comments are where the over-commenting habit lives. 
+Implementation comments are where the over-commenting habit lives.
 
-**If a comment is doing any of the following, _delete it_:**
+**If a comment is doing any of the following, *delete it*:**
 
 - Restating the line below it. "Check if the ARN is valid" above an `arn.IsARN` call, "increment the counter" above `i++`.
 - Naming the obvious operation. "Create the client," "return the error," "close the file."
@@ -179,7 +180,7 @@ What survives that list is worth keeping: a constraint, an invariant, an AWS beh
 
 None of these are judgment calls. They're settled Go conventions, and they come up in review constantly.
 
-**Names**
+### Names
 
 - **Initialisms keep one case:** `ID`, `ARN`, `API`, `VPC`, `KMS`, `URL`, `HTTP`, so `applicationID`, `vpcARN`, `ServeHTTP`. Never `Id`, `Arn`, `Url`. This matters more here than in most repositories, because the provider is mostly acronyms.
 - **`MixedCaps`, never underscores.** An unexported constant is `maxRetries`, not `MAX_RETRIES` or `max_retries`. Test names are the deliberate exception: `TestAccDocDBElasticCluster_basic` uses the underscore to separate subject from scenario, which is the Go test convention rather than a violation of this one.
@@ -187,30 +188,30 @@ None of these are judgment calls. They're settled Go conventions, and they come 
 - **Receivers are short and consistent.** One or two letters (`r` for a resource, `c` for a client), the same letter on every method of the type. Never `this`, `me`, or `self`.
 - **Getters drop the `Get`.** Write `Owner()`, not `GetOwner()`. A setter is `SetOwner()`.
 
-**Context**
+### Context
 
 - `ctx context.Context` is the **first parameter**, always.
 - **Never store a `Context` in a struct field.** Pass it to each method that needs it. Provider CRUD, finders, waiters, and sweepers all take it explicitly, which keeps the call chain visible.
 - Don't define custom context types, and don't accept anything but `context.Context` in that position.
 
-**Errors**
+### Errors
 
 - **Error strings are lowercase and unpunctuated:** `fmt.Errorf("reading bucket policy")`, not `"Reading bucket policy."`. They get wrapped into longer messages, where a mid-sentence capital reads like a bug. Proper nouns and acronyms stay capitalized.
 - **Never discard an error with `_`.** Handle it, return it, or panic in the rare case that warrants it. `fi, _ := os.Stat(path)` is how you get a nil-pointer panic three lines later.
 - **Don't panic** for ordinary failures. Errors are values, so return them.
 
-**Data**
+### Data
 
 - **`var x []string`, not `x := []string{}`.** The nil slice is the idiomatic empty slice.
 - **Know when the distinction is load-bearing.** A `nil` slice marshals to JSON `null` and an empty one marshals to `[]`, and flatten functions feeding Terraform state care about the difference. Choose deliberately instead of by accident.
 - **Don't pass a pointer to save bytes.** If a function only ever reads `*s`, take a `string`. A `*string` or `*io.Reader` parameter is almost always a mistake. This doesn't apply to the AWS SDK's own `*string` fields, which use pointers to model absence.
 
-**Tests**
+### Tests
 
 - **Fail with useful messages**, `got` before `want`: `t.Errorf("Foo(%q) = %d, want %d", in, got, want)`. Assume whoever debugs it is neither you nor on your team.
 - Reach for [table-driven tests](https://go.dev/wiki/TableDrivenTests) when a helper would otherwise need six call sites.
 
-**Doc comments**
+### Doc comments
 
 - Full sentences, starting with the name and ending with a period: `// FindBucketByName returns the bucket matching name.` That's what reads correctly in `go doc` output, which is the whole reason for the convention.
 
