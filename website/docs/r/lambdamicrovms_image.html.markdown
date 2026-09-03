@@ -137,9 +137,9 @@ The `cpu_configuration` block supports the following:
 
 The `hooks` block supports the following:
 
-* `port` - (Required) Port number on which the hooks listener runs in the MicroVM. The API requires a port whenever any hook is enabled. Valid values: `1`-`65535`.
 * `microvm_hooks` - (Optional) Lifecycle hooks invoked during MicroVM events. [See below](#microvm_hooks-block).
 * `microvm_image_hooks` - (Optional) Hooks invoked during MicroVM image build events. [See below](#microvm_image_hooks-block).
+* `port` - (Required) Port number on which the hooks listener runs in the MicroVM. The API requires a port whenever any hook is enabled. Valid values: `1`-`65535`.
 
 ### `microvm_hooks` Block
 
