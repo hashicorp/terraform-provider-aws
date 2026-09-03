@@ -44,7 +44,7 @@ func testAccFISSafetyLeverState_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_basic/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(startStatus),
+					"status": config.StringVariable(startStatus),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
@@ -59,7 +59,7 @@ func testAccFISSafetyLeverState_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_basic/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(startStatus),
+					"status": config.StringVariable(startStatus),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
@@ -72,7 +72,7 @@ func testAccFISSafetyLeverState_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_basic/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(safetyLeverStatusDisengaged),
+					"status": config.StringVariable(safetyLeverStatusDisengaged),
 				},
 			},
 		},
@@ -102,7 +102,7 @@ func testAccFISSafetyLeverState_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(startStatus),
+					"status": config.StringVariable(startStatus),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
@@ -117,7 +117,7 @@ func testAccFISSafetyLeverState_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(startStatus),
+					"status": config.StringVariable(startStatus),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
@@ -135,7 +135,7 @@ func testAccFISSafetyLeverState_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					names.AttrStatus: config.StringVariable(safetyLeverStatusDisengaged),
+					"status": config.StringVariable(safetyLeverStatusDisengaged),
 				},
 			},
 		},
@@ -167,8 +167,8 @@ func testAccFISSafetyLeverState_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_region_override/"),
 				ConfigVariables: config.Variables{
-					names.AttrRegion: config.StringVariable(altRegion),
-					names.AttrStatus: config.StringVariable(startStatus),
+					"region": config.StringVariable(altRegion),
+					"status": config.StringVariable(startStatus),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
@@ -184,8 +184,8 @@ func testAccFISSafetyLeverState_List_regionOverride(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_region_override/"),
 				ConfigVariables: config.Variables{
-					names.AttrRegion: config.StringVariable(altRegion),
-					names.AttrStatus: config.StringVariable(startStatus),
+					"region": config.StringVariable(altRegion),
+					"status": config.StringVariable(startStatus),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
@@ -197,8 +197,8 @@ func testAccFISSafetyLeverState_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/SafetyLeverState/list_region_override/"),
 				ConfigVariables: config.Variables{
-					names.AttrRegion: config.StringVariable(altRegion),
-					names.AttrStatus: config.StringVariable(safetyLeverStatusDisengaged),
+					"region": config.StringVariable(altRegion),
+					"status": config.StringVariable(safetyLeverStatusDisengaged),
 				},
 			},
 		},
