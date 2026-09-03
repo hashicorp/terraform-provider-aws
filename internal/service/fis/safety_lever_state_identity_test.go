@@ -74,10 +74,10 @@ func testAccFISSafetyLeverState_Identity_basic(t *testing.T) {
 
 			// Step 4: leave the account's safety lever disengaged.
 			{
-				Config: testAccSafetyLeverStateConfig_basic("disengaged", "Managed by Terraform acceptance test"),
+				Config: testAccSafetyLeverStateConfig_basic(safetyLeverStatusDisengaged, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state.0.status", "disengaged"),
+					resource.TestCheckResourceAttr(resourceName, "state.0.status", safetyLeverStatusDisengaged),
 				),
 			},
 		},
@@ -133,10 +133,10 @@ func testAccFISSafetyLeverState_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: leave the alternate Region's safety lever disengaged.
 			{
-				Config: testAccSafetyLeverStateConfig_region(altRegion, "disengaged", "Managed by Terraform acceptance test"),
+				Config: testAccSafetyLeverStateConfig_region(altRegion, safetyLeverStatusDisengaged, "Managed by Terraform acceptance test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state.0.status", "disengaged"),
+					resource.TestCheckResourceAttr(resourceName, "state.0.status", safetyLeverStatusDisengaged),
 				),
 			},
 		},
