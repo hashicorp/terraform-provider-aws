@@ -31,6 +31,9 @@ func TestAccFISSafetyLeverState_serial(t *testing.T) {
 		"update":                  testAccFISSafetyLeverState_update,
 		"Identity_basic":          testAccFISSafetyLeverState_Identity_basic,
 		"Identity_regionOverride": testAccFISSafetyLeverState_Identity_regionOverride,
+		"List_basic":              testAccFISSafetyLeverState_List_basic,
+		"List_includeResource":    testAccFISSafetyLeverState_List_includeResource,
+		"List_regionOverride":     testAccFISSafetyLeverState_List_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
