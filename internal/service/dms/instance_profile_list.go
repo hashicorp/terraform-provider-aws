@@ -37,9 +37,9 @@ func (l *listResourceInstanceProfile) List(ctx context.Context, request list.Lis
 	conn := awsClient.DMSClient(ctx)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
 		var input databasemigrationservice.DescribeInstanceProfilesInput
 		for instanceProfile, err := range listInstanceProfiles(ctx, conn, &input) {
+			result := request.NewListResult(ctx)
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
