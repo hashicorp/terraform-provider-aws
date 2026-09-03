@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_accountaccess_entitlements
 
-Lists AWS Account Access [Entitlements](../r/accountaccess_entitlement.html.markdown) for a given Application, filtered by principal, role, or target account.
+Lists AWS Account Access [Entitlements](../r/accountaccess_entitlement.html.markdown) for a given Application.
 
 ## Example Usage
 
@@ -18,20 +18,15 @@ Lists AWS Account Access [Entitlements](../r/accountaccess_entitlement.html.mark
 data "aws_accountaccess_entitlements" "example" {
   application_arn = aws_accountaccess_application.example.arn
 
-  principal {
-    identity_center {
-      user_id = "11111111-2222-3333-4444-555555555555"
+  filter {
+    principal_role {
+      principal {
+        identity_center {
+          user_id = "11111111-2222-3333-4444-555555555555"
+        }
+      }
     }
   }
-}
-```
-
-### Filter by Role
-
-```terraform
-data "aws_accountaccess_entitlements" "example" {
-  application_arn = aws_accountaccess_application.example.arn
-  role_arn        = "arn:aws:iam::123456789012:role/example-role"
 }
 ```
 
@@ -40,7 +35,12 @@ data "aws_accountaccess_entitlements" "example" {
 ```terraform
 data "aws_accountaccess_entitlements" "example" {
   application_arn = aws_accountaccess_application.example.arn
-  account_id      = "123456789012"
+
+  filter {
+    principal_role {
+      account_id = "123456789012"
+    }
+  }
 }
 ```
 
@@ -49,26 +49,38 @@ data "aws_accountaccess_entitlements" "example" {
 The following arguments are required:
 
 * `application_arn` - (Required) ARN of the parent Application to list Entitlements within.
+* `filter` - (Required) Filter criteria to narrow the entitlements returned. You can filter by principal, IAM role, or account. See [`filter` Block](#filter-block) below.
 
 The following arguments are optional:
 
-* `account_id` - (Optional) 12-digit AWS account ID to filter by. At least one of `account_id`, `role_arn`, or `principal` must be configured.
-* `principal` - (Optional) IAM Identity Center principal to filter by. See [`principal` Block](#principal-block) below. At least one of `account_id`, `role_arn`, or `principal` must be configured.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `role_arn` - (Optional) Target IAM role ARN to filter by. At least one of `account_id`, `role_arn`, or `principal` must be configured.
 
-### `principal` Block
+### `filter` Block
 
-The `principal` block supports:
+The `filter` block supports:
 
-* `identity_center` - (Required) IAM Identity Center principal filter. See [`principal.identity_center` Block](#principalidentity_center-block) below.
+* `principal_role` - (Required) principal-to-role filter criteria for narrowing entitlement results. See [`filter.principal_role` Block](#filterprincipal_role-block) below.
 
-### `principal.identity_center` Block
+### `filter.principal_role` Block
 
-The `principal.identity_center` block requires exactly one of the following arguments:
+The `filter.principal_role` block supports:
 
-* `group_id` - (Optional) IAM Identity Center group ID to filter by.
-* `user_id` - (Optional) IAM Identity Center user ID to filter by.
+* `account_id` - (Optional) AWS account ID to filter entitlements by.
+* `principal` - (Optional) principal to filter entitlements by. See [`filter.principal_role.principal` Block](#filterprincipal_roleprincipal-block) below.
+* `role_arn` - (Optional) IAM role ARN to filter entitlements by.
+
+### `filter.principal_role.principal` Block
+
+The `filter.principal_role.principal` block supports:
+
+* `identity_center` - (Required) IAM Identity Center principal filter criteria. See [`filter.principal_role.principal.identity_center` Block](#filterprincipal_roleprincipalidentity_center-block) below.
+
+### `filter.principal_role.principal.identity_center` Block
+
+The `filter.principal_role.principal.identity_center` block requires exactly one of the following arguments:
+
+* `group_id` - (Optional) Unique identifier of a group in IAM Identity Center to filter by.
+* `user_id` - (Optional) Unique identifier of a user in IAM Identity Center to filter by.
 
 ## Attribute Reference
 

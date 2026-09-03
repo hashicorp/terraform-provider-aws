@@ -48,9 +48,8 @@ func TestAccAccountAccess_serial(t *testing.T) {
 			"List_includeResource": testAccAccountAccessEntitlement_List_includeResource,
 		},
 		"EntitlementsDataSource": {
-			"byPrincipal": testAccAccountAccessEntitlementsDataSource_byPrincipal,
-			"byRole":      testAccAccountAccessEntitlementsDataSource_byRole,
-			"byAccount":   testAccAccountAccessEntitlementsDataSource_byAccount,
+			acctest.CtBasic: testAccEntitlementsDataSource_basic,
+			"multiple":      testAccEntitlementsDataSource_multiple,
 		},
 	}
 
