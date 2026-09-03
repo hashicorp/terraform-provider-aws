@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/synthetics: Add additional validation to `memory_in_mb`
+resource/aws_synthetics_canary: Add additional validation to `memory_in_mb`
 ```
