@@ -7,17 +7,22 @@ provider "aws" {
   }
 }
 
-data "aws_ssoadmin_instances" "test" {
-}
-
-resource "aws_accountaccess_application" "test" {
-  identity_source {
-    identity_center {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-    }
-  }
+resource "aws_key_pair" "test" {
+  key_name   = var.rName
+  public_key = var.public_key
 
   tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "public_key" {
+  type     = string
+  nullable = false
 }
 
 variable "resource_tags" {

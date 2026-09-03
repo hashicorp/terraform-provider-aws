@@ -5,19 +5,27 @@ provider "aws" {
   default_tags {
     tags = var.provider_tags
   }
-}
-
-data "aws_ssoadmin_instances" "test" {
-}
-
-resource "aws_accountaccess_application" "test" {
-  identity_source {
-    identity_center {
-      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-    }
+  ignore_tags {
+    keys = var.ignore_tag_keys
   }
+}
+
+resource "aws_key_pair" "test" {
+  key_name   = var.rName
+  public_key = var.public_key
 
   tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "public_key" {
+  type     = string
+  nullable = false
 }
 
 variable "resource_tags" {
@@ -29,5 +37,11 @@ variable "resource_tags" {
 
 variable "provider_tags" {
   type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }
