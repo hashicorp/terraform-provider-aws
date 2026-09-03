@@ -235,6 +235,10 @@ func TestAccEC2Instance_basic(t *testing.T) {
 // Set the environment variable `EC2_INSTANCE_TEST_ENA_QUEUE_COUNT` to run this test.
 func TestAccEC2Instance_enaQueueCount(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, "EC2_INSTANCE_TEST_ENA_QUEUE_COUNT")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	var instanceID string
