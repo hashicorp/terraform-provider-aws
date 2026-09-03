@@ -75,4 +75,4 @@ TF_ACC=1 go test \
     ./internal/vcr/... \
     ./internal/verify/... \
     ./internal/yaml/... \
-    -json -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+    -json -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -vet=off -buildvcs=false
