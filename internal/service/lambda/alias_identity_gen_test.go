@@ -202,7 +202,7 @@ func TestAccLambdaAlias_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.62.0
+// Resource Identity was added after v6.63.0
 func TestAccLambdaAlias_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -220,7 +220,7 @@ func TestAccLambdaAlias_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Alias/basic_v6.62.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Alias/basic_v6.63.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -262,7 +262,7 @@ func TestAccLambdaAlias_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.62.0
+// Resource Identity was added after v6.63.0
 func TestAccLambdaAlias_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -285,7 +285,7 @@ func TestAccLambdaAlias_Identity_ExistingResource_noRefreshNoChange(t *testing.T
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Alias/basic_v6.62.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Alias/basic_v6.63.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

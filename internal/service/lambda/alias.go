@@ -34,7 +34,7 @@ import (
 // @IdentityAttribute("name")
 // @ImportIDHandler("aliasImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetAliasOutput")
-// @Testing(preIdentityVersion="v6.62.0")
+// @Testing(preIdentityVersion="v6.63.0")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
