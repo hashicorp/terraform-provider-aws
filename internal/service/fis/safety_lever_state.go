@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -35,6 +35,9 @@ import (
 )
 
 // @FrameworkResource("aws_fis_safety_lever_state", name="Safety Lever State")
+// @SingletonIdentity
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(identityTest=false)
 func newSafetyLeverStateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &safetyLeverStateResource{}
 
@@ -47,21 +50,32 @@ func newSafetyLeverStateResource(_ context.Context) (resource.ResourceWithConfig
 const (
 	ResNameSafetyLeverState = "Safety Lever State"
 
-	// The FIS safety lever is an account/region singleton: AWS always exposes exactly one,
-	// its ID is the fixed literal "default"
+	// The FIS safety lever is an account/Region singleton: AWS always exposes exactly one,
+	// and every GetSafetyLever/UpdateSafetyLeverState call addresses it by the fixed literal
+	// "default". Terraform identifies it by resource identity ({account_id, region}) - see
+	// @SingletonIdentity - so there is no "id" attribute.
 	safetyLeverDefaultID = "default"
+
+	// Substring of the ConflictException AWS returns from UpdateSafetyLeverState when the
+	// requested status already matches the live status ("Cannot update Safety Lever reason
+	// without a status change").
+	safetyLeverReasonWithoutStatusChange = "without a status change"
 )
 
+// The safety lever has no Create or Delete API - it always exists. Delete is intentionally a
+// no-op (framework.WithNoOpDelete): it only stops Terraform tracking the lever and never
+// touches the live value, so destroying this resource can't silently disengage a safety control.
 type safetyLeverStateResource struct {
 	framework.ResourceWithModel[safetyLeverStateResourceModel]
 	framework.WithTimeouts
+	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
 func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"state": schema.ListNestedBlock{
@@ -72,9 +86,8 @@ func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.Sche
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"reason": schema.StringAttribute{
-							Required: true,
-							Description: "Reason for the current status of the safety lever. AWS only accepts a " +
-								"reason change together with an actual status transition; see the resource documentation.",
+							Required:    true,
+							Description: "Reason for the current status of the safety lever",
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 256),
 							},
@@ -98,68 +111,18 @@ func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *safetyLeverStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().FISClient(ctx)
-
 	var plan safetyLeverStateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	planState, d := plan.State.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	r.upsert(ctx, &plan, r.CreateTimeout(ctx, plan.Timeouts), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	status := planState.Status.ValueString()
-	reason := planState.Reason.ValueString()
-
-	// The safety lever always exists (it predates Terraform managing it), so "create" is really
-	// "adopt". Check its live status first: AWS rejects UpdateSafetyLeverState with a
-	// ConflictException ("Cannot update Safety Lever reason without a status change") whenever the
-	// requested status already matches the current one. Terraform's protocol also does not allow a
-	// provider to silently substitute a value the practitioner explicitly configured (reason here),
-	// so when this happens the only honest option is to fail with actionable guidance rather than
-	// attempt - and fail - the API call, or silently ignore the configured reason.
-	current, err := findSafetyLever(ctx, conn, safetyLeverDefaultID)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, safetyLeverDefaultID)
-		return
-	}
-
-	if current.State != nil && string(current.State.Status) == status {
-		resp.Diagnostics.AddError(
-			"FIS Safety Lever Already In Requested Status",
-			fmt.Sprintf("The account's FIS safety lever is already %q (reason: %q). AWS does not allow setting "+
-				"a reason without an accompanying status change, so this resource cannot be created while its "+
-				"configured status matches the account's current status.\n\n"+
-				"To bring the existing safety lever under Terraform management as-is, import it instead:\n"+
-				"  terraform import aws_fis_safety_lever_state.<name> %s",
-				status, aws.ToString(current.State.Reason), safetyLeverDefaultID),
-		)
-		return
-	}
-
-	_, err = updateSafetyLeverState(ctx, conn, safetyLeverDefaultID, status, reason)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, safetyLeverDefaultID)
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	out, err := waitSafetyLeverStatus(ctx, conn, safetyLeverDefaultID, status, createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, safetyLeverDefaultID)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *safetyLeverStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -171,14 +134,14 @@ func (r *safetyLeverStateResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findSafetyLever(ctx, conn, state.ID.ValueString())
+	out, err := findSafetyLever(ctx, conn, safetyLeverDefaultID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, safetyLeverDefaultID)
 		return
 	}
 
@@ -191,67 +154,89 @@ func (r *safetyLeverStateResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *safetyLeverStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().FISClient(ctx)
-
-	var plan, state safetyLeverStateResourceModel
+	var plan safetyLeverStateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	planState, d := plan.State.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	priorState, d := state.State.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	r.upsert(ctx, &plan, r.UpdateTimeout(ctx, plan.Timeouts), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// AWS rejects a reason-only update (see the Create comment above), so a change is only ever
-	// sendable to AWS when status is actually transitioning.
-	if !planState.Status.Equal(priorState.Status) {
-		status := planState.Status.ValueString()
-		reason := planState.Reason.ValueString()
-
-		_, err := updateSafetyLeverState(ctx, conn, plan.ID.ValueString(), status, reason)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitSafetyLeverStatus(ctx, conn, plan.ID.ValueString(), status, updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	} else if !planState.Reason.Equal(priorState.Reason) {
-		resp.Diagnostics.AddError(
-			"Cannot Update FIS Safety Lever Reason Without a Status Change",
-			fmt.Sprintf("AWS does not allow changing the safety lever's reason (from %q to %q) without also "+
-				"changing its status. The configured status (%q) matches the current status, so this change "+
-				"cannot be applied. Pair the reason change with an actual status transition, or set reason "+
-				"back to %q.",
-				priorState.Reason.ValueString(), planState.Reason.ValueString(), planState.Status.ValueString(), priorState.Reason.ValueString()),
-		)
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-// No Delete API. Delete simply stops Terraform from tracking it and leaves the live value untouched.
-func (r *safetyLeverStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-}
+// upsert is the single code path behind both Create and Update. The safety lever always
+// exists, so both operations are really "drive the lever to the configured state".
+//
+// AWS rejects UpdateSafetyLeverState with a ConflictException whenever the requested status
+// already matches the live status - it will not accept a reason-only change. Rather than read
+// first to avoid that call, upsert attempts it and interprets the conflict:
+//
+//   - configured reason already matches the live reason -> the declared config matches reality,
+//     so this is a legitimate provider no-op (mirrors how Delete swallows NotFound).
+//   - configured reason differs -> the change is genuinely unsatisfiable; fail with the live
+//     reason surfaced so the practitioner can reconcile their config. The configured value is
+//     never silently overwritten in state.
+func (r *safetyLeverStateResource) upsert(ctx context.Context, plan *safetyLeverStateResourceModel, timeout time.Duration, diags *diag.Diagnostics) {
+	conn := r.Meta().FISClient(ctx)
 
-func (r *safetyLeverStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	planState, d := plan.State.ToPtr(ctx)
+	smerr.AddEnrich(ctx, diags, d)
+	if diags.HasError() {
+		return
+	}
+
+	status := planState.Status.ValueString()
+	reason := planState.Reason.ValueString()
+
+	var out *awstypes.SafetyLever
+	_, err := updateSafetyLeverState(ctx, conn, safetyLeverDefaultID, status, reason)
+	switch {
+	case err == nil:
+		// A real status transition was accepted - wait out the transient "engaging" status
+		// so Terraform never persists a non-terminal value.
+		out, err = waitSafetyLeverStatus(ctx, conn, safetyLeverDefaultID, status, timeout)
+		if err != nil {
+			smerr.AddError(ctx, diags, err, smerr.ID, safetyLeverDefaultID)
+			return
+		}
+	case errs.IsAErrorMessageContains[*awstypes.ConflictException](err, safetyLeverReasonWithoutStatusChange):
+		current, findErr := findSafetyLever(ctx, conn, safetyLeverDefaultID)
+		if findErr != nil {
+			smerr.AddError(ctx, diags, findErr, smerr.ID, safetyLeverDefaultID)
+			return
+		}
+
+		var liveReason string
+		if current.State != nil {
+			liveReason = aws.ToString(current.State.Reason)
+		}
+
+		if liveReason != reason {
+			diags.AddError(
+				"Cannot Change FIS Safety Lever Reason Without a Status Change",
+				fmt.Sprintf("The account's safety lever is already %q, and AWS does not allow changing its "+
+					"reason without also changing its status.\n\n"+
+					"  configured reason: %q\n"+
+					"  actual reason:     %q\n\n"+
+					"Pair the reason change with an actual status transition, or set reason to %q to match "+
+					"the live value.",
+					status, reason, liveReason, liveReason),
+			)
+			return
+		}
+
+		// Configured status and reason already match reality: nothing to do.
+		out = current
+	default:
+		smerr.AddError(ctx, diags, err, smerr.ID, safetyLeverDefaultID)
+		return
+	}
+
+	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, out, plan))
 }
 
 func updateSafetyLeverState(ctx context.Context, conn *fis.Client, id, status, reason string) (*awstypes.SafetyLever, error) {
@@ -335,7 +320,6 @@ func statusSafetyLever(conn *fis.Client, id string) retry.StateRefreshFunc {
 type safetyLeverStateResourceModel struct {
 	framework.WithRegionModel
 	ARN      types.String                                                `tfsdk:"arn"`
-	ID       types.String                                                `tfsdk:"id"`
 	State    fwtypes.ListNestedObjectValueOf[safetyLeverStateStateModel] `tfsdk:"state"`
 	Timeouts timeouts.Value                                              `tfsdk:"timeouts"`
 }
