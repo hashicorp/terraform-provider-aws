@@ -120,7 +120,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 							"bedrock_model_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"additional_params": knownvalue.Null(),
-									"api_format":        knownvalue.Null(),
+									"api_format":        knownvalue.NotNull(),
 									"max_tokens":        knownvalue.Null(),
 									"model_id":          knownvalue.StringExact("anthropic.claude-sonnet-4-20250514"),
 									"temperature":       knownvalue.Null(),
