@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	testAutonomousDatabaseSecretARN  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password" //lintignore:AWSAT003,AWSAT005
+	testAutonomousDatabaseIAMRoleARN = "arn:aws:iam::123456789012:role/SecretManagerReadRole"                //lintignore:AWSAT005
+)
+
 func TestAutonomousDatabaseSchemas(t *testing.T) {
 	t.Parallel()
 
@@ -93,7 +98,7 @@ func TestAutonomousDatabaseAdminPasswordSourceRoundTrip(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	source := testAutonomousDatabaseAdminPasswordSource(ctx, "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password", "arn:aws:iam::123456789012:role/SecretManagerReadRole", odbtypes.ExternalIdTypeCompartmentOcid)
+	source := testAutonomousDatabaseAdminPasswordSource(ctx, testAutonomousDatabaseSecretARN, testAutonomousDatabaseIAMRoleARN, odbtypes.ExternalIdTypeCompartmentOcid)
 
 	var response resource.CreateResponse
 	passwordSource, configuration := expandAutonomousDatabaseAdminPasswordSource(ctx, source, &response.Diagnostics)
@@ -107,10 +112,10 @@ func TestAutonomousDatabaseAdminPasswordSourceRoundTrip(t *testing.T) {
 	if !ok {
 		t.Fatalf("admin password source configuration = %T, want customer-managed AWS secret", configuration)
 	}
-	if got, want := aws.ToString(secret.Value.SecretId), "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password"; got != want {
+	if got, want := aws.ToString(secret.Value.SecretId), testAutonomousDatabaseSecretARN; got != want {
 		t.Fatalf("secret_id = %q, want %q", got, want)
 	}
-	if got, want := aws.ToString(secret.Value.IamRoleArn), "arn:aws:iam::123456789012:role/SecretManagerReadRole"; got != want {
+	if got, want := aws.ToString(secret.Value.IamRoleArn), testAutonomousDatabaseIAMRoleARN; got != want {
 		t.Fatalf("iam_role_arn = %q, want %q", got, want)
 	}
 	if got, want := secret.Value.ExternalIdType, odbtypes.ExternalIdTypeCompartmentOcid; got != want {
@@ -123,8 +128,8 @@ func TestAutonomousDatabaseAdminPasswordSourceRoundTrip(t *testing.T) {
 		AdminPasswordSourceConfiguration: &odbtypes.AdminPasswordSourceConfigurationMemberCustomerManagedAwsSecret{
 			Value: odbtypes.CustomerManagedAwsSecretConfiguration{
 				ExternalIdType: odbtypes.ExternalIdTypeCompartmentOcid,
-				IamRoleArn:     aws.String("arn:aws:iam::123456789012:role/SecretManagerReadRole"),
-				SecretId:       aws.String("arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password"),
+				IamRoleArn:     aws.String(testAutonomousDatabaseIAMRoleARN),
+				SecretId:       aws.String(testAutonomousDatabaseSecretARN),
 			},
 		},
 	}, &result)
@@ -146,7 +151,7 @@ func TestAutonomousDatabaseUpdateInputAdminPasswordSource(t *testing.T) {
 	}
 	state.AutonomousDatabaseID = types.StringValue("adb-123")
 	plan := state
-	plan.AdminPasswordSource = testAutonomousDatabaseAdminPasswordSource(ctx, "arn:aws:secretsmanager:us-east-1:123456789012:secret:admin-password", "arn:aws:iam::123456789012:role/SecretManagerReadRole", odbtypes.ExternalIdTypeCompartmentOcid)
+	plan.AdminPasswordSource = testAutonomousDatabaseAdminPasswordSource(ctx, testAutonomousDatabaseSecretARN, testAutonomousDatabaseIAMRoleARN, odbtypes.ExternalIdTypeCompartmentOcid)
 
 	var response resource.UpdateResponse
 	input := expandAutonomousDatabaseUpdateInput(ctx, plan, state, plan, &response.Diagnostics)
@@ -351,10 +356,10 @@ func TestAutonomousDatabaseDefaultBlocksFlatten(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("flattening Autonomous Database defaults: %v", diags)
 	}
-	if got := len(model.DbToolsDetails.Elements()); got != 0 {
+	if got := model.DbToolsDetails.Length(inttypes.CollectionLengthUnhandledAsZero); got != 0 {
 		t.Fatalf("db_tools_details block count = %d, want 0", got)
 	}
-	if got := len(model.ResourcePoolSummary.Elements()); got != 0 {
+	if got := model.ResourcePoolSummary.Length(inttypes.CollectionLengthUnhandledAsZero); got != 0 {
 		t.Fatalf("resource_pool_summary block count = %d, want 0", got)
 	}
 }
@@ -382,10 +387,10 @@ func TestAutonomousDatabaseConfiguredBlocksFlatten(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("flattening Autonomous Database: %v", diags)
 	}
-	if got, want := len(model.CustomerContactsToSendToOCI.Elements()), 1; got != want {
+	if got, want := model.CustomerContactsToSendToOCI.Length(inttypes.CollectionLengthUnhandledAsZero), 1; got != want {
 		t.Fatalf("customer_contacts_to_send_to_oci block count = %d, want %d", got, want)
 	}
-	if got, want := len(model.LongTermBackupSchedule.Elements()), 1; got != want {
+	if got, want := model.LongTermBackupSchedule.Length(inttypes.CollectionLengthUnhandledAsZero), 1; got != want {
 		t.Fatalf("long_term_backup_schedule block count = %d, want %d", got, want)
 	}
 }
