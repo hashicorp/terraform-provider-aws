@@ -527,8 +527,8 @@ github.com/aws/aws-sdk-go-v2/service/servicequotas v1.41.0 h1:44JqeJqo+G33xYupcR
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.41.0/go.mod h1:oYB/X1MysTy6APNzIEjgyMMHMORgtWrpByeN/uhHRDQ=
 github.com/aws/aws-sdk-go-v2/service/ses v1.40.0 h1:5PuP7TCmZFO6josnC7AQtb+UWE6cn6kT5wCw6yfVZoU=
 github.com/aws/aws-sdk-go-v2/service/ses v1.40.0/go.mod h1:c32UEWTkWkzfGTqCErAhYxfU+NUdj1wssOQFFGwC7JU=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.69.1 h1:W9VmR2VUv6M0BJYQOkQ6HsZPE6hpbbpblLwAKIvAkjs=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.69.1/go.mod h1:5e9k346wrGB6ihmyQeQPTCDp9sT39mAYwqk6gDfDaww=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.71.0 h1:OQeIApx7szIUgsuHfDY309fM0vKZ9A1BuI4RdEXlc+M=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.71.0/go.mod h1:5e9k346wrGB6ihmyQeQPTCDp9sT39mAYwqk6gDfDaww=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.47.1 h1:9aYzRPtSvDHdP+oWyul/snTVbs0dqsia3dyCn4Kadd4=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.47.1/go.mod h1:pfMEgN9npDtoHYEYmxJRwhIiGXQt3mwIqyXjo1/RnaM=
 github.com/aws/aws-sdk-go-v2/service/shield v1.40.1 h1:qhIS2Q2C1C+KBdUPR8ucfRD+KMyIT4pKpr93XAD9Puk=
