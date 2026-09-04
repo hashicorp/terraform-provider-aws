@@ -136,6 +136,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -333,6 +334,7 @@ func registerSweepers() {
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
 	observabilityadmin.RegisterSweepers()
+	odb.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
 	organizations.RegisterSweepers()
