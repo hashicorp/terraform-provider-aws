@@ -467,8 +467,8 @@ github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.41.0 h1:ifK5p2wm+VIXQ7inq9
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.41.0/go.mod h1:3eyPBvkOrHokpf+GVfU/O802T9/pbhtRRn1/lN9F9bs=
 github.com/aws/aws-sdk-go-v2/service/resiliencehubv2 v1.7.0 h1:bBpxCIug//ZKwhXz5d1D1UWdq2jO/x0avk2Q42IVWwc=
 github.com/aws/aws-sdk-go-v2/service/resiliencehubv2 v1.7.0/go.mod h1:b8evtNEeJhU5jD1UcVnUyPMnbHDCqfc1mPmV515JZTg=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.30.1 h1:Z2UIyd017afQ9S75X6BjF23AR1M5Zpn4Jw5J87Cxvd0=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.30.1/go.mod h1:Gxo9YESfpgyXerHGz7Ks5UvfGMWo1WAsgR3Ai7yM62I=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.31.0 h1:fiGFqN+mfoeyXDwCQLSV8IZiFOSH8hSbfJm0nXHjGL0=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.31.0/go.mod h1:Gxo9YESfpgyXerHGz7Ks5UvfGMWo1WAsgR3Ai7yM62I=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.39.1 h1:NmloVVAzH5hJBW2UWsAKwVp2wj/moGJ/iiN1H4l55DE=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.39.1/go.mod h1:mSBSDmbc7Gh7GqTrlfUuxnzAUr0LQ9E1518usjdwMsk=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.38.1 h1:go64duU3vqs7gfBo7xXfQI4boGwDILJ2fggFAmG8lJQ=
