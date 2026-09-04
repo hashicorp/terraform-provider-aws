@@ -414,7 +414,7 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 func memoryIDFromARN(memoryARN string) (string, error) {
 	parsedARN, err := arn.Parse(memoryARN)
 	if err != nil {
-		return "", fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err)
+		return "", smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
 	}
 	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
 	return memoryID, nil
@@ -456,7 +456,7 @@ func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	return nil, smarterr.NewError(err)
 }
 
-func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
+func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemoryStatusDeleting, awstypes.MemoryStatusActive),
 		Target:  []string{},
