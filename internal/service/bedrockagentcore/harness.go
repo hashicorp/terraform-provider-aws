@@ -890,7 +890,6 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	// Underlying IAM eventual consistency errors can occur after the CreateHarness API call.
@@ -904,6 +903,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		harness   *awstypes.Harness
 	)
 	err := tfresource.Retry(ctx, propagationTimeout+createTimeout, func(ctx context.Context) *tfresource.RetryError {
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		out, err := conn.CreateHarness(ctx, &input)
 
 		// Only retry IAM eventual consistency errors up to that timeout.
