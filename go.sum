@@ -83,8 +83,8 @@ github.com/aws/aws-sdk-go-v2/service/appstream v1.68.1 h1:idKL5xBwhn/cemSG3/lzS0
 github.com/aws/aws-sdk-go-v2/service/appstream v1.68.1/go.mod h1:Ir1L3+lijDKphWTeAfhg4NHNrNGFkLvLPE03I+hKb5Q=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.59.0 h1:Z9+cBZ/o1OPcZNqar1sIAdAHNQo4aKltgeAW4O0KMUA=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.59.0/go.mod h1:0rpbwVj+6N7OPOyEBkZ9WRuYnD/IdiGfS5DCFo5aE9U=
-github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.16.1 h1:CcHI8tHqDs+HZelE6I9Ri5GETmwxy9Uk4JVR130AgGA=
-github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.16.1/go.mod h1:gi6BzXmU5zZmWr9eoLQ/Bl+PAaKrVeONp1ZydLE1HD0=
+github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.17.0 h1:wmOjAJD9qvjTwz5AMsUv5QIBgUbuRRwHPsejD107L5o=
+github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.17.0/go.mod h1:gi6BzXmU5zZmWr9eoLQ/Bl+PAaKrVeONp1ZydLE1HD0=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.27.1 h1:fAqtnm5XUz08gk/JGlc39XKdr/pricv4Q+lhbb2ig50=
 github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.27.1/go.mod h1:I/kItMwxwFEiiEqdWwdA79wAAC7T4GOkI1FW4m86ngs=
 github.com/aws/aws-sdk-go-v2/service/athena v1.62.1 h1:XGq/4HcGOb5ToAdiT9wpcUim1tfpiSOo1DcMtgLMRdw=
