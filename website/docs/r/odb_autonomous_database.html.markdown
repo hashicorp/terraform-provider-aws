@@ -227,7 +227,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `actual_used_data_storage_size_in_tbs` - Actual data storage currently in use, in TB.
 * `allocated_storage_size_in_tbs` - Storage currently allocated, in TB.
-* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
+* `arn` - ARN of the Autonomous Database.
 * `availability_zone` - Availability Zone of the database.
 * `availability_zone_id` - Availability Zone ID of the database.
 * `available_upgrade_versions` - Oracle Database versions available for upgrade.

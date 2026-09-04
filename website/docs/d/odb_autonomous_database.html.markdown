@@ -33,7 +33,7 @@ This data source exports the following attributes in addition to the arguments a
 * `admin_password_source` - Source of the ADMIN password. See [`admin_password_source` Block](#admin_password_source-block) below.
 * `allocated_storage_size_in_tbs` - Storage currently allocated, in TB.
 * `allowlisted_ips` - IP addresses allowed to access the database.
-* `arn` - Amazon Resource Name (ARN) of the Autonomous Database.
+* `arn` - ARN of the Autonomous Database.
 * `auto_refresh_frequency_in_seconds` - Automatic refresh frequency in seconds.
 * `auto_refresh_point_lag_in_seconds` - Refresh lag from the source in seconds.
 * `autonomous_maintenance_schedule_type` - Maintenance schedule type.
@@ -98,31 +98,31 @@ This data source exports the following attributes in addition to the arguments a
 
 * `customer_managed_aws_secret` - Customer-managed AWS Secrets Manager configuration.
 
-#### `customer_managed_aws_secret`
+#### `customer_managed_aws_secret` Block
 
 * `external_id_type` - OCI identifier type used as the external ID when OCI assumes the customer-managed IAM role.
 * `iam_role_arn` - ARN of the customer-managed IAM role OCI assumes to retrieve the secret.
 * `secret_arn` - ARN of the AWS Secrets Manager secret containing the ADMIN password.
 
-### `customer_contacts_to_send_to_oci`
+### `customer_contacts_to_send_to_oci` Block
 
 * `email` - Customer contact email address.
 
-### `db_tools_details`
+### `db_tools_details` Block
 
 * `compute_count` - Compute capacity allocated to the database tool.
 * `is_enabled` - Whether the database tool is enabled.
 * `max_idle_time_in_minutes` - Maximum idle time before the tool is shut down.
 * `name` - Database tool name.
 
-### `long_term_backup_schedule`
+### `long_term_backup_schedule` Block
 
 * `is_disabled` - Whether the schedule is disabled.
 * `repeat_cadence` - Backup cadence.
 * `retention_period_in_days` - Backup retention period in days.
 * `time_of_backup` - Backup date and time.
 
-### `resource_pool_summary`
+### `resource_pool_summary` Block
 
 * `available_compute_capacity` - Available compute capacity.
 * `available_storage_capacity_in_tbs` - Available storage capacity in TB.
@@ -131,7 +131,7 @@ This data source exports the following attributes in addition to the arguments a
 * `pool_storage_size_in_tbs` - Pool storage size in TB.
 * `total_compute_capacity` - Total compute capacity.
 
-### `scheduled_operations`
+### `scheduled_operations` Block
 
 * `day_of_week` - Day of the week.
 * `scheduled_start_time` - Scheduled start time in UTC.
