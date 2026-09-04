@@ -118,6 +118,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newDataSourceGIMinorVersions,
+			TypeName: "aws_odb_gi_minor_versions",
+			Name:     "GI Minor Versions",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceGiVersions,
 			TypeName: "aws_odb_gi_versions",
 			Name:     "Gi Versions",

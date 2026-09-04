@@ -34,7 +34,7 @@ func TestAccODBExaDBVMCluster_List_basic(t *testing.T) {
 	resourceName2 := "aws_odb_exadb_vm_cluster.test[1]"
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
@@ -91,7 +91,7 @@ func TestAccODBExaDBVMCluster_List_includeResource(t *testing.T) {
 	resourceName2 := "aws_odb_exadb_vm_cluster.test[1]"
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
@@ -152,7 +152,7 @@ func TestAccODBExaDBVMCluster_List_regionOverride(t *testing.T) {
 	resourceName2 := "aws_odb_exadb_vm_cluster.test[1]"
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(t, acctest.AlternateRegion())
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.AlternateRegion(), testAccExaDBVMClusterAlternateAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
@@ -230,18 +230,4 @@ func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]known
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("total_ecpu_count"), knownvalue.Int32Exact(testAccExaDBVMClusterTotalECPUCount)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("vm_file_system_storage_total_size_in_gbs"), knownvalue.Int32Exact(testAccExaDBVMClusterVMFileSystemSizeInGBs)),
 	})
-}
-
-func testAccExaDBVMClusterGridImageIDForRegion(t *testing.T, region string) string {
-	t.Helper()
-
-	switch region {
-	case endpoints.UsEast1RegionID:
-		return acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
-	case endpoints.EuWest1RegionID:
-		return acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterAlternateGridImageIDEnvVar)
-	default:
-		t.Fatalf("unsupported ExaDB VM Cluster acceptance test region: %s", region)
-		return ""
-	}
 }

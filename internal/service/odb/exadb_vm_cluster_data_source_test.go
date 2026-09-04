@@ -23,7 +23,7 @@ func TestAccODBExaDBVMClusterDataSource_basic(t *testing.T) {
 	var exaDBVMCluster odbtypes.ExadbVmCluster
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 	dataSourceName := "data.aws_odb_exadb_vm_cluster.test"

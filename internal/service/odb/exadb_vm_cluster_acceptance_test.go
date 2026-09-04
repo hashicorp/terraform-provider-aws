@@ -10,9 +10,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -29,12 +31,13 @@ import (
 
 const (
 	testAccExaDBVMClusterAvailabilityZoneID           = "use1-az6"
-	testAccExaDBVMClusterAlternateGridImageIDEnvVar   = "TF_AWS_ODB_EXADB_VM_CLUSTER_ALTERNATE_REGION_GRID_IMAGE_ID"
+	testAccExaDBVMClusterAlternateAvailabilityZoneID  = "euw1-az3"
 	testAccExaDBVMClusterDisplayNamePrefix            = "ofake"
 	testAccExaDBVMClusterEnabledECPUCount             = 16
-	testAccExaDBVMClusterGridImageIDEnvVar            = "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID"
+	testAccExaDBVMClusterGIVersion                    = "19.0.0.0"
 	testAccExaDBVMClusterNodeCount                    = 2
 	testAccExaDBVMClusterShape                        = "ExaDbXS"
+	testAccExaDBVMClusterShapeFamily                  = "EXADB_XS"
 	testAccExaDBVMClusterTotalECPUCount               = 64
 	testAccExaDBVMClusterUpdatedEnabledECPUCount      = 20
 	testAccExaDBVMClusterUpdatedTotalECPUCount        = 80
@@ -53,7 +56,7 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 	var exaDBVMCluster odbtypes.ExadbVmCluster
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -115,7 +118,7 @@ func TestAccODBExaDBVMCluster_allArguments(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	clusterName := testAccRandomExaDBVMClusterClusterName(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -165,7 +168,7 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 	var exaDBVMCluster odbtypes.ExadbVmCluster
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey1 := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	publicKey2 := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
@@ -242,7 +245,7 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 	var exaDBVMCluster odbtypes.ExadbVmCluster
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -307,7 +310,7 @@ func TestAccODBExaDBVMCluster_disappears(t *testing.T) {
 
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := acctest.SkipIfEnvVarNotSet(t, testAccExaDBVMClusterGridImageIDEnvVar)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -396,6 +399,78 @@ func testAccPreCheckExaDBVMCluster(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func testAccExaDBVMClusterGridImageIDForRegion(ctx context.Context, t *testing.T, region, availabilityZoneID string) string {
+	t.Helper()
+
+	acctest.PreCheck(ctx, t)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
+	regionOption := func(options *odb.Options) {
+		options.Region = region
+	}
+
+	giVersionFound := false
+	giVersionsPaginator := odb.NewListGiVersionsPaginator(conn, &odb.ListGiVersionsInput{
+		Shape: aws.String(testAccExaDBVMClusterShape),
+	})
+	for giVersionsPaginator.HasMorePages() {
+		page, err := giVersionsPaginator.NextPage(ctx, regionOption)
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: listing GI versions: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing GI versions: %s", err)
+		}
+
+		for _, giVersion := range page.GiVersions {
+			if aws.ToString(giVersion.Version) == testAccExaDBVMClusterGIVersion {
+				giVersionFound = true
+				break
+			}
+		}
+	}
+	if !giVersionFound {
+		t.Fatalf("GI version %q is not available for shape %q in Region %q", testAccExaDBVMClusterGIVersion, testAccExaDBVMClusterShape, region)
+	}
+
+	var latestVersion *version.Version
+	var gridImageID string
+	giMinorVersionsPaginator := odb.NewListGiMinorVersionsPaginator(conn, &odb.ListGiMinorVersionsInput{
+		AvailabilityZoneId: aws.String(availabilityZoneID),
+		GiVersion:          aws.String(testAccExaDBVMClusterGIVersion),
+		ShapeFamily:        aws.String(testAccExaDBVMClusterShapeFamily),
+	})
+	for giMinorVersionsPaginator.HasMorePages() {
+		page, err := giMinorVersionsPaginator.NextPage(ctx, regionOption)
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: listing GI minor versions: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing GI minor versions: %s", err)
+		}
+
+		for _, giMinorVersion := range page.GiMinorVersions {
+			candidateGridImageID := aws.ToString(giMinorVersion.GridImageId)
+			if candidateGridImageID == "" {
+				continue
+			}
+
+			candidateVersion, err := version.NewVersion(aws.ToString(giMinorVersion.Version))
+			if err != nil {
+				t.Fatalf("parsing GI minor version %q: %s", aws.ToString(giMinorVersion.Version), err)
+			}
+			if latestVersion == nil || candidateVersion.GreaterThan(latestVersion) {
+				latestVersion = candidateVersion
+				gridImageID = candidateGridImageID
+			}
+		}
+	}
+	if gridImageID == "" {
+		t.Fatalf("no Grid Image ID is available for GI version %q, shape family %q, and Availability Zone ID %q in Region %q", testAccExaDBVMClusterGIVersion, testAccExaDBVMClusterShapeFamily, availabilityZoneID, region)
+	}
+
+	return gridImageID
 }
 
 func testAccRandomExaDBVMClusterDisplayName(t *testing.T) string {

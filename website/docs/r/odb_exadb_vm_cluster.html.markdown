@@ -15,11 +15,17 @@ Manages an [Oracle Database@AWS ExaDB VM Cluster](https://docs.aws.amazon.com/od
 ### Basic Usage
 
 ```terraform
+data "aws_odb_gi_minor_versions" "example" {
+  availability_zone_id = "use1-az6"
+  gi_version            = "19.0.0.0"
+  shape_family          = "EXADB_XS"
+}
+
 resource "aws_odb_exadb_vm_cluster" "example" {
   display_name                             = "example_exadb_vm_cluster"
   enabled_ecpu_count                       = 16
   exascale_db_storage_vault_id             = "xsvault_0123456789"
-  grid_image_id                            = "ocid1.dbpatch.oc1.iad.exampleuniqueid"
+  grid_image_id                            = data.aws_odb_gi_minor_versions.example.gi_minor_versions[0].grid_image_id
   hostname                                 = "exadbvm1"
   node_count                               = 2
   odb_network_id                           = "odbnetwork_0123456789"
@@ -47,7 +53,7 @@ The following arguments are required:
 * `display_name` - (Required) User-friendly name for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Must start with a letter or underscore and contain only letters, numbers, underscores, and hyphens.
 * `enabled_ecpu_count` - (Required) Number of ECPUs enabled for the ExaDB VM Cluster. Value must be at least `0`.
 * `exascale_db_storage_vault_id` - (Required) ID of the Exascale DB Storage Vault for the ExaDB VM Cluster. Length must be between `6` and `2048` characters. Changing this value creates a new resource.
-* `grid_image_id` - (Required) Grid Infrastructure software image ID for the ExaDB VM Cluster. Length must be between `1` and `255` characters.
+* `grid_image_id` - (Required) Grid Infrastructure software image ID for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Use the [`aws_odb_gi_minor_versions` data source](/docs/providers/aws/d/odb_gi_minor_versions.html) to retrieve available IDs.
 * `hostname` - (Required) Host name for the ExaDB VM Cluster. Length must be between `1` and `12` characters. Must start with a letter, end with a letter or number, and contain only letters, numbers, and hyphens. Changing this value creates a new resource.
 * `node_count` - (Required) Number of nodes in the ExaDB VM Cluster. Value must be at least `1`. Changing this value creates a new resource.
 * `odb_network_id` - (Required) ID of the ODB network for the ExaDB VM Cluster. Length must be between `6` and `2048` characters. Changing this value creates a new resource.
