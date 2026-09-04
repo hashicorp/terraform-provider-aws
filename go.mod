@@ -156,7 +156,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.49.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.38.1
