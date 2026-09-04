@@ -1,5 +1,5 @@
-// Copyright IBM Corp. 2014, 2026
-// SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 # Enables the Oracle Database@AWS Autonomous Database Serverless integration
 # with AWS Secrets Manager and returns the service role ARN to trust from a

@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
+const testAutonomousDatabaseServiceRoleARN = "arn:aws:iam::123456789012:role/ADBSSecretManagerServiceRole-123456789012" //lintignore:AWSAT005
+
 func TestAutonomousDatabaseSecretsManagerIntegrationSchema(t *testing.T) {
 	t.Parallel()
 
@@ -35,7 +37,7 @@ func TestFlattenAutonomousDatabaseSecretsManagerIntegration(t *testing.T) {
 
 	model := autonomousDatabaseSecretsManagerIntegrationResourceModel{}
 	role := &odbtypes.OciIamRole{
-		IamRoleArn:   aws.String("arn:aws:iam::123456789012:role/ADBSSecretManagerServiceRole-123456789012"),
+		IamRoleArn:   aws.String(testAutonomousDatabaseServiceRoleARN),
 		Status:       odbtypes.OciIamRoleStatusAvailable,
 		StatusReason: aws.String("available"),
 	}

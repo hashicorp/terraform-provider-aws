@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -517,7 +516,7 @@ func adminPasswordSourceResourceBlock(ctx context.Context) schema.ListNestedBloc
 								Required:    true,
 								Description: "Type of OCI identifier supplied as the external ID when OCI assumes the IAM role.",
 							},
-							"iam_role_arn": schema.StringAttribute{
+							names.AttrIAMRoleARN: schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									fwvalidators.ARN(),
@@ -1081,6 +1080,11 @@ type autonomousDatabaseValue interface {
 	IsUnknown() bool
 }
 
+type autonomousDatabaseCollectionValue interface {
+	autonomousDatabaseValue
+	Length(basetypes.CollectionLengthOptions) int
+}
+
 func isKnownAutonomousDatabaseValue(value autonomousDatabaseValue) bool {
 	return !value.IsNull() && !value.IsUnknown()
 }
@@ -1621,13 +1625,13 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 	if diags.HasError() {
 		return
 	}
-	if !dbToolsDetails.IsUnknown() && len(dbToolsDetails.Elements()) == 0 {
+	if !dbToolsDetails.IsUnknown() && dbToolsDetails.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		model.DbToolsDetails = dbToolsDetails
 	}
 	if apiObject.LongTermBackupSchedule == nil && isConfiguredAutonomousDatabaseBlock(longTermBackupSchedule) {
 		model.LongTermBackupSchedule = longTermBackupSchedule
 	}
-	if !resourcePoolSummary.IsUnknown() && len(resourcePoolSummary.Elements()) == 0 {
+	if !resourcePoolSummary.IsUnknown() && resourcePoolSummary.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		model.ResourcePoolSummary = resourcePoolSummary
 	}
 
@@ -1661,17 +1665,19 @@ func flattenAutonomousDatabase(ctx context.Context, apiObject *odbtypes.Autonomo
 // AdminPasswordSourceConfiguration is an SDK tagged union and requires explicit member selection.
 // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenAutonomousDatabaseAdminPasswordSource(ctx context.Context, summary *odbtypes.AdminPasswordSourceSummary, target *fwtypes.ListNestedObjectValueOf[autonomousDatabaseAdminPasswordSourceModel]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	*target = fwtypes.NewListNestedObjectValueOfNull[autonomousDatabaseAdminPasswordSourceModel](ctx)
 	if summary == nil || summary.AdminPasswordSource != odbtypes.AdminPasswordSourceCustomerManagedAwsSecret {
-		return nil
+		return diags
 	}
 
 	configuration, ok := summary.AdminPasswordSourceConfiguration.(*odbtypes.AdminPasswordSourceConfigurationMemberCustomerManagedAwsSecret)
 	if !ok {
-		return nil
+		return diags
 	}
 
-	value, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []autonomousDatabaseAdminPasswordSourceModel{
+	value, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []autonomousDatabaseAdminPasswordSourceModel{
 		{
 			CustomerManagedAWSSecret: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []autonomousDatabaseCustomerManagedAWSSecretModel{
 				{
@@ -1682,17 +1688,17 @@ func flattenAutonomousDatabaseAdminPasswordSource(ctx context.Context, summary *
 			}),
 		},
 	})
+	diags.Append(d...)
 	*target = value
 	return diags
 }
 
-func isConfiguredAutonomousDatabaseBlock(value autonomousDatabaseValue) bool {
+func isConfiguredAutonomousDatabaseBlock(value autonomousDatabaseCollectionValue) bool {
 	if value.IsNull() || value.IsUnknown() {
 		return false
 	}
 
-	valueWithElements, ok := value.(interface{ Elements() []attr.Value })
-	return ok && len(valueWithElements.Elements()) > 0
+	return value.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 }
 
 func flattenAutonomousDatabaseByolComputeCountLimit(value *int32) types.Float64 {
