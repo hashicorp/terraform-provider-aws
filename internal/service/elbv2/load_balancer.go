@@ -1356,10 +1356,17 @@ func flattenSubnetMappingsFromAvailabilityZones(apiObjects []awstypes.Availabili
 			names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 		}
 		if apiObjects := apiObject.LoadBalancerAddresses; len(apiObjects) > 0 {
-			apiObject := apiObjects[0]
-			tfMap["allocation_id"] = aws.ToString(apiObject.AllocationId)
-			tfMap["ipv6_address"] = aws.ToString(apiObject.IPv6Address)
-			tfMap["private_ipv4_address"] = aws.ToString(apiObject.PrivateIPv4Address)
+			for _, apiObject := range apiObjects {
+				if v := aws.ToString(apiObject.AllocationId); v != "" {
+					tfMap["allocation_id"] = v
+				}
+				if v := aws.ToString(apiObject.IPv6Address); v != "" {
+					tfMap["ipv6_address"] = v
+				}
+				if v := aws.ToString(apiObject.PrivateIPv4Address); v != "" {
+					tfMap["private_ipv4_address"] = v
+				}
+			}
 		}
 
 		return tfMap
