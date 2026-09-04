@@ -96,10 +96,12 @@ func (l *deploymentListResource) List(ctx context.Context, request list.ListRequ
 				if request.IncludeResource {
 					output, err := findDeploymentByTwoPartKey(ctx, conn, restAPIID, deploymentID)
 					if err != nil {
-						tflog.Error(ctx, "Reading API Gateway Deployment", map[string]any{
-							"error": err.Error(),
-						})
-						continue
+						if retry.NotFound(err) {
+							continue
+						}
+
+						yield(fwdiag.NewListResultErrorDiagnostic(err))
+						return
 					}
 					resourceDeploymentFlatten(rd, output)
 				}
