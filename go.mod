@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/glue v1.156.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/greengrass v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.87.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.46.0
