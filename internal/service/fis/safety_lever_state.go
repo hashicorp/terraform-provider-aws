@@ -176,13 +176,10 @@ func (r *safetyLeverStateResource) upsert(ctx context.Context, plan tfsdk.Plan, 
 			return
 		}
 
-		var liveReason string
-		if current.State != nil {
-			liveReason = aws.ToString(current.State.Reason)
-		}
-
-		if liveReason != reason {
-			smerr.AddError(ctx, diags, fmt.Errorf("cannot change FIS safety lever reason without a status change (status %q): configured reason %q, actual reason %q; set reason to %q to match the live value or change status", status, reason, liveReason, liveReason), smerr.ID, safetyLeverDefaultID)
+		if current.State != nil && aws.ToString(current.State.Reason) != reason {
+			smerr.AddError(ctx, diags, fmt.Errorf("cannot change FIS safety lever reason without a status change (status %[1]q): "+
+				"configured reason %[2]q, actual reason %[3]q; set reason to %[3]q to match the live value or change status",
+				status, reason, aws.ToString(current.State.Reason)), smerr.ID, safetyLeverDefaultID)
 			return
 		}
 
