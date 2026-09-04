@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
@@ -115,6 +116,11 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 			},
 			{
 				Config: testAccSafetyLeverStateConfig_basic(otherStatus, "Blocked for scheduled maintenance"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSafetyLeverStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "state.0.status", otherStatus),
