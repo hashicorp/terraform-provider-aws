@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_amplify_app: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `environment_variables` or `auto_branch_creation_config.environment_variables`
+```
+
+```release-note:bug
+resource/aws_amplify_branch: Fix `BadRequestException: Environment variables cannot have an empty key` when clearing `environment_variables`
+```
