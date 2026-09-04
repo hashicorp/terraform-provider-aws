@@ -148,7 +148,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/interconnect v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/invoicing v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/invoicing v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.80.1
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.26.1
