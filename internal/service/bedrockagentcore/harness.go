@@ -946,7 +946,11 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 			// On recreating the harness:
 			// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Memory operation failed: Validation failed during CreateMemory: Memory with name ... already exists".
 			if memoryARN != "" {
-				if _, err := waitMemoryDeleted(ctx, conn, memoryARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+				memoryID, err := memoryIDFromARN(memoryARN)
+				if err != nil {
+					return tfresource.NonRetryableError(err)
+				}
+				if _, err := waitMemoryDeleted(ctx, conn, memoryID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 					return tfresource.NonRetryableError(err)
 				}
 			}
@@ -2364,9 +2368,15 @@ func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Con
 	}
 
 	arn := fwflex.StringValueFromFramework(ctx, m.ARN)
-	memory, err := findMemoryByARN(ctx, conn, arn)
+	memoryID, err := memoryIDFromARN(arn)
 	if err != nil {
-		diags.AddError(fmt.Sprintf("reading Bedrock AgentCore Memory (%s)", arn), err.Error())
+		smerr.AddError(ctx, &diags, err)
+		return diags
+	}
+
+	memory, err := findMemoryByID(ctx, conn, memoryID)
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading Bedrock AgentCore Memory (%s)", memoryID), err.Error())
 		return diags
 	}
 
