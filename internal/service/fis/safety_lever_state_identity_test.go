@@ -33,7 +33,7 @@ func testAccFISSafetyLeverState_Identity_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: create via a genuine status transition, then check resource identity.
 			{
@@ -115,7 +115,7 @@ func testAccFISSafetyLeverState_Identity_regionOverride(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: create in the alternate Region, check identity carries that Region.
 			{

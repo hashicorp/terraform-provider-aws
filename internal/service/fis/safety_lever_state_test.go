@@ -53,7 +53,7 @@ func testAccFISSafetyLeverState_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSafetyLeverStateConfig_basic(startStatus, "Managed by Terraform acceptance test"),
@@ -105,7 +105,7 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSafetyLeverStateConfig_basic(startStatus, "Managed by Terraform acceptance test"),
@@ -136,13 +136,6 @@ func testAccFISSafetyLeverState_update(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Delete is no-op
-func testAccCheckSafetyLeverStateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return nil
-	}
 }
 
 func testAccCheckSafetyLeverStateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {

@@ -38,7 +38,7 @@ func testAccFISSafetyLeverState_List_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: create the singleton via a genuine status transition.
 			{
@@ -96,7 +96,7 @@ func testAccFISSafetyLeverState_List_includeResource(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: create the singleton via a genuine status transition.
 			{
@@ -161,7 +161,7 @@ func testAccFISSafetyLeverState_List_regionOverride(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSafetyLeverStateDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: create the lever in the alternate Region.
 			{
