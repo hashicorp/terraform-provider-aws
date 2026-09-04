@@ -6888,6 +6888,46 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_prohibitedOnReadReplicaSource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	replicaResourceName := "aws_db_instance.replica"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_readReplicaSource(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &v),
+					resource.TestCheckResourceAttrPair(replicaResourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
+				),
+			},
+			{
+				// Enabling blue_green_update on the source while it has a read
+				// replica, together with a triggering change (instance_class),
+				// must be rejected at plan time.
+				Config:      testAccInstanceConfig_BlueGreenDeployment_readReplicaSource(rName, true),
+				ExpectError: regexache.MustCompile(`cannot be set to true on an instance with read replicas`),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -14406,6 +14446,72 @@ resource "aws_db_instance" "test" {
   }
 }
 `, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_readReplicaSource(rName string, triggerBlueGreen bool) string {
+	// Select a different instance class set on the triggering step so the
+	// source's instance_class actually changes between steps.
+	var halfClasses []string
+	start := 0
+	if triggerBlueGreen {
+		start = 1
+	}
+	for i := start; i < len(instanceClassesSlice); i += 2 {
+		halfClasses = append(halfClasses, instanceClassesSlice[i])
+	}
+	halfMainInstClass := strings.Join(halfClasses, ", ")
+
+	// blue_green_update is only set on the triggering step. Setting it while the
+	// source has a read replica, together with the instance_class change, is what
+	// the guard must reject. It is intentionally absent on the first step so the
+	// source and its replica can be created cleanly.
+	blueGreen := ""
+	if triggerBlueGreen {
+		blueGreen = `
+  blue_green_update {
+    enabled = true
+  }
+`
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = [%[4]s]
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 20
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[5]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = %[3]q
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+%[6]s
+}
+
+resource "aws_db_instance" "replica" {
+  identifier          = "%[5]s-replica"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db = aws_db_instance.source.identifier
+  skip_final_snapshot = true
+}
+`, tfrds.InstanceEngineMySQL, "general-public-license", "gp2", halfMainInstClass, rName, blueGreen))
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {

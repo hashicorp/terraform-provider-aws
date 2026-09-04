@@ -746,6 +746,81 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			// Blue/Green deployments on aws_db_instance are not coordinated with
+			// sibling aws_db_instance resources that declare this instance as
+			// their replicate_source_db. If a plan would trigger the Blue/Green
+			// code path in resourceInstanceUpdate while this instance has read
+			// replicas in AWS, the switchover leaves the replicas in one of two
+			// broken states: (1) tracking a "-old<N>" renamed instance, or
+			// (2) auto-promoted to standalone with ReadReplicaSourceDBInstanceIdentifier
+			// cleared to null. In case (2) reads through the replica endpoint
+			// return stale data with no drift signal, until a subsequent apply
+			// touches the replica and fails with "cannot elect new source
+			// database for replication". Recovery requires destroying and
+			// recreating the replica plus manual cleanup of untracked green/old
+			// side resources.
+			//
+			// See hashicorp/terraform-provider-aws#33702 for the underlying
+			// resource-model constraint that prevents coordinating switchover
+			// across sibling resources.
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if !d.Get("blue_green_update.0.enabled").(bool) {
+					return nil
+				}
+				// No existing instance to check on creation.
+				if d.Id() == "" {
+					return nil
+				}
+				// Only check when the planned diff will actually trigger the
+				// Blue/Green code path in resourceInstanceUpdate. This exempt
+				// list mirrors the inner HasChangesExcept in that function.
+				// ResourceDiff does not expose HasChangesExcept, so iterate
+				// GetChangedKeysPrefix and match against the exempt set.
+				bgExempt := map[string]struct{}{
+					names.AttrAllowMajorVersionUpgrade: {},
+					"blue_green_update":                {},
+					"delete_automated_backups":         {},
+					names.AttrFinalSnapshotIdentifier:  {},
+					"replicate_source_db":              {},
+					"skip_final_snapshot":              {},
+					names.AttrTags:                     {},
+					names.AttrTagsAll:                  {},
+					names.AttrDeletionProtection:       {},
+					names.AttrPassword:                 {},
+				}
+				triggersBlueGreen := false
+				for _, changedKey := range d.GetChangedKeysPrefix("") {
+					top := strings.SplitN(changedKey, ".", 2)[0]
+					if _, ok := bgExempt[top]; !ok {
+						triggersBlueGreen = true
+						break
+					}
+				}
+				if !triggersBlueGreen {
+					return nil
+				}
+
+				conn := meta.(*conns.AWSClient).RDSClient(ctx)
+				instance, err := findDBInstanceByID(ctx, conn, d.Id())
+				if err != nil {
+					// Do not block plan on lookup errors; the update path will
+					// surface any genuine problem.
+					return nil //nolint:nilerr // best-effort plan-time check; genuine lookup errors surface during apply
+				}
+				if len(instance.ReadReplicaDBInstanceIdentifiers) == 0 {
+					return nil
+				}
+
+				return fmt.Errorf(
+					`"blue_green_update.enabled" cannot be set to true on an instance with read replicas: %v. `+
+						`Blue/Green deployments on aws_db_instance are not coordinated with sibling replica resources; `+
+						`after switchover the replicas may be orphaned, promoted to standalone, or left tracking a `+
+						`"-old<N>" renamed instance, and read traffic through affected replica endpoints may return `+
+						`stale data. Destroy the replicas before applying this change, or set `+
+						`"blue_green_update.enabled" to false. See hashicorp/terraform-provider-aws#33702.`,
+					instance.ReadReplicaDBInstanceIdentifiers,
+				)
+			},
 		),
 	}
 }
