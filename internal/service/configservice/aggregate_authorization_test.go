@@ -96,8 +96,12 @@ func testAccConfigServiceAggregateAuthorization_regionMigration(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccAggregateAuthorizationConfig_basic(accountID),
-				PlanOnly: true,
+				Config: testAccAggregateAuthorizationConfig_basic(accountID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
