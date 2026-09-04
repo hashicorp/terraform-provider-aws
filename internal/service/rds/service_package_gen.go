@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newGlobalClustersDataSource,
+			TypeName: "aws_rds_global_clusters",
+			Name:     "Global Clusters",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSnapshotsDataSource,
 			TypeName: "aws_rds_snapshots",
 			Name:     "Snapshots",
