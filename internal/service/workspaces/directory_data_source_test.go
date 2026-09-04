@@ -86,6 +86,43 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	})
 }
 
+func testAccDirectoryDataSource_accessEndpointConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandString(t, 8)
+	domain := acctest.RandomDomainName(t)
+
+	resourceName := "aws_workspaces_directory.main"
+	dataSourceName := "data.aws_workspaces_directory.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryDataSourceConfig_accessEndpointConfig(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.#", resourceName, "workspace_access_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.access_endpoint_config.#", resourceName, "workspace_access_properties.0.access_endpoint_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.#", resourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.*", map[string]string{
+						"access_endpoint_type": "STREAMING_WSP",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.access_endpoints.*.vpc_endpoint_id", "aws_vpc_endpoint.streaming", names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.internet_fallback_protocols.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "workspace_access_properties.0.access_endpoint_config.0.internet_fallback_protocols.0", "PCOIP"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDirectoryDataSourceConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_base(rName, domain),
@@ -153,4 +190,14 @@ data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
 `, rName, domain))
+}
+
+func testAccDirectoryDataSourceConfig_accessEndpointConfig(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_accessEndpointConfig(rName, domain),
+		`
+data "aws_workspaces_directory" "test" {
+  directory_id = aws_workspaces_directory.main.id
+}
+`)
 }
