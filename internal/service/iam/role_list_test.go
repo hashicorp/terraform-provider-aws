@@ -130,3 +130,54 @@ func TestAccIAMRole_List_includeResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccIAMRole_List_pathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_iam_role.test_match[0]"
+	resourceName2 := "aws_iam_role.test_match[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	pathPrefix := "/test-path/"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup resources (2 matching, 1 non-matching)
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Role/list_path_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", "role"+pathPrefix+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNExact("iam", "role"+pathPrefix+rName+"-1")),
+				},
+			},
+
+			// Step 2: Run the list query and verify it filtered correctly
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Role/list_path_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName + "-0"),
+					}),
+					querycheck.ExpectIdentity("aws_iam_role.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrName:      knownvalue.StringExact(rName + "-1"),
+					}),
+				},
+			},
+		},
+	})
+}
