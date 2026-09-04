@@ -33,6 +33,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newEntitlementsDataSource,
+			TypeName: "aws_accountaccess_entitlements",
+			Name:     "Entitlements",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
