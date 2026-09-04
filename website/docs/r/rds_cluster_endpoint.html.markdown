@@ -93,7 +93,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster
+* `arn` - ARN of cluster
 * `id` - The RDS Cluster Endpoint Identifier
 * `endpoint` - A custom endpoint for the Aurora cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

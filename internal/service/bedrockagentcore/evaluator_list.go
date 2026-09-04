@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -58,9 +57,8 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 				return
 			}
 
-			evaluatorID := aws.ToString(item.EvaluatorId)
-			if strings.HasPrefix(evaluatorID, "Builtin.") {
-				// Skip Built-in evaluators
+			if item.EvaluatorType == awstypes.EvaluatorTypeBuiltin || item.EvaluatorType == awstypes.EvaluatorTypeThirdParty {
+				// Skip Built-in and third-party evaluators
 				continue
 			}
 
@@ -70,7 +68,7 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 			var output *bedrockagentcorecontrol.GetEvaluatorOutput
 			if request.IncludeResource {
 				var err error
-				output, err = findEvaluatorByID(ctx, conn, evaluatorID)
+				output, err = findEvaluatorByID(ctx, conn, aws.ToString(item.EvaluatorId))
 				if retry.NotFound(err) {
 					continue
 				}
@@ -87,7 +85,7 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 				if request.IncludeResource {
 					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
 				} else {
-					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data))
+					data.EvaluatorID = fwflex.StringToFramework(ctx, item.EvaluatorId)
 				}
 				if result.Diagnostics.HasError() {
 					return

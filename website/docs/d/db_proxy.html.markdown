@@ -37,7 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `endpoint_network_type` - Network type of the DB proxy endpoint.
 * `engine_family` - Kinds of databases that the proxy can connect to.
 * `idle_client_timeout` - Number of seconds a connection to the proxy can have no activity before the proxy drops the client connection.
-* `require_tls` - Whether Transport Layer Security (TLS) encryption is required for connections to the proxy.
+* `require_tls` - Whether TLS encryption is required for connections to the proxy.
 * `role_arn` - ARN for the IAM role that the proxy uses to access Amazon Secrets Manager.
 * `target_connection_network_type` - Network type that the proxy uses to connect to the target database.
 * `vpc_id` - Provides the VPC ID of the DB proxy.

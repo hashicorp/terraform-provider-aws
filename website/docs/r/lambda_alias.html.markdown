@@ -84,9 +84,9 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the alias.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `routing_config` - (Optional) Lambda alias' route configuration settings. [See below](#routing_config-configuration-block).
+* `routing_config` - (Optional) Lambda alias' route configuration settings. [See below](#routing_config-block).
 
-### routing_config Configuration Block
+### `routing_config` Block
 
 * `additional_version_weights` - (Optional) Map that defines the proportion of events that should be sent to different versions of a Lambda function.
 

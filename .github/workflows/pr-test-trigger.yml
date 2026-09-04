@@ -83,7 +83,6 @@ jobs:
         id: run_tests
         env:
           PR_NUMBER: ${{ github.event.issue.number }}
-          PKGS: ${{ steps.pkgs.outputs.pkgs }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           TCTEST_SERVER: ${{ secrets.TCTEST_SERVER }}
           TCTEST_BUILD_TYPE_ID: ${{ secrets.TCTEST_BUILD_TYPE_ID }}
@@ -108,26 +107,29 @@ jobs:
             pattern="${raw_pattern}"
           fi
 
-          # Validate PKGS (from GitHub API) before embedding in properties string.
-          if [[ ! "${PKGS}" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-            echo "::error::PKGS contains unexpected characters: ${PKGS}"
-            exit 1
-          fi
-          properties="PKG=${PKGS}"
+          properties=""
           if [[ -n "${parallelism_value}" ]]; then
             if [[ "${parallelism_value}" -gt 20 ]]; then
               echo "::error::Parallelism value ${parallelism_value} exceeds maximum of 20"
               exit 1
             fi
-            properties="${properties};ACCTEST_PARALLELISM=${parallelism_value}"
+            properties="ACCTEST_PARALLELISM=${parallelism_value}"
           fi
 
           # Invoke tctest directly — no eval, no string-assembled commands.
           if [[ -n "${pattern}" ]]; then
-            tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" "${pattern}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" "${pattern}" --comment --reappend-split-character
+            fi
           else
-            tctest pr "${PR_NUMBER}" --properties "${properties}" --comment --reappend-split-character
-          fix
+            if [[ -n "${properties}" ]]; then
+              tctest pr "${PR_NUMBER}" --properties "${properties}" --comment --reappend-split-character
+            else
+              tctest pr "${PR_NUMBER}" --comment --reappend-split-character
+            fi
+          fi
 
       - name: Comment on Test Start
         if: steps.run_tests.outcome == 'success'

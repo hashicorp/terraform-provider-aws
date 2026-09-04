@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `activated_storage_count` - Number of storage servers requested for the Exadata infrastructure.
 * `additional_storage_count` - Number of storage servers requested for the Exadata infrastructure.
-* `arn` - Amazon Resource Name (ARN) of the Exadata infrastructure.
+* `arn` - ARN of the Exadata infrastructure.
 * `available_storage_size_in_gbs` - Amount of available storage, in gigabytes (GB), for the Exadata infrastructure.
 * `compute_model` - OCI model compute model used when you create or clone an instance: ECPU or OCPU.
 * `cpu_count` - Total number of CPU cores that are allocated to the Exadata infrastructure.

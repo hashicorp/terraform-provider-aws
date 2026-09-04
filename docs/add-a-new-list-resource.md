@@ -117,7 +117,7 @@ For more information on acceptance tests for List Resource, see the [Acceptance 
 
 #### Example test file
 
-```hcl
+```terraform
 resource "aws_batch_job_definition" "test" {
   count = var.resource_count
 

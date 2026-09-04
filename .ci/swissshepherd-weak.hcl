@@ -5,7 +5,9 @@ provider_source = "registry.terraform.io/hashicorp/aws"
 provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
 
-file_aliases = {}
+file_aliases = {
+  "list_resource/aws_ami_launch_permission" = "aws_ec2_ami_launch_permission"
+}
 
 ignore_contents_check = [
   "data_source/aws_kms_secret",
@@ -30,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -60,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -90,14 +92,14 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "usage_notes" { }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "usage_notes" {}
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -113,13 +115,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -139,13 +141,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -165,14 +167,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -181,6 +183,52 @@ type "action" {
 }
 
 # ─── Check blocks ───────────────────────────────────────────────────────────
+
+check "banned_glosses" {
+  enabled = true
+
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
+  banned_glosses = {
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Domain Name System"                = "DNS"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Language"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
+  }
+
+  skip_frontmatter = true
+  severity         = "error"
+}
 
 check "schema_docs" {
   enabled = true
@@ -222,8 +270,6 @@ check "schema_docs" {
   ]
 
   ignore_targets = [
-    "action/aws_lambda_invoke",
-    "action/aws_ses_send_email",
     "data_source/aws_account_primary_contact",
     "data_source/aws_account_regions",
     "data_source/aws_acm_certificate",
@@ -492,10 +538,6 @@ check "schema_docs" {
     "data_source/aws_kms_secrets",
     "data_source/aws_lakeformation_data_lake_settings",
     "data_source/aws_lakeformation_permissions",
-    "data_source/aws_lambda_code_signing_config",
-    "data_source/aws_lambda_function",
-    "data_source/aws_lambda_function_url",
-    "data_source/aws_lambda_layer_version",
     "data_source/aws_launch_configuration",
     "data_source/aws_launch_template",
     "data_source/aws_lb_hosted_zone_id",
@@ -654,11 +696,6 @@ check "schema_docs" {
     "data_source/aws_servicecatalogappregistry_attribute_group",
     "data_source/aws_servicequotas_service_quota",
     "data_source/aws_servicequotas_templates",
-    "data_source/aws_ses_email_identity",
-    "data_source/aws_sesv2_configuration_set",
-    "data_source/aws_sesv2_dedicated_ip_pool",
-    "data_source/aws_sesv2_email_identity_mail_from_attributes",
-    "data_source/aws_sesv2_email_identity",
     "data_source/aws_sfn_activity",
     "data_source/aws_sfn_alias",
     "data_source/aws_sfn_state_machine",
@@ -706,7 +743,6 @@ check "schema_docs" {
     "data_source/aws_vpc_peering_connections",
     "data_source/aws_vpc_security_group_rule",
     "data_source/aws_vpc_security_group_rules",
-    "data_source/aws_vpc",
     "data_source/aws_vpcs",
     "data_source/aws_vpn_connection",
     "data_source/aws_vpn_gateway",
@@ -743,7 +779,6 @@ check "schema_docs" {
     "list_resource/aws_subnet",
     "list_resource/aws_vpc_endpoint",
     "list_resource/aws_vpc_security_group_egress_rule",
-    "list_resource/aws_vpc",
     "resource/aws_accessanalyzer_analyzer",
     "resource/aws_accessanalyzer_archive_rule",
     "resource/aws_account_alternate_contact",
@@ -826,7 +861,6 @@ check "schema_docs" {
     "resource/aws_bedrockagentcore_gateway_target",
     "resource/aws_bedrockagentcore_gateway",
     "resource/aws_bedrockagentcore_harness",
-    "resource/aws_bedrockagentcore_memory",
     "resource/aws_bedrockagentcore_oauth2_credential_provider",
     "resource/aws_bedrockagentcore_registry",
     "resource/aws_bedrockagentcore_token_vault_cmk",
@@ -1419,14 +1453,6 @@ check "schema_docs" {
     "resource/aws_lakeformation_resource_lf_tag",
     "resource/aws_lakeformation_resource_lf_tags",
     "resource/aws_lakeformation_resource",
-    "resource/aws_lambda_alias",
-    "resource/aws_lambda_capacity_provider",
-    "resource/aws_lambda_code_signing_config",
-    "resource/aws_lambda_event_source_mapping",
-    "resource/aws_lambda_function_event_invoke_config",
-    "resource/aws_lambda_function_url",
-    "resource/aws_lambda_function",
-    "resource/aws_lambda_permission",
     "resource/aws_launch_configuration",
     "resource/aws_launch_template",
     "resource/aws_lb_cookie_stickiness_policy",
@@ -1807,31 +1833,6 @@ check "schema_docs" {
     "resource/aws_servicequotas_auto_management",
     "resource/aws_servicequotas_service_quota",
     "resource/aws_servicequotas_template",
-    "resource/aws_ses_active_receipt_rule_set",
-    "resource/aws_ses_configuration_set",
-    "resource/aws_ses_domain_dkim",
-    "resource/aws_ses_domain_identity_verification",
-    "resource/aws_ses_domain_identity",
-    "resource/aws_ses_domain_mail_from",
-    "resource/aws_ses_email_identity",
-    "resource/aws_ses_event_destination",
-    "resource/aws_ses_identity_notification_topic",
-    "resource/aws_ses_receipt_filter",
-    "resource/aws_ses_receipt_rule",
-    "resource/aws_ses_template",
-    "resource/aws_sesv2_account_suppression_attributes",
-    "resource/aws_sesv2_account_vdm_attributes",
-    "resource/aws_sesv2_configuration_set_event_destination",
-    "resource/aws_sesv2_configuration_set",
-    "resource/aws_sesv2_contact_list",
-    "resource/aws_sesv2_dedicated_ip_assignment",
-    "resource/aws_sesv2_dedicated_ip_pool",
-    "resource/aws_sesv2_email_identity_feedback_attributes",
-    "resource/aws_sesv2_email_identity_mail_from_attributes",
-    "resource/aws_sesv2_email_identity_policy",
-    "resource/aws_sesv2_email_identity",
-    "resource/aws_sesv2_tenant_resource_association",
-    "resource/aws_sesv2_tenant",
     "resource/aws_sfn_activity",
     "resource/aws_sfn_alias",
     "resource/aws_sfn_state_machine",
@@ -1959,7 +1960,6 @@ check "schema_docs" {
     "resource/aws_vpc_security_group_egress_rule",
     "resource/aws_vpc_security_group_ingress_rule",
     "resource/aws_vpc_security_group_vpc_association",
-    "resource/aws_vpc",
     "resource/aws_vpn_concentrator",
     "resource/aws_vpn_connection_route",
     "resource/aws_vpn_connection",
@@ -2025,7 +2025,7 @@ check "schema_docs" {
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 
   ignore_targets = [
