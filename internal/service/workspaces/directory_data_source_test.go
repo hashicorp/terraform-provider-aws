@@ -103,6 +103,7 @@ func testAccDirectoryDataSource_accessEndpointConfig(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_accessEndpointConfig(rName, domain),
