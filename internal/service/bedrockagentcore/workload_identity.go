@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,11 +27,18 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrockagentcore_workload_identity", name="Workload Identity")
+// @IdentityAttribute("name")
+// @Tags(identifierAttribute="workload_identity_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetWorkloadIdentityOutput")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckWorkloadIdentities")
 func newWorkloadIdentityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &workloadIdentityResource{}
 	return r, nil
@@ -40,6 +46,7 @@ func newWorkloadIdentityResource(_ context.Context) (resource.ResourceWithConfig
 
 type workloadIdentityResource struct {
 	framework.ResourceWithModel[workloadIdentityResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -59,6 +66,8 @@ func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:          tftags.TagsAttribute(),
+			names.AttrTagsAll:       tftags.TagsAttributeComputedOnly(),
 			"workload_identity_arn": framework.ARNAttributeComputedOnly(),
 		},
 	}
@@ -79,6 +88,8 @@ func (r *workloadIdentityResource) Create(ctx context.Context, request resource.
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateWorkloadIdentity(ctx, &input)
 	if err != nil {
@@ -181,10 +192,6 @@ func (r *workloadIdentityResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *workloadIdentityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
 func findWorkloadIdentityByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetWorkloadIdentityOutput, error) {
 	input := bedrockagentcorecontrol.GetWorkloadIdentityInput{
 		Name: aws.String(name),
@@ -217,5 +224,7 @@ type workloadIdentityResourceModel struct {
 	framework.WithRegionModel
 	AllowedResourceOauth2ReturnURLs fwtypes.SetOfString `tfsdk:"allowed_resource_oauth2_return_urls"`
 	Name                            types.String        `tfsdk:"name"`
+	Tags                            tftags.Map          `tfsdk:"tags"`
+	TagsAll                         tftags.Map          `tfsdk:"tags_all"`
 	WorkloadIdentityARN             types.String        `tfsdk:"workload_identity_arn"`
 }
