@@ -7,19 +7,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -35,6 +35,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,7 +44,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_agentregistry_registry", name="Registry")
 // @Tags(identifierAttribute="registry_arn")
 // @Testing(hasNoPreExistingResource=true)
@@ -78,18 +79,13 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9_-]+$`),
-						"must contain only letters, numbers, hyphens, and underscores",
+						regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`),
+						"Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.",
 					),
-					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			"registry_arn": framework.ARNAttributeComputedOnly(),
-			"registry_id":  framework.IDAttribute(),
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.RegistryStatus](),
-				Computed:   true,
-			},
+			"registry_arn":    framework.ARNAttributeComputedOnly(),
+			"registry_id":     framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -102,12 +98,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"auto_approval_rules": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Optional:    true,
-							Validators: []validator.Set{
-								setvalidator.ValueStringsAre(stringvalidator.OneOf("APPROVE_ALL")),
-							},
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.AutoApprovalRule](),
+							Optional:   true,
 						},
 					},
 				},
@@ -115,7 +107,6 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"discovery_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[discoveryConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -123,6 +114,12 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 						"authorizer_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.AlsoRequiresWhenEquals(
+									awstypes.RegistryAuthorizerTypeCustomJwt,
+									path.MatchRelative().AtParent().AtName("authorizer_configuration").AtListIndex(0).AtName("custom_jwt_authorizer"),
+								),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -135,87 +132,101 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"allowed_audience": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
-									},
-									"allowed_clients": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
-									},
-									"allowed_scopes": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
-									},
-									"discovery_url": schema.StringAttribute{
-										Required: true,
-									},
+								Validators: []validator.Object{
+									tfobjectvalidator.AtLeastOneOfChildren(
+										path.MatchRelative().AtName("custom_jwt_authorizer"),
+									),
 								},
 								Blocks: map[string]schema.Block{
-									"custom_claim": schema.SetNestedBlock{
-										CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
+									"custom_jwt_authorizer": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"inbound_token_claim_name": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.LengthBetween(1, 255),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
-													},
+												"allowed_audience": schema.ListAttribute{
+													CustomType: fwtypes.ListOfStringType,
+													Optional:   true,
 												},
-												"inbound_token_claim_value_type": schema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
-													Required:   true,
+												"allowed_clients": schema.ListAttribute{
+													CustomType: fwtypes.ListOfStringType,
+													Optional:   true,
+												},
+												"allowed_scopes": schema.ListAttribute{
+													CustomType: fwtypes.ListOfStringType,
+													Optional:   true,
+												},
+												"discovery_url": schema.StringAttribute{
+													Required: true,
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"authorizing_claim_match_value": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerAuthorizingClaimMatchValueModel](ctx),
-													Validators: []validator.List{
-														listvalidator.IsRequired(),
-														listvalidator.SizeAtMost(1),
-													},
+												"custom_claim": schema.SetNestedBlock{
+													CustomType: fwtypes.NewSetNestedObjectTypeOf[customClaimValidationTypeModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"claim_match_operator": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
+															"inbound_token_claim_name": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 255),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																},
+															},
+															"inbound_token_claim_value_type": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
 																Required:   true,
 															},
 														},
 														Blocks: map[string]schema.Block{
-															"claim_match_value": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerClaimMatchValueModel](ctx),
+															"authorizing_claim_match_value": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[authorizingClaimMatchValueTypeModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.IsRequired(),
+																	listvalidator.SizeAtLeast(1),
 																	listvalidator.SizeAtMost(1),
 																},
 																NestedObject: schema.NestedBlockObject{
-																	Validators: []validator.Object{
-																		objectvalidator.ExactlyOneOf(
-																			path.MatchRelative().AtName("match_value_string"),
-																			path.MatchRelative().AtName("match_value_string_list"),
-																		),
-																	},
 																	Attributes: map[string]schema.Attribute{
-																		"match_value_string": schema.StringAttribute{
-																			Optional: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																				stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
-																			},
+																		"claim_match_operator": schema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
+																			Required:   true,
 																		},
-																		"match_value_string_list": schema.SetAttribute{
-																			Optional:    true,
-																			ElementType: types.StringType,
-																			Validators: []validator.Set{
-																				setvalidator.ValueStringsAre(
-																					stringvalidator.LengthBetween(1, 255),
-																					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
-																				),
+																	},
+																	Blocks: map[string]schema.Block{
+																		"claim_match_value": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[claimMatchValueTypeModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Validators: []validator.Object{
+																					tfobjectvalidator.AtLeastOneOfChildren(
+																						path.MatchRelative().AtName("match_value_string"),
+																						path.MatchRelative().AtName("match_value_string_list"),
+																					),
+																				},
+																				Attributes: map[string]schema.Attribute{
+																					"match_value_string": schema.StringAttribute{
+																						Optional: true,
+																						Validators: []validator.String{
+																							stringvalidator.LengthBetween(1, 255),
+																							stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																						},
+																					},
+																					"match_value_string_list": schema.SetAttribute{
+																						Optional:    true,
+																						ElementType: types.StringType,
+																						Validators: []validator.Set{
+																							setvalidator.ValueStringsAre(
+																								stringvalidator.LengthBetween(1, 255),
+																								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																							),
+																						},
+																					},
+																				},
 																			},
 																		},
 																	},
@@ -242,203 +253,82 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *registryResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data registryResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// The listvalidator.IsRequired schema validator handles a missing discovery
-	// block. Resource-level validation only enforces the conditional relationship
-	// that schema validators cannot express.
-	if !data.DiscoveryConfiguration.IsNull() && !data.DiscoveryConfiguration.IsUnknown() {
-		var discoveryConfig []discoveryConfigurationModel
-		resp.Diagnostics.Append(data.DiscoveryConfiguration.ElementsAs(ctx, &discoveryConfig, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(discoveryConfig) > 0 {
-			config := discoveryConfig[0]
-			if config.AuthorizerType.ValueEnum() == awstypes.RegistryAuthorizerTypeCustomJwt &&
-				config.AuthorizerConfiguration.IsNull() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("discovery_configuration").AtListIndex(0).AtName("authorizer_configuration"),
-					"Missing Required Block",
-					"authorizer_configuration is required when authorizer_type is CUSTOM_JWT",
-				)
-			}
-		}
-	}
-}
-
 func (r *registryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AgentRegistryClient(ctx)
-
 	var plan registryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := agentregistrycontrol.CreateRegistryInput{
-		ClientToken: aws.String(create.UniqueId(ctx)),
-		Name:        plan.Name.ValueStringPointer(),
-		Description: plan.Description.ValueStringPointer(),
-		Tags:        getTagsIn(ctx),
+	conn := r.Meta().AgentRegistryClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input agentregistrycontrol.CreateRegistryInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.ApprovalConfiguration.IsNull() {
-		var approvalConfig []approvalConfigurationModel
-		resp.Diagnostics.Append(plan.ApprovalConfiguration.ElementsAs(ctx, &approvalConfig, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(approvalConfig) > 0 {
-			var rules []awstypes.AutoApprovalRule
-			resp.Diagnostics.Append(approvalConfig[0].AutoApprovalRules.ElementsAs(ctx, &rules, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			input.ApprovalConfiguration = &awstypes.ApprovalConfiguration{
-				AutoApprovalRules: rules,
-			}
-		}
-	}
-
-	if !plan.DiscoveryConfiguration.IsNull() {
-		var discoveryConfig []discoveryConfigurationModel
-		resp.Diagnostics.Append(plan.DiscoveryConfiguration.ElementsAs(ctx, &discoveryConfig, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(discoveryConfig) > 0 {
-			config := discoveryConfig[0]
-			input.DiscoveryConfiguration = &awstypes.DiscoveryConfiguration{
-				AuthorizerType: config.AuthorizerType.ValueEnum(),
-			}
-
-			if !config.AuthorizerConfiguration.IsNull() {
-				var authConfig []authorizerConfigurationModel
-				resp.Diagnostics.Append(config.AuthorizerConfiguration.ElementsAs(ctx, &authConfig, false)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
-				if len(authConfig) > 0 {
-					var allowedAudience, allowedClients, allowedScopes []string
-					resp.Diagnostics.Append(authConfig[0].AllowedAudience.ElementsAs(ctx, &allowedAudience, false)...)
-					resp.Diagnostics.Append(authConfig[0].AllowedClients.ElementsAs(ctx, &allowedClients, false)...)
-					resp.Diagnostics.Append(authConfig[0].AllowedScopes.ElementsAs(ctx, &allowedScopes, false)...)
-					if resp.Diagnostics.HasError() {
-						return
-					}
-
-					jwtConfig := awstypes.CustomJWTAuthorizerConfiguration{
-						DiscoveryUrl:    authConfig[0].DiscoveryURL.ValueStringPointer(),
-						AllowedAudience: allowedAudience,
-						AllowedClients:  allowedClients,
-						AllowedScopes:   allowedScopes,
-					}
-
-					if !authConfig[0].CustomClaim.IsNull() {
-						var customClaims []awstypes.CustomClaimValidationType
-						smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, authConfig[0].CustomClaim, &customClaims))
-						if resp.Diagnostics.HasError() {
-							return
-						}
-						jwtConfig.CustomClaims = customClaims
-					}
-
-					input.DiscoveryConfiguration.AuthorizerConfiguration = &awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer{
-						Value: jwtConfig,
-					}
-				}
-			}
-		}
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateRegistry(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionCreating, "Registry", plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
 	}
 
 	registryARN := aws.ToString(out.RegistryArn)
-
-	created, err := waitRegistryCreated(ctx, conn, registryARN, r.CreateTimeout(ctx, plan.Timeouts))
+	registryID, err := registryIDFromARN(registryARN)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionWaitingForCreation, "Registry", registryARN, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err)
+	}
+
+	if _, err := waitRegistryCreated(ctx, conn, registryID, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("registry_id"), registryID)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
 
-	// Set values for unknowns
-	plan.RegistryID = types.StringValue(aws.ToString(created.RegistryId))
-	plan.RegistryARN = types.StringValue(aws.ToString(created.RegistryArn))
-	plan.Status = fwtypes.StringEnumValue(created.Status)
-
-	// Flatten the response back into state
-	resp.Diagnostics.Append(flattenApprovalConfiguration(ctx, created.ApprovalConfiguration, &plan)...)
-	resp.Diagnostics.Append(flattenDiscoveryConfiguration(ctx, created.DiscoveryConfiguration, &plan)...)
+	// Set values for unknowns.
+	plan.RegistryARN = fwflex.StringValueToFramework(ctx, registryARN)
+	plan.RegistryID = fwflex.StringValueToFramework(ctx, registryID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *registryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AgentRegistryClient(ctx)
-
 	var state registryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findRegistryByID(ctx, conn, state.RegistryID.ValueString())
+	conn := r.Meta().AgentRegistryClient(ctx)
+
+	registryID := fwflex.StringValueFromFramework(ctx, state.RegistryID)
+	out, err := findRegistryByID(ctx, conn, registryID)
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionReading, "Registry", state.RegistryID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
 
-	// Set computed attributes
-	state.RegistryID = types.StringValue(aws.ToString(out.RegistryId))
-	state.RegistryARN = types.StringValue(aws.ToString(out.RegistryArn))
-	state.Name = types.StringValue(aws.ToString(out.Name))
-	state.Status = fwtypes.StringEnumValue(out.Status)
-
-	if out.Description != nil {
-		state.Description = types.StringValue(aws.ToString(out.Description))
-	} else {
-		state.Description = types.StringNull()
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
-
-	// Flatten nested structures
-	resp.Diagnostics.Append(flattenApprovalConfiguration(ctx, out.ApprovalConfiguration, &state)...)
-	resp.Diagnostics.Append(flattenDiscoveryConfiguration(ctx, out.DiscoveryConfiguration, &state)...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *registryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AgentRegistryClient(ctx)
-
 	var plan, state registryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -446,182 +336,80 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	// Framework tag updates can invoke Update with no Registry API field changes.
-	// Computed attributes are unknown in the plan, so carry them forward unless
-	// the service update below returns fresher values.
-	plan.RegistryARN = state.RegistryARN
-	plan.RegistryID = state.RegistryID
-	plan.Status = state.Status
+	conn := r.Meta().AgentRegistryClient(ctx)
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ApprovalConfiguration.Equal(state.ApprovalConfiguration) ||
-		!plan.DiscoveryConfiguration.Equal(state.DiscoveryConfiguration) {
-		input := agentregistrycontrol.UpdateRegistryInput{
-			RegistryId: plan.RegistryID.ValueStringPointer(),
-		}
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		if !plan.Name.Equal(state.Name) {
-			input.Name = plan.Name.ValueStringPointer()
-		}
-
-		if !plan.Description.Equal(state.Description) {
-			input.Description = &awstypes.UpdatedDescription{
-				OptionalValue: plan.Description.ValueStringPointer(),
-			}
-		}
-
-		if !plan.ApprovalConfiguration.Equal(state.ApprovalConfiguration) {
-			var approvalConfig []approvalConfigurationModel
-			resp.Diagnostics.Append(plan.ApprovalConfiguration.ElementsAs(ctx, &approvalConfig, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			if len(approvalConfig) > 0 {
-				var rules []awstypes.AutoApprovalRule
-				resp.Diagnostics.Append(approvalConfig[0].AutoApprovalRules.ElementsAs(ctx, &rules, false)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-
-				input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{
-					OptionalValue: &awstypes.ApprovalConfiguration{
-						AutoApprovalRules: rules,
-					},
-				}
-			} else {
-				// Empty list means clear the approval configuration
-				input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{
-					OptionalValue: &awstypes.ApprovalConfiguration{
-						AutoApprovalRules: []awstypes.AutoApprovalRule{},
-					},
-				}
-			}
-		}
-
-		if !plan.DiscoveryConfiguration.Equal(state.DiscoveryConfiguration) {
-			var discoveryConfig []discoveryConfigurationModel
-			resp.Diagnostics.Append(plan.DiscoveryConfiguration.ElementsAs(ctx, &discoveryConfig, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			if len(discoveryConfig) > 0 {
-				config := discoveryConfig[0]
-
-				if !config.AuthorizerConfiguration.IsNull() {
-					var authConfig []authorizerConfigurationModel
-					resp.Diagnostics.Append(config.AuthorizerConfiguration.ElementsAs(ctx, &authConfig, false)...)
-					if resp.Diagnostics.HasError() {
-						return
-					}
-
-					if len(authConfig) > 0 {
-						var allowedAudience, allowedClients, allowedScopes []string
-						resp.Diagnostics.Append(authConfig[0].AllowedAudience.ElementsAs(ctx, &allowedAudience, false)...)
-						resp.Diagnostics.Append(authConfig[0].AllowedClients.ElementsAs(ctx, &allowedClients, false)...)
-						resp.Diagnostics.Append(authConfig[0].AllowedScopes.ElementsAs(ctx, &allowedScopes, false)...)
-						if resp.Diagnostics.HasError() {
-							return
-						}
-
-						jwtConfig := awstypes.CustomJWTAuthorizerConfiguration{
-							DiscoveryUrl:    authConfig[0].DiscoveryURL.ValueStringPointer(),
-							AllowedAudience: allowedAudience,
-							AllowedClients:  allowedClients,
-							AllowedScopes:   allowedScopes,
-						}
-
-						if !authConfig[0].CustomClaim.IsNull() {
-							var customClaims []awstypes.CustomClaimValidationType
-							smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, authConfig[0].CustomClaim, &customClaims))
-							if resp.Diagnostics.HasError() {
-								return
-							}
-							jwtConfig.CustomClaims = customClaims
-						}
-
-						input.DiscoveryConfiguration = &awstypes.UpdatedDiscoveryConfiguration{
-							AuthorizerConfiguration: &awstypes.UpdatedAuthorizerConfiguration{
-								OptionalValue: &awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer{
-									Value: jwtConfig,
-								},
-							},
-						}
-					}
-				}
-			}
+	if diff.HasChanges() {
+		registryID := fwflex.StringValueFromFramework(ctx, plan.RegistryID)
+		var input agentregistrycontrol.UpdateRegistryInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
 		_, err := conn.UpdateRegistry(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionUpdating, "Registry", plan.RegistryID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 			return
 		}
 
-		updated, err := waitRegistryUpdated(ctx, conn, plan.RegistryID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionWaitingForUpdate, "Registry", plan.RegistryID.String(), err),
-				err.Error(),
-			)
+		if _, err := waitRegistryUpdated(ctx, conn, registryID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 			return
 		}
-
-		plan.Status = fwtypes.StringEnumValue(updated.Status)
-		resp.Diagnostics.Append(flattenApprovalConfiguration(ctx, updated.ApprovalConfiguration, &plan)...)
-		resp.Diagnostics.Append(flattenDiscoveryConfiguration(ctx, updated.DiscoveryConfiguration, &plan)...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *registryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AgentRegistryClient(ctx)
-
 	var state registryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	registryID := state.RegistryID.ValueString()
+	conn := r.Meta().AgentRegistryClient(ctx)
 
+	registryID := fwflex.StringValueFromFramework(ctx, state.RegistryID)
 	input := agentregistrycontrol.DeleteRegistryInput{
 		RegistryId: aws.String(registryID),
 	}
-
 	_, err := conn.DeleteRegistry(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionDeleting, "Registry", registryID, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
 
 	if _, err := waitRegistryDeleted(ctx, conn, registryID, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AgentRegistry, create.ErrActionWaitingForDeletion, "Registry", registryID, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
+}
+
+func (r *registryResource) flatten(ctx context.Context, out *agentregistrycontrol.GetRegistryOutput, data *registryResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	return diags
 }
 
 func findRegistryByID(ctx context.Context, conn *agentregistrycontrol.Client, id string) (*agentregistrycontrol.GetRegistryOutput, error) {
 	input := agentregistrycontrol.GetRegistryInput{
 		RegistryId: aws.String(id),
 	}
+	return findRegistry(ctx, conn, &input)
+}
 
-	out, err := conn.GetRegistry(ctx, &input)
+func findRegistry(ctx context.Context, conn *agentregistrycontrol.Client, input *agentregistrycontrol.GetRegistryInput) (*agentregistrycontrol.GetRegistryOutput, error) {
+	out, err := conn.GetRegistry(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -714,201 +502,152 @@ func statusRegistry(conn *agentregistrycontrol.Client, id string) retry.StateRef
 	}
 }
 
-// The approval and discovery configurations are flattened by hand because an
-// omitted block and an explicitly empty one both map to no auto-approval rules,
-// a distinction that has to be preserved across refresh.
-// nosemgrep:ci.semgrep.framework.manual-flattener-functions
-func flattenApprovalConfiguration(ctx context.Context, apiObject *awstypes.ApprovalConfiguration, model *registryResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if apiObject == nil || len(apiObject.AutoApprovalRules) == 0 {
-		// Omitted and explicit empty both mean manual approval to AWS. Preserve an
-		// explicit configured block across refresh so `auto_approval_rules = []`
-		// does not drift to null; imports have no prior block and stay null.
-		if model.ApprovalConfiguration.IsNull() {
-			model.ApprovalConfiguration = fwtypes.NewListNestedObjectValueOfNull[approvalConfigurationModel](ctx)
-			return diags
-		}
-
-		emptyRules, d := fwtypes.NewSetValueOf[types.String](ctx, []attr.Value{})
-		diags.Append(d...)
-		model.ApprovalConfiguration = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []approvalConfigurationModel{{
-			AutoApprovalRules: emptyRules,
-		}})
-		return diags
+func registryIDFromARN(registryyARN string) (string, error) {
+	parsedARN, err := arn.Parse(registryyARN)
+	if err != nil {
+		return "", fmt.Errorf("parsing registry ARN (%s): %w", registryyARN, err)
 	}
-
-	// Convert enum slice to attr.Value slice.
-	ruleValues := make([]attr.Value, len(apiObject.AutoApprovalRules))
-	for i, rule := range apiObject.AutoApprovalRules {
-		ruleValues[i] = types.StringValue(string(rule))
-	}
-
-	rules, d := fwtypes.NewSetValueOf[types.String](ctx, ruleValues)
-	diags.Append(d...)
-
-	approvalConfig := approvalConfigurationModel{
-		AutoApprovalRules: rules,
-	}
-
-	model.ApprovalConfiguration = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []approvalConfigurationModel{approvalConfig})
-	return diags
-}
-
-// nosemgrep:ci.semgrep.framework.manual-flattener-functions
-func flattenDiscoveryConfiguration(ctx context.Context, apiObject *awstypes.DiscoveryConfiguration, model *registryResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if apiObject == nil {
-		model.DiscoveryConfiguration = fwtypes.NewListNestedObjectValueOfNull[discoveryConfigurationModel](ctx)
-		return diags
-	}
-
-	discoveryConfig := discoveryConfigurationModel{
-		AuthorizerType: fwtypes.StringEnumValue(apiObject.AuthorizerType),
-	}
-
-	if apiObject.AuthorizerConfiguration != nil {
-		if member, ok := apiObject.AuthorizerConfiguration.(*awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer); ok {
-			authConfig := authorizerConfigurationModel{
-				DiscoveryURL: types.StringValue(aws.ToString(member.Value.DiscoveryUrl)),
-			}
-
-			if len(member.Value.AllowedAudience) > 0 {
-				// Convert []string to []attr.Value
-				audienceVals := make([]attr.Value, len(member.Value.AllowedAudience))
-				for i, v := range member.Value.AllowedAudience {
-					audienceVals[i] = types.StringValue(v)
-				}
-				audience, d := fwtypes.NewListValueOf[types.String](ctx, audienceVals)
-				diags.Append(d...)
-				authConfig.AllowedAudience = audience
-			} else {
-				authConfig.AllowedAudience = fwtypes.NewListValueOfNull[types.String](ctx)
-			}
-
-			if len(member.Value.AllowedClients) > 0 {
-				clientVals := make([]attr.Value, len(member.Value.AllowedClients))
-				for i, v := range member.Value.AllowedClients {
-					clientVals[i] = types.StringValue(v)
-				}
-				clients, d := fwtypes.NewListValueOf[types.String](ctx, clientVals)
-				diags.Append(d...)
-				authConfig.AllowedClients = clients
-			} else {
-				authConfig.AllowedClients = fwtypes.NewListValueOfNull[types.String](ctx)
-			}
-
-			if len(member.Value.AllowedScopes) > 0 {
-				scopeVals := make([]attr.Value, len(member.Value.AllowedScopes))
-				for i, v := range member.Value.AllowedScopes {
-					scopeVals[i] = types.StringValue(v)
-				}
-				scopes, d := fwtypes.NewListValueOf[types.String](ctx, scopeVals)
-				diags.Append(d...)
-				authConfig.AllowedScopes = scopes
-			} else {
-				authConfig.AllowedScopes = fwtypes.NewListValueOfNull[types.String](ctx)
-			}
-
-			if len(member.Value.CustomClaims) > 0 {
-				var customClaims fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel]
-				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, member.Value.CustomClaims, &customClaims))
-				authConfig.CustomClaim = customClaims
-			} else {
-				authConfig.CustomClaim = fwtypes.NewSetNestedObjectValueOfNull[customJWTAuthorizerCustomClaimModel](ctx)
-			}
-
-			discoveryConfig.AuthorizerConfiguration = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []authorizerConfigurationModel{authConfig})
-		}
-	} else {
-		discoveryConfig.AuthorizerConfiguration = fwtypes.NewListNestedObjectValueOfNull[authorizerConfigurationModel](ctx)
-	}
-
-	model.DiscoveryConfiguration = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []discoveryConfigurationModel{discoveryConfig})
-	return diags
+	memoryID := strings.TrimPrefix(parsedARN.Resource, "registry/")
+	return memoryID, nil
 }
 
 type registryResourceModel struct {
 	framework.WithRegionModel
-	ApprovalConfiguration  fwtypes.ListNestedObjectValueOf[approvalConfigurationModel]  `tfsdk:"approval_configuration"`
+	ApprovalConfiguration fwtypes.ListNestedObjectValueOf[approvalConfigurationModel] `tfsdk:"approval_configuration"`
+	// AutoDetectionConfiguration fwtypes.ListNestedObjectValueOf[autoDetectionConfigurationModel] `tfsdk:"auto_detection_configuration"`
 	Description            types.String                                                 `tfsdk:"description"`
 	DiscoveryConfiguration fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel] `tfsdk:"discovery_configuration"`
-	Name                   types.String                                                 `tfsdk:"name"`
-	RegistryARN            types.String                                                 `tfsdk:"registry_arn"`
-	RegistryID             types.String                                                 `tfsdk:"registry_id"`
-	Status                 fwtypes.StringEnum[awstypes.RegistryStatus]                  `tfsdk:"status"`
-	Tags                   tftags.Map                                                   `tfsdk:"tags"`
-	TagsAll                tftags.Map                                                   `tfsdk:"tags_all"`
-	Timeouts               timeouts.Value                                               `tfsdk:"timeouts"`
+	// EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	Name        types.String   `tfsdk:"name"`
+	RegistryARN types.String   `tfsdk:"registry_arn"`
+	RegistryID  types.String   `tfsdk:"registry_id"`
+	Tags        tftags.Map     `tfsdk:"tags"`
+	TagsAll     tftags.Map     `tfsdk:"tags_all"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
 
 type approvalConfigurationModel struct {
-	AutoApprovalRules fwtypes.SetOfString `tfsdk:"auto_approval_rules"`
+	AutoApprovalRules fwtypes.SetOfStringEnum[awstypes.AutoApprovalRule] `tfsdk:"auto_approval_rules"`
 }
 
 type discoveryConfigurationModel struct {
-	AuthorizerType          fwtypes.StringEnum[awstypes.RegistryAuthorizerType]           `tfsdk:"authorizer_type"`
 	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel] `tfsdk:"authorizer_configuration"`
+	AuthorizerType          fwtypes.StringEnum[awstypes.RegistryAuthorizerType]           `tfsdk:"authorizer_type"`
 }
 
 type authorizerConfigurationModel struct {
-	AllowedAudience fwtypes.ListOfString                                                `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.ListOfString                                                `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.ListOfString                                                `tfsdk:"allowed_scopes"`
-	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+	CustomJWTAuthorizer fwtypes.ListNestedObjectValueOf[customJWTAuthorizerConfigurationModel] `tfsdk:"custom_jwt_authorizer"`
 }
 
-type customJWTAuthorizerCustomClaimModel struct {
-	InboundTokenClaimName      types.String                                                                        `tfsdk:"inbound_token_claim_name"`
-	InboundTokenClaimValueType fwtypes.StringEnum[awstypes.InboundTokenClaimValueType]                             `tfsdk:"inbound_token_claim_value_type"`
-	AuthorizingClaimMatchValue fwtypes.ListNestedObjectValueOf[customJWTAuthorizerAuthorizingClaimMatchValueModel] `tfsdk:"authorizing_claim_match_value"`
+var (
+	_ fwflex.Expander  = authorizerConfigurationModel{}
+	_ fwflex.Flattener = &authorizerConfigurationModel{}
+)
+
+func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer:
+		var model customJWTAuthorizerConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.CustomJWTAuthorizer, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("authorizerConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
 }
 
-type customJWTAuthorizerAuthorizingClaimMatchValueModel struct {
-	ClaimMatchOperator fwtypes.StringEnum[awstypes.ClaimMatchOperatorType]                      `tfsdk:"claim_match_operator"`
-	ClaimMatchValue    fwtypes.ListNestedObjectValueOf[customJWTAuthorizerClaimMatchValueModel] `tfsdk:"claim_match_value"`
+func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.CustomJWTAuthorizer.IsNull():
+		model, d := m.CustomJWTAuthorizer.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+	}
+
+	return nil, diags
 }
 
-type customJWTAuthorizerClaimMatchValueModel struct {
+type customJWTAuthorizerConfigurationModel struct {
+	AllowedAudience fwtypes.ListOfString                                           `tfsdk:"allowed_audience"`
+	AllowedClients  fwtypes.ListOfString                                           `tfsdk:"allowed_clients"`
+	AllowedScopes   fwtypes.ListOfString                                           `tfsdk:"allowed_scopes"`
+	CustomClaims    fwtypes.SetNestedObjectValueOf[customClaimValidationTypeModel] `tfsdk:"custom_claim"`
+	DiscoveryURL    types.String                                                   `tfsdk:"discovery_url"`
+	// TODO
+	// PrivateEndpoint          fwtypes.SetNestedObjectValueOf[privateEndpointModel]         `tfsdk:"private_endpoint"`
+	// PrivateEndpointOverrides fwtypes.SetNestedObjectValueOf[privateEndpointOverrideModel] `tfsdk:"private_endpoint_override"`
+}
+
+type customClaimValidationTypeModel struct {
+	AuthorizingClaimMatchValue fwtypes.ListNestedObjectValueOf[authorizingClaimMatchValueTypeModel] `tfsdk:"authorizing_claim_match_value"`
+	InboundTokenClaimName      types.String                                                         `tfsdk:"inbound_token_claim_name"`
+	InboundTokenClaimValueType fwtypes.StringEnum[awstypes.InboundTokenClaimValueType]              `tfsdk:"inbound_token_claim_value_type"`
+}
+
+type authorizingClaimMatchValueTypeModel struct {
+	ClaimMatchOperator fwtypes.StringEnum[awstypes.ClaimMatchOperatorType]       `tfsdk:"claim_match_operator"`
+	ClaimMatchValue    fwtypes.ListNestedObjectValueOf[claimMatchValueTypeModel] `tfsdk:"claim_match_value"`
+}
+
+type claimMatchValueTypeModel struct {
 	MatchValueString     types.String        `tfsdk:"match_value_string"`
 	MatchValueStringList fwtypes.SetOfString `tfsdk:"match_value_string_list"`
 }
 
 var (
-	_ fwflex.Expander  = customJWTAuthorizerClaimMatchValueModel{}
-	_ fwflex.Flattener = &customJWTAuthorizerClaimMatchValueModel{}
+	_ fwflex.Expander  = claimMatchValueTypeModel{}
+	_ fwflex.Flattener = &claimMatchValueTypeModel{}
 )
 
-func (m *customJWTAuthorizerClaimMatchValueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+func (m *claimMatchValueTypeModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.ClaimMatchValueTypeMemberMatchValueString:
 		m.MatchValueString = types.StringValue(t.Value)
+
 	case awstypes.ClaimMatchValueTypeMemberMatchValueStringList:
 		m.MatchValueStringList = fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value)
 
 	default:
 		diags.AddError(
 			"Unsupported Type",
-			fmt.Sprintf("claim match value flatten: %T", v),
+			fmt.Sprintf("claimMatchValueTypeModel.Flatten: %T", v),
 		)
 	}
+
 	return diags
 }
 
-func (m customJWTAuthorizerClaimMatchValueModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m claimMatchValueTypeModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
 	case !m.MatchValueString.IsNull():
 		var r awstypes.ClaimMatchValueTypeMemberMatchValueString
 		r.Value = fwflex.StringValueFromFramework(ctx, m.MatchValueString)
 		return &r, diags
+
 	case !m.MatchValueStringList.IsNull():
 		var r awstypes.ClaimMatchValueTypeMemberMatchValueStringList
 		r.Value = fwflex.ExpandFrameworkStringValueSet(ctx, m.MatchValueStringList)
 		return &r, diags
 	}
+
 	return nil, diags
 }

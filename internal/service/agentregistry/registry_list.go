@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,31 +56,41 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			registryID := aws.ToString(item.RegistryId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.RegistryArn))
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), registryID)
 
-			output, err := findRegistryByID(ctx, conn, registryID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			var output *agentregistrycontrol.GetRegistryOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findRegistryByID(ctx, conn, registryID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
 			}
 
 			result := request.NewListResult(ctx)
 
 			var data registryResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.Name = types.StringValue(aws.ToString(output.Name))
-				data.Description = types.StringPointerValue(output.Description)
-				data.RegistryARN = types.StringValue(aws.ToString(output.RegistryArn))
-				data.RegistryID = types.StringValue(aws.ToString(output.RegistryId))
-				data.Status = fwtypes.StringEnumValue(output.Status)
+				data.RegistryID = fwflex.StringValueToFramework(ctx, registryID)
 
-				result.Diagnostics.Append(flattenApprovalConfiguration(ctx, output.ApprovalConfiguration, &data)...)
-				result.Diagnostics.Append(flattenDiscoveryConfiguration(ctx, output.DiscoveryConfiguration, &data)...)
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				}
 
 				result.DisplayName = aws.ToString(item.Name)
 			})
 
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
 			if !yield(result) {
 				return
 			}
@@ -91,20 +102,22 @@ type listRegistryModel struct {
 	framework.WithRegionModel
 }
 
-func listRegistries(ctx context.Context, conn *agentregistrycontrol.Client, input *agentregistrycontrol.ListRegistriesInput) iter.Seq2[awstypes.RegistrySummary, error] {
-	return func(yield func(awstypes.RegistrySummary, error) bool) {
+func listRegistries(ctx context.Context, conn *agentregistrycontrol.Client, input *agentregistrycontrol.ListRegistriesInput, optFns ...func(*agentregistrycontrol.Options)) iter.Seq2[awstypes.RegistrySummary, error] {
+	return tfiter.ConcatValuesWithError(listRegistryPages(ctx, conn, input, optFns...))
+}
+
+func listRegistryPages(ctx context.Context, conn *agentregistrycontrol.Client, input *agentregistrycontrol.ListRegistriesInput, optFns ...func(*agentregistrycontrol.Options)) iter.Seq2[[]awstypes.RegistrySummary, error] {
+	return func(yield func([]awstypes.RegistrySummary, error) bool) {
 		pages := agentregistrycontrol.NewListRegistriesPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.RegistrySummary](), fmt.Errorf("listing Agent Registry Registries: %w", err))
+				yield(nil, fmt.Errorf("listing Agent Registry Registries: %w", err))
 				return
 			}
 
-			for _, item := range page.Registries {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.Registries, nil) {
+				return
 			}
 		}
 	}

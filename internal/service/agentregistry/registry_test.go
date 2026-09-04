@@ -283,7 +283,7 @@ func testAccCheckRegistryDestroy(ctx context.Context, t *testing.T) resource.Tes
 				return err
 			}
 
-			return fmt.Errorf("Agent Registry Registry %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Agent Registry Registry %s still exists", rs.Primary.Attributes["registry_id"])
 		}
 
 		return nil
