@@ -186,11 +186,13 @@ func resourceCapacityProvider() *schema.Resource {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
+								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"actions_status": {
 											Type:             schema.TypeString,
 											Optional:         true,
+											Computed:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.AutoRepairActionsStatus](),
 										},
 									},
