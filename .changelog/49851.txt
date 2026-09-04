@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_aggregate_authorization: Fix `region` to `authorized_aws_region` migration incorrectly forcing resource replacement
+```
