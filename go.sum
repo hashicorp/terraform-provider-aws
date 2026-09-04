@@ -299,8 +299,8 @@ github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.61.0 h1:T3XLpKrVyeT52/XUrI9
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.61.0/go.mod h1:LrrgYcCbFV+b5K+M84wVKRcuQlL0sk4FDcQUt/TrUXM=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.37.0 h1:xPBughHZchwVjM12S2he3rpkBoSB+g0Kofi6TKzMfj4=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.37.0/go.mod h1:e8WGJ/kJUkFrVbSNRa9rMjY8pYYnBFpzukkdU53jukk=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.56.1 h1:hdBsvutwvfmFs559XodYMQhplIOZJd1TE27nW0z8Gv8=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.56.1/go.mod h1:vYJxLvCfJvTOTrO1xal89c4dAWELn6TXJHTbcdaJkl0=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.57.0 h1:xWQe9LaHH/0pWsEQLtDTW5U3o1T4XdwkaKo/maJwZXQ=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.57.0/go.mod h1:vYJxLvCfJvTOTrO1xal89c4dAWELn6TXJHTbcdaJkl0=
 github.com/aws/aws-sdk-go-v2/service/interconnect v1.6.1 h1:+x5SQST6JR7KHEyK94jNMD299bqqtJ2B/77nG6BTO/M=
 github.com/aws/aws-sdk-go-v2/service/interconnect v1.6.1/go.mod h1:AvY8hJWJpLPappbDFln2ychbEpO4aG+2FMZyo58jQhE=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 h1:bAdDl/HkGCcGPoe25ToSHEw23VIxt6CT5fLcg111BKg=
