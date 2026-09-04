@@ -82,8 +82,13 @@ func TestBGPASNResourceSchemas(t *testing.T) {
 	t.Parallel()
 
 	resourceFactories := map[string]func() *schema.Resource{
-		"private VIF": resourcePrivateVirtualInterface,
-		"transit VIF": resourceTransitVirtualInterface,
+		"BGP peer":           resourceBGPPeer,
+		"private VIF":        resourcePrivateVirtualInterface,
+		"public VIF":         resourcePublicVirtualInterface,
+		"transit VIF":        resourceTransitVirtualInterface,
+		"hosted private VIF": resourceHostedPrivateVirtualInterface,
+		"hosted public VIF":  resourceHostedPublicVirtualInterface,
+		"hosted transit VIF": resourceHostedTransitVirtualInterface,
 	}
 
 	for name, resourceFactory := range resourceFactories {
