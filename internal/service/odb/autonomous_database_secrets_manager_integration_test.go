@@ -25,7 +25,7 @@ func TestAccODBAutonomousDatabaseSecretsManagerIntegration_basic(t *testing.T) {
 	var role odbtypes.OciIamRole
 	resourceName := "aws_odb_autonomous_database_secrets_manager_integration.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- account-wide integration tests must remain serialized
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx, t)

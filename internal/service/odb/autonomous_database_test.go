@@ -239,7 +239,7 @@ func TestAccODBAutonomousDatabase_adminPasswordSourceWithIntegration(t *testing.
 	displayName := acctest.RandomWithPrefix(t, "tf-odb-adbs")
 	dbName := "TFADB" + acctest.RandStringFromCharSet(t, 10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- account-wide integration tests must remain serialized
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccAutonomousDatabaseSecretsManagerIntegrationPreCheck(ctx, t)
