@@ -690,6 +690,64 @@ func TestAccRDSProxy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSProxy_clientPasswordAuthType_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBProxy
+	resourceName := "aws_db_proxy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyConfig_authClientPasswordType(
+					rName,
+					"MYSQL_NATIVE_PASSWORD",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
+						"auth_scheme":               "SECRETS",
+						"client_password_auth_type": "MYSQL_NATIVE_PASSWORD",
+						names.AttrDescription:       "test",
+						"iam_auth":                  "DISABLED",
+					}),
+				),
+			},
+			{
+				Config: testAccProxyConfig_authClientPasswordType(
+					rName,
+					"MYSQL_CACHING_SHA2_PASSWORD",
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
+						"auth_scheme":               "SECRETS",
+						"client_password_auth_type": "MYSQL_CACHING_SHA2_PASSWORD",
+						names.AttrDescription:       "test",
+						"iam_auth":                  "DISABLED",
+					},
+					),
+				),
+			},
+		},
+	})
+}
+
 // testAccDBProxyPreCheck checks if a call to describe db proxies errors out meaning feature not supported
 func testAccDBProxyPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
@@ -1383,4 +1441,29 @@ resource "aws_db_proxy" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccProxyConfig_authClientPasswordType(rName, clientPasswordAuthType string) string {
+	return acctest.ConfigCompose(testAccProxyConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = %[1]q
+  engine_family          = "MYSQL"
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test[*].id
+
+  auth {
+    auth_scheme               = "SECRETS"
+    client_password_auth_type = %[2]q
+    description               = "test"
+    iam_auth                  = "DISABLED"
+    secret_arn                = aws_secretsmanager_secret.test.arn
+  }
+}
+`, rName, clientPasswordAuthType))
 }
