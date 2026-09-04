@@ -923,16 +923,32 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		harnessID = aws.ToString(out.Harness.HarnessId)
 		harness, err = waitHarnessCreated(ctx, conn, harnessID, createTimeout)
 		if waitErr := err; waitErr != nil {
-			// Only retry IAM eventual consistency errors up to that timeout.
-			// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service".
-			if iamwaiterDeadline.Remaining() == 0 || !errs.Contains(err, "verify that the role exists and its trust policy allows assumption") {
-				return tfresource.NonRetryableError(err)
+			switch {
+			case iamwaiterDeadline.Remaining() > 0 && errs.Contains(waitErr, "verify that the role exists and its trust policy allows assumption"):
+				// Only retry IAM eventual consistency errors up to that timeout.
+				// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service".
+			default:
+				return tfresource.NonRetryableError(waitErr)
+			}
+
+			var memoryARN string
+			switch t := harness.Memory.(type) {
+			case *awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
+				memoryARN = aws.ToString(t.Value.Arn)
 			}
 
 			err := r.deleteSync(ctx, harnessID, r.DeleteTimeout(ctx, data.Timeouts))
 			harnessID, harness = "", nil
 			if err != nil {
 				return tfresource.NonRetryableError(err)
+			}
+
+			// On recreating the harness:
+			// "While waiting, unexpected state 'CREATE_FAILED', wanted target 'READY'. last error: Memory operation failed: Validation failed during CreateMemory: Memory with name ... already exists".
+			if memoryARN != "" {
+				if _, err := waitMemoryDeleted(ctx, conn, memoryARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+					return tfresource.NonRetryableError(err)
+				}
 			}
 
 			return tfresource.RetryableError(waitErr)
@@ -1117,8 +1133,7 @@ func (r *harnessResource) flatten(ctx context.Context, harness *awstypes.Harness
 
 	r.flattenEnvironment(ctx, data, populateEnvironment)
 
-	conn := r.Meta().BedrockAgentCoreClient(ctx)
-	diags.Append(r.flattenMemory(ctx, conn, data, populateMemory)...)
+	diags.Append(r.flattenMemory(ctx, data, populateMemory)...)
 
 	return diags
 }
@@ -1133,8 +1148,10 @@ func (r *harnessResource) flattenEnvironment(ctx context.Context, data *harnessR
 	}
 }
 
-func (r *harnessResource) flattenMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
+func (r *harnessResource) flattenMemory(ctx context.Context, data *harnessResourceModel, populateMemory bool) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	memoryBlock, d := data.Memory.ToPtr(ctx)
 	diags.Append(d...)
