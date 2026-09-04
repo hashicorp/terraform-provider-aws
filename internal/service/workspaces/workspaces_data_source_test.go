@@ -21,7 +21,8 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			acctest.CtBasic: testAccDirectoryDataSource_basic,
+			acctest.CtBasic:        testAccDirectoryDataSource_basic,
+			"accessEndpointConfig": testAccDirectoryDataSource_accessEndpointConfig,
 		},
 		"Image": {
 			acctest.CtBasic: testAccImageDataSource_basic,
