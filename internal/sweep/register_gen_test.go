@@ -101,6 +101,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/interconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -298,6 +299,7 @@ func registerSweepers() {
 	guardduty.RegisterSweepers()
 	iam.RegisterSweepers()
 	imagebuilder.RegisterSweepers()
+	interconnect.RegisterSweepers()
 	internetmonitor.RegisterSweepers()
 	iot.RegisterSweepers()
 	kafka.RegisterSweepers()
