@@ -7,7 +7,9 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -24,6 +26,13 @@ import (
 )
 
 // @SDKResource("aws_iam_group_membership", name="Group Membership")
+// @IdentityAttribute("name")
+// @IdentityAttribute("group")
+// @IdAttrFormat("{name}")
+// @ImportIDHandler("groupMembershipImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam;iam.GetGroupOutput")
+// @Testing(preIdentityVersion="v6.49.0")
+// @Testing(importStateIdFunc=testAccGroupMembershipImportStateIdFunc)
 func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,
@@ -183,4 +192,26 @@ func addUsersToGroup(ctx context.Context, conn *iam.Client, users []string, grou
 		}
 	}
 	return nil
+}
+
+const groupMembershipImportIDSeparator = "/"
+
+type groupMembershipImportID struct{}
+
+func (groupMembershipImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
+}
+
+func (groupMembershipImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.SplitN(id, groupMembershipImportIDSeparator, 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <membership-name>%s<group-name>", id, groupMembershipImportIDSeparator)
+	}
+
+	result := map[string]any{
+		names.AttrName: parts[0],
+		"group":        parts[1],
+	}
+
+	return parts[0], result, nil
 }
