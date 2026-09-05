@@ -99,6 +99,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newSPICECapacityConfigurationResource,
+			TypeName: "aws_quicksight_spice_capacity_configuration",
+			Name:     "SPICE Capacity Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newTemplateAliasResource,
 			TypeName: "aws_quicksight_template_alias",
 			Name:     "Template Alias",
