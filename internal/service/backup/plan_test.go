@@ -6,6 +6,7 @@ package backup_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -45,6 +46,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 						names.AttrSchedule:             "cron(0 12 * * ? *)",
 						"schedule_expression_timezone": "Etc/UTC",
 						"lifecycle.#":                  "0",
+						"index_action.#":               "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
@@ -807,6 +809,73 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scan_setting.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBackupPlan_withIndexAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_withIndexAction(rName, []string{"EBS"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.0.resource_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.index_action.0.resource_types.*", "EBS"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Update index_action.resource_types from ["EBS"] to ["EBS", "S3"]
+				Config: testAccPlanConfig_withIndexAction(rName, []string{"EBS", "S3"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.0.resource_types.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.index_action.0.resource_types.*", "EBS"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.index_action.0.resource_types.*", "S3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Remove index_action block
+				Config: testAccPlanConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.index_action.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1596,4 +1665,26 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, rName))
+}
+
+func testAccPlanConfig_withIndexAction(rName string, resourceTypes []string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    index_action {
+      resource_types = ["%[2]s"]
+    }
+  }
+}
+`, rName, strings.Join(resourceTypes, `","`))
 }
