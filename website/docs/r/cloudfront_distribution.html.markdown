@@ -656,8 +656,8 @@ The arguments of `geo_restriction` are:
 
 #### Viewer mTLS Config Arguments
 
-* `mode` (Required) - The mode for viewer mTLS. Valid values: `required`, `optional`.
-* `trust_store_config` (Required) - The [trust store configuration](#trust-store-config-arguments) for viewer mTLS (maximum one).
+* `mode` (Required) - The mode for viewer mTLS. Valid values: `required`, `optional`, `passthrough`. In `passthrough` mode, CloudFront does not validate the client certificate against a trust store and instead forwards the certificate to the origin for validation.
+* `trust_store_config` (Optional) - The [trust store configuration](#trust-store-config-arguments) for viewer mTLS (maximum one). Required when `mode` is `required` or `optional`. Must be omitted when `mode` is `passthrough`.
 
 ##### Trust Store Config Arguments
 
