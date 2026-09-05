@@ -46,6 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
 * `availability_zone` - Availability zone where the EBS volume exists.
+* `availability_zone_id` - ID of the Availability Zone where the EBS volume exists.
 * `create_time` - Timestamp when volume creation was initiated.
 * `encrypted` - Whether the disk is encrypted.
 * `id` - Volume ID (e.g., vol-59fcb34e).
