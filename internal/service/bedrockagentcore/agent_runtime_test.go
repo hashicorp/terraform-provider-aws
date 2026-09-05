@@ -128,6 +128,10 @@ func TestCustomJWTAuthorizerPrivateEndpointRoundTrip(t *testing.T) {
 			in := awstypes.CustomJWTAuthorizerConfiguration{
 				DiscoveryUrl:    aws.String("https://example.com/.well-known/openid-configuration"),
 				AllowedAudience: []string{"aud"},
+				AllowedScopes:   []string{"resource/scope"},
+				AdvertisedScopeMapping: map[string]string{
+					"resource/scope": "openid",
+				},
 				PrivateEndpoint: tc.privateEndpoint,
 				PrivateEndpointOverrides: []awstypes.PrivateEndpointOverride{
 					{
@@ -460,6 +464,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
@@ -505,6 +510,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("finance"),
 										knownvalue.StringExact("technology"),
@@ -573,6 +579,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
@@ -644,6 +651,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
@@ -706,6 +714,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"custom_jwt_authorizer": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"advertised_scope_mapping": knownvalue.Null(),
 									"allowed_audience": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("sports"),
 										knownvalue.StringExact("weather"),
