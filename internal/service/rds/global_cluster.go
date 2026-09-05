@@ -391,16 +391,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.Client, dbClusterARN string) (*types.GlobalCluster, error) {
-	input := &rds.DescribeGlobalClustersInput{
-		Filters: []types.Filter{
-			{
-				Name:   aws.String("db-cluster-id"),
-				Values: []string{dbClusterARN},
-			},
-		},
-	}
-
-	return findGlobalCluster(ctx, conn, input, func(v *types.GlobalCluster) bool {
+	return findGlobalCluster(ctx, conn, &rds.DescribeGlobalClustersInput{}, func(v *types.GlobalCluster) bool {
 		return slices.ContainsFunc(v.GlobalClusterMembers, func(v types.GlobalClusterMember) bool {
 			return aws.ToString(v.DBClusterArn) == dbClusterARN
 		})
