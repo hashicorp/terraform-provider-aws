@@ -555,6 +555,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Computed: true,
 										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
 									},
+									names.AttrOwnerAccountID: schema.StringAttribute{
+										Optional: true,
+									},
 									"vpc_origin_id": schema.StringAttribute{
 										Required: true,
 									},
@@ -1146,6 +1149,7 @@ type originShieldModel struct {
 type vpcOriginConfigModel struct {
 	OriginKeepaliveTimeout types.Int32  `tfsdk:"origin_keepalive_timeout"`
 	OriginReadTimeout      types.Int32  `tfsdk:"origin_read_timeout"`
+	OwnerAccountID         types.String `tfsdk:"owner_account_id"`
 	VpcOriginID            types.String `tfsdk:"vpc_origin_id"`
 }
 
