@@ -155,6 +155,7 @@ func ResourceCanary() *schema.Resource {
 								ValidateFunc: validation.All(
 									validation.IntDivisibleBy(64),
 									validation.IntAtLeast(960),
+									validation.IntAtMost(3008),
 								),
 							},
 							"timeout_in_seconds": {
