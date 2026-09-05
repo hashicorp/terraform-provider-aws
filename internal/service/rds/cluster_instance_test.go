@@ -892,6 +892,14 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
 				),
 			},
+			{
+				Config: testAccClusterInstanceConfig_performanceInsightsDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
+				),
+			},
 		},
 	})
 }
@@ -1801,4 +1809,28 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_retention_period = %[2]d
 }
 `, rName, performanceInsightsRetentionPeriod))
+}
+
+func testAccClusterInstanceConfig_performanceInsightsDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", true),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "mustbeeightcharacters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier           = aws_rds_cluster.test.id
+  engine                       = aws_rds_cluster.test.engine
+  identifier                   = %[1]q
+  instance_class               = data.aws_rds_orderable_db_instance.test.instance_class
+  performance_insights_enabled = false
+}
+`, rName))
 }
