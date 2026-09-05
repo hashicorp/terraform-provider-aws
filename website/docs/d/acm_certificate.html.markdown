@@ -55,4 +55,5 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the found certificate.
 * `certificate` - ACM-issued certificate.
 * `certificate_chain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
+* `subject_alternative_names` - List of Subject Alternative Names (domain names) included in the certificate, including the primary domain.
 * `tags` - Mapping of tags for the resource.
