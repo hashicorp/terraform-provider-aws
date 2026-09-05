@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `ip_address_type` - (Optional, Forces new resource) The IP address type of the Anycast IP list. Valid values: `ipv4`, `ipv6`, `dualstack`. Defaults to `ipv4`.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
