@@ -420,9 +420,11 @@ gen-check: gen ## [CI] Provider Checks / go_generate
 	@git diff origin/$(BASE_REF) --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
-generate-changelog: ## Generate changelog
-	@echo "make: Generating changelog..."
-	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
+generate-changelog: ## Legacy target. CHANGELOG generation is now handled by GitHub Actions workflows; see docs/changelog-process.md
+	@echo "make: generate-changelog is deprecated"
+	@echo "make: CHANGELOG generation is now handled by GitHub Actions workflows"
+	@echo "make: See docs/changelog-process.md for current process"
+	@exit 1
 
 gh-workflow-lint: ## [CI] Workflow Linting / actionlint
 	@echo "make: Workflow Linting / actionlint..."
