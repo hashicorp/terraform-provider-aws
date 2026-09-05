@@ -80,7 +80,9 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = findAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Policy, error) {
+		return findAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Policy Attachment (%s) not found, removing from state", d.Id())
