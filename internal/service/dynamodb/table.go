@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -229,6 +230,7 @@ func resourceTable() *schema.Resource {
 							"range_key": {
 								Type:             schema.TypeString,
 								Optional:         true,
+								Computed:         true,
 								Deprecated:       "range_key is deprecated. Use key_schema instead.",
 								ValidateDiagFunc: verify.WarnStringIsNotEmpty,
 							},
@@ -245,6 +247,7 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
+					// Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
 				"global_table_witness": {
 					Type:     schema.TypeList,
@@ -3696,73 +3699,91 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 	planGSI := planRaw.GetAttr("global_secondary_index")
 	plan := collectGSI(planGSI)
 
-	// Adding or removing GSIs
-	if len(plan) != len(state) {
-		return nil
-	}
-
-	// GSI name mismatch
-	for name := range state {
-		if _, ok := plan[name]; !ok {
-			return nil
+	// Group changed keys by GSI element hash
+	keysByHash := make(map[string][]string)
+	for _, key := range diff.GetChangedKeysPrefix("global_secondary_index") {
+		parts := strings.Split(key, ".")
+		if len(parts) >= 2 && parts[1] != "#" {
+			hash := parts[1]
+			keysByHash[hash] = append(keysByHash[hash], key)
 		}
 	}
 
-	for name, vState := range state {
-		vPlan := plan[name]
+	for hash := range keysByHash {
+		nameKey := fmt.Sprintf("global_secondary_index.%s.%s", hash, names.AttrName)
+		gsiName, ok := diff.Get(nameKey).(string)
+		if !ok || gsiName == "" {
+			continue
+		}
 
-		for attrName := range vState.Type().AttributeTypes() {
-			s := vState.GetAttr(attrName)
-			p := vPlan.GetAttr(attrName)
-			switch attrName {
-			case "hash_key":
-				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
-					// "key_schema" is set
-					continue // change to "key_schema" will be caught by equality test
-				}
-				if !ctyValueLegacyEquals(s, p) {
-					return nil
-				}
-
-			case "range_key":
-				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
-					// "key_schema" is set
-					continue // change to "key_schema" will be caught by equality test
-				}
-				if !ctyValueLegacyEquals(s, p) {
-					return nil
-				}
-
-			case "key_schema":
-				// key_schema is a block nested list, so the zero-value is an empty list
-				if p.LengthInt() == 0 && s.LengthInt() > 0 {
-					// "hash_key" is set
-					continue // change to "hash_key" will be caught by equality test
-				}
-				if !ctyValueLegacyEquals(s, p) {
-					return nil
-				}
-
-			case "warm_throughput":
-				// AWS automatically sets warm_throughput
-				// values for on-demand tables, but these should not cause diffs when
-				// the user hasn't explicitly configured warm_throughput.
-				if p.IsNull() || (p.IsKnown() && p.LengthInt() == 0) {
-					continue
-				}
-				if !ctyValueLegacyEquals(s, p) {
-					return nil
-				}
-
-			default:
-				if !ctyValueLegacyEquals(s, p) {
-					return nil
+		vState, existsInState := state[gsiName]
+		vPlan, existsInPlan := plan[gsiName]
+		if existsInState && existsInPlan {
+			if !gsiHasFunctionalChanges(vState, vPlan) {
+				for _, attr := range []string{"hash_key", "range_key", "key_schema", "read_capacity", "write_capacity", "warm_throughput"} {
+					key := fmt.Sprintf("global_secondary_index.%s.%s", hash, attr)
+					if err := diff.Clear(key); err != nil {
+						return err
+					}
 				}
 			}
 		}
 	}
 
-	return diff.Clear("global_secondary_index")
+	return nil
+}
+
+func gsiHasFunctionalChanges(vState, vPlan cty.Value) bool {
+	for attrName := range vState.Type().AttributeTypes() {
+		s := vState.GetAttr(attrName)
+		p := vPlan.GetAttr(attrName)
+		switch attrName {
+		case "hash_key":
+			if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+				// "key_schema" is set
+				continue
+			}
+			if !ctyValueLegacyEquals(s, p) {
+				return true
+			}
+
+		case "range_key":
+			if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+				// "key_schema" is set
+				continue
+			}
+			if !ctyValueLegacyEquals(s, p) {
+				return true
+			}
+
+		case "key_schema":
+			// key_schema is a block nested list, so the zero-value is an empty list
+			if p.LengthInt() == 0 && s.LengthInt() > 0 {
+				// "hash_key" is set
+				continue
+			}
+			if !ctyValueLegacyEquals(s, p) {
+				return true
+			}
+
+		case "warm_throughput":
+			// AWS automatically sets warm_throughput
+			// values for on-demand tables, but these should not cause diffs when
+			// the user hasn't explicitly configured warm_throughput.
+			if p.IsNull() || (p.IsKnown() && p.LengthInt() == 0) {
+				continue
+			}
+			if !ctyValueLegacyEquals(s, p) {
+				return true
+			}
+
+		default:
+			if !ctyValueLegacyEquals(s, p) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func collectGSI(gsi cty.Value) map[string]cty.Value {
