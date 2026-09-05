@@ -402,6 +402,10 @@ func (r *registryResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *registryResource) flatten(ctx context.Context, out *agentregistrycontrol.GetRegistryOutput, data *registryResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// Normalize approval_configuration "approvalConfiguration": {"autoApprovalRules": []} to null.
+	if out.ApprovalConfiguration != nil && len(out.ApprovalConfiguration.AutoApprovalRules) == 0 {
+		out.ApprovalConfiguration = nil
+	}
 	diags.Append(fwflex.Flatten(ctx, out, data)...)
 	return diags
 }
