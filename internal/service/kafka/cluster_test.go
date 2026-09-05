@@ -1100,6 +1100,48 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 	})
 }
 
+func TestAccKafkaCluster_ZookeeperClientAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1 types.ClusterInfo
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_zookeeperClientAccess(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.zookeeper_client_access", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+					// Not returned by DescribeClusterV2, so it cannot be verified on import.
+					"broker_node_group_info.0.connectivity_info.0.zookeeper_client_access",
+				},
+			},
+			{
+				Config: testAccClusterConfig_zookeeperClientAccess(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.zookeeper_client_access", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 types.ClusterInfo
@@ -2058,6 +2100,32 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClusterConfig_zookeeperClientAccess(rName string, zkClientAccess bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.9.x"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.t3.small"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+
+    connectivity_info {
+      zookeeper_client_access = %[2]t
+    }
+  }
+}
+`, rName, zkClientAccess))
 }
 
 func testAccClusterConfig_brokerNodeGroupInfoPublicAccessSASLIAM(rName string, pa string) string {

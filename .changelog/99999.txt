@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `zookeeper_client_access` argument to the `broker_node_group_info.connectivity_info` configuration block
+```
