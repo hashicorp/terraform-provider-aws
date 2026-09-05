@@ -5,6 +5,7 @@ package agentregistry
 
 // Exports for use in tests only.
 var (
-	FindRegistryByID = findRegistryByID
 	ResourceRegistry = newRegistryResource
+
+	FindRegistryByID = findRegistryByID
 )
