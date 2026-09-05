@@ -58,36 +58,78 @@ resource "aws_dynamodb_table_replica" "example" {
 }
 ```
 
+### Cross-Account Replica Example
+
+```terraform
+provider "aws" {
+  alias  = "main"
+  region = "us-west-2"
+}
+
+provider "aws" {
+  alias  = "alt_account"
+  region = "us-east-2"
+  # credentials for account B
+}
+
+resource "aws_dynamodb_table" "example" {
+  provider         = aws.main
+  name             = "TestTable"
+  hash_key         = "BrodoBaggins"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "BrodoBaggins"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "example" {
+  provider         = aws.alt_account
+  global_table_arn = aws_dynamodb_table.example.arn
+
+  tags = {
+    Name = "CrossAccountReplica"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `global_table_arn` - (Required) ARN of the _main_ or global table which this resource will replicate.
+- `global_table_arn` - (Required) ARN of the _main_ or global table which this resource will replicate.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
-* `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.
-* `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the table replica. Default is `false`.
-* `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
-* `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+- `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+- `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.
+- `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the table replica. Default is `false`.
+- `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
+- `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the table replica.
-* `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `arn` - ARN of the table replica.
+- `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).
+- `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `20m`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
