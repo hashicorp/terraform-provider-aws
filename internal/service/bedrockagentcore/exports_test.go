@@ -11,6 +11,7 @@ var (
 	ResourceBrowser                  = newBrowserResource
 	ResourceBrowserProfile           = newBrowserProfileResource
 	ResourceCodeInterpreter          = newCodeInterpreterResource
+	ResourceDataset                  = newDatasetResource
 	ResourceEvaluator                = newEvaluatorResource
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayRule              = newGatewayRuleResource
@@ -34,6 +35,7 @@ var (
 	FindBrowserByID                      = findBrowserByID
 	FindBrowserProfileByID               = findBrowserProfileByID
 	FindCodeInterpreterByID              = findCodeInterpreterByID
+	FindDatasetByID                      = findDatasetByID
 	FindEvaluatorByID                    = findEvaluatorByID
 	FindGatewayByID                      = findGatewayByID
 	FindGatewayRuleByTwoPartKey          = findGatewayRuleByTwoPartKey
