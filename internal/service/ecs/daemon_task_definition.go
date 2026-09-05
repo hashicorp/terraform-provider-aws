@@ -80,8 +80,22 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 					stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
 				},
 			},
+			"ipc_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DaemonIpcMode](),
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"memory": schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"pid_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DaemonPidMode](),
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -671,7 +685,9 @@ type daemonTaskDefinitionResourceModel struct {
 	Cpu                     types.String                                              `tfsdk:"cpu"`
 	ExecutionRoleArn        fwtypes.ARN                                               `tfsdk:"execution_role_arn"`
 	Family                  types.String                                              `tfsdk:"family"`
+	IpcMode                 fwtypes.StringEnum[awstypes.DaemonIpcMode]                `tfsdk:"ipc_mode"`
 	Memory                  types.String                                              `tfsdk:"memory"`
+	PidMode                 fwtypes.StringEnum[awstypes.DaemonPidMode]                `tfsdk:"pid_mode"`
 	Revision                types.Int64                                               `tfsdk:"revision"`
 	Status                  fwtypes.StringEnum[awstypes.DaemonTaskDefinitionStatus]   `tfsdk:"status"`
 	Tags                    tftags.Map                                                `tfsdk:"tags"`
