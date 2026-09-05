@@ -154,6 +154,7 @@ func resourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monetization_config": monetizationConfigSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -204,6 +205,7 @@ func resourceWebACL() *schema.Resource {
 										"captcha":   captchaConfigSchema(),
 										"challenge": challengeConfigSchema(),
 										"count":     countConfigSchema(),
+										"monetize":  monetizeConfigSchema(),
 									},
 								},
 							},
@@ -300,6 +302,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+		input.MonetizationConfig = expandMonetizationConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk("token_domains"); ok && v.(*schema.Set).Len() > 0 {
 		input.TokenDomains = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -363,6 +369,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
+	if err := d.Set("monetization_config", flattenMonetizationConfig(webACL.MonetizationConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monetization_config: %s", err)
+	}
 	d.Set(names.AttrName, webACL.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
@@ -396,6 +405,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		"data_protection_config",
 		names.AttrDefaultAction,
 		names.AttrDescription,
+		"monetization_config",
 		"rule_json",
 		names.AttrRule,
 		"token_domains",
@@ -444,6 +454,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			DefaultAction:        expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 			Id:                   aws.String(d.Id()),
 			LockToken:            aws.String(aclLockToken),
+			MonetizationConfig:   expandMonetizationConfig(d.Get("monetization_config").([]any)),
 			Name:                 aws.String(aclName),
 			Rules:                rules,
 			Scope:                awstypes.Scope(aclScope),
