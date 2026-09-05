@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,7 +44,7 @@ import (
 // @FrameworkResource("aws_lambdamicrovms_image", name="Image")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors;image_version")
+// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors;hooks;image_version;logging;resources")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmImageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
@@ -161,6 +163,155 @@ func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
+			"hooks": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[hooksModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPort: schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 65535),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"microvm_hooks": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[microvmHooksModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"resume": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"resume_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 60),
+										},
+									},
+									"run": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"run_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 60),
+										},
+									},
+									"suspend": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"suspend_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 60),
+										},
+									},
+									"terminate": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"terminate_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 60),
+										},
+									},
+								},
+							},
+						},
+						"microvm_image_hooks": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[microvmImageHooksModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"ready": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"ready_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 3600),
+										},
+									},
+									"validate": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HookState](),
+										Optional:   true,
+									},
+									"validate_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 3600),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"logging": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[loggingModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("cloudwatch"),
+							path.MatchRelative().AtName("disabled"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"cloudwatch": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLoggingModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"log_group": schema.StringAttribute{
+										Optional: true,
+									},
+									"log_stream": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"disabled": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[loggingDisabledModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+						},
+					},
+				},
+			},
+			names.AttrResources: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"minimum_memory_in_mib": schema.Int32Attribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -180,6 +331,13 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+
+	// The service always resolves resources to a concrete value (currently
+	// 2048 MiB when not configured) and returns it in the response. Nested
+	// blocks cannot be Computed under protocol v5, so the service default is
+	// intentionally not stored in state unless resources is configured.
+	resourcesConfigured := !plan.Resources.IsNull()
+
 	var input lambdamicrovms.CreateMicrovmImageInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
@@ -214,6 +372,10 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan, fwflex.WithFieldNamePrefix("Image")))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !resourcesConfigured {
+		plan.Resources = fwtypes.NewListNestedObjectValueOfNull[resourcesModel](ctx)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
@@ -265,6 +427,10 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	if diff.HasChanges() {
+		// See Create: the service-resolved resources default is not stored in
+		// state when resources is not configured.
+		resourcesConfigured := !plan.Resources.IsNull()
+
 		var input lambdamicrovms.UpdateMicrovmImageInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
 		input.ImageIdentifier = plan.ARN.ValueStringPointer()
@@ -305,6 +471,10 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, outWait, &plan))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		if !resourcesConfigured {
+			plan.Resources = fwtypes.NewListNestedObjectValueOfNull[resourcesModel](ctx)
 		}
 	} else {
 		// Tag-only update: no API call was made, so carry forward the computed
@@ -464,10 +634,13 @@ type imageResourceModel struct {
 	Description              types.String                                           `tfsdk:"description"`
 	EgressNetworkConnectors  fwtypes.ListOfString                                   `tfsdk:"egress_network_connectors"`
 	EnvironmentVariables     fwtypes.MapOfString                                    `tfsdk:"environment_variables"`
+	Hooks                    fwtypes.ListNestedObjectValueOf[hooksModel]            `tfsdk:"hooks"`
 	ImageVersion             types.String                                           `tfsdk:"image_version"`
 	LatestActiveImageVersion types.String                                           `tfsdk:"latest_active_image_version"`
 	LatestFailedImageVersion types.String                                           `tfsdk:"latest_failed_image_version"`
+	Logging                  fwtypes.ListNestedObjectValueOf[loggingModel]          `tfsdk:"logging"`
 	Name                     types.String                                           `tfsdk:"name"`
+	Resources                fwtypes.ListNestedObjectValueOf[resourcesModel]        `tfsdk:"resources"`
 	State                    fwtypes.StringEnum[awstypes.MicrovmImageState]         `tfsdk:"state"`
 	Tags                     tftags.Map                                             `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                             `tfsdk:"tags_all"`
@@ -516,4 +689,32 @@ func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics
 
 type cpuConfigurationModel struct {
 	Architecture fwtypes.StringEnum[awstypes.Architecture] `tfsdk:"architecture"`
+}
+
+type hooksModel struct {
+	MicrovmHooks      fwtypes.ListNestedObjectValueOf[microvmHooksModel]      `tfsdk:"microvm_hooks"`
+	MicrovmImageHooks fwtypes.ListNestedObjectValueOf[microvmImageHooksModel] `tfsdk:"microvm_image_hooks"`
+	Port              types.Int32                                             `tfsdk:"port"`
+}
+
+type microvmHooksModel struct {
+	Resume                    fwtypes.StringEnum[awstypes.HookState] `tfsdk:"resume"`
+	ResumeTimeoutInSeconds    types.Int32                            `tfsdk:"resume_timeout_in_seconds"`
+	Run                       fwtypes.StringEnum[awstypes.HookState] `tfsdk:"run"`
+	RunTimeoutInSeconds       types.Int32                            `tfsdk:"run_timeout_in_seconds"`
+	Suspend                   fwtypes.StringEnum[awstypes.HookState] `tfsdk:"suspend"`
+	SuspendTimeoutInSeconds   types.Int32                            `tfsdk:"suspend_timeout_in_seconds"`
+	Terminate                 fwtypes.StringEnum[awstypes.HookState] `tfsdk:"terminate"`
+	TerminateTimeoutInSeconds types.Int32                            `tfsdk:"terminate_timeout_in_seconds"`
+}
+
+type microvmImageHooksModel struct {
+	Ready                    fwtypes.StringEnum[awstypes.HookState] `tfsdk:"ready"`
+	ReadyTimeoutInSeconds    types.Int32                            `tfsdk:"ready_timeout_in_seconds"`
+	Validate                 fwtypes.StringEnum[awstypes.HookState] `tfsdk:"validate"`
+	ValidateTimeoutInSeconds types.Int32                            `tfsdk:"validate_timeout_in_seconds"`
+}
+
+type resourcesModel struct {
+	MinimumMemoryInMiB types.Int32 `tfsdk:"minimum_memory_in_mib"`
 }

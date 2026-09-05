@@ -6,6 +6,7 @@ package lambdamicrovms
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -478,7 +479,10 @@ type cloudWatchLoggingModel struct {
 
 type loggingDisabledModel struct{}
 
-var _ fwflex.Expander = loggingModel{}
+var (
+	_ fwflex.Expander  = loggingModel{}
+	_ fwflex.Flattener = (*loggingModel)(nil)
+)
 
 func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -504,4 +508,34 @@ func (m loggingModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	}
 
 	return nil, diags
+}
+
+func (m *loggingModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.LoggingMemberCloudWatch:
+		var data cloudWatchLoggingModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.CloudWatch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+		m.Disabled = fwtypes.NewListNestedObjectValueOfNull[loggingDisabledModel](ctx)
+
+	case awstypes.LoggingMemberDisabled:
+		m.CloudWatch = fwtypes.NewListNestedObjectValueOfNull[cloudWatchLoggingModel](ctx)
+		m.Disabled = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &loggingDisabledModel{})
+
+	case awstypes.UnknownUnionMember:
+		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("loggingModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
 }
