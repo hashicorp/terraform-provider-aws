@@ -1,0 +1,221 @@
+{
+  "smithy": "2.0",
+  "shapes": {
+    "com.amazonaws.amp#CreateWorkspace": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.amp#CreateWorkspaceRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.amp#CreateWorkspaceResponse"
+      }
+    },
+    "com.amazonaws.amp#DescribeWorkspace": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.amp#DescribeWorkspaceRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.amp#DescribeWorkspaceResponse"
+      }
+    },
+    "com.amazonaws.amp#PutResourcePolicy": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.amp#PutResourcePolicyRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.amp#PutResourcePolicyResponse"
+      }
+    },
+    "com.amazonaws.amp#DescribeResourcePolicy": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.amp#DescribeResourcePolicyRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.amp#DescribeResourcePolicyResponse"
+      }
+    },
+    "com.amazonaws.amp#DeleteResourcePolicy": {
+      "type": "operation",
+      "input": {
+        "target": "com.amazonaws.amp#DeleteResourcePolicyRequest"
+      },
+      "output": {
+        "target": "com.amazonaws.amp#DeleteResourcePolicyResponse"
+      }
+    },
+    "com.amazonaws.amp#Workspace": {
+      "type": "resource",
+      "identifiers": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId"
+        }
+      },
+      "create": {
+        "target": "com.amazonaws.amp#CreateWorkspace"
+      },
+      "read": {
+        "target": "com.amazonaws.amp#DescribeWorkspace"
+      }
+    },
+    "com.amazonaws.amp#WorkspaceResourcePolicy": {
+      "type": "resource",
+      "identifiers": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId"
+        }
+      },
+      "put": {
+        "target": "com.amazonaws.amp#PutResourcePolicy"
+      },
+      "read": {
+        "target": "com.amazonaws.amp#DescribeResourcePolicy"
+      },
+      "delete": {
+        "target": "com.amazonaws.amp#DeleteResourcePolicy"
+      },
+      "operations": [
+        {
+          "target": "com.amazonaws.amp#CreateWorkspace"
+        }
+      ]
+    },
+    "com.amazonaws.amp#CreateWorkspaceRequest": {
+      "type": "structure",
+      "members": {
+        "alias": {
+          "target": "com.amazonaws.amp#WorkspaceAlias"
+        },
+        "clientToken": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#idempotencyToken": {}
+          }
+        },
+        "tags": {
+          "target": "com.amazonaws.amp#TagMap"
+        },
+        "kmsKeyArn": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#CreateWorkspaceResponse": {
+      "type": "structure",
+      "members": {
+        "arn": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#DescribeWorkspaceRequest": {
+      "type": "structure",
+      "members": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId",
+          "traits": {
+            "smithy.api#httpLabel": {}
+          }
+        }
+      }
+    },
+    "com.amazonaws.amp#DescribeWorkspaceResponse": {
+      "type": "structure",
+      "members": {
+        "workspace": {
+          "target": "com.amazonaws.amp#WorkspaceDescription"
+        },
+        "status": {
+          "target": "smithy.api#String"
+        },
+        "arn": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#PutResourcePolicyRequest": {
+      "type": "structure",
+      "members": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId",
+          "traits": {
+            "smithy.api#httpLabel": {}
+          }
+        },
+        "policyDocument": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#PutResourcePolicyResponse": {
+      "type": "structure",
+      "members": {
+        "revisionId": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#DescribeResourcePolicyRequest": {
+      "type": "structure",
+      "members": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId",
+          "traits": {
+            "smithy.api#httpLabel": {}
+          }
+        }
+      }
+    },
+    "com.amazonaws.amp#DescribeResourcePolicyResponse": {
+      "type": "structure",
+      "members": {
+        "policyDocument": {
+          "target": "smithy.api#String"
+        },
+        "revisionId": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#DeleteResourcePolicyRequest": {
+      "type": "structure",
+      "members": {
+        "workspaceId": {
+          "target": "com.amazonaws.amp#WorkspaceId",
+          "traits": {
+            "smithy.api#httpLabel": {}
+          }
+        }
+      }
+    },
+    "com.amazonaws.amp#DeleteResourcePolicyResponse": {
+      "type": "structure",
+      "members": {}
+    },
+    "com.amazonaws.amp#WorkspaceDescription": {
+      "type": "structure",
+      "members": {
+        "arn": {
+          "target": "smithy.api#String"
+        }
+      }
+    },
+    "com.amazonaws.amp#WorkspaceAlias": {
+      "type": "string"
+    },
+    "com.amazonaws.amp#WorkspaceId": {
+      "type": "string"
+    },
+    "com.amazonaws.amp#TagMap": {
+      "type": "map",
+      "key": {
+        "target": "smithy.api#String"
+      },
+      "value": {
+        "target": "smithy.api#String"
+      }
+    }
+  }
+}
