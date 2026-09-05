@@ -302,7 +302,8 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
 		}
 
-		if !new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !new.GuardrailConfiguration.IsNull() {
+		if (!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !new.GuardrailConfiguration.IsNull()) ||
+			(new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !old.GuardrailConfiguration.IsNull()) {
 			guardrailConfiguration := &awstypes.GuardrailConfiguration{}
 			response.Diagnostics.Append(fwflex.Expand(ctx, new.GuardrailConfiguration, guardrailConfiguration)...)
 			if response.Diagnostics.HasError() {
