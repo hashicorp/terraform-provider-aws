@@ -43,10 +43,44 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccServiceCatalogPortfolioDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_servicecatalog_portfolio.test"
+	resourceName := "aws_servicecatalog_portfolio.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPortfolioDataSourceConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrProviderName, dataSourceName, names.AttrProviderName),
+				),
+			},
+		},
+	})
+}
+
 func testAccPortfolioDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPortfolioConfig_basic(rName), `
 data "aws_servicecatalog_portfolio" "test" {
   id = aws_servicecatalog_portfolio.test.id
+}
+`)
+}
+
+func testAccPortfolioDataSourceConfig_name(rName string) string {
+	return acctest.ConfigCompose(testAccPortfolioConfig_basic(rName), `
+data "aws_servicecatalog_portfolio" "test" {
+  name = aws_servicecatalog_portfolio.test.name
 }
 `)
 }

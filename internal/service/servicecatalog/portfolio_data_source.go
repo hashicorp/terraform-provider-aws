@@ -53,12 +53,16 @@ func dataSourcePortfolio() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrID: {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Computed: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
 				},
 				names.AttrProviderName: {
 					Type:     schema.TypeString,
@@ -74,22 +78,38 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.DescribePortfolioInput{
-		Id: aws.String(d.Get(names.AttrID).(string)),
+	acceptLanguage := d.Get("accept_language").(string)
+
+	id := d.Get(names.AttrID).(string)
+
+	if id == "" {
+		name := d.Get(names.AttrName).(string)
+
+		portfolio, err := findPortfolioByName(ctx, conn, acceptLanguage, name)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Service Catalog Portfolio (%s): %s", name, err)
+		}
+
+		id = aws.ToString(portfolio.Id)
 	}
 
-	if v, ok := d.GetOk("accept_language"); ok {
-		input.AcceptLanguage = aws.String(v.(string))
+	input := &servicecatalog.DescribePortfolioInput{
+		Id: aws.String(id),
+	}
+
+	if acceptLanguage != "" {
+		input.AcceptLanguage = aws.String(acceptLanguage)
 	}
 
 	output, err := conn.DescribePortfolio(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get(names.AttrID).(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", id, err)
 	}
 
 	if output == nil || output.PortfolioDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get(names.AttrID).(string))
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", id)
 	}
 
 	detail := output.PortfolioDetail
