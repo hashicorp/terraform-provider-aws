@@ -39,6 +39,7 @@ func (d *zonesDataSource) Schema(ctx context.Context, request datasource.SchemaR
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			"zones": framework.DataSourceComputedListOfObjectAttribute[hostedZoneSummaryModel](ctx),
 		},
 	}
 }
@@ -65,13 +66,37 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 		return cleanZoneID(aws.ToString(v.Id))
 	})
 
+	zones := tfslices.ApplyToAll(output, func(v awstypes.HostedZone) hostedZoneSummaryModel {
+		return hostedZoneSummaryModel{
+			Name:                   types.StringValue(normalizeDomainName(aws.ToString(v.Name))),
+			PrivateZone:            types.BoolValue(v.Config != nil && v.Config.PrivateZone),
+			ResourceRecordSetCount: types.Int64PointerValue(v.ResourceRecordSetCount),
+			ZoneID:                 types.StringValue(cleanZoneID(aws.ToString(v.Id))),
+		}
+	})
+
+	zonesValue, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, zones)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.ZoneIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, zoneIDs)
+	data.Zones = zonesValue
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type zonesDataSourceModel struct {
-	ID      types.String         `tfsdk:"id"`
-	ZoneIDs fwtypes.ListOfString `tfsdk:"ids"`
+	ID      types.String                                            `tfsdk:"id"`
+	ZoneIDs fwtypes.ListOfString                                    `tfsdk:"ids"`
+	Zones   fwtypes.ListNestedObjectValueOf[hostedZoneSummaryModel] `tfsdk:"zones"`
+}
+
+type hostedZoneSummaryModel struct {
+	Name                   types.String `tfsdk:"name"`
+	PrivateZone            types.Bool   `tfsdk:"private_zone"`
+	ResourceRecordSetCount types.Int64  `tfsdk:"resource_record_set_count"`
+	ZoneID                 types.String `tfsdk:"zone_id"`
 }
