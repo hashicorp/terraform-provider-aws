@@ -26,6 +26,7 @@ import (
 )
 
 // @SDKResource("aws_rolesanywhere_profile", name="Profile")
+// @V60SDKv2Fix
 // @Tags(identifierAttribute="arn")
 func resourceProfile() *schema.Resource {
 	return &schema.Resource{
@@ -171,7 +172,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
