@@ -5,5 +5,6 @@ resource "aws_agentregistry_registry" "test" {
   discovery_configuration {
     authorizer_type = "AWS_IAM"
   }
+
 {{- template "tags" . }}
 }

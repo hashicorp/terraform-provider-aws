@@ -24,7 +24,7 @@ func TestAccAgentRegistryRegistry_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -111,7 +111,7 @@ func TestAccAgentRegistryRegistry_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

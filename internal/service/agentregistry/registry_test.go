@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,14 +18,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfagentregistry "github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var checkRegistryARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("agent-registry", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}`))
+
 func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_agentregistry_registry.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -34,21 +38,36 @@ func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "registry_id"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "registry_arn", "agent-registry", regexache.MustCompile(`registry/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.RegistryStatusReady)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"authorizer_configuration": knownvalue.ListSizeExact(0),
+						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -71,7 +90,10 @@ func TestAccAgentRegistryRegistry_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfagentregistry.ResourceRegistry, resourceName),

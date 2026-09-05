@@ -47,7 +47,6 @@ import (
 // @FrameworkResource("aws_agentregistry_registry", name="Registry")
 // @Tags(identifierAttribute="registry_arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="registry_id")
 // @IdentityAttribute("registry_id")
 func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -107,6 +106,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"discovery_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[discoveryConfigurationModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -118,6 +119,10 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 								tfstringvalidator.AlsoRequiresWhenEquals(
 									awstypes.RegistryAuthorizerTypeCustomJwt,
 									path.MatchRelative().AtParent().AtName("authorizer_configuration").AtListIndex(0).AtName("custom_jwt_authorizer"),
+								),
+								tfstringvalidator.ConflictsWithWhenEquals(
+									awstypes.RegistryAuthorizerTypeAwsIam,
+									path.MatchRelative().AtParent().AtName("authorizer_configuration"),
 								),
 							},
 							PlanModifiers: []planmodifier.String{

@@ -23,7 +23,7 @@ func TestAccAgentRegistryRegistry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -216,7 +216,7 @@ func TestAccAgentRegistryRegistry_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -283,7 +283,7 @@ func TestAccAgentRegistryRegistry_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -338,7 +338,7 @@ func TestAccAgentRegistryRegistry_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -423,7 +423,7 @@ func TestAccAgentRegistryRegistry_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -520,7 +520,7 @@ func TestAccAgentRegistryRegistry_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -666,7 +666,7 @@ func TestAccAgentRegistryRegistry_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -761,7 +761,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -953,7 +953,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1122,7 +1122,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1307,7 +1307,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_updateToProviderOnly(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1402,7 +1402,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_updateToResourceOnly(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1496,7 +1496,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_emptyResourceTag(t *testing.T
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1567,7 +1567,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_emptyProviderOnlyTag(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1630,7 +1630,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_nullOverlappingResourceTag(t 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1704,7 +1704,7 @@ func TestAccAgentRegistryRegistry_Tags_DefaultTags_nullNonOverlappingResourceTag
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1780,7 +1780,7 @@ func TestAccAgentRegistryRegistry_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1840,7 +1840,7 @@ func TestAccAgentRegistryRegistry_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1942,7 +1942,7 @@ func TestAccAgentRegistryRegistry_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2034,7 +2034,7 @@ func TestAccAgentRegistryRegistry_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2199,7 +2199,7 @@ func TestAccAgentRegistryRegistry_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_agentregistry_registry.test"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
