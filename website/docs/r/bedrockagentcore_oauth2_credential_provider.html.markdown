@@ -120,6 +120,10 @@ The `custom_oauth2_provider_config` block supports the following:
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
 
+**Other:**
+
+* `client_authentication_method` - (Optional) Client authentication method to use when authenticating with the token endpoint. Valid values: `CLIENT_SECRET_BASIC`, `CLIENT_SECRET_POST`, `AWS_IAM_ID_TOKEN_JWT`.
+
 ### `github`, `google`, `microsoft`, `salesforce`, `slack`
 
 These predefined provider blocks support the following:
