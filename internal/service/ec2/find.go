@@ -4905,7 +4905,35 @@ func findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx
 		},
 	}
 
-	return findTransitGatewayAttachment(ctx, conn, &input)
+	output, err := findTransitGatewayAttachments(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Deleted attachments remain visible after an association is recreated with the same gateways.
+	return findActiveTransitGatewayAttachment(output)
+}
+
+func findActiveTransitGatewayAttachment(attachments []awstypes.TransitGatewayAttachment) (*awstypes.TransitGatewayAttachment, error) {
+	return tfresource.AssertSingleValueResult(tfslices.Filter(attachments, func(v awstypes.TransitGatewayAttachment) bool {
+		return !transitGatewayAttachmentStateIsInactive(v.State)
+	}))
+}
+
+func transitGatewayAttachmentStateIsInactive(state awstypes.TransitGatewayAttachmentState) bool {
+	switch state {
+	case awstypes.TransitGatewayAttachmentStateRollingBack,
+		awstypes.TransitGatewayAttachmentStateDeleting,
+		awstypes.TransitGatewayAttachmentStateDeleted,
+		awstypes.TransitGatewayAttachmentStateFailing,
+		awstypes.TransitGatewayAttachmentStateFailed,
+		awstypes.TransitGatewayAttachmentStateRejecting,
+		awstypes.TransitGatewayAttachmentStateRejected:
+		return true
+	default:
+		return false
+	}
 }
 
 func findTransitGatewayConnect(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) (*awstypes.TransitGatewayConnect, error) {
