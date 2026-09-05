@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Preserve the parent Web ACL's `data_protection_config`, `monetization_config`, and `on_source_ddos_protection_config`
+```
+
+```release-note:bug
+resource/aws_wafv2_web_acl_rule_group_association: Preserve the parent Web ACL's `data_protection_config`, `monetization_config`, and `on_source_ddos_protection_config`
+```
