@@ -422,8 +422,10 @@ func (r *catalogResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tags, err := listTags(ctx, r.Meta().GlueClient(ctx), state.ARN.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
-		return
+		if !errs.IsA[*awstypes.InvalidInputException](err) {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
+			return
+		}
 	}
 	setTagsOut(ctx, tags.Map())
 
