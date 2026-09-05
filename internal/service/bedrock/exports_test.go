@@ -6,6 +6,7 @@ package bedrock
 // Exports for use in tests only.
 var (
 	ResourceCustomModel                         = newCustomModelResource
+	ResourceEnforcedGuardrailConfiguration      = newEnforcedGuardrailConfigurationResource
 	ResourceEvaluationJob                       = newEvaluationJobResource
 	ResourceGuardrail                           = newGuardrailResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
@@ -14,6 +15,7 @@ var (
 	ResourceFoundationModelAgreement            = newFoundationModelAgreementResource
 
 	FindCustomModelByID                     = findCustomModelByID
+	FindEnforcedGuardrailConfiguration      = findEnforcedGuardrailConfiguration
 	FindEvaluationJobByARN                  = findEvaluationJobByARN
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
