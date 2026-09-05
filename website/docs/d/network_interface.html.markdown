@@ -64,6 +64,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `attachment_id` - ID of the network interface attachment.
 * `device_index` - Device index of the network interface attachment on the instance.
+* `ena_queue_count` - Number of ENA queues allocated to the network interface attachment.
 * `instance_id` - ID of the instance.
 * `instance_owner_id` - AWS account ID of the owner of the instance.
 * `network_card_index` - Index of the network card.
