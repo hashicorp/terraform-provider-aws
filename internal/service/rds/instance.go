@@ -693,6 +693,11 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrUsername: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -753,6 +758,8 @@ func resourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	createStart := time.Now().UTC()
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
 	// RestoreDBInstanceToPointInTime do not support all parameters to
@@ -1936,6 +1943,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
@@ -2232,9 +2244,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			if err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string))); err != nil {
+			modifyDiags, err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string)))
+			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
+			diags = append(diags, modifyDiags...)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
@@ -2343,6 +2357,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				input.DBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			}
 
+			modifyStart := time.Now().UTC()
+
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
@@ -2353,6 +2369,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					d.Set("manage_master_user_password", old.(bool))
 				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			// Key on the identifier, not d.Id() (the DbiResourceId), which
+			// DescribeEvents rejects as a db-instance SourceIdentifier.
+			if v, ok := d.GetOk("warning_event_categories"); ok {
+				diags = append(diags, surfaceEvents(ctx, conn, d.Get(names.AttrIdentifier).(string), types.SourceTypeDbInstance, modifyStart,
+					flex.ExpandStringValueSet(v.(*schema.Set)))...)
 			}
 		}
 	}
@@ -3274,4 +3297,39 @@ func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.Resourc
 		}
 	}
 	return false
+}
+
+// surfaceEvents emits one Warning diagnostic per RDS event reported for
+// sourceID/st in the given categories since the operation began, relaying the
+// RDS message verbatim without interpreting it. Best-effort: empty categories
+// or a DescribeEvents error yield no diagnostics and never an error, so
+// surfacing cannot fail an otherwise-successful apply. Always Warning, because
+// the operation itself succeeded.
+func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st types.SourceType, since time.Time, categories []string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if len(categories) == 0 {
+		return diags
+	}
+
+	events, err := findEvents(ctx, conn, &rds.DescribeEventsInput{
+		SourceIdentifier: aws.String(sourceID),
+		SourceType:       st,
+		EventCategories:  categories,
+		StartTime:        aws.Time(since),
+	})
+	if err != nil {
+		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
+		return diags
+	}
+
+	for _, e := range events {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("RDS reported an event during this operation [%s]", strings.Join(e.EventCategories, ", ")),
+			Detail:   aws.ToString(e.Message),
+		})
+	}
+
+	return diags
 }

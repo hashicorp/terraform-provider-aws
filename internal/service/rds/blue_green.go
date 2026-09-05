@@ -12,9 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -144,25 +146,38 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	return input
 }
 
-func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
+func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) (diag.Diagnostics, error) {
+	var diags diag.Diagnostics
+
 	modifyInput := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
-	if diags.HasError() {
-		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	needsModify, popDiags := dbInstancePopulateModify(modifyInput, d)
+	if popDiags.HasError() {
+		return nil, fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(popDiags))
 	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
+		modifyStart := time.Now().UTC()
+
 		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
-			return fmt.Errorf("updating Green environment: %w", err)
+			return nil, fmt.Errorf("updating Green environment: %w", err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			// dbInstanceModify's wait polls d.Id() (blue), not the green
+			// target, so settle green explicitly before querying its events.
+			if _, err := waitDBInstanceAvailable(ctx, h.conn, identifier, timeout); err == nil {
+				diags = append(diags, surfaceEvents(ctx, h.conn, identifier, types.SourceTypeDbInstance, modifyStart,
+					flex.ExpandStringValueSet(v.(*schema.Set)))...)
+			}
 		}
 	}
 
-	return nil
+	return diags, nil
 }

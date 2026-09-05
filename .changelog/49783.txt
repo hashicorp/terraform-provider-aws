@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_rds_events
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update
+```

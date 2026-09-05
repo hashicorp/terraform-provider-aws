@@ -3212,6 +3212,56 @@ func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_warningEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_warningEventCategories(rName, `["failure"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+				),
+			},
+			{
+				// Confirm an update (not just create) with the argument set
+				// also applies cleanly and does not error.
+				Config: testAccClusterConfig_warningEventCategories(rName, `["failure", "maintenance"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "maintenance"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_warningEventCategories(rName, categories string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+
+  warning_event_categories = %[3]s
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, categories)
+}
+
 func TestAccRDSCluster_performanceInsights_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

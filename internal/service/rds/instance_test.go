@@ -8923,6 +8923,71 @@ resource "aws_db_instance" "test" {
 `, rName1, rName2))
 }
 
+func TestAccRDSInstance_warningEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_warningEventCategories(rName, `["failure"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+				),
+			},
+			{
+				// Confirm an update (not just create) with the argument set
+				// also applies cleanly and does not error.
+				Config: testAccInstanceConfig_warningEventCategories(rName, `["failure", "maintenance"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "maintenance"),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceConfig_warningEventCategories(rName, categories string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
+
+  warning_event_categories = %[2]s
+}
+`, rName, categories))
+}
+
 func testAccInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),

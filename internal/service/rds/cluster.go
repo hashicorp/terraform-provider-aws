@@ -707,6 +707,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -749,6 +754,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate(ctx)
+
+	createStart := time.Now().UTC()
 
 	// get write-only value from configuration
 	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
@@ -1460,6 +1467,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -1743,6 +1755,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		const (
 			timeout = 5 * time.Minute
 		)
+
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
@@ -1769,8 +1784,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		_, err = waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart,
+				flex.ExpandStringValueSet(v.(*schema.Set)))...)
 		}
 	}
 

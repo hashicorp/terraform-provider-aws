@@ -403,6 +403,7 @@ is only supported by Oracle instances. Oracle replicas operate in `open-read-onl
   See [DB Instance Replication][instance-replication] and [Working with PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) for more information on using Replication.
 * `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica.
   Can only be set with `replicate_source_db`.
+* `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this instance during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events.
 * `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time.
   Requires the `identifier` argument to be set with the name of the new DB instance to be created.
   See [Restore To Point In Time](#restore-to-point-in-time) below for details.
