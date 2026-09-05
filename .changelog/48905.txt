@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_user: Add `password_wo_1`, `password_wo_2`, and `password_wo_version` attributes for write-only password support with up to 2 simultaneous passwords
+```
+
+```release-note:note
+resource/aws_elasticache_user: The `passwords_wo` and `passwords_wo_version` attributes are deprecated in favor of `password_wo_1`, `password_wo_2`, and `password_wo_version`
+```
