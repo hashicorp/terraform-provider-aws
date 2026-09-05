@@ -24,7 +24,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -110,6 +112,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"authorizer_type": schema.StringAttribute{
@@ -136,6 +141,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Validators: []validator.Object{
 									tfobjectvalidator.AtLeastOneOfChildren(
@@ -148,27 +156,45 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"allowed_audience": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
 												},
 												"allowed_clients": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
 												},
 												"allowed_scopes": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
 												},
 												"discovery_url": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 											Blocks: map[string]schema.Block{
 												"custom_claim": schema.SetNestedBlock{
 													CustomType: fwtypes.NewSetNestedObjectTypeOf[customClaimValidationTypeModel](ctx),
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"inbound_token_claim_name": schema.StringAttribute{
@@ -177,10 +203,16 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																	stringvalidator.LengthBetween(1, 255),
 																	stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																},
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 															"inbound_token_claim_value_type": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
 																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 														Blocks: map[string]schema.Block{
@@ -191,11 +223,17 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																	listvalidator.SizeAtLeast(1),
 																	listvalidator.SizeAtMost(1),
 																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		"claim_match_operator": schema.StringAttribute{
 																			CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
 																			Required:   true,
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
 																		},
 																	},
 																	Blocks: map[string]schema.Block{
@@ -205,6 +243,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																				listvalidator.IsRequired(),
 																				listvalidator.SizeAtLeast(1),
 																				listvalidator.SizeAtMost(1),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Validators: []validator.Object{
@@ -220,6 +261,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																							stringvalidator.LengthBetween(1, 255),
 																							stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																						},
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
 																					},
 																					"match_value_string_list": schema.SetAttribute{
 																						Optional:    true,
@@ -229,6 +273,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																								stringvalidator.LengthBetween(1, 255),
 																								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
 																							),
+																						},
+																						PlanModifiers: []planmodifier.Set{
+																							setplanmodifier.RequiresReplace(),
 																						},
 																					},
 																				},
@@ -351,10 +398,31 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 
 	if diff.HasChanges() {
 		registryID := fwflex.StringValueFromFramework(ctx, plan.RegistryID)
+		optFns := []fwflex.AutoFlexOptionsFunc{
+			fwflex.WithIgnoredFieldNamesAppend("ApprovalConfiguration"),
+			fwflex.WithIgnoredFieldNamesAppend("Description"),
+		}
 		var input agentregistrycontrol.UpdateRegistryInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, optFns...))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		if !plan.ApprovalConfiguration.Equal(state.ApprovalConfiguration) {
+			input.ApprovalConfiguration = &awstypes.UpdatedApprovalConfiguration{}
+			if !plan.ApprovalConfiguration.IsNull() {
+				smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan.ApprovalConfiguration, &input.ApprovalConfiguration.OptionalValue))
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
+		}
+
+		if !plan.Description.Equal(state.Description) {
+			input.Description = &awstypes.UpdatedDescription{}
+			if !plan.Description.IsNull() {
+				input.Description.OptionalValue = fwflex.StringFromFramework(ctx, plan.Description)
+			}
 		}
 
 		_, err := conn.UpdateRegistry(ctx, &input)
