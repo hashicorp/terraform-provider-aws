@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_neptune_cluster: Skip engine version update when cluster is part of a global cluster
+```
