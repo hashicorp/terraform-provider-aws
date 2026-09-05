@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Wait for the green instance to finish `storage-optimization` and reach `available` before switching over a Blue/Green Deployment
+```
