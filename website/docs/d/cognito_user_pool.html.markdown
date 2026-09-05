@@ -93,6 +93,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * [custom_email_sender](#lambda-function) - Configuration for a custom email sender Lambda function.
 * [custom_sms_sender](#lambda-function) - Configuration for a custom SMS sender Lambda function
+* [inbound_federation](#lambda-function) - Configuration for an inbound federation Lambda function that transforms federated user attributes during authentication with external identity providers.
 * [pre_token_generation_config](#lambda-function) - Configuration for a Lambda function that executes before token generation.
 
 ### lambda function
