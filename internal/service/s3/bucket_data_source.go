@@ -59,6 +59,42 @@ func dataSourceBucket() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"server_side_encryption_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"apply_server_side_encryption_by_default": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"kms_master_key_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"sse_algorithm": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"bucket_key_enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -109,6 +145,14 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("website_endpoint", endpoint)
 	} else if !retry.NotFound(err) {
 		log.Printf("[WARN] Reading S3 Bucket (%s) Website: %s", bucket, err)
+	}
+
+	encryptionConfig, err := findServerSideEncryptionConfiguration(ctx, conn, bucket, "")
+	if err != nil && !retry.NotFound(err) {
+		log.Printf("[WARN] Reading S3 Bucket (%s) Server Side Encryption Configuration: %s", bucket, err)
+	}
+	if encryptionConfig != nil {
+		d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfig))
 	}
 
 	return diags
