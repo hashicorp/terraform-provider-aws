@@ -114,6 +114,26 @@ func RetryWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx c
 	})
 }
 
+func RetryWhenIsOneOf2ErrorMessageContains[T any, E1, E2 errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), needle1, needle2 string) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[E1](err, needle1) || errs.IsAErrorMessageContains[E2](err, needle2) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf3ErrorMessageContains[T any, E1, E2, E3 errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), needle1, needle2, needle3 string) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[E1](err, needle1) || errs.IsAErrorMessageContains[E2](err, needle2) || errs.IsAErrorMessageContains[E3](err, needle3) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 // RetryUntilEqual retries the specified function until it returns a value equal to `target`.
 func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error), opts ...backoff.Option) (T, error) {
 	t, err := retry.Op(f).If(func(t T, err error) (bool, error) {

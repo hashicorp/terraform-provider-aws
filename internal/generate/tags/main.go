@@ -71,9 +71,9 @@ var (
 	listTagsOpPaginatorCustom  = flag.Bool("ListTagsOpPaginatorCustom", false, "whether ListTagsOp has a custom paginator")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 
-	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
-	retryErrorMessage     = flag.String("RetryErrorMessage", "", "error message to retry, must be used with RetryTagOps")
-	retryTagOps           = flag.Bool("RetryTagOps", false, "whether to retry tag operations")
+	retryErrorCodes    stringList
+	retryErrorMessages stringList
+	retryTagOps        = flag.Bool("RetryTagOps", false, "whether to retry tag operations")
 	retryTagsListTagsType = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as ListTagsForResourceOutput, must be used with RetryTagOps")
 	retryTimeout          = flag.Duration("RetryTimeout", 1*time.Minute, "amount of time tag operations should retry")
 
@@ -103,6 +103,17 @@ var (
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 )
+
+// stringList is a flag.Value that accumulates repeated -Flag=value invocations.
+type stringList []string
+
+func (s *stringList) String() string     { return strings.Join(*s, ",") }
+func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
+
+func init() {
+	flag.Var(&retryErrorCodes, "RetryErrorCode", "error code to retry, must be used with RetryTagOps; can be repeated paired with RetryErrorMessage")
+	flag.Var(&retryErrorMessages, "RetryErrorMessage", "error message substring to retry, must be used with RetryTagOps; can be repeated paired with RetryErrorCode")
+}
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
@@ -144,6 +155,14 @@ func newTemplateBody(kvtValues bool) *TemplateBody {
 	}
 }
 
+// RetryCondition is one (error type, error message substring) pair that the generated
+// retry helper should treat as transient. Callers may declare multiple conditions by
+// repeating -RetryErrorCode / -RetryErrorMessage on the generator command line.
+type RetryCondition struct {
+	Code    string
+	Message string
+}
+
 type TemplateData struct {
 	AWSService        string
 	ClientType        string
@@ -166,8 +185,7 @@ type TemplateData struct {
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
-	RetryErrorCode             string
-	RetryErrorMessage          string
+	RetryConditions            []RetryCondition
 	RetryTagOps                bool
 	RetryTagsListTagsType      string
 	RetryTimeout               string
@@ -247,6 +265,17 @@ func main() {
 		g.Errorf("TagResTypeIsAccountID requires TagResTypeElem")
 	}
 
+	if len(retryErrorCodes) != len(retryErrorMessages) {
+		g.Fatalf("RetryErrorCode and RetryErrorMessage must be specified in matching pairs (got %d codes, %d messages)", len(retryErrorCodes), len(retryErrorMessages))
+	}
+	if *retryTagOps && len(retryErrorCodes) == 0 {
+		g.Fatalf("RetryTagOps requires at least one -RetryErrorCode/-RetryErrorMessage pair")
+	}
+	retryConditions := make([]RetryCondition, len(retryErrorCodes))
+	for i := range retryErrorCodes {
+		retryConditions[i] = RetryCondition{Code: retryErrorCodes[i], Message: retryErrorMessages[i]}
+	}
+
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
@@ -270,8 +299,7 @@ func main() {
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
-		RetryErrorCode:             *retryErrorCode,
-		RetryErrorMessage:          *retryErrorMessage,
+		RetryConditions:            retryConditions,
 		RetryTagOps:                *retryTagOps,
 		RetryTagsListTagsType:      *retryTagsListTagsType,
 		RetryTimeout:               formatDuration(*retryTimeout),
