@@ -57,6 +57,25 @@ func TestAccACMCertificateDataSource_byDomainNoMatch(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificateDataSource_byDomainNoMatchMostRecent(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
+	domain := acctest.RandomDomain().String()
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateDataSourceConfig_byDomainNoMatchMostRecent(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				ExpectError: regexache.MustCompile(`reading ACM Certificates: no matching ACM Certificate found`),
+			},
+		},
+	})
+}
+
 func TestAccACMCertificateDataSource_byDomainMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
@@ -331,6 +350,22 @@ resource "aws_acm_certificate" "test" {
 
 data "aws_acm_certificate" "test" {
   domain = "not.%[1]s"
+
+  depends_on = [aws_acm_certificate.test]
+}
+`, domain, certificate, key)
+}
+
+func testAccCertificateDataSourceConfig_byDomainNoMatchMostRecent(domain, certificate, key string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+data "aws_acm_certificate" "test" {
+  domain = "not.%[1]s"
+  most_recent = true
 
   depends_on = [aws_acm_certificate.test]
 }
