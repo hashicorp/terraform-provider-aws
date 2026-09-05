@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_verifiedpermissions_policy_store_alias
+```
+
+```release-note:new-list-resource
+aws_verifiedpermissions_policy_store_alias
+```
