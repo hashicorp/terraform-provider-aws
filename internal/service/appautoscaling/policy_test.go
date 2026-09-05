@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,6 +99,59 @@ func TestPolicyParseImportID(t *testing.T) {
 		if !reflect.DeepEqual(tc.expected, idParts) {
 			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
+	}
+}
+
+func TestPolicyReadRetryable(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		err           error
+		isNewResource bool
+		expected      bool
+	}{
+		"empty result while creating": {
+			err:           tfresource.NewEmptyResultError(),
+			isNewResource: true,
+			expected:      true,
+		},
+		"empty result after creating": {
+			err:           tfresource.NewEmptyResultError(),
+			isNewResource: false,
+			expected:      false,
+		},
+		"failed resource access while creating": {
+			err:           &awstypes.FailedResourceAccessException{},
+			isNewResource: true,
+			expected:      true,
+		},
+		"failed resource access after creating": {
+			err:           &awstypes.FailedResourceAccessException{},
+			isNewResource: false,
+			expected:      true,
+		},
+		"validation error while creating": {
+			err:           &awstypes.ValidationException{},
+			isNewResource: true,
+			expected:      false,
+		},
+		"no error": {
+			err:           nil,
+			isNewResource: true,
+			expected:      false,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, _ := tfappautoscaling.PolicyReadRetryable(testCase.isNewResource)(testCase.err)
+
+			if got != testCase.expected {
+				t.Errorf("got %t, expected %t", got, testCase.expected)
+			}
+		})
 	}
 }
 
