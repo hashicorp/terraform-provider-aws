@@ -2654,7 +2654,10 @@ resource "aws_iam_role_policy" "test" {
     "Effect": "Allow",
     "Action": [
       "bedrock:InvokeModel",
-      "bedrock:InvokeModelWithResponseStream"
+      "bedrock:InvokeModelWithResponseStream",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer"
     ],
     "Resource": "*"
   }
