@@ -24,6 +24,7 @@ var (
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
 	FindReplicationTaskByID        = findReplicationTaskByID
 	TaskSettingsEqual              = taskSettingsEqual
+	ExpandOracleSettings           = expandOracleSettings
 	ValidEndpointID                = validEndpointID
 	ValidReplicationInstanceID     = validReplicationInstanceID
 	ValidReplicationSubnetGroupID  = validReplicationSubnetGroupID
