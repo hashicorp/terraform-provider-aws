@@ -142,6 +142,10 @@ func resourceRepository() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"repository_url_dualstack": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
@@ -236,6 +240,7 @@ func resourceRepositoryFlatten(_ context.Context, d *schema.ResourceData, reposi
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+	d.Set("repository_url_dualstack", repositoryURIDualStack(aws.ToString(repository.RepositoryUri)))
 }
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -450,4 +455,14 @@ func validateImageTagMutabilityExclusionFilterUsage(_ context.Context, d *schema
 	}
 
 	return nil
+}
+
+// repositoryURIDualStack converts an ECR repository URI from the IPv4 format
+// (<account>.dkr.ecr.<region>.amazonaws.com/<repo>) to the dual-stack format
+// (<account>.dkr-ecr.<region>.on.aws/<repo>) that supports both IPv4 and IPv6.
+func repositoryURIDualStack(uri string) string {
+	// Replace ".dkr.ecr." with ".dkr-ecr." and ".amazonaws.com" with ".on.aws"
+	result := strings.Replace(uri, ".dkr.ecr.", ".dkr-ecr.", 1)
+	result = strings.Replace(result, ".amazonaws.com", ".on.aws", 1)
+	return result
 }
