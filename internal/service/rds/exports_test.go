@@ -34,6 +34,7 @@ var (
 	ResourceSnapshot                            = resourceSnapshot
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
+	ResourceTenantDatabase                      = resourceTenantDatabase
 
 	ClusterIDAndRegionFromARN                  = clusterIDAndRegionFromARN
 	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
@@ -45,6 +46,7 @@ var (
 	FindDBClusterWithActivityStream            = findDBClusterWithActivityStream
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
 	FindDBInstanceByID                         = findDBInstanceByID
+	FindTenantDatabaseByID                     = findTenantDatabaseByID
 	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
