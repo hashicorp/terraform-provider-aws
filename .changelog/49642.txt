@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_amplify_app: Fix `access_token` and `oauth_token` maximum length being lower than the AWS API limit
+```
