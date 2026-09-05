@@ -501,6 +501,50 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/41778
+func TestAccWAFV2WebACLLoggingConfiguration_removeRedactedFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.LoggingConfiguration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
+						"single_header.0.name": "user-agent",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLLoggingConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.LoggingConfiguration
