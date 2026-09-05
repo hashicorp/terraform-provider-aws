@@ -4,91 +4,278 @@
 name: Update Changelog
 
 on:
+  pull_request_target:
+    types:
+      - closed
+    paths:
+      - '.changes/*.x/unreleased/**'
+    branches:
+      - 'main'
+
   workflow_dispatch:
     inputs:
-      previous_version:
-        description: 'Previous semver version (e.g., 1.2.3)'
-        required: true
+      version:
+        description: 'SemVer version (e.g., 6.27.0). If blank, defaults to the next minor version. Input is ignored when final_for_version is false.'
+        required: false
         type: string
+      final_for_version:
+        description: 'When true, produces a final per-version CHANGELOG. When false, regenerates the unreleased CHANGELOG only.'
+        type: boolean
+        default: true
+
+# Prevent race conditions: if two PRs merge in rapid succession, queue each run
+# rather than canceling the pending one. cancel-in-progress defaults to false.
+# actionlint does not yet recognise the `queue` key (rhysd/actionlint#657);
+# ignore config added in actionlint.yml
+concurrency:
+  group: ${{ github.workflow }}
+  queue: max
 
 permissions:
-  contents: write      # required to create a branch and push changes
-  pull-requests: write # required to create a pull request
+  contents: write       # required to push changes and create branches
+  pull-requests: write  # required to create a pull request
 
 jobs:
-  update-changelog:
+  update-unreleased:
+    name: Update CHANGELOG (Unreleased)
+    if: |
+      (github.event_name == 'pull_request_target' && github.event.pull_request.merged)
+      || (github.event_name == 'workflow_dispatch' && !inputs.final_for_version)
     runs-on: ubuntu-latest
-
+    env:
+      TARGET_BRANCH: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.base.ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
+          sparse-checkout: |
+            .changie.yaml
+            .changes/
+            .ci/scripts/
+            CHANGELOG.md
 
-      - name: Calculate next minor version
-        id: version
+      - name: Get changesDir from Changie Config
+        id: changes
+        shell: bash
+        run: echo "dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
+
+      # `go-changelog` auto-conversion
+      # ------------------------------------------------------------------------------
+      # Detect legacy `.changelog/*.txt` files introduced by this PR and convert them
+      # to Changie fragments. This handles PRs that predated the Changie migration.
+      - name: Detect go-changelog Fragments and Changie Fragments
+        id: filter
+        if: github.event_name == 'pull_request_target'
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        with:
+          list-files: json
+          filters: |
+            go_changelog_fragments:
+              - added:'.changelog/*.txt'
+            changie_fragments:
+              - added:'${{ steps.changes.outputs.dir }}/unreleased/*.yaml'
+
+      - name: Validate and Convert go-changelog Fragments
+        id: convert
+        if: github.event_name == 'pull_request_target' && steps.filter.outputs.go_changelog_fragments == 'true'
+        shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          FILES_JSON: ${{ steps.filter.outputs.go_changelog_fragments_files }}
         run: |
-          PREV_VERSION="${{ github.event.inputs.previous_version }}"
+          CONVERSION_FAILED=false
+          FAILED_FILE=""
 
-          # Remove 'v' prefix if present
-          PREV_VERSION=${PREV_VERSION#v}
+          while IFS= read -r fragment_file; do
+            echo "Converting: $fragment_file"
 
-          # Split version into parts
-          IFS='.' read -ra VERSION_PARTS <<< "$PREV_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=${VERSION_PARTS[2]}
+            if ! make convert-changelog FILE="$fragment_file"; then
+              echo "::error::Conversion failed for fragment: $fragment_file"
+              CONVERSION_FAILED=true
+              FAILED_FILE="$fragment_file"
+              break
+            fi
+          done < <(echo "$FILES_JSON" | jq -r '.[]')
 
-          # Increment minor version and reset patch to 0
-          NEXT_MINOR=$((MINOR + 1))
-          NEXT_VERSION="${MAJOR}.${NEXT_MINOR}.0"
+          if [[ "$CONVERSION_FAILED" == "true" ]]; then
+            echo "failed_file=$FAILED_FILE" >> "$GITHUB_OUTPUT"
+            echo "conversion_failed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
 
-          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-          echo "branch_name=changelog_update_after_${PREV_VERSION}_release" >> $GITHUB_OUTPUT
+          echo "conversion_failed=false" >> "$GITHUB_OUTPUT"
 
-      - name: Create and checkout new branch
+      - name: Notify of Conversion Failure
+        if: failure() && steps.convert.outcome == 'failure'
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          FAILED_FILE: ${{ steps.convert.outputs.failed_file }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: *go-changelog Fragment Conversion Failed*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('Pull request <{0}|#{1}: {2}> was merged but the go-changelog fragment `{3}` could not be converted. A maintainer must create a correction PR with a proper Changie fragment.', env.PR_URL, env.PR_NUMBER, env.PR_TITLE, env.FAILED_FILE)) }}
+                  }
+                }
+              ]
+            }
+
+      # PullRequest key backfill
+      # ------------------------------------------------------------------------------
+      # For each Changie fragment introduced by this PR that is missing a PullRequest
+      # key, write the PR number in. This runs after go-changelog conversion so that
+      # converted fragments (which already have PullRequest set) are a no-op.
+      - name: Backfill PullRequest Key in Changie Fragments
+        if: github.event_name == 'pull_request_target' && steps.filter.outputs.changie_fragments == 'true'
+        shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          FILES_JSON: ${{ steps.filter.outputs.changie_fragments_files }}
+        run: |
+          while IFS= read -r fragment_file; do
+            existing=$(yq eval '.custom.PullRequest' "$fragment_file")
+            if [[ -z "$existing" || "$existing" == "null" ]]; then
+              echo "Backfilling PullRequest=$PR_NUMBER into $fragment_file"
+              yq eval --inplace ".custom.PullRequest = \"$PR_NUMBER\"" "$fragment_file"
+            else
+              echo "PullRequest already set in $fragment_file ($existing), skipping"
+            fi
+          done < <(echo "$FILES_JSON" | jq -r '.[]')
+
+      - name: Install Changie and Get Next Minor Version
+        id: changie
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
+        with:
+          args: next minor
+
+      - name: Regenerate CHANGELOG
+        shell: bash
+        env:
+          NEXT_MINOR: ${{ steps.changie.outputs.output }}
+        run: |
+          changie merge --include-unreleased "## $NEXT_MINOR (Unreleased)"
+          .ci/scripts/sort-changelog-entries.sh CHANGELOG.md
+          cat .changes/footer.md >> CHANGELOG.md
+
+      - name: Commit and Push to main
+        shell: bash
+        env:
+          NEXT_MINOR: ${{ steps.changie.outputs.output }}
         run: |
           git config --local user.email "changelogbot@hashicorp.com"
           git config --local user.name "changelogbot"
-          git checkout -b ${{ steps.version.outputs.branch_name }}
-
-      - name: Update CHANGELOG.md
-        run: |
-          NEXT_VERSION="${{ steps.version.outputs.next_version }}"
-
-          # Check if CHANGELOG.md exists
-          if [ ! -f "CHANGELOG.md" ]; then
-            echo "# Changelog" > CHANGELOG.md
-            echo "" >> CHANGELOG.md
+          git add -A CHANGELOG.md .changes/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update CHANGELOG for v${NEXT_MINOR} (Unreleased)"
+            git push origin "HEAD:${TARGET_BRANCH}"
+          else
+            echo "::notice::No changes to commit"
           fi
 
-          # Create a temporary file with the new entry at the top
-          {
-            echo "## $NEXT_VERSION (Unreleased)"
-            echo ""
+  update-final:
+    name: Update CHANGELOG (Final for Version)
+    if: github.event_name == 'workflow_dispatch' && inputs.final_for_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
-            # Add the existing content, skipping the first line if it's just "# Changelog"
-            if head -1 CHANGELOG.md | grep -q "^# Changelog$"; then
-              tail -n +2 CHANGELOG.md
-            else
-              cat CHANGELOG.md
-            fi
-          } > CHANGELOG.tmp
+      # Version resolution
+      # -------------------------------------------------------------------------------------
+      # Resolve version from input or changie next minor.
+      - name: Install Changie and Get Next Minor Version
+        id: changie
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
+        with:
+          args: next minor
 
-          # Replace the original file
-          mv CHANGELOG.tmp CHANGELOG.md
-
-      - name: Commit changes
+      - name: Resolve and Validate Version
+        id: version
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version != '' && inputs.version || steps.changie.outputs.output }}
         run: |
-          git add CHANGELOG.md
-          git commit -m "Add changelog entry for v${{ steps.version.outputs.next_version }}"
+          if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
+          fi
 
-      - name: Push branch
+      - name: Get changesDir from Changie Config
+        id: changes
+        shell: bash
+        run: echo "dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
+
+      - name: Batch and Generate Final Per-Version CHANGELOG
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CHANGES_DIR: ${{ steps.changes.outputs.dir }}
         run: |
-          git push origin ${{ steps.version.outputs.branch_name }}
+          changie batch "$VERSION"
+          .ci/scripts/sort-changelog-entries.sh "${CHANGES_DIR}/${VERSION}.md"
+          changie merge
+          cat .changes/footer.md >> CHANGELOG.md
 
-      - name: Create PR description
-        id: create_pr_description
+      - name: Create and Checkout Branch
+        shell: bash
+        env:
+          BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
+        run: git checkout -b "$BRANCH_NAME"
+
+      - name: Commit Changes
+        id: commit
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config --local user.email "changelogbot@hashicorp.com"
+          git config --local user.name "changelogbot"
+          git add -A CHANGELOG.md .changes/ version/VERSION
+          if ! git diff --cached --quiet; then
+            git commit -m "Update CHANGELOG for v${VERSION}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No changes to commit"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push Branch
+        if: steps.commit.outputs.committed == 'true'
+        shell: bash
+        env:
+          BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
+        run: git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        if: steps.commit.outputs.committed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: "changelog-${{ steps.version.outputs.version }}"
         run: |
           cat > pr_description.md << 'EOF'
           <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
@@ -103,19 +290,17 @@ jobs:
 
           ## Description
 
-          This PR adds a changelog entry for the next minor version v${{ steps.version.outputs.next_version }} following the release of v${{ github.event.inputs.previous_version }}.
-
-          - Added changelog section for v${{ steps.version.outputs.next_version }} (Unreleased)
+          This PR:
+          - Batches unreleased change fragments into `${{ steps.changes.outputs.dir }}/${{ steps.version.outputs.version }}.md`
+          - Removes the batched change fragments from `${{ steps.changes.outputs.dir }}/unreleased/`
+          - Updates `version/VERSION` to `${{ steps.version.outputs.version }}`
+          - Updates the main `CHANGELOG.md` for v${{ steps.version.outputs.version }}
 
           ### Relations
           EOF
 
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
           gh pr create \
-            --title "Add CHANGELOG entry for v${{ steps.version.outputs.next_version }}" \
+            --title "Update CHANGELOG for v${{ steps.version.outputs.version }}" \
             --body-file pr_description.md \
             --base main \
-            --head ${{ steps.version.outputs.branch_name }}
+            --head "$BRANCH_NAME"
