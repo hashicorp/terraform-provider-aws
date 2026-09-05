@@ -16,6 +16,13 @@ func TestAccBedrockAgentCore_serial(t *testing.T) {
 		"TokenVaultCMK": {
 			acctest.CtBasic: testAccTokenVaultCMK_basic,
 		},
+		"PaymentManager": {
+			acctest.CtBasic:      testAccPaymentManager_basic,
+			acctest.CtDisappears: testAccPaymentManager_disappears,
+			"Description":        testAccPaymentManager_description,
+			"tags":               testAccBedrockAgentCorePaymentManager_tagsSerial,
+			"Identity":           testAccBedrockAgentCorePaymentManager_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
