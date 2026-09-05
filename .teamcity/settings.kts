@@ -646,9 +646,13 @@ object Sanity : BuildType({
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
-            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
         feature {
             type = "JetBrains.SharedResources"

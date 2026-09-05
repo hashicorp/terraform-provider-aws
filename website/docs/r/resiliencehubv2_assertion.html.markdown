@@ -16,7 +16,7 @@ An assertion is a statement about your application that provides context for fai
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_assertion" "example" {
   service_arn = aws_resiliencehubv2_service.example.arn
   text        = "The service must recover within 5 minutes of an AZ failure"

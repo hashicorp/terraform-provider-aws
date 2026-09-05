@@ -16,7 +16,7 @@ A resilience policy defines your resilience expectations through modular, compos
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-policy"
 
@@ -28,7 +28,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-AZ with Data Recovery
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name        = "example-policy"
   description = "Policy with multi-AZ and data recovery targets"
@@ -55,7 +55,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-Region
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-multi-region-policy"
 

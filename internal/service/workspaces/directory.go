@@ -218,6 +218,41 @@ func resourceDirectory() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"access_endpoint_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_endpoints": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"access_endpoint_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.AccessEndpointType](),
+													},
+													names.AttrVPCEndpointID: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										"internet_fallback_protocols": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[types.InternetFallbackProtocol](),
+											},
+										},
+									},
+								},
+							},
 							"device_type_android": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -833,6 +868,10 @@ func expandWorkspaceAccessProperties(tfList []any) *types.WorkspaceAccessPropert
 	apiObject := &types.WorkspaceAccessProperties{}
 	tfMap := tfList[0].(map[string]any)
 
+	if v, ok := tfMap["access_endpoint_config"].([]any); ok && len(v) > 0 {
+		apiObject.AccessEndpointConfig = expandAccessEndpointConfig(v)
+	}
+
 	if tfMap["device_type_android"].(string) != "" {
 		apiObject.DeviceTypeAndroid = types.AccessPropertyValue(tfMap["device_type_android"].(string))
 	}
@@ -866,6 +905,45 @@ func expandWorkspaceAccessProperties(tfList []any) *types.WorkspaceAccessPropert
 	}
 
 	return apiObject
+}
+
+func expandAccessEndpointConfig(tfList []any) *types.AccessEndpointConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.AccessEndpointConfig{}
+
+	if v, ok := tfMap["access_endpoints"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AccessEndpoints = expandAccessEndpoints(v.List())
+	}
+
+	if v, ok := tfMap["internet_fallback_protocols"].([]any); ok && len(v) > 0 {
+		apiObject.InternetFallbackProtocols = flex.ExpandStringyValueList[types.InternetFallbackProtocol](v)
+	}
+
+	return apiObject
+}
+
+func expandAccessEndpoints(tfList []any) []types.AccessEndpoint {
+	apiObjects := make([]types.AccessEndpoint, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.AccessEndpoint{
+			AccessEndpointType: types.AccessEndpointType(tfMap["access_endpoint_type"].(string)),
+			VpcEndpointId:      aws.String(tfMap[names.AttrVPCEndpointID].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandActiveDirectoryConfig(tfList []any) *types.ActiveDirectoryConfig {
@@ -1003,6 +1081,7 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 
 	return []any{
 		map[string]any{
+			"access_endpoint_config": flattenAccessEndpointConfig(apiObject.AccessEndpointConfig),
 			"device_type_android":    apiObject.DeviceTypeAndroid,
 			"device_type_chromeos":   apiObject.DeviceTypeChromeOs,
 			"device_type_ios":        apiObject.DeviceTypeIos,
@@ -1013,6 +1092,32 @@ func flattenWorkspaceAccessProperties(apiObject *types.WorkspaceAccessProperties
 			"device_type_zeroclient": apiObject.DeviceTypeZeroClient,
 		},
 	}
+}
+
+func flattenAccessEndpointConfig(apiObject *types.AccessEndpointConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"access_endpoints":            flattenAccessEndpoints(apiObject.AccessEndpoints),
+			"internet_fallback_protocols": flex.FlattenStringyValueList(apiObject.InternetFallbackProtocols),
+		},
+	}
+}
+
+func flattenAccessEndpoints(apiObjects []types.AccessEndpoint) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"access_endpoint_type":  apiObject.AccessEndpointType,
+			names.AttrVPCEndpointID: aws.ToString(apiObject.VpcEndpointId),
+		})
+	}
+
+	return tfList
 }
 
 func flattenCertificateBasedAuthProperties(apiObject *types.CertificateBasedAuthProperties) []any {

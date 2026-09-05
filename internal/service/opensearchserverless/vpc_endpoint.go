@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -185,17 +187,25 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, r.Meta(), output, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Security Group IDs are not returned and must be retrieved from the EC2 API.
-	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
+}
 
+func (r *vpcEndpointResource) flatten(ctx context.Context, meta *conns.AWSClient, output *awstypes.VpcEndpointDetail, data *vpcEndpointResourceModel) (diags diag.Diagnostics) {
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, data))
+	if diags.HasError() {
+		return diags
+	}
+
+	// Security Group IDs are not returned by the OpenSearch Serverless API and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, meta.EC2Client(ctx), data.ID.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
-		return
+		smerr.AddError(ctx, &diags, err, smerr.ID, data.ID.ValueString())
+		return diags
 	}
 
 	var securityGroupIDs []*string
@@ -203,12 +213,8 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
+	return diags
 }
 
 func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

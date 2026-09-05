@@ -16,7 +16,7 @@ A system represents a business application or platform that delivers value to yo
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_system" "example" {
   name = "example-system"
 }
@@ -24,7 +24,7 @@ resource "aws_resiliencehubv2_system" "example" {
 
 ### With Sharing Enabled
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_system" "example" {
   name            = "example-system"
   description     = "Production system grouping"

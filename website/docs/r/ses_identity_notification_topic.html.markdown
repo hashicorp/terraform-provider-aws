@@ -25,11 +25,11 @@ resource "aws_ses_identity_notification_topic" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `topic_arn` - (Optional) ARN of the Amazon SNS topic. Can be set to `""` (an empty string) to disable publishing.
-* `notification_type` - (Required) The type of notifications that will be published to the specified Amazon SNS topic. Valid Values: `Bounce`, `Complaint` or `Delivery`.
 * `identity` - (Required) Identity for which the Amazon SNS topic will be set. You can specify an identity by using its name or by using its ARN.
 * `include_original_headers` - (Optional) Whether SES should include original email headers in SNS notifications of this type. `false` by default.
+* `notification_type` - (Required) Type of notifications that will be published to the specified Amazon SNS topic. Valid Values: `Bounce`, `Complaint` or `Delivery`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `topic_arn` - (Optional) ARN of the Amazon SNS topic. Can be set to `""` (an empty string) to disable publishing.
 
 ## Attribute Reference
 
