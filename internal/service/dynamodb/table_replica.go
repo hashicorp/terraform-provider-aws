@@ -269,6 +269,9 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrKMSKeyARN, replica.KMSMasterKeyId)
 	}
 
+	// MultiRegionConsistency is a table-level property in DynamoDB's API, not per-replica.
+	// AWS enforces that all replicas in a global table share the same consistency mode,
+	// so reading from the table object is semantically correct for representing replica consistency.
 	if table.MultiRegionConsistency != "" {
 		d.Set("consistency_mode", string(table.MultiRegionConsistency))
 	} else {
