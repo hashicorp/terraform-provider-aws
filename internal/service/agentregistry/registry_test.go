@@ -115,6 +115,85 @@ func TestAccAgentRegistryRegistry_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAgentRegistryRegistry_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_agentregistry_registry.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AgentRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"authorizer_configuration": knownvalue.ListSizeExact(0),
+						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName1),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"authorizer_configuration": knownvalue.ListSizeExact(0),
+						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccAgentRegistryRegistry_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomWithPrefixAndUnderscore(t)
@@ -127,34 +206,74 @@ func TestAccAgentRegistryRegistry_description(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_description(rName, "initial description"),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description1")),
+				},
 			},
 			{
-				Config: testAccRegistryConfig_description(rName, "updated description"),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description2")),
+				},
 			},
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description1")),
 				},
 			},
 		},
@@ -173,16 +292,33 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_approvalConfiguration(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/approval_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration").AtSliceIndex(0).AtMapKey("auto_approval_rules"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"auto_approval_rules": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.AutoApprovalRuleApproveAll),
+						}),
+					})})),
 				},
 			},
 			{
-				Config: testAccRegistryConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
@@ -191,29 +327,30 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
-		},
-	})
-}
-
-func TestAccAgentRegistryRegistry_discoveryIAM(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := randomWithPrefixAndUnderscore(t)
-	resourceName := "aws_agentregistry_registry.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AgentRegistryServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_discoveryIAM(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/approval_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration").AtSliceIndex(0).AtMapKey("authorizer_type"), knownvalue.StringExact("AWS_IAM")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"auto_approval_rules": knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(awstypes.AutoApprovalRuleApproveAll),
+						}),
+					})})),
 				},
 			},
 		},
@@ -325,39 +462,6 @@ resource "aws_agentregistry_registry" "test" {
   }
 }
 `, rName)
-}
-
-func testAccRegistryConfig_description(rName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_agentregistry_registry" "test" {
-  name        = %[1]q
-  description = %[2]q
-
-  discovery_configuration {
-    authorizer_type = "AWS_IAM"
-  }
-}
-`, rName, description)
-}
-
-func testAccRegistryConfig_approvalConfiguration(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_agentregistry_registry" "test" {
-  name = %[1]q
-
-  approval_configuration {
-    auto_approval_rules = ["APPROVE_ALL"]
-  }
-
-  discovery_configuration {
-    authorizer_type = "AWS_IAM"
-  }
-}
-`, rName)
-}
-
-func testAccRegistryConfig_discoveryIAM(rName string) string {
-	return testAccRegistryConfig_basic(rName)
 }
 
 func testAccRegistryConfig_authorizerConfigurationCreate(rName string) string {
