@@ -207,8 +207,11 @@ func TestAccDynamoDBTableReplica_consistencyModeForceNew(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "consistency_mode", "STRONG"),
 				),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 		},
 	})
