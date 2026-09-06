@@ -117,6 +117,37 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_consistencyMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_consistencyMode(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "consistency_mode", "STRONG"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
