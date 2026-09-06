@@ -15,20 +15,27 @@ import (
 
 func TestAgentRuntimeCapacityProviderRoundTrip(t *testing.T) {
 	t.Parallel()
+
+	// Synthetic ARNs for SDK conversion tests that do not call AWS.
+	const (
+		capacityProviderARN = "arn:aws:bedrock-agentcore:eu-west-1:123456789012:capacity-provider/example-abc1234567" //lintignore:AWSAT003,AWSAT005
+		efsAccessPointARN   = "arn:aws:elasticfilesystem:eu-west-1:123456789012:access-point/fsap-1234567890abcdef0"  //lintignore:AWSAT003,AWSAT005
+		s3AccessPointARN    = "arn:aws:s3:eu-west-1:123456789012:accesspoint/example"                                 //lintignore:AWSAT003,AWSAT005
+	)
 	for _, tc := range []struct {
 		name  string
 		input bedrockagentcorecontrol.CreateAgentRuntimeInput
 	}{
 		{name: "microVM", input: bedrockagentcorecontrol.CreateAgentRuntimeInput{NetworkConfiguration: &awstypes.NetworkConfiguration{NetworkMode: awstypes.NetworkModePublic}}},
 		{name: "instances", input: bedrockagentcorecontrol.CreateAgentRuntimeInput{
-			CapacityProviderConfiguration: &awstypes.CapacityProviderConfiguration{CapacityProviderArn: aws.String("arn:aws:bedrock-agentcore:eu-west-1:123456789012:capacity-provider/example-abc1234567")},
+			CapacityProviderConfiguration: &awstypes.CapacityProviderConfiguration{CapacityProviderArn: aws.String(capacityProviderARN)},
 			FilesystemConfigurations:      []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberCapacityProviderVolume{Value: awstypes.CapacityProviderVolumeConfiguration{VolumeName: aws.String("data"), MountPath: aws.String("/mnt/data")}}},
 		}},
 		{name: "efs", input: bedrockagentcorecontrol.CreateAgentRuntimeInput{
-			FilesystemConfigurations: []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberEfsAccessPoint{Value: awstypes.EfsAccessPointConfiguration{AccessPointArn: aws.String("arn:aws:elasticfilesystem:eu-west-1:123456789012:access-point/fsap-1234567890abcdef0"), MountPath: aws.String("/mnt/efs")}}},
+			FilesystemConfigurations: []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberEfsAccessPoint{Value: awstypes.EfsAccessPointConfiguration{AccessPointArn: aws.String(efsAccessPointARN), MountPath: aws.String("/mnt/efs")}}},
 		}},
 		{name: "s3Files", input: bedrockagentcorecontrol.CreateAgentRuntimeInput{
-			FilesystemConfigurations: []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberS3FilesAccessPoint{Value: awstypes.S3FilesAccessPointConfiguration{AccessPointArn: aws.String("arn:aws:s3:eu-west-1:123456789012:accesspoint/example"), MountPath: aws.String("/mnt/s3")}}},
+			FilesystemConfigurations: []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberS3FilesAccessPoint{Value: awstypes.S3FilesAccessPointConfiguration{AccessPointArn: aws.String(s3AccessPointARN), MountPath: aws.String("/mnt/s3")}}},
 		}},
 		{name: "sessionStorage", input: bedrockagentcorecontrol.CreateAgentRuntimeInput{
 			FilesystemConfigurations: []awstypes.FilesystemConfiguration{&awstypes.FilesystemConfigurationMemberSessionStorage{Value: awstypes.SessionStorageConfiguration{MountPath: aws.String("/mnt/session")}}},
