@@ -6,6 +6,7 @@ package agentregistry_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/agentregistrycontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -24,7 +26,7 @@ func TestAccAgentRegistryRegistry_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_agentregistry_registry.test[0]"
 	resourceName2 := "aws_agentregistry_registry.test[1]"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -46,9 +48,11 @@ func TestAccAgentRegistryRegistry_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_arn"), checkRegistryARN),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 
 					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("registry_arn"), checkRegistryARN),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 				},
 			},
@@ -63,11 +67,11 @@ func TestAccAgentRegistryRegistry_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_agentregistry_registry.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_agentregistry_registry.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceDisplayName("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -78,7 +82,7 @@ func TestAccAgentRegistryRegistry_List_basic(t *testing.T) {
 func TestAccAgentRegistryRegistry_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_agentregistry_registry.test[0]"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -96,10 +100,14 @@ func TestAccAgentRegistryRegistry_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_arn"), checkRegistryARN),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 				},
 			},
 
@@ -110,17 +118,30 @@ func TestAccAgentRegistryRegistry_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_agentregistry_registry.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"_0")),
 					querycheck.ExpectResourceKnownValues("aws_agentregistry_registry.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"_0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_arn"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("READY")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authorizer_configuration": knownvalue.ListSizeExact(0),
+							"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
+						})})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_arn"), checkRegistryARN),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("registry_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					}),
 				},
 			},
@@ -132,7 +153,7 @@ func TestAccAgentRegistryRegistry_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_agentregistry_registry.test[0]"
 	resourceName2 := "aws_agentregistry_registry.test[1]"
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -158,10 +179,12 @@ func TestAccAgentRegistryRegistry_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_arn"), checkRegistryARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("registry_arn"), checkRegistryARNAlternateRegion),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
 				},
 			},
 

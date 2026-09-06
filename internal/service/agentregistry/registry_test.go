@@ -24,7 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var checkRegistryARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("agent-registry", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}`))
+var (
+	checkRegistryARN                knownvalue.Check = tfknownvalue.RegionalARNRegexp("agent-registry", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}`))
+	checkRegistryARNAlternateRegion knownvalue.Check = tfknownvalue.RegionalARNAlternateRegionRegexp("agent-registry", regexache.MustCompile(`registry/[a-zA-Z0-9]{12,16}`))
+)
 
 func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -80,7 +83,7 @@ func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 
 func TestAccAgentRegistryRegistry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomWithPrefixAndUnderscore(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_agentregistry_registry.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

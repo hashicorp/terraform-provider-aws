@@ -5,7 +5,7 @@ resource "aws_agentregistry_registry" "test" {
   count  = var.resource_count
   region = var.region
 
-  name = "${var.rName}_${count.index}"
+  name = "${var.rName}-${count.index}"
 
   discovery_configuration {
     authorizer_type = "AWS_IAM"

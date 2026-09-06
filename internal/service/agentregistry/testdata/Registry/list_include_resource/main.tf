@@ -4,12 +4,13 @@
 resource "aws_agentregistry_registry" "test" {
   count = var.resource_count
 
-  name        = "${var.rName}_${count.index}"
-  description = "test description"
+  name = "${var.rName}-${count.index}"
 
   discovery_configuration {
     authorizer_type = "AWS_IAM"
   }
+
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -21,5 +22,11 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
   nullable    = false
 }
