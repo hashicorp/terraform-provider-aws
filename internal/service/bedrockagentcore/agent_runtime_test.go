@@ -4,8 +4,12 @@
 package bedrockagentcore_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -1597,4 +1601,119 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, rImageUri, mountPath))
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_capacityProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccRandomAgentRuntimeName(t)
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	var runtime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	var archive bytes.Buffer
+	w := zip.NewWriter(&archive)
+	f, err := w.Create("main.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.Write([]byte("from http.server import HTTPServer, BaseHTTPRequestHandler\nclass Handler(BaseHTTPRequestHandler):\n    def do_GET(self):\n        self.send_response(200)\n        self.end_headers()\n        self.wfile.write(b'OK')\nHTTPServer(('0.0.0.0', 8080), Handler).serve_forever()\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err = w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	archivePath := filepath.Join(t.TempDir(), "agent.zip")
+	if err = os.WriteFile(archivePath, archive.Bytes(), 0600); err != nil {
+		t.Fatal(err)
+	}
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             resource.ComposeAggregateTestCheckFunc(testAccCheckAgentRuntimeDestroy(ctx, t), testAccCheckCapacityProviderDestroy(ctx, t)),
+		Steps: []resource.TestStep{
+			{Config: testAccAgentRuntimeConfig_compute(rName, archivePath, true, "/mnt/data"), Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckAgentRuntimeExists(ctx, t, resourceName, &runtime),
+				resource.TestCheckResourceAttrPair(resourceName, "capacity_provider_configuration.0.capacity_provider_arn", "aws_bedrockagentcore_capacity_provider.test", names.AttrARN),
+				resource.TestCheckResourceAttr(resourceName, "filesystem_configuration.0.capacity_provider_volume.0.volume_name", "data"),
+				resource.TestCheckResourceAttr(resourceName, "filesystem_configuration.0.capacity_provider_volume.0.mount_path", "/mnt/data"),
+			)},
+			{ResourceName: resourceName, ImportState: true, ImportStateVerify: true, ImportStateVerifyIdentifierAttribute: "agent_runtime_id", ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id")},
+			{Config: testAccAgentRuntimeConfig_compute(rName, archivePath, true, "/mnt/workspace"), Check: resource.TestCheckResourceAttr(resourceName, "filesystem_configuration.0.capacity_provider_volume.0.mount_path", "/mnt/workspace")},
+			{ResourceName: resourceName, ImportState: true, ImportStateVerify: true, ImportStateVerifyIdentifierAttribute: "agent_runtime_id", ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id")},
+			{Config: testAccAgentRuntimeConfig_compute(rName, archivePath, false, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate)}},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "filesystem_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.network_mode", "PUBLIC"),
+				)},
+			{Config: testAccAgentRuntimeConfig_compute(rName, archivePath, true, "/mnt/data"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate)}},
+				Check:            resource.TestCheckResourceAttrPair(resourceName, "capacity_provider_configuration.0.capacity_provider_arn", "aws_bedrockagentcore_capacity_provider.test", names.AttrARN)},
+		}})
+}
+
+func testAccAgentRuntimeConfig_compute(rName, archivePath string, instances bool, mountPath string) string {
+	computeConfiguration := `
+network_configuration {
+ network_mode = "PUBLIC"
+}
+`
+	if instances {
+		computeConfiguration = fmt.Sprintf(`
+capacity_provider_configuration {
+ capacity_provider_arn = aws_bedrockagentcore_capacity_provider.test.arn
+}
+filesystem_configuration {
+ capacity_provider_volume {
+  volume_name = "data"
+  mount_path = %q
+ }
+}
+`, mountPath)
+	}
+
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_storage(rName, 1), fmt.Sprintf(`
+resource "aws_s3_bucket" "runtime" {
+  bucket_prefix = "tf-acc-agentcore-"
+  force_destroy = true
+}
+resource "aws_s3_object" "runtime" {
+  bucket = aws_s3_bucket.runtime.id
+  key    = "agent.zip"
+  source = %[2]q
+}
+resource "aws_iam_role" "runtime" {
+  name = "%[1]s_runtime"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = "sts:AssumeRole", Principal = { Service = "bedrock-agentcore.amazonaws.com" } }]
+  })
+}
+resource "aws_iam_role_policy" "runtime" {
+  role = aws_iam_role.runtime.id
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = ["s3:GetObject"], Resource = aws_s3_object.runtime.arn }]
+  })
+}
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  lifecycle_configuration = [{ idle_runtime_session_timeout = 300, max_lifetime = 600 }]
+  agent_runtime_name      = %[1]q
+  role_arn                = aws_iam_role.runtime.arn
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.runtime.id
+          prefix = aws_s3_object.runtime.key
+        }
+      }
+    }
+  }
+  %[3]s
+  depends_on = [aws_iam_role_policy.runtime]
+}
+`, rName, archivePath, computeConfiguration))
 }
