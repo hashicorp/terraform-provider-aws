@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `capacity_provider_configuration` and `filesystem_configuration.capacity_provider_volume` support for Runtime Instances
+```
