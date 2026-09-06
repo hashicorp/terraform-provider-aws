@@ -19,17 +19,17 @@ func TestCapacityProviderConfigurationRoundTrip(t *testing.T) {
 	ctx := t.Context()
 	input := bedrockagentcorecontrol.CreateCapacityProviderInput{
 		Name: aws.String("test_capacity"), Description: aws.String(names.AttrDescription),
-		PermissionsConfiguration: &awstypes.PermissionsConfiguration{CapacityProviderOperatorRoleArn: aws.String("arn:aws:iam::123456789012:role/operator")},
+		PermissionsConfiguration: &awstypes.PermissionsConfiguration{CapacityProviderOperatorRoleArn: aws.String("arn:aws:iam::123456789012:role/operator")}, //lintignore:AWSAT005 // Synthetic ARN for offline SDK conversion.
 		ComputeConfiguration: &awstypes.ComputeConfigurationMemberEc2Configuration{Value: awstypes.Ec2Configuration{
 			LaunchTemplateSource: &awstypes.LaunchTemplateSourceMemberLaunchParameters{Value: awstypes.LaunchParameters{
 				OperatingSystem:      awstypes.OperatingSystemLinuxArm64,
 				InstanceRequirements: &awstypes.InstanceRequirements{AllowedInstanceTypes: []string{"t4g.nano"}},
-				InstanceProfileArn:   aws.String("arn:aws:iam::123456789012:instance-profile/test"),
+				InstanceProfileArn:   aws.String("arn:aws:iam::123456789012:instance-profile/test"), //lintignore:AWSAT005 // Synthetic ARN for offline SDK conversion.
 				SshKeyName:           aws.String("test-key"), Monitoring: awstypes.MonitoringBasic,
 				PropagatedTags:                   map[string]string{"Name": "test"},
 				CapacityReservationSpecification: &awstypes.CapacityReservationSpecification{CapacityReservationPreference: awstypes.CapacityReservationPreferenceOpen, CapacityReservationTarget: &awstypes.CapacityReservationTarget{CapacityReservationId: aws.String("cr-12345678")}},
 				EphemeralVolumes:                 []awstypes.EphemeralBlockDeviceMapping{{DeviceName: aws.String("/dev/sdb"), VirtualName: aws.String("ephemeral0")}},
-				LicenseSpecifications:            []awstypes.LicenseSpecification{{LicenseConfigurationArn: aws.String("arn:aws:license-manager:us-east-1:123456789012:license-configuration:lic-test")}},
+				LicenseSpecifications:            []awstypes.LicenseSpecification{{LicenseConfigurationArn: aws.String("arn:aws:license-manager:us-east-1:123456789012:license-configuration:lic-test")}}, //lintignore:AWSAT003,AWSAT005 // Synthetic ARN for offline SDK conversion.
 			}},
 			VpcConfiguration:       &awstypes.VpcConfiguration{Subnets: []string{"subnet-12345678"}, SecurityGroups: []string{"sg-12345678"}},
 			LifecycleConfiguration: &awstypes.InstanceLifecycleConfiguration{IdleInstanceTimeout: aws.Int32(900), MaxLifetime: aws.Int32(28800)},
