@@ -94,6 +94,27 @@ resource "aws_backup_selection" "example" {
 }
 ```
 
+### Selecting Backups By Resource Type And Tag
+
+~> **Note:** To select resources that match both an ARN pattern (for example a service-scoped wildcard) **and** a tag, use `condition` with `resources`. Do **not** combine `resources` wildcards with `selection_tag` — that combination uses OR semantics and can select far more resources than expected. See [Argument Reference](#argument-reference) below.
+
+```terraform
+resource "aws_backup_selection" "example" {
+  iam_role_arn = aws_iam_role.example.arn
+  name         = "tf_example_backup_selection"
+  plan_id      = aws_backup_plan.example.id
+
+  resources = ["arn:aws:s3:::*"]
+
+  condition {
+    string_equals {
+      key   = "aws:ResourceTag/enable_backup"
+      value = "true"
+    }
+  }
+}
+```
+
 ### Selecting Backups By Resource
 
 ```terraform
@@ -130,13 +151,15 @@ resource "aws_backup_selection" "example" {
 
 This resource supports the following arguments:
 
+~> **Note:** `resources` and `selection_tag` are evaluated independently and combined with **OR** semantics (AWS Backup `Resources` + `ListOfTags`). A resource is selected if it matches **any** ARN/pattern in `resources` **or** **any** `selection_tag`. Tag conditions in `selection_tag` do **not** further filter the ARNs in `resources`. In particular, `resources = ["*"]` or a service-scoped wildcard such as `["arn:aws:s3:::*"]` together with `selection_tag` selects all resources matching the ARN pattern **plus** all resources matching the tag(s), which can result in an unintended account-wide selection. To require **both** an ARN match and a tag match, set `resources` to the desired pattern and use `condition` (AWS Backup `Conditions`) instead of `selection_tag`. Multiple `condition` rules use **AND** semantics. See [CreateBackupSelection](https://docs.aws.amazon.com/cli/latest/reference/backup/create-backup-selection.html).
+
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
-* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag) for details.
-* `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition) for details.
-* `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
+* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan (`ListOfTags` in the AWS API). Multiple tags use OR logic among themselves. When set together with `resources`, selection is the union of both (OR), not an intersection. See [below](#selection_tag) for details.
+* `condition` - (Optional) Condition-based filters applied to resources selected for a backup plan (`Conditions` in the AWS API). Multiple conditions use AND logic. Use this with `resources` when you need tag filters to narrow an ARN pattern. See [below](#condition) for details.
+* `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan. Multiple ARNs use OR logic. Combined with `selection_tag` using OR semantics (see note above).
 * `not_resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to exclude from a backup plan.
 
 ### selection_tag
