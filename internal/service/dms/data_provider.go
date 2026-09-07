@@ -257,19 +257,6 @@ func findDataProviderByARN(ctx context.Context, conn *databasemigrationservice.C
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
-type dataProviderResourceModel struct {
-	framework.WithRegionModel
-	ARN          types.String                                               `tfsdk:"arn"`
-	CreationTime timetypes.RFC3339                                          `tfsdk:"creation_time"`
-	Description  types.String                                               `tfsdk:"description"`
-	Engine       types.String                                               `tfsdk:"engine"`
-	Name         types.String                                               `tfsdk:"name"`
-	Settings     fwtypes.ListNestedObjectValueOf[dataProviderSettingsModel] `tfsdk:"settings"`
-	Tags         tftags.Map                                                 `tfsdk:"tags"`
-	TagsAll      tftags.Map                                                 `tfsdk:"tags_all"`
-	Virtual      types.Bool                                                 `tfsdk:"virtual"`
-}
-
 func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 	certificateARN := schema.StringAttribute{
 		CustomType: fwtypes.ARNType,
@@ -577,6 +564,19 @@ func dataProviderSettingsUnionValidators() []validator.List {
 			path.MatchRelative().AtParent().AtName("sybase_ase_settings"),
 		),
 	}
+}
+
+type dataProviderResourceModel struct {
+	framework.WithRegionModel
+	ARN          types.String                                               `tfsdk:"arn"`
+	CreationTime timetypes.RFC3339                                          `tfsdk:"creation_time"`
+	Description  types.String                                               `tfsdk:"description"`
+	Engine       types.String                                               `tfsdk:"engine"`
+	Name         types.String                                               `tfsdk:"name"`
+	Settings     fwtypes.ListNestedObjectValueOf[dataProviderSettingsModel] `tfsdk:"settings"`
+	Tags         tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll      tftags.Map                                                 `tfsdk:"tags_all"`
+	Virtual      types.Bool                                                 `tfsdk:"virtual"`
 }
 
 type dataProviderSettingsModel struct {
