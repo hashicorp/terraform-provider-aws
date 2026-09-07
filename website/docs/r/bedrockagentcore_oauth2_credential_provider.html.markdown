@@ -12,6 +12,8 @@ Manages an AWS Bedrock AgentCore OAuth2 Credential Provider. OAuth2 credential p
 
 -> **Note:** Write-Only arguments `client_id_wo` and `client_secret_wo` are available to use in place of `client_id` and `client_secret`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
+-> **Note:** Alternatively, `client_secret_config` points AgentCore at a client secret you already hold in AWS Secrets Manager, so the secret value never passes through Terraform. AgentCore reads the value at token exchange time, which means the secret can be populated or rotated out-of-band without re-running Terraform. Without `client_secret_config`, AgentCore creates and manages the secret itself and its name, tags, KMS key, resource policy, and rotation schedule are not configurable.
+
 ## Example Usage
 
 ### GitHub OAuth Provider
@@ -45,6 +47,52 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "auth0" {
 
       oauth_discovery {
         discovery_url = "https://dev-company.auth0.com/.well-known/openid-configuration"
+      }
+    }
+  }
+}
+```
+
+### Referencing an Existing Secrets Manager Secret
+
+Manage the client secret yourself in AWS Secrets Manager and let AgentCore read it. The secret is never read by Terraform, so it can be populated out-of-band. The secret needs a resource policy allowing AgentCore to call `secretsmanager:GetSecretValue`, plus `kms:Decrypt` on the key when encrypted with a customer managed KMS key.
+
+```terraform
+resource "aws_secretsmanager_secret" "example" {
+  name = "example/github-oauth"
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_secretsmanager_secret_policy" "example" {
+  secret_arn = aws_secretsmanager_secret.example.arn
+  policy     = data.aws_iam_policy_document.example.json
+}
+
+resource "aws_bedrockagentcore_oauth2_credential_provider" "example" {
+  name = "github-oauth-provider"
+
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
+    github_oauth2_provider_config {
+      client_id            = "your-github-client-id"
+      client_secret_source = "EXTERNAL"
+
+      client_secret_config {
+        secret_id = aws_secretsmanager_secret.example.arn
+        json_key  = "client_secret"
       }
     }
   }
@@ -116,6 +164,11 @@ The `custom_oauth2_provider_config` block supports the following:
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
+**Referenced Secret (choose in place of a client secret):**
+
+* `client_secret_config` - (Optional) Reference to an existing AWS Secrets Manager secret that AgentCore reads the client secret from. Cannot be used with `client_secret`, `client_secret_wo`, or `client_credentials_wo_version`. See [`client_secret_config`](#client_secret_config) below.
+* `client_secret_source` - (Optional) Where AgentCore reads the client secret from. Valid values: `MANAGED`, `EXTERNAL`. Inferred as `EXTERNAL` when `client_secret_config` is configured, and defaults to `MANAGED` otherwise.
+
 **OAuth Discovery Configuration:**
 
 * `oauth_discovery` - (Optional) OAuth discovery configuration. See [`oauth_discovery`](#oauth_discovery) below.
@@ -135,7 +188,19 @@ These predefined provider blocks support the following:
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
 
+**Referenced Secret (choose in place of a client secret):**
+
+* `client_secret_config` - (Optional) Reference to an existing AWS Secrets Manager secret that AgentCore reads the client secret from. Cannot be used with `client_secret`, `client_secret_wo`, or `client_credentials_wo_version`. See [`client_secret_config`](#client_secret_config) below.
+* `client_secret_source` - (Optional) Where AgentCore reads the client secret from. Valid values: `MANAGED`, `EXTERNAL`. Inferred as `EXTERNAL` when `client_secret_config` is configured, and defaults to `MANAGED` otherwise.
+
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
+
+### `client_secret_config`
+
+The `client_secret_config` block supports the following:
+
+* `json_key` - (Required) Key within the secret's JSON payload that holds the client secret value.
+* `secret_id` - (Required) ARN or name of the AWS Secrets Manager secret that stores the client secret. Secrets in another AWS account in the same Region are supported, in which case an ARN is required.
 
 ### `oauth_discovery`
 
