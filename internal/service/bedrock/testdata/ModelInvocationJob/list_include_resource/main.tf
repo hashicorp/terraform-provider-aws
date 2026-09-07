@@ -1,6 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_bedrock_model_invocation_job" "test" {
-{{- template "region" }}
-  job_name = var.rName
+  count = var.resource_count
+
+  job_name = "${var.rName}-${count.index}"
   model_id = "us.amazon.nova-2-lite-v1:0"
   role_arn = aws_iam_role.test.arn
 
@@ -12,30 +16,23 @@ resource "aws_bedrock_model_invocation_job" "test" {
 
   output_data_config {
     s3_output_data_config {
-      s3_uri = "s3://${aws_s3_bucket.test.id}/output/"
+      s3_uri = "s3://${aws_s3_bucket.test.id}/output/${count.index}/"
     }
   }
 
   depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
-
 }
-
-# testAccModelInvocationJobConfig_base
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_region" "current" {
-{{- template "region" -}}
-}
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
-{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
 
 resource "aws_s3_object" "input" {
-{{- template "region" }}
   bucket  = aws_s3_bucket.test.id
   key     = "input/records.jsonl"
   content = <<-EOT
@@ -100,4 +97,16 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   })
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }

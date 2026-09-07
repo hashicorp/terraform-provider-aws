@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -129,12 +130,13 @@ func testAccCheckModelInvocationJobExists(ctx context.Context, t *testing.T, n s
 // AWS does not support permanent deletion of model invocation jobs.
 func testAccCheckModelInvocationJobDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_model_invocation_job" {
 				continue
 			}
+
+			ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 			arn := rs.Primary.Attributes["job_arn"]
 			output, err := tfbedrock.FindModelInvocationJobByARN(ctx, conn, arn)
@@ -301,35 +303,6 @@ resource "aws_bedrock_model_invocation_job" "test" {
   depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
 `, rName))
-}
-
-func testAccModelInvocationJobConfig_tags(rName, tagVal1, tagVal2 string) string {
-	return acctest.ConfigCompose(testAccModelInvocationJobConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrock_model_invocation_job" "test" {
-  job_name = %[1]q
-  model_id = "us.amazon.nova-2-lite-v1:0"
-  role_arn = aws_iam_role.test.arn
-
-  input_data_config {
-    s3_input_data_config {
-      s3_uri = "s3://${aws_s3_bucket.test.id}/input/"
-    }
-  }
-
-  output_data_config {
-    s3_output_data_config {
-      s3_uri = "s3://${aws_s3_bucket.test.id}/output/"
-    }
-  }
-
-  tags = {
-    key1 = %[2]q
-    key2 = %[3]q
-  }
-
-  depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
-}
-`, rName, tagVal1, tagVal2))
 }
 
 func testAccModelInvocationJobConfig_skipDestroy(rName string) string {

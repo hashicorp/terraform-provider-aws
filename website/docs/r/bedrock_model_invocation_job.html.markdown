@@ -50,9 +50,8 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_destroy` - (Optional) Whether to leave the batch inference job in its current state when destroying the resource, instead of stopping it.
-* `tags` - (Optional) Map of tags to assign to the batch inference job. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout_duration_in_hours` - (Optional) Number of hours after which to force the batch inference job to time out.
-* `vpc_config` - (Optional) Virtual Private Cloud (VPC) configuration for the data used by the batch inference job. See [`vpc_config` Block](#vpc_config-block) below.
+* `vpc_config` - (Optional) VPC configuration for the data used by the batch inference job. See [`vpc_config` Block](#vpc_config-block) below.
 
 ### `input_data_config` Block
 
@@ -102,7 +101,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the batch inference job.
 * `submit_time` - Time at which the batch inference job was submitted.
 * `success_record_count` - Number of records that were successfully processed in the batch inference job.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `total_record_count` - Total number of records in the batch inference job.
 
 ## Timeouts

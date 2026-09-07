@@ -41,13 +41,11 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrock_model_invocation_job", name="Model Invocation Job")
-// @Tags(identifierAttribute="job_arn")
 // @ArnIdentity("job_arn")
 // @Testing(preCheck="testAccPreCheckModelInvocationJob")
 // @Testing(importIgnore="status")
@@ -171,8 +169,6 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"input_data_config": schema.ListNestedBlock{
@@ -321,7 +317,6 @@ func (r *modelInvocationJobResource) Create(ctx context.Context, req resource.Cr
 
 	// Additional fields.
 	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
-	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateModelInvocationJob(ctx, &input)
 	if err != nil {
@@ -339,12 +334,11 @@ func (r *modelInvocationJobResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, findOutput, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, findOutput, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ModelID = fwflex.StringValueToFramework(ctx, modelIDFromResource(aws.ToString(findOutput.ModelId)))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -369,13 +363,23 @@ func (r *modelInvocationJobResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, job, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, job, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.ModelID = fwflex.StringValueToFramework(ctx, modelIDFromResource(aws.ToString(job.ModelId)))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *modelInvocationJobResource) flatten(ctx context.Context, job *bedrock.GetModelInvocationJobOutput, data *modelInvocationJobResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, job, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.ModelID = fwflex.StringValueToFramework(ctx, modelIDFromResource(aws.ToString(job.ModelId)))
+
+	return diags
 }
 
 func (r *modelInvocationJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -526,8 +530,6 @@ type modelInvocationJobResourceModel struct {
 	Status                 fwtypes.StringEnum[awstypes.ModelInvocationJobStatus]                    `tfsdk:"status"`
 	SubmitTime             timetypes.RFC3339                                                        `tfsdk:"submit_time"`
 	SuccessRecordCount     types.Int64                                                              `tfsdk:"success_record_count"`
-	Tags                   tftags.Map                                                               `tfsdk:"tags"`
-	TagsAll                tftags.Map                                                               `tfsdk:"tags_all"`
 	TimeoutDurationInHours types.Int32                                                              `tfsdk:"timeout_duration_in_hours"`
 	Timeouts               timeouts.Value                                                           `tfsdk:"timeouts"`
 	TotalRecordCount       types.Int64                                                              `tfsdk:"total_record_count"`

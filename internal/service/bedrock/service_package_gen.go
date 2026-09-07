@@ -141,9 +141,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newModelInvocationJobResource,
 			TypeName: "aws_bedrock_model_invocation_job",
 			Name:     "Model Invocation Job",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "job_arn",
-			}),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 			Import: inttypes.FrameworkImport{
@@ -195,6 +192,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "job_arn",
 			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
+		{
+			Factory:  newModelInvocationJobResourceAsListResource,
+			TypeName: "aws_bedrock_model_invocation_job",
+			Name:     "Model Invocation Job",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 		},

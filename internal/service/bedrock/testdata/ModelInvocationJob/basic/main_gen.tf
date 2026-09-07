@@ -19,6 +19,7 @@ resource "aws_bedrock_model_invocation_job" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
+
 }
 
 # testAccModelInvocationJobConfig_base
