@@ -419,10 +419,7 @@ func (r *modelInvocationJobResource) Delete(ctx context.Context, req resource.De
 // GetModelInvocationJob resolves a model_id containing an inference profile
 // ID (e.g. "us.amazon.nova-2-lite-v1:0") to its fully-qualified ARN
 // (e.g. "arn:aws:bedrock:us-west-2:123456789012:inference-profile/us.amazon.nova-2-lite-v1:0").
-// Truncate that back down to the identifier the caller configured so it
-// round-trips on read/import without conflicting with the Required,
-// non-Computed model_id attribute. Values that aren't ARNs (such as plain
-// foundation model IDs) are returned unchanged.
+// Truncate the value back to just model_id.
 func modelIDFromResource(id string) string {
 	if !arn.IsARN(id) {
 		return id
