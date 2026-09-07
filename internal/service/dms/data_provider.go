@@ -99,164 +99,6 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *dataProviderResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DMSClient(ctx)
-
-	var plan dataProviderResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var input databasemigrationservice.CreateDataProviderInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("DataProvider")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	input.Tags = getTagsIn(ctx)
-
-	out, err := conn.CreateDataProvider(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil || out.DataProvider == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-}
-
-func (r *dataProviderResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().DMSClient(ctx)
-
-	var state dataProviderResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findDataProviderByARN(ctx, conn, state.ARN.ValueString())
-	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *dataProviderResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().DMSClient(ctx)
-
-	var plan, state dataProviderResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		var input databasemigrationservice.ModifyDataProviderInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("DataProvider")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		input.DataProviderIdentifier = state.ARN.ValueStringPointer()
-		// Replace rather than merge settings so removed arguments are cleared.
-		input.ExactSettings = aws.Bool(true)
-
-		out, err := conn.ModifyDataProvider(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
-			return
-		}
-		if out == nil || out.DataProvider == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, state.ARN.String())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-}
-
-func (r *dataProviderResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().DMSClient(ctx)
-
-	var state dataProviderResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	input := databasemigrationservice.DeleteDataProviderInput{
-		DataProviderIdentifier: state.ARN.ValueStringPointer(),
-	}
-	_, err := conn.DeleteDataProvider(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
-		return
-	}
-}
-
-func (r *dataProviderResource) flatten(ctx context.Context, out *awstypes.DataProvider, data *dataProviderResourceModel) diag.Diagnostics {
-	return flex.Flatten(ctx, out, data, flex.WithFieldNamePrefix("DataProvider"))
-}
-
-func findDataProviderByARN(ctx context.Context, conn *databasemigrationservice.Client, arn string) (*awstypes.DataProvider, error) {
-	input := databasemigrationservice.DescribeDataProvidersInput{
-		Filters: []awstypes.Filter{{
-			Name:   aws.String("data-provider-identifier"),
-			Values: []string{arn},
-		}},
-	}
-
-	var output []awstypes.DataProvider
-	for item, err := range listDataProviders(ctx, conn, &input) {
-		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
-		}
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-		output = append(output, item)
-	}
-
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
-}
-
 func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 	certificateARN := schema.StringAttribute{
 		CustomType: fwtypes.ARNType,
@@ -545,6 +387,164 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
+}
+
+func (r *dataProviderResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().DMSClient(ctx)
+
+	var plan dataProviderResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input databasemigrationservice.CreateDataProviderInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("DataProvider")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input.Tags = getTagsIn(ctx)
+
+	out, err := conn.CreateDataProvider(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+	if out == nil || out.DataProvider == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+}
+
+func (r *dataProviderResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().DMSClient(ctx)
+
+	var state dataProviderResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := findDataProviderByARN(ctx, conn, state.ARN.ValueString())
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *dataProviderResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().DMSClient(ctx)
+
+	var plan, state dataProviderResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input databasemigrationservice.ModifyDataProviderInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("DataProvider")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.DataProviderIdentifier = state.ARN.ValueStringPointer()
+		// Replace rather than merge settings so removed arguments are cleared.
+		input.ExactSettings = aws.Bool(true)
+
+		out, err := conn.ModifyDataProvider(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+			return
+		}
+		if out == nil || out.DataProvider == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, state.ARN.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *dataProviderResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().DMSClient(ctx)
+
+	var state dataProviderResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := databasemigrationservice.DeleteDataProviderInput{
+		DataProviderIdentifier: state.ARN.ValueStringPointer(),
+	}
+	_, err := conn.DeleteDataProvider(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		return
+	}
+}
+
+func (r *dataProviderResource) flatten(ctx context.Context, out *awstypes.DataProvider, data *dataProviderResourceModel) diag.Diagnostics {
+	return flex.Flatten(ctx, out, data, flex.WithFieldNamePrefix("DataProvider"))
+}
+
+func findDataProviderByARN(ctx context.Context, conn *databasemigrationservice.Client, arn string) (*awstypes.DataProvider, error) {
+	input := databasemigrationservice.DescribeDataProvidersInput{
+		Filters: []awstypes.Filter{{
+			Name:   aws.String("data-provider-identifier"),
+			Values: []string{arn},
+		}},
+	}
+
+	var output []awstypes.DataProvider
+	for item, err := range listDataProviders(ctx, conn, &input) {
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
+		}
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		output = append(output, item)
+	}
+
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func dataProviderSettingsUnionValidators() []validator.List {
