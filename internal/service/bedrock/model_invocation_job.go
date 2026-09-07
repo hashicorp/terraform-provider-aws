@@ -371,17 +371,6 @@ func (r *modelInvocationJobResource) Read(ctx context.Context, req resource.Read
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *modelInvocationJobResource) flatten(ctx context.Context, job *bedrock.GetModelInvocationJobOutput, data *modelInvocationJobResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, job, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	data.ModelID = fwflex.StringValueToFramework(ctx, modelIDFromResource(aws.ToString(job.ModelId)))
-
-	return diags
-}
-
 func (r *modelInvocationJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state modelInvocationJobResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -449,6 +438,17 @@ func modelIDFromResource(id string) string {
 	}
 
 	return id
+}
+
+func (r *modelInvocationJobResource) flatten(ctx context.Context, job *bedrock.GetModelInvocationJobOutput, data *modelInvocationJobResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, job, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.ModelID = fwflex.StringValueToFramework(ctx, modelIDFromResource(aws.ToString(job.ModelId)))
+
+	return diags
 }
 
 func findModelInvocationJobByARN(ctx context.Context, conn *bedrock.Client, arn string) (*bedrock.GetModelInvocationJobOutput, error) {
