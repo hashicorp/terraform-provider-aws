@@ -36,7 +36,7 @@ import (
 // @IdentityAttribute("name")
 // @Tags(identifierAttribute="workload_identity_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetWorkloadIdentityOutput")
-// @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v6.63.0")
 // @Testing(importStateIdAttribute="name")
 // @Testing(preCheck="testAccPreCheckWorkloadIdentities")
 func newWorkloadIdentityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
