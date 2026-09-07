@@ -12,6 +12,8 @@ Manages an Amazon Bedrock model invocation job. A model invocation job runs a fo
 
 ~> Amazon Bedrock does not support permanently deleting a model invocation job. Destroying this resource stops the job (if it hasn't already reached a terminal state) using the [StopModelInvocationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopModelInvocationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
 
+~> This resource does not support `tags`. Amazon Bedrock does not allow retrieving tags for a batch inference job that has already finished running, which would cause errors when importing or listing existing jobs.
+
 ## Example Usage
 
 ### Basic Usage
