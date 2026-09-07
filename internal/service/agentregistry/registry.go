@@ -146,7 +146,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Validators: []validator.Object{
-									tfobjectvalidator.AtLeastOneOfChildren(
+									tfobjectvalidator.ExactlyOneOfChildren(
 										path.MatchRelative().AtName("custom_jwt_authorizer"),
 									),
 								},
@@ -160,10 +160,19 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 											listplanmodifier.RequiresReplace(),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.AtLeastOneOfChildren(
+													path.MatchRelative().AtName("allowed_audience"),
+													path.MatchRelative().AtName("allowed_clients"),
+												),
+											},
 											Attributes: map[string]schema.Attribute{
 												"allowed_audience": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
 													PlanModifiers: []planmodifier.List{
 														listplanmodifier.RequiresReplace(),
 													},
@@ -171,6 +180,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 												"allowed_clients": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
 													PlanModifiers: []planmodifier.List{
 														listplanmodifier.RequiresReplace(),
 													},
@@ -178,6 +190,9 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 												"allowed_scopes": schema.ListAttribute{
 													CustomType: fwtypes.ListOfStringType,
 													Optional:   true,
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
 													PlanModifiers: []planmodifier.List{
 														listplanmodifier.RequiresReplace(),
 													},
@@ -248,12 +263,12 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																				listplanmodifier.RequiresReplace(),
 																			},
 																			NestedObject: schema.NestedBlockObject{
-																				Validators: []validator.Object{
-																					tfobjectvalidator.AtLeastOneOfChildren(
-																						path.MatchRelative().AtName("match_value_string"),
-																						path.MatchRelative().AtName("match_value_string_list"),
-																					),
-																				},
+																				// Validators: []validator.Object{
+																				// 	tfobjectvalidator.ExactlyOneOfChildren(
+																				// 		path.MatchRelative().AtName("match_value_string"),
+																				// 		path.MatchRelative().AtName("match_value_string_list"),
+																				// 	),
+																				// },
 																				Attributes: map[string]schema.Attribute{
 																					"match_value_string": schema.StringAttribute{
 																						Optional: true,
