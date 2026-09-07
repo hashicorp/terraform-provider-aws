@@ -622,173 +622,274 @@ var (
 	_ flex.Flattener = &dataProviderSettingsModel{}
 )
 
-// Expand implements the AutoFlex union conversion.
-func (m dataProviderSettingsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	count := 0
-	for _, v := range []basetypes.ListValue{
-		m.DocDBSettings.ListValue,
-		m.IBMDb2LUWSettings.ListValue,
-		m.IBMDb2ZOSSettings.ListValue,
-		m.MariaDBSettings.ListValue,
-		m.MicrosoftSQLServerSettings.ListValue,
-		m.MongoDBSettings.ListValue,
-		m.MySQLSettings.ListValue,
-		m.OracleSettings.ListValue,
-		m.PostgreSQLSettings.ListValue,
-		m.RedshiftSettings.ListValue,
-		m.SybaseASESettings.ListValue,
-	} {
-		if v.IsUnknown() {
-			smerr.AddError(ctx, &diags, fmt.Errorf("data provider settings contain an unknown engine settings block"))
-			return nil, diags
+
+	switch t := v.(type) {
+	case *awstypes.DataProviderSettingsMemberDocDbSettings:
+		var model dataProviderDocDBSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
 		}
-		if len(v.Elements()) > 1 {
-			smerr.AddError(ctx, &diags, fmt.Errorf("data provider settings must contain exactly one engine settings block"))
-			return nil, diags
+		var d diag.Diagnostics
+		m.DocDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
+		var model dataProviderIBMDb2LUWSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
 		}
-		for _, element := range v.Elements() {
-			if element.IsNull() || element.IsUnknown() {
-				smerr.AddError(ctx, &diags, fmt.Errorf("data provider settings contain a null or unknown engine settings object"))
-				return nil, diags
-			}
+		var d diag.Diagnostics
+		m.IBMDb2LUWSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
+		var model dataProviderIBMDb2ZOSSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
 		}
-		count += len(v.Elements())
-	}
-	if count != 1 {
-		smerr.AddError(ctx, &diags, fmt.Errorf("data provider settings must contain exactly one engine settings block, got %d", count))
-		return nil, diags
+		var d diag.Diagnostics
+		m.IBMDb2ZOSSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberMariaDbSettings:
+		var model dataProviderMariaDBSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.MariaDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
+		var model dataProviderMicrosoftSQLServerSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.MicrosoftSQLServerSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberMongoDbSettings:
+		var model dataProviderMongoDBSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.MongoDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberMySqlSettings:
+		var model dataProviderMySQLSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.MySQLSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberOracleSettings:
+		var model dataProviderOracleSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.OracleSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberPostgreSqlSettings:
+		var model dataProviderPostgreSQLSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.PostgreSQLSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberRedshiftSettings:
+		var model dataProviderRedshiftSettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.RedshiftSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case *awstypes.DataProviderSettingsMemberSybaseAseSettings:
+		var model dataProviderSybaseASESettingsModel
+		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.SybaseASESettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		smerr.AddError(ctx, &diags, fmt.Errorf("unsupported type: %T", v))
 	}
 
-	switch {
-	case len(m.DocDBSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberDocDbSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.DocDBSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.IBMDb2LUWSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberIbmDb2LuwSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IBMDb2LUWSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.IBMDb2ZOSSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberIbmDb2zOsSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.IBMDb2ZOSSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.MariaDBSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberMariaDbSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.MariaDBSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.MicrosoftSQLServerSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.MicrosoftSQLServerSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.MongoDBSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberMongoDbSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.MongoDBSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.MySQLSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberMySqlSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.MySQLSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.OracleSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberOracleSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.OracleSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.PostgreSQLSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberPostgreSqlSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.PostgreSQLSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.RedshiftSettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberRedshiftSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.RedshiftSettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	case len(m.SybaseASESettings.Elements()) == 1:
-		var result awstypes.DataProviderSettingsMemberSybaseAseSettings
-		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, m.SybaseASESettings, &result.Value))
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &result, diags
-	default:
-		smerr.AddError(ctx, &diags, fmt.Errorf("data provider settings contain no supported engine settings"))
-		return nil, diags
-	}
+	return diags
 }
 
-// Flatten implements the AutoFlex union conversion.
-func (m *dataProviderSettingsModel) Flatten(ctx context.Context, value any) diag.Diagnostics {
+func (m dataProviderSettingsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	result := dataProviderSettingsModel{
-		DocDBSettings:              fwtypes.NewListNestedObjectValueOfNull[dataProviderDocDBSettingsModel](ctx),
-		IBMDb2LUWSettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderIBMDb2LUWSettingsModel](ctx),
-		IBMDb2ZOSSettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderIBMDb2ZOSSettingsModel](ctx),
-		MariaDBSettings:            fwtypes.NewListNestedObjectValueOfNull[dataProviderMariaDBSettingsModel](ctx),
-		MicrosoftSQLServerSettings: fwtypes.NewListNestedObjectValueOfNull[dataProviderMicrosoftSQLServerSettingsModel](ctx),
-		MongoDBSettings:            fwtypes.NewListNestedObjectValueOfNull[dataProviderMongoDBSettingsModel](ctx),
-		MySQLSettings:              fwtypes.NewListNestedObjectValueOfNull[dataProviderMySQLSettingsModel](ctx),
-		OracleSettings:             fwtypes.NewListNestedObjectValueOfNull[dataProviderOracleSettingsModel](ctx),
-		PostgreSQLSettings:         fwtypes.NewListNestedObjectValueOfNull[dataProviderPostgreSQLSettingsModel](ctx),
-		RedshiftSettings:           fwtypes.NewListNestedObjectValueOfNull[dataProviderRedshiftSettingsModel](ctx),
-		SybaseASESettings:          fwtypes.NewListNestedObjectValueOfNull[dataProviderSybaseASESettingsModel](ctx),
+
+	switch {
+	case !m.DocDBSettings.IsNull():
+		model, d := m.DocDBSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberDocDbSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.IBMDb2LUWSettings.IsNull():
+		model, d := m.IBMDb2LUWSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberIbmDb2LuwSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.IBMDb2ZOSSettings.IsNull():
+		model, d := m.IBMDb2ZOSSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberIbmDb2zOsSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MariaDBSettings.IsNull():
+		model, d := m.MariaDBSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberMariaDbSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MicrosoftSQLServerSettings.IsNull():
+		model, d := m.MicrosoftSQLServerSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MongoDBSettings.IsNull():
+		model, d := m.MongoDBSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberMongoDbSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MySQLSettings.IsNull():
+		model, d := m.MySQLSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberMySqlSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.OracleSettings.IsNull():
+		model, d := m.OracleSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberOracleSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.PostgreSQLSettings.IsNull():
+		model, d := m.PostgreSQLSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberPostgreSqlSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.RedshiftSettings.IsNull():
+		model, d := m.RedshiftSettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberRedshiftSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.SybaseASESettings.IsNull():
+		model, d := m.SybaseASESettings.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataProviderSettingsMemberSybaseAseSettings
+		smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, model, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	}
-	switch v := value.(type) {
-	case awstypes.DataProviderSettingsMemberDocDbSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.DocDBSettings))
-	case awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.IBMDb2LUWSettings))
-	case awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.IBMDb2ZOSSettings))
-	case awstypes.DataProviderSettingsMemberMariaDbSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.MariaDBSettings))
-	case awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.MicrosoftSQLServerSettings))
-	case awstypes.DataProviderSettingsMemberMongoDbSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.MongoDBSettings))
-	case awstypes.DataProviderSettingsMemberMySqlSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.MySQLSettings))
-	case awstypes.DataProviderSettingsMemberOracleSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.OracleSettings))
-	case awstypes.DataProviderSettingsMemberPostgreSqlSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.PostgreSQLSettings))
-	case awstypes.DataProviderSettingsMemberRedshiftSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.RedshiftSettings))
-	case awstypes.DataProviderSettingsMemberSybaseAseSettings:
-		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, v.Value, &result.SybaseASESettings))
-	default:
-		smerr.AddError(ctx, &diags, fmt.Errorf("flattening data provider settings: unsupported union member %T", value))
-	}
-	if diags.HasError() {
-		return diags
-	}
-	*m = result
-	return diags
+
+	return nil, diags
 }
