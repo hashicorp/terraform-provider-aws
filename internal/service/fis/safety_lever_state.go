@@ -66,6 +66,8 @@ type safetyLeverStateResource struct {
 	framework.WithImportByIdentity
 }
 
+var _ resource.ResourceWithModifyPlan = (*safetyLeverStateResource)(nil)
+
 func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -101,6 +103,16 @@ func (r *safetyLeverStateResource) Schema(ctx context.Context, req resource.Sche
 				Update: true,
 			}),
 		},
+	}
+}
+
+func (r *safetyLeverStateResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		resp.Diagnostics.AddWarning(
+			"Resource Destruction Considerations",
+			"Applying this resource destruction will only remove the safety lever state from Terraform state. "+
+				"The FIS safety lever remains unchanged because the API does not support deleting it.",
+		)
 	}
 }
 
