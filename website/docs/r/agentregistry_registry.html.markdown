@@ -118,6 +118,12 @@ The `discovery_configuration` configuration block supports the following argumen
 
 The `authorizer_configuration` configuration block supports the following arguments:
 
+* `custom_jwt_authorizer` - (Optional) Configuration for a custom JWT authorizer.
+
+### `custom_jwt_authorizer` Block
+
+The `custom_jwt_authorizer` configuration block supports the following arguments:
+
 * `allowed_audience` - (Optional) Audience values accepted during JWT validation. A token is rejected if none of its audience claims match.
 * `allowed_clients` - (Optional) Client identifiers accepted during JWT validation. A token is rejected if it was not issued to one of these clients.
 * `allowed_scopes` - (Optional) Scopes accepted during JWT validation. A token is rejected if it does not carry one of these scopes.
@@ -152,7 +158,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `registry_arn` - ARN of the registry.
 * `registry_id` - Unique identifier of the registry.
-* `status` - Current status of the registry. Valid values: `CREATING`, `READY`, `UPDATING`, `DELETING`, `CREATE_FAILED`, `UPDATE_FAILED`, `DELETE_FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
