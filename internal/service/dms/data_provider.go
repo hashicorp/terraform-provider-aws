@@ -415,7 +415,7 @@ func (r *dataProviderResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.DataProvider, &plan, flex.WithFieldNamePrefix("DataProvider")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -443,7 +443,7 @@ func (r *dataProviderResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("DataProvider")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -490,7 +490,7 @@ func (r *dataProviderResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.DataProvider, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.DataProvider, &plan, flex.WithFieldNamePrefix("DataProvider")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -519,10 +519,6 @@ func (r *dataProviderResource) Delete(ctx context.Context, req resource.DeleteRe
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
 	}
-}
-
-func (r *dataProviderResource) flatten(ctx context.Context, out *awstypes.DataProvider, data *dataProviderResourceModel) diag.Diagnostics {
-	return flex.Flatten(ctx, out, data, flex.WithFieldNamePrefix("DataProvider"))
 }
 
 func findDataProviderByARN(ctx context.Context, conn *databasemigrationservice.Client, arn string) (*awstypes.DataProvider, error) {
