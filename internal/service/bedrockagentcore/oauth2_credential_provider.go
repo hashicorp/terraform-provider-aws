@@ -76,9 +76,16 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 				stringvalidator.ConflictsWith(path.Expressions{
 					path.MatchRelative().AtParent().AtName("client_id_wo"),
 				}...),
-				stringvalidator.AlsoRequires(path.Expressions{
-					path.MatchRelative().AtParent().AtName(names.AttrClientSecret),
-				}...),
+				// The client secret is either supplied inline or read by the service
+				// from a Secrets Manager secret referenced by client_secret_config.
+				stringvalidator.Any(
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRelative().AtParent().AtName(names.AttrClientSecret),
+					}...),
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRelative().AtParent().AtName("client_secret_config"),
+					}...),
+				),
 				//stringvalidator.PreferWriteOnlyAttribute(path.MatchRelative().AtParent().AtName("client_id_wo")),
 			},
 		},
@@ -111,6 +118,10 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 				//stringvalidator.PreferWriteOnlyAttribute(path.MatchRelative().AtParent().AtName("client_secret_wo")),
 			},
 		},
+		"client_secret_source": schema.StringAttribute{
+			CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
+			Optional:   true,
+		},
 		"client_secret_wo": schema.StringAttribute{
 			Optional:  true,
 			WriteOnly: true,
@@ -129,6 +140,38 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 	}
 }
 
+// oauth2ClientSecretConfigBlock describes a Secrets Manager secret that the service
+// reads the client secret from, used when the client secret source is EXTERNAL.
+func oauth2ClientSecretConfigBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2SecretReferenceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(path.Expressions{
+				path.MatchRelative().AtParent().AtName(names.AttrClientSecret),
+				path.MatchRelative().AtParent().AtName("client_secret_wo"),
+				path.MatchRelative().AtParent().AtName("client_credentials_wo_version"),
+			}...),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"json_key": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
+				},
+				"secret_id": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+					},
+				},
+			},
+		},
+	}
+}
+
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNestedBlock {
 	attrs := oauth2ClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
@@ -140,6 +183,9 @@ func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNeste
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: attrs,
+			Blocks: map[string]schema.Block{
+				"client_secret_config": oauth2ClientSecretConfigBlock(ctx),
+			},
 		},
 	}
 }
@@ -186,6 +232,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 							NestedObject: schema.NestedBlockObject{
 								Attributes: oauth2ClientCredentialsAttributes(ctx),
 								Blocks: map[string]schema.Block{
+									"client_secret_config": oauth2ClientSecretConfigBlock(ctx),
 									"oauth_discovery": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
 										Validators: []validator.List{
@@ -590,6 +637,26 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 		clientCredentials.ClientSecret = clientCredentials.ClientSecretWO
 	}
 
+	// The API only reads client_secret_config when the source is EXTERNAL, so infer
+	// the source rather than making practitioners repeat it.
+	externalSecret := !clientCredentials.ClientSecretConfig.IsNull()
+	switch source := clientCredentials.ClientSecretSource.ValueEnum(); {
+	case externalSecret && source != "" && source != awstypes.SecretSourceTypeExternal:
+		diags.AddError(
+			"Invalid OAuth2 Client Secret Configuration",
+			fmt.Sprintf("client_secret_source must be %q when client_secret_config is configured, got %q", awstypes.SecretSourceTypeExternal, source),
+		)
+		return nil, diags
+	case !externalSecret && source == awstypes.SecretSourceTypeExternal:
+		diags.AddError(
+			"Invalid OAuth2 Client Secret Configuration",
+			fmt.Sprintf("client_secret_config must be configured when client_secret_source is %q", awstypes.SecretSourceTypeExternal),
+		)
+		return nil, diags
+	case externalSecret:
+		clientCredentials.ClientSecretSource = fwtypes.StringEnumValue(awstypes.SecretSourceTypeExternal)
+	}
+
 	switch {
 	case !m.CustomOAuth2ProviderConfig.IsNull():
 		data, d := m.CustomOAuth2ProviderConfig.ToPtr(ctx)
@@ -734,11 +801,18 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 }
 
 type oauth2ClientCredentialsModel struct {
-	ClientCredentialsWOVersion types.Int64  `tfsdk:"client_credentials_wo_version"`
-	ClientID                   types.String `tfsdk:"client_id"`
-	ClientIDWO                 types.String `tfsdk:"client_id_wo"`
-	ClientSecret               types.String `tfsdk:"client_secret"`
-	ClientSecretWO             types.String `tfsdk:"client_secret_wo"`
+	ClientCredentialsWOVersion types.Int64                                                 `tfsdk:"client_credentials_wo_version"`
+	ClientID                   types.String                                                `tfsdk:"client_id"`
+	ClientIDWO                 types.String                                                `tfsdk:"client_id_wo"`
+	ClientSecret               types.String                                                `tfsdk:"client_secret"`
+	ClientSecretConfig         fwtypes.ListNestedObjectValueOf[oauth2SecretReferenceModel] `tfsdk:"client_secret_config"`
+	ClientSecretSource         fwtypes.StringEnum[awstypes.SecretSourceType]               `tfsdk:"client_secret_source"`
+	ClientSecretWO             types.String                                                `tfsdk:"client_secret_wo"`
+}
+
+type oauth2SecretReferenceModel struct {
+	JSONKey  types.String `tfsdk:"json_key"`
+	SecretID types.String `tfsdk:"secret_id"`
 }
 
 type oauth2DiscoveryModel struct {
