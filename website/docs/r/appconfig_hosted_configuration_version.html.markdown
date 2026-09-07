@@ -124,8 +124,8 @@ This resource supports the following arguments:
 * `content` - (Required, Forces new resource) Content of the configuration or the configuration data.
 * `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
 * `description` - (Optional, Forces new resource) Description of the configuration.
-* `version_label` - (Optional, Forces new resource) User-defined label for the AppConfig hosted configuration version. This value must contain at least one non-numeric character.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `version_label` - (Optional, Forces new resource) User-defined label for the AppConfig hosted configuration version. This value must contain at least one non-numeric character.
 
 ## Attribute Reference
 
