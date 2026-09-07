@@ -313,7 +313,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
@@ -359,7 +359,7 @@ func TestAccDMSDataProvider_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
@@ -387,7 +387,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
@@ -466,7 +466,7 @@ func TestAccDMSDataProvider_engine(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
@@ -559,7 +559,7 @@ func TestAccDMSDataProvider_settings(t *testing.T) {
 			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck: func() {
 					acctest.PreCheck(ctx, t)
-					acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+					acctest.PreCheckPartitionHasService(t, names.DMS)
 					testAccPreCheck(ctx, t)
 				},
 				ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
@@ -592,7 +592,7 @@ func TestAccDMSDataProvider_mongoDBSettingsUpdate(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DMSEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
