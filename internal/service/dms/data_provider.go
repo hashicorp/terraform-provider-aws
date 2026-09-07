@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -272,19 +271,33 @@ type dataProviderResourceModel struct {
 }
 
 func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
-	certificateARN := schema.StringAttribute{CustomType: fwtypes.ARNType, Optional: true}
-	accessRoleARN := schema.StringAttribute{CustomType: fwtypes.ARNType, Optional: true}
+	certificateARN := schema.StringAttribute{
+		CustomType: fwtypes.ARNType,
+		Optional:   true,
+	}
+
+	accessRoleARN := schema.StringAttribute{
+		CustomType: fwtypes.ARNType,
+		Optional:   true,
+	}
+
 	port := schema.Int32Attribute{
 		Optional:   true,
 		Validators: []validator.Int32{int32validator.Between(1, 65535)},
 	}
+
 	sslMode := schema.StringAttribute{
 		CustomType: fwtypes.StringEnumType[awstypes.DmsSslModeValue](),
 		Optional:   true,
 		Computed:   true,
 	}
-	db2SSLMode := sslMode
-	db2SSLMode.Validators = []validator.String{stringvalidator.OneOf("none", "verify-ca")}
+
+	ibmDb2SSLMode := schema.StringAttribute{
+		CustomType: fwtypes.StringEnumType[awstypes.DmsSslModeValue](),
+		Optional:   true,
+		Computed:   true,
+		Validators: []validator.String{stringvalidator.OneOf("none", "verify-ca")},
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[dataProviderSettingsModel](ctx),
@@ -300,10 +313,14 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort: port,
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -313,14 +330,26 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							"encryption_algorithm":   schema.Int32Attribute{Optional: true, Computed: true},
-							names.AttrPort:           port,
-							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"security_mechanism":     schema.Int32Attribute{Optional: true, Computed: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               db2SSLMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							"encryption_algorithm": schema.Int32Attribute{
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"security_mechanism": schema.Int32Attribute{
+								Optional: true,
+								Computed: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": ibmDb2SSLMode,
 						},
 					},
 				},
@@ -330,12 +359,18 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               db2SSLMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": ibmDb2SSLMode,
 						},
 					},
 				},
@@ -347,9 +382,13 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 							names.AttrCertificateARN: certificateARN,
 							names.AttrPort:           port,
 							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -359,12 +398,18 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -378,17 +423,24 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 								Optional:   true,
 								Computed:   true,
 							},
-							"auth_source": schema.StringAttribute{Optional: true, Computed: true},
+							"auth_source": schema.StringAttribute{
+								Optional: true,
+								Computed: true,
+							},
 							"auth_type": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.AuthTypeValue](),
 								Optional:   true,
 								Computed:   true,
 							},
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort: port,
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -400,9 +452,13 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 							names.AttrCertificateARN: certificateARN,
 							names.AttrPort:           port,
 							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -411,18 +467,30 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: dataProviderSettingsUnionValidators(),
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"asm_server":             schema.StringAttribute{Optional: true},
+							"asm_server": schema.StringAttribute{
+								Optional: true,
+							},
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"secrets_manager_oracle_asm_access_role_arn":             accessRoleARN,
-							"secrets_manager_oracle_asm_secret_id":                   schema.StringAttribute{Optional: true},
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"secrets_manager_oracle_asm_access_role_arn": accessRoleARN,
+							"secrets_manager_oracle_asm_secret_id": schema.StringAttribute{
+								Optional: true,
+							},
 							"secrets_manager_security_db_encryption_access_role_arn": accessRoleARN,
-							"secrets_manager_security_db_encryption_secret_id":       schema.StringAttribute{Optional: true},
-							"server_name": schema.StringAttribute{Optional: true},
-							"ssl_mode":    sslMode,
+							"secrets_manager_security_db_encryption_secret_id": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -432,12 +500,18 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							names.AttrPort:           port,
-							"s3_access_role_arn":     accessRoleARN,
-							"s3_path":                schema.StringAttribute{Optional: true},
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
@@ -446,11 +520,17 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: dataProviderSettingsUnionValidators(),
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							names.AttrDatabaseName: schema.StringAttribute{Optional: true},
-							names.AttrPort:         port,
-							"s3_access_role_arn":   accessRoleARN,
-							"s3_path":              schema.StringAttribute{Optional: true},
-							"server_name":          schema.StringAttribute{Optional: true},
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrPort:       port,
+							"s3_access_role_arn": accessRoleARN,
+							"s3_path": schema.StringAttribute{
+								Optional: true,
+							},
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
 						},
 					},
 				},
@@ -460,11 +540,18 @@ func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrCertificateARN: certificateARN,
-							names.AttrDatabaseName:   schema.StringAttribute{Optional: true},
-							"encrypt_password":       schema.BoolAttribute{Optional: true, Computed: true},
-							names.AttrPort:           port,
-							"server_name":            schema.StringAttribute{Optional: true},
-							"ssl_mode":               sslMode,
+							names.AttrDatabaseName: schema.StringAttribute{
+								Optional: true,
+							},
+							"encrypt_password": schema.BoolAttribute{
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrPort: port,
+							"server_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"ssl_mode": sslMode,
 						},
 					},
 				},
