@@ -1,7 +1,6 @@
 resource "aws_dms_data_provider" "test" {
 {{- template "region" }}
 
-  name   = var.rName
   engine = "postgres"
 
   settings {
