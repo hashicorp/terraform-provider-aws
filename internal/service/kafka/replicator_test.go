@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1153,7 +1154,7 @@ func randKafkaString(prefix string) string { // nosemgrep:ci.kafka-in-func-name
 
 // randKafkaARN returns a non-empty pseudo-random ARN-shaped string. // nosemgrep:ci.kafka-in-func-name
 func randKafkaARN(prefix string) string { // nosemgrep:ci.kafka-in-func-name
-	return fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s-%d", prefix, rand.IntN(1_000_000))
+	return fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s-%d", prefix, rand.IntN(1_000_000)) //lintignore:AWSAT003,AWSAT005
 }
 
 // TestReplicatorApacheKafkaClusterRoundTrip asserts that expanding an apache_kafka_cluster
@@ -1181,10 +1182,10 @@ func TestReplicatorApacheKafkaClusterRoundTrip(t *testing.T) { // nosemgrep:ci.k
 func TestReplicatorClientAuthenticationRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	mechanisms := []string{
-		string(awstypes.KafkaClusterSaslScramMechanismSha256),
-		string(awstypes.KafkaClusterSaslScramMechanismSha512),
-	}
+	mechanisms := enum.Slice(
+		awstypes.KafkaClusterSaslScramMechanismSha256,
+		awstypes.KafkaClusterSaslScramMechanismSha512,
+	)
 
 	for i := range propertyTestIterations {
 		tfMap := map[string]any{}
@@ -1241,7 +1242,7 @@ func TestReplicatorKafkaClusterKindMutualExclusivity(t *testing.T) { // nosemgre
 
 	amazonBlock := func() any {
 		return []any{map[string]any{
-			"msk_cluster_arn": "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1",
+			"msk_cluster_arn": "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1", //lintignore:AWSAT003,AWSAT005
 		}}
 	}
 	apacheBlock := func() any {
@@ -1299,17 +1300,17 @@ func TestReplicatorKafkaClusterIdentifier(t *testing.T) { // nosemgrep:ci.kafka-
 
 	for i := range propertyTestIterations {
 		var (
-			desc     awstypes.KafkaClusterDescription
-			wantARN  *string
-			mskARN   = randKafkaARN("cluster")
-			apacheID = randKafkaString("on-prem")
+			desc       awstypes.KafkaClusterDescription
+			wantARN    *string
+			clusterARN = randKafkaARN("cluster")
+			apacheID   = randKafkaString("on-prem")
 		)
 
 		// kind: 0 = amazon, 1 = apache, 2 = neither.
 		switch rand.IntN(3) {
 		case 0:
-			desc.AmazonMskCluster = &awstypes.AmazonMskCluster{MskClusterArn: aws.String(mskARN)}
-			wantARN = aws.String(mskARN)
+			desc.AmazonMskCluster = &awstypes.AmazonMskCluster{MskClusterArn: aws.String(clusterARN)}
+			wantARN = aws.String(clusterARN)
 		case 1:
 			desc.ApacheKafkaCluster = &awstypes.ApacheKafkaCluster{
 				ApacheKafkaClusterId:  aws.String(apacheID),
@@ -1334,7 +1335,7 @@ func TestReplicatorKafkaClusterIdentifier(t *testing.T) { // nosemgrep:ci.kafka-
 func TestExpandKafkaCluster_amazonMSKCluster(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
 	t.Parallel()
 
-	const arn = "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1"
+	const arn = "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1" //lintignore:AWSAT003,AWSAT005
 	tfMap := map[string]any{
 		"amazon_msk_cluster": []any{map[string]any{
 			"msk_cluster_arn": arn,
@@ -1367,7 +1368,7 @@ func TestReplicatorSecretARNValidation(t *testing.T) {
 		t.Fatal("expected a validation error for a malformed secret_arn, got none")
 	}
 
-	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-1"
+	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-1" //lintignore:AWSAT003,AWSAT005
 	if _, errs := secretARN.ValidateFunc(validARN, "secret_arn"); len(errs) != 0 {
 		t.Fatalf("expected no validation error for a well-formed secret_arn, got: %v", errs)
 	}
@@ -1390,7 +1391,7 @@ func TestReplicatorRootCaCertificateValidation(t *testing.T) {
 		t.Fatal("expected a validation error for a malformed root_ca_certificate, got none")
 	}
 
-	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-ca"
+	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-ca" //lintignore:AWSAT003,AWSAT005
 	if _, errs := rootCA.ValidateFunc(validARN, "root_ca_certificate"); len(errs) != 0 {
 		t.Fatalf("expected no validation error for a well-formed root_ca_certificate ARN, got: %v", errs)
 	}
@@ -1403,13 +1404,13 @@ func TestReplicatorRootCaCertificateValidation(t *testing.T) {
 // internal/service/kafka/testdata/replicator_self_managed for a config that provisions that
 // infrastructure and emits these values as outputs.
 const (
-	envVarOnPremKafkaEnabled          = "MSK_ONPREM_KAFKA_ENABLED"
-	envVarOnPremKafkaBootstrap        = "MSK_ONPREM_KAFKA_BOOTSTRAP_BROKERS"
-	envVarOnPremKafkaClusterID        = "MSK_ONPREM_KAFKA_CLUSTER_ID"
-	envVarOnPremKafkaSASLSCRAMSecr    = "MSK_ONPREM_KAFKA_SASL_SCRAM_SECRET_ARN"
-	envVarOnPremKafkaTargetCluster    = "MSK_ONPREM_KAFKA_TARGET_CLUSTER_ARN"
-	envVarOnPremKafkaSubnetIDs        = "MSK_ONPREM_KAFKA_SUBNET_IDS"
-	envVarOnPremKafkaSecurityGroupIDs = "MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS"
+	envVarOnPremEnabled          = "MSK_ONPREM_KAFKA_ENABLED"
+	envVarOnPremBootstrap        = "MSK_ONPREM_KAFKA_BOOTSTRAP_BROKERS"
+	envVarOnPremClusterID        = "MSK_ONPREM_KAFKA_CLUSTER_ID"
+	envVarOnPremSASLSCRAMSecr    = "MSK_ONPREM_KAFKA_SASL_SCRAM_SECRET_ARN"
+	envVarOnPremTargetCluster    = "MSK_ONPREM_KAFKA_TARGET_CLUSTER_ARN"
+	envVarOnPremSubnetIDs        = "MSK_ONPREM_KAFKA_SUBNET_IDS"
+	envVarOnPremSecurityGroupIDs = "MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS"
 )
 
 // TestAccKafkaReplicator_selfManagedSASLSCRAM exercises the self-managed source path
@@ -1423,13 +1424,13 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaEnabled)
-	bootstrap := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaBootstrap)
-	clusterID := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaClusterID)
-	secretARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSASLSCRAMSecr)
-	targetARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaTargetCluster)
-	subnetIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSubnetIDs)
-	securityGroupIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSecurityGroupIDs)
+	acctest.SkipIfEnvVarNotSet(t, envVarOnPremEnabled)
+	bootstrap := acctest.SkipIfEnvVarNotSet(t, envVarOnPremBootstrap)
+	clusterID := acctest.SkipIfEnvVarNotSet(t, envVarOnPremClusterID)
+	secretARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSASLSCRAMSecr)
+	targetARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremTargetCluster)
+	subnetIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSubnetIDs)
+	securityGroupIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSecurityGroupIDs)
 
 	var replicator kafka.DescribeReplicatorOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1463,10 +1464,10 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 	})
 }
 
-// TestAccKafkaReplicator_amazonMskClusterOnly_noDiff verifies backward compatibility: an
+// TestAccKafkaReplicator_amazonMSKClusterOnly_noDiff verifies backward compatibility: an
 // existing amazon_msk_cluster-only configuration produces no plan differences after these
 // changes.
-func TestAccKafkaReplicator_amazonMskClusterOnly_noDiff(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
+func TestAccKafkaReplicator_amazonMSKClusterOnly_noDiff(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1512,7 +1513,7 @@ func TestAccKafkaReplicator_amazonMskClusterOnly_noDiff(t *testing.T) { // nosem
 func testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs string) string { // nosemgrep:ci.kafka-in-func-name
 	hclList := func(csv string) string {
 		var quoted []string
-		for _, p := range strings.Split(csv, ",") {
+		for p := range strings.SplitSeq(csv, ",") {
 			if p = strings.TrimSpace(p); p != "" {
 				quoted = append(quoted, fmt.Sprintf("%q", p))
 			}
