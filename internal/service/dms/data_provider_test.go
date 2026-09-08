@@ -44,9 +44,9 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`data-provider:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrCreationTime, regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`^dp-\d+$`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "postgres"),
-					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "virtual"),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", rName+".example.com"),
@@ -129,7 +129,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataProviderConfig_update(rName, "second description", "updated."+rName+".example.com", 5433, true),
+				Config: testAccDataProviderConfig_update(rName, "second description", "updated."+rName+".example.com", 5433, false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -139,7 +139,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "second description"),
-					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "updated."+rName+".example.com"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5433"),
 				),
