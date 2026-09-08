@@ -58,6 +58,7 @@ func TestAccAppConfigHostedConfigurationVersion_versionLabel(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 	versionLabel := "v1.2.3"
+	versionLabelUpdated := "v1.2.4"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -79,10 +80,10 @@ func TestAccAppConfigHostedConfigurationVersion_versionLabel(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHostedConfigurationVersionConfig_versionLabel(rName, "v1.2.4"),
+				Config: testAccHostedConfigurationVersionConfig_versionLabel(rName, versionLabelUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "version_label", "v1.2.4"),
+					resource.TestCheckResourceAttr(resourceName, "version_label", versionLabelUpdated),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
