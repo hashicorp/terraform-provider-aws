@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_odb_gi_minor_versions", name="GI Minor Versions")
@@ -30,7 +31,7 @@ type giMinorVersionsDataSource struct {
 func (d *giMinorVersionsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Optional:    true,
 				Description: "Availability Zone to filter GI minor versions.",
 				Validators: []validator.String{
