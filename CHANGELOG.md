@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_accountaccess_application` ([#49553](https://github.com/hashicorp/terraform-provider-aws/issues/49553))
 * **New Data Source:** `aws_accountaccess_entitlements` ([#49554](https://github.com/hashicorp/terraform-provider-aws/issues/49554))
+* **New Data Source:** `aws_rds_events` ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 * **New List Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
 * **New List Resource:** `aws_agentregistry_registry` ([#49549](https://github.com/hashicorp/terraform-provider-aws/issues/49549))
 * **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
@@ -26,10 +27,13 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_harness: Change `skill.path` to Optional ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
 * resource/aws_bedrockagentcore_harness: Change `system_prompt` to Required ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
 * resource/aws_cloudwatch_metric_alarm: Add `warm_up_configuration` configuration block ([#49873](https://github.com/hashicorp/terraform-provider-aws/issues/49873))
+* resource/aws_db_instance: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update. Requires the `rds:DescribeEvents` IAM permission ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 * resource/aws_ecs_capacity_provider: Add `managed_instances_provider.auto_repair_configuration` configuration block ([#49763](https://github.com/hashicorp/terraform-provider-aws/issues/49763))
 * resource/aws_msk_replicator: Add `kafka_cluster.client_authentication` to configure `mtls` or `sasl_scram` authentication to an Apache Kafka cluster ([#49265](https://github.com/hashicorp/terraform-provider-aws/issues/49265))
 * resource/aws_msk_replicator: Add `kafka_cluster.encryption_in_transit` to supply a custom root CA certificate for an Apache Kafka cluster ([#49265](https://github.com/hashicorp/terraform-provider-aws/issues/49265))
 * resource/aws_msk_replicator: Support self-managed and on-premises Apache Kafka clusters as a replication source or target, via the `kafka_cluster.apache_kafka_cluster` block and the `replication_info_list.source_kafka_cluster_id` and `target_kafka_cluster_id` arguments ([#49265](https://github.com/hashicorp/terraform-provider-aws/issues/49265))
+* resource/aws_rds_cluster: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update. Requires the `rds:DescribeEvents` IAM permission ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
+* resource/aws_rds_cluster_instance: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update. Requires the `rds:DescribeEvents` IAM permission ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 
 BUG FIXES:
 
