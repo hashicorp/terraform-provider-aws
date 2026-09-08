@@ -8,7 +8,6 @@ package dms_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.DataProvider
 	resourceName := "aws_dms_data_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -43,7 +41,7 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
