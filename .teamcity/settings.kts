@@ -740,6 +740,8 @@ object SmokeTestsResourceIdentity : BuildType({
         text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
         text("env.TERRAFORM_CORE_VERSION", "")
         text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
     }
 
     vcs {
