@@ -10,8 +10,6 @@ description: |-
 
 Manages an AWS DMS (Database Migration) Data Provider. A data provider stores the database engine and connection settings for a database used in a migration project. Creating a data provider does not create a database.
 
-~> **Note:** Remove the data provider from all migration projects before updating or deleting it.
-
 ### Basic Usage
 
 ```terraform
