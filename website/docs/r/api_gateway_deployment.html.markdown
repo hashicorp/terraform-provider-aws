@@ -163,8 +163,8 @@ resource "aws_api_gateway_deployment" "example" {
 
 #### Required
 
-* `rest_api_id` (String) REST API identifier.
 * `id` (String) Deployment identifier.
+* `rest_api_id` (String) REST API identifier.
 
 #### Optional
 
