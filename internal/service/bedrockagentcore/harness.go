@@ -932,9 +932,11 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 			}
 
 			var memoryARN string
-			switch t := harness.Memory.(type) {
-			case *awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
-				memoryARN = aws.ToString(t.Value.Arn)
+			if harness != nil {
+				switch t := harness.Memory.(type) {
+				case *awstypes.HarnessMemoryConfigurationMemberManagedMemoryConfiguration:
+					memoryARN = aws.ToString(t.Value.Arn)
+				}
 			}
 
 			err := r.deleteSync(ctx, harnessID, r.DeleteTimeout(ctx, data.Timeouts))
