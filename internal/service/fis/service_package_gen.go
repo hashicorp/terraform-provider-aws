@@ -7,6 +7,8 @@ package fis
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,12 +36,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newSafetyLeverStateResource,
+			TypeName: "aws_fis_safety_lever_state",
+			Name:     "Safety Lever State",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceTargetAccountConfiguration,
 			TypeName: "aws_fis_target_account_configuration",
 			Name:     "Target Account Configuration",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSafetyLeverStateResourceAsListResource,
+			TypeName: "aws_fis_safety_lever_state",
+			Name:     "Safety Lever State",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
