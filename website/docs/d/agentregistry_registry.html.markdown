@@ -3,12 +3,12 @@ subcategory: "Agent Registry"
 layout: "aws"
 page_title: "AWS: aws_agentregistry_registry"
 description: |-
-  Terraform data source for managing an AWS Agent Registry Registry.
+  Provides details about an AWS Agent Registry registry.
 ---
 
 # Data Source: aws_agentregistry_registry
 
-Terraform data source for managing an AWS Agent Registry Registry.
+Provides details about an AWS Agent Registry registry.
 
 ## Example Usage
 
