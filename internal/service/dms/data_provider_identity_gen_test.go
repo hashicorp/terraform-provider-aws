@@ -32,7 +32,7 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDataProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
@@ -111,7 +111,7 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDataProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
