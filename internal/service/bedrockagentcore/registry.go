@@ -62,7 +62,7 @@ type registryResource struct {
 
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026. Use the `aws_agentregistry_registry` resource for all new registries.",
 		Attributes: map[string]schema.Attribute{
 			"approval_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[approvalConfigurationModel](ctx),
 			"authorizer_type": schema.StringAttribute{
