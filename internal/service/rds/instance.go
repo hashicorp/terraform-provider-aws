@@ -2244,11 +2244,21 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
-			modifyDiags, err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string)))
-			if err != nil {
+			modifyStart := time.Now().UTC()
+
+			if err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string))); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
-			diags = append(diags, modifyDiags...)
+
+			// Surface opted-in events reported on the green target during the
+			// modify. dbInstanceModify waits on blue (d.Id()), so settle the
+			// green instance explicitly before querying its events.
+			if v, ok := d.GetOk("warning_event_categories"); ok {
+				if _, err := waitDBInstanceAvailable(ctx, conn, targetARN.Identifier, deadline.Remaining()); err == nil {
+					diags = append(diags, surfaceEvents(ctx, conn, targetARN.Identifier, types.SourceTypeDbInstance, modifyStart,
+						flex.ExpandStringValueSet(v.(*schema.Set)))...)
+				}
+			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
 
