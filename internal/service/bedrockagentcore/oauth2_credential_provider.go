@@ -159,8 +159,7 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9\-_]+$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`), "Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters."),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

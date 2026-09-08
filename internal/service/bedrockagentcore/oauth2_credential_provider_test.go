@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,6 +23,10 @@ import (
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkOAuth2CredentialProviderARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/`+name))
+}
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -50,12 +55,28 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("client_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("client_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), checkOAuth2CredentialProviderARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), tfknownvalue.StringExact(awstypes.CredentialProviderVendorTypeGithubOauth2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"github_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Null(),
+							"client_id":                     knownvalue.StringExact("test-client-id"),
+							"client_id_wo":                  knownvalue.Null(),
+							"client_secret":                 knownvalue.StringExact("test-client-secret"),
+							"client_secret_wo":              knownvalue.Null(),
+							"oauth_discovery":               knownvalue.ListSizeExact(1),
+						})}),
+						"google_oauth2_provider_config":     knownvalue.ListSizeExact(0),
+						"microsoft_oauth2_provider_config":  knownvalue.ListSizeExact(0),
+						"salesforce_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"slack_oauth2_provider_config":      knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
