@@ -12,8 +12,6 @@ Manages an AWS DMS (Database Migration) Data Provider. A data provider stores th
 
 ~> **Note:** Remove the data provider from all migration projects before updating or deleting it.
 
-## Example Usage
-
 ### Basic Usage
 
 ```terraform
