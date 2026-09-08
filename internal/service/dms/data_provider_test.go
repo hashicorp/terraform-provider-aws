@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const resNameDataProvider = "Data Provider"
+
 func TestAccDMSDataProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -222,10 +224,10 @@ func testAccCheckDataProviderDestroy(ctx context.Context, t *testing.T) resource
 				continue
 			}
 			if err != nil {
-				return create.Error(names.DMS, create.ErrActionCheckingDestroyed, "Data Provider", arn, err)
+				return create.Error(names.DMS, create.ErrActionCheckingDestroyed, resNameDataProvider, arn, err)
 			}
 
-			return create.Error(names.DMS, create.ErrActionCheckingDestroyed, "Data Provider", arn, errors.New("not destroyed"))
+			return create.Error(names.DMS, create.ErrActionCheckingDestroyed, resNameDataProvider, arn, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -236,19 +238,19 @@ func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, name stri
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, "Data Provider", name, errors.New("not found"))
+			return create.Error(names.DMS, create.ErrActionCheckingExistence, resNameDataProvider, name, errors.New("not found"))
 		}
 
 		arn := rs.Primary.Attributes[names.AttrARN]
 		if arn == "" {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, "Data Provider", name, errors.New("arn not set"))
+			return create.Error(names.DMS, create.ErrActionCheckingExistence, resNameDataProvider, name, errors.New("arn not set"))
 		}
 
 		ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 		_, err := tfdms.FindDataProviderByARN(ctx, conn, arn)
 		if err != nil {
-			return create.Error(names.DMS, create.ErrActionCheckingExistence, "Data Provider", arn, err)
+			return create.Error(names.DMS, create.ErrActionCheckingExistence, resNameDataProvider, arn, err)
 		}
 
 		return nil
