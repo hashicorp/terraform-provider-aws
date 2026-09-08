@@ -41,6 +41,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.DataProvider")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 // @Testing(importStateIdAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 func newDataProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
