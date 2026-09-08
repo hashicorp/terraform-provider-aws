@@ -1463,10 +1463,10 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 	})
 }
 
-// TestAccKafkaReplicator_amazonMskClusterOnly_noDiff verifies backward compatibility: an
+// TestAccKafkaReplicator_amazonMSKClusterOnly_noDiff verifies backward compatibility: an
 // existing amazon_msk_cluster-only configuration produces no plan differences after these
 // changes.
-func TestAccKafkaReplicator_amazonMskClusterOnly_noDiff(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
+func TestAccKafkaReplicator_amazonMSKClusterOnly_noDiff(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
