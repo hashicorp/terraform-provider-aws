@@ -32,7 +32,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DMS)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDataProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func TestAccDMSDataProvider_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DMS)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDataProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,7 +112,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DMS)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDataProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -206,7 +206,7 @@ func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, name stri
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckDataProvider(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
