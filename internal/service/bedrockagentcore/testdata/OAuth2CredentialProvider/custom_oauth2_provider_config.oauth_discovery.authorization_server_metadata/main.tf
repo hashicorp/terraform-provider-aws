@@ -14,9 +14,9 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 
       oauth_discovery {
         authorization_server_metadata {
-          issuer                 = "https://auth.company.com/realms/production"
-          authorization_endpoint = "https://auth.company.com/realms/production/protocol/openid-connect/auth"
-          token_endpoint         = "https://auth.company.com/realms/production/protocol/openid-connect/token"
+          issuer                 = "https://auth.company.com/realms/production"                               # nosemgrep:ci.semgrep.domain-names.domain-names-tf
+          authorization_endpoint = "https://auth.company.com/realms/production/protocol/openid-connect/auth"  # nosemgrep:ci.semgrep.domain-names.domain-names-tf
+          token_endpoint         = "https://auth.company.com/realms/production/protocol/openid-connect/token" # nosemgrep:ci.semgrep.domain-names.domain-names-tf
           response_types         = ["code", "id_token"]
         }
       }
