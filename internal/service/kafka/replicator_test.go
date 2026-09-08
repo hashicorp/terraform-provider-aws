@@ -1299,17 +1299,17 @@ func TestReplicatorKafkaClusterIdentifier(t *testing.T) { // nosemgrep:ci.kafka-
 
 	for i := range propertyTestIterations {
 		var (
-			desc     awstypes.KafkaClusterDescription
-			wantARN  *string
-			mskARN   = randKafkaARN("cluster")
-			apacheID = randKafkaString("on-prem")
+			desc       awstypes.KafkaClusterDescription
+			wantARN    *string
+			clusterARN = randKafkaARN("cluster")
+			apacheID   = randKafkaString("on-prem")
 		)
 
 		// kind: 0 = amazon, 1 = apache, 2 = neither.
 		switch rand.IntN(3) {
 		case 0:
-			desc.AmazonMskCluster = &awstypes.AmazonMskCluster{MskClusterArn: aws.String(mskARN)}
-			wantARN = aws.String(mskARN)
+			desc.AmazonMskCluster = &awstypes.AmazonMskCluster{MskClusterArn: aws.String(clusterARN)}
+			wantARN = aws.String(clusterARN)
 		case 1:
 			desc.ApacheKafkaCluster = &awstypes.ApacheKafkaCluster{
 				ApacheKafkaClusterId:  aws.String(apacheID),
@@ -1403,13 +1403,13 @@ func TestReplicatorRootCaCertificateValidation(t *testing.T) {
 // internal/service/kafka/testdata/replicator_self_managed for a config that provisions that
 // infrastructure and emits these values as outputs.
 const (
-	envVarOnPremKafkaEnabled          = "MSK_ONPREM_KAFKA_ENABLED"
-	envVarOnPremKafkaBootstrap        = "MSK_ONPREM_KAFKA_BOOTSTRAP_BROKERS"
-	envVarOnPremKafkaClusterID        = "MSK_ONPREM_KAFKA_CLUSTER_ID"
-	envVarOnPremKafkaSASLSCRAMSecr    = "MSK_ONPREM_KAFKA_SASL_SCRAM_SECRET_ARN"
-	envVarOnPremKafkaTargetCluster    = "MSK_ONPREM_KAFKA_TARGET_CLUSTER_ARN"
-	envVarOnPremKafkaSubnetIDs        = "MSK_ONPREM_KAFKA_SUBNET_IDS"
-	envVarOnPremKafkaSecurityGroupIDs = "MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS"
+	envVarOnPremEnabled          = "MSK_ONPREM_KAFKA_ENABLED"
+	envVarOnPremBootstrap        = "MSK_ONPREM_KAFKA_BOOTSTRAP_BROKERS"
+	envVarOnPremClusterID        = "MSK_ONPREM_KAFKA_CLUSTER_ID"
+	envVarOnPremSASLSCRAMSecr    = "MSK_ONPREM_KAFKA_SASL_SCRAM_SECRET_ARN"
+	envVarOnPremTargetCluster    = "MSK_ONPREM_KAFKA_TARGET_CLUSTER_ARN"
+	envVarOnPremSubnetIDs        = "MSK_ONPREM_KAFKA_SUBNET_IDS"
+	envVarOnPremSecurityGroupIDs = "MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS"
 )
 
 // TestAccKafkaReplicator_selfManagedSASLSCRAM exercises the self-managed source path
@@ -1423,13 +1423,13 @@ func TestAccKafkaReplicator_selfManagedSASLSCRAM(t *testing.T) { // nosemgrep:ci
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaEnabled)
-	bootstrap := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaBootstrap)
-	clusterID := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaClusterID)
-	secretARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSASLSCRAMSecr)
-	targetARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaTargetCluster)
-	subnetIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSubnetIDs)
-	securityGroupIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremKafkaSecurityGroupIDs)
+	acctest.SkipIfEnvVarNotSet(t, envVarOnPremEnabled)
+	bootstrap := acctest.SkipIfEnvVarNotSet(t, envVarOnPremBootstrap)
+	clusterID := acctest.SkipIfEnvVarNotSet(t, envVarOnPremClusterID)
+	secretARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSASLSCRAMSecr)
+	targetARN := acctest.SkipIfEnvVarNotSet(t, envVarOnPremTargetCluster)
+	subnetIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSubnetIDs)
+	securityGroupIDs := acctest.SkipIfEnvVarNotSet(t, envVarOnPremSecurityGroupIDs)
 
 	var replicator kafka.DescribeReplicatorOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
