@@ -44,11 +44,13 @@ var (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="credential_provider_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetOauth2CredentialProviderOutput")
 // @Testing(importIgnore="oauth2_provider_config.0.github_oauth2_provider_config.0.client_id;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret")
 // @Testing(importStateIdAttribute="name")
 // @Testing(preCheck="testAccPreCheckOAuth2CredentialProviders")
+// @Testing(preIdentityVersion="v6.63.0")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
 	return r, nil
@@ -56,6 +58,7 @@ func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWi
 
 type oauth2CredentialProviderResource struct {
 	framework.ResourceWithModel[oauth2CredentialProviderResourceModel]
+	framework.WithImportByIdentity
 }
 
 func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attribute {
@@ -437,10 +440,6 @@ func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request r
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
-}
-
-func (r *oauth2CredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {

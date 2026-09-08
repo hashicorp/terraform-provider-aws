@@ -164,17 +164,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore OAuth2 Credential Provider using the provider name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_bedrockagentcore_oauth2_credential_provider.example
-  id = "oauth2-provider-name"
+  identity = {
+    name = "example-oauth2-provider"
+  }
+}
+
+resource "aws_bedrockagentcore_oauth2_credential_provider" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Bedrock AgentCore OAuth2 Credential Provider using the provider name. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) OAuth2 credential provider name.
+
+#### Optional
+
+* `account_id` (String) Account ID where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore OAuth2 Credential Provider using `name`. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_oauth2_credential_provider.example
+  id = "example-oauth2-provider"
+}
+```
+
+Using `terraform import`, import Bedrock AgentCore OAuth2 Credential Provider using `name`. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_oauth2_credential_provider.example oauth2-provider-name
+% terraform import aws_bedrockagentcore_oauth2_credential_provider.example example-oauth2-provider
 ```
