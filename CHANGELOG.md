@@ -1,4 +1,26 @@
-## 6.63.0 (Unreleased)
+## 6.64.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_accountaccess_application` ([#49553](https://github.com/hashicorp/terraform-provider-aws/issues/49553))
+* **New Data Source:** `aws_accountaccess_entitlements` ([#49554](https://github.com/hashicorp/terraform-provider-aws/issues/49554))
+* **New List Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
+* **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+* **New List Resource:** `aws_lambda_alias` ([#49706](https://github.com/hashicorp/terraform-provider-aws/issues/49706))
+* **New Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
+* **New Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
+
+ENHANCEMENTS:
+
+* data-source/aws_workspaces_directory: Add `workspace_access_properties.access_endpoint_config` attribute ([#49849](https://github.com/hashicorp/terraform-provider-aws/issues/49849))
+* resource/aws_ecs_capacity_provider: Add `managed_instances_provider.auto_repair_configuration` configuration block ([#49763](https://github.com/hashicorp/terraform-provider-aws/issues/49763))
+
+BUG FIXES:
+
+* data-source/aws_workspaces_directory: Fix `setting workspace_access_properties: Invalid address to set` errors ([#49849](https://github.com/hashicorp/terraform-provider-aws/issues/49849))
+* resource/aws_rds_global_cluster: Fix potential eventual consistency error when re-creating resource. ([#49804](https://github.com/hashicorp/terraform-provider-aws/issues/49804))
+
+## 6.63.0 (September 3, 2026)
 
 FEATURES:
 
@@ -55,6 +77,8 @@ BUG FIXES:
 * resource/aws_rds_cluster_parameter_group: Fix `name_prefix` length validation to allow the correct maximum of 229 characters ([#49197](https://github.com/hashicorp/terraform-provider-aws/issues/49197))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
 * resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity ([#49690](https://github.com/hashicorp/terraform-provider-aws/issues/49690))
+* resource/aws_s3_bucket: Setting `object_lock_configuration.object_lock_enabled` to `Enabled` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
+* resource/aws_s3_bucket: Setting `object_lock_enabled` to `true` no longer forces a replacement ([#36530](https://github.com/hashicorp/terraform-provider-aws/issues/36530))
 
 ## 6.62.0 (August 26, 2026)
 

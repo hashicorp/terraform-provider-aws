@@ -104,7 +104,12 @@ func testAccAccountAccessApplication_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_accountaccess_application.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_accountaccess_application.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkApplicationARN),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("identity_center_application_arn"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("identity_source"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"identity_center": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"application_arn": knownvalue.NotNull(),
+								"instance_arn":    knownvalue.NotNull(),
+							})}),
+						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
