@@ -11,20 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accountaccess"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accountaccess/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -53,82 +48,7 @@ func (l *entitlementListResource) ListResourceConfigSchema(ctx context.Context, 
 			},
 		},
 		Blocks: map[string]listschema.Block{
-			names.AttrFilter: listschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[entitlementFilterModel](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: listschema.NestedBlockObject{
-					Validators: []validator.Object{
-						tfobjectvalidator.ExactlyOneOfChildren(
-							path.MatchRelative().AtName("principal_role"),
-						),
-					},
-					Blocks: map[string]listschema.Block{
-						"principal_role": listschema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[principalRoleEntitlementFilterModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: listschema.NestedBlockObject{
-								Attributes: map[string]listschema.Attribute{
-									names.AttrAccountID: listschema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											fwvalidators.AWSAccountID(),
-										},
-									},
-									names.AttrRoleARN: listschema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Optional:   true,
-									},
-								},
-								Blocks: map[string]listschema.Block{
-									names.AttrPrincipal: listschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[principalFilterModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: listschema.NestedBlockObject{
-											Validators: []validator.Object{
-												tfobjectvalidator.ExactlyOneOfChildren(
-													path.MatchRelative().AtName("identity_center"),
-												),
-											},
-											Blocks: map[string]listschema.Block{
-												"identity_center": listschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[identityCenterPrincipalFilterModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: listschema.NestedBlockObject{
-														Validators: []validator.Object{
-															tfobjectvalidator.ExactlyOneOfChildren(
-																path.MatchRelative().AtName("group_id"),
-																path.MatchRelative().AtName("user_id"),
-															),
-														},
-														Attributes: map[string]listschema.Attribute{
-															"group_id": listschema.StringAttribute{
-																Optional: true,
-															},
-															"user_id": listschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			names.AttrFilter: entitlementsFilterBlock(ctx),
 		},
 	}
 }

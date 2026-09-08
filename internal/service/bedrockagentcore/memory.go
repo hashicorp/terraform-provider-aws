@@ -411,6 +411,15 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
+func memoryIDFromARN(memoryARN string) (string, error) {
+	parsedARN, err := arn.Parse(memoryARN)
+	if err != nil {
+		return "", smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
+	}
+	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
+	return memoryID, nil
+}
+
 func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.MemoryStatusCreating),
@@ -447,7 +456,7 @@ func waitMemoryUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	return nil, smarterr.NewError(err)
 }
 
-func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) {
+func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, id string, timeout time.Duration) (*awstypes.Memory, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemoryStatusDeleting, awstypes.MemoryStatusActive),
 		Target:  []string{},
@@ -485,16 +494,6 @@ func findMemoryByID(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 	}
 
 	return findMemory(ctx, conn, &input)
-}
-
-func findMemoryByARN(ctx context.Context, conn *bedrockagentcorecontrol.Client, memoryARN string) (*awstypes.Memory, error) {
-	parsedARN, err := arn.Parse(memoryARN)
-	if err != nil {
-		return nil, smarterr.NewError(fmt.Errorf("parsing memory ARN (%s): %w", memoryARN, err))
-	}
-	memoryID := strings.TrimPrefix(parsedARN.Resource, "memory/")
-
-	return findMemoryByID(ctx, conn, memoryID)
 }
 
 func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetMemoryInput) (*awstypes.Memory, error) {
