@@ -9,9 +9,14 @@ resource "aws_dms_data_provider" "test" {
     postgresql_settings {
       database_name = "example"
       port          = 5432
-      server_name   = "example.com"
+      server_name   = "${var.rName}.example.com"
       ssl_mode      = "none"
     }
   }
 }
 
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}

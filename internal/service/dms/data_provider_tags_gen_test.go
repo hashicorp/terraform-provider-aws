@@ -23,6 +23,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,6 +40,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -69,6 +71,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -82,6 +85,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -117,6 +121,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -131,6 +136,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -161,6 +167,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -174,6 +181,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -194,6 +202,7 @@ func TestAccDMSDataProvider_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -210,6 +219,7 @@ func TestAccDMSDataProvider_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -226,6 +236,7 @@ func TestAccDMSDataProvider_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -256,6 +267,7 @@ func TestAccDMSDataProvider_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -277,6 +289,7 @@ func TestAccDMSDataProvider_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -293,6 +306,7 @@ func TestAccDMSDataProvider_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -313,6 +327,7 @@ func TestAccDMSDataProvider_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:                         resourceName,
@@ -332,6 +347,7 @@ func TestAccDMSDataProvider_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -348,6 +364,7 @@ func TestAccDMSDataProvider_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -368,6 +385,7 @@ func TestAccDMSDataProvider_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -398,6 +416,7 @@ func TestAccDMSDataProvider_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -416,6 +435,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -432,6 +452,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -462,6 +483,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -475,6 +497,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -495,6 +518,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -511,6 +535,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -527,6 +552,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -557,6 +583,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -592,6 +619,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -606,6 +634,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -636,6 +665,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -654,6 +684,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -670,6 +701,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -700,6 +732,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -730,6 +763,7 @@ func TestAccDMSDataProvider_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -748,6 +782,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -764,6 +799,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -792,6 +828,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -807,6 +844,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -838,6 +876,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -854,6 +893,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -882,6 +922,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -897,6 +938,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -918,6 +960,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -934,6 +977,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -950,6 +994,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -986,6 +1031,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1003,6 +1049,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1044,6 +1091,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1062,6 +1110,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1083,6 +1132,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:                         resourceName,
@@ -1099,6 +1149,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1115,6 +1166,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1149,6 +1201,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1166,6 +1219,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1206,6 +1260,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1225,6 +1280,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1259,6 +1315,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1280,6 +1337,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1296,6 +1354,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1327,6 +1386,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1355,6 +1415,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1374,6 +1435,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1390,6 +1452,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1418,6 +1481,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1449,6 +1513,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1467,6 +1532,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1483,6 +1549,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1517,6 +1584,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1538,6 +1606,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1554,6 +1623,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1582,6 +1652,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1601,6 +1672,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullOverlappingResourceTag(t *testi
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1617,6 +1689,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullOverlappingResourceTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1651,6 +1724,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullOverlappingResourceTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1675,6 +1749,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1691,6 +1766,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1727,6 +1803,7 @@ func TestAccDMSDataProvider_Tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1751,6 +1828,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1767,6 +1845,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1795,6 +1874,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:                         resourceName,
@@ -1811,6 +1891,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1827,6 +1908,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1858,6 +1940,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed2/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1894,6 +1977,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed2/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1912,6 +1996,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1928,6 +2013,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1959,6 +2045,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1987,6 +2074,7 @@ func TestAccDMSDataProvider_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tagsComputed1/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:                         resourceName,
@@ -2003,6 +2091,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2020,6 +2109,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -2068,6 +2158,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2116,6 +2207,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2167,6 +2259,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2184,6 +2277,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2241,6 +2335,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2297,6 +2392,7 @@ func TestAccDMSDataProvider_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/DataProvider/tags_ignore/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),

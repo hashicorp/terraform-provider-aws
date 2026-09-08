@@ -23,6 +23,7 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,7 +40,9 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/basic/"),
-				ConfigVariables: config.Variables{},
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 				),
@@ -54,8 +57,10 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory:                      config.StaticDirectory("testdata/DataProvider/basic/"),
-				ConfigVariables:                      config.Variables{},
+				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ResourceName:                         resourceName,
@@ -66,8 +71,10 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/DataProvider/basic/"),
-				ConfigVariables:   config.Variables{},
+				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -83,7 +90,9 @@ func TestAccDMSDataProvider_Identity_basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/basic/"),
-				ConfigVariables: config.Variables{},
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -102,6 +111,7 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dms_data_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -119,7 +129,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -134,7 +145,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
@@ -148,7 +160,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
@@ -162,7 +175,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -180,7 +194,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -198,7 +213,8 @@ func TestAccDMSDataProvider_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DataProvider/region_override/"),
 				ConfigVariables: config.Variables{
-					"region": config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
