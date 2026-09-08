@@ -3,13 +3,12 @@ subcategory: "Agent Registry"
 layout: "aws"
 page_title: "AWS: aws_agentregistry_registry"
 description: |-
-  Lists Agent Registry Registry resources.
+  Lists Agent Registry registry resources.
 ---
 
 # List Resource: aws_agentregistry_registry
 
-Lists Agent Registry Registry resources.
-
+Lists Agent Registry registry resources.
 ## Example Usage
 
 ```terraform
