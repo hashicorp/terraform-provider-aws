@@ -10,8 +10,6 @@ description: |-
 
 Lists DMS (Database Migration) Data Provider resources.
 
-## Example Usage
-
 ### Basic Usage
 
 ```terraform
