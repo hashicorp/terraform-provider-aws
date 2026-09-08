@@ -243,6 +243,140 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_externalClientSecret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_externalClientSecret(rName, "test-client-id", "oauth_client_secret"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config").AtSliceIndex(0).AtMapKey("github_oauth2_provider_config").AtSliceIndex(0).AtMapKey("client_secret_source"), knownvalue.StringExact("EXTERNAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config").AtSliceIndex(0).AtMapKey("github_oauth2_provider_config").AtSliceIndex(0).AtMapKey("client_secret_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"json_key":  knownvalue.StringExact("oauth_client_secret"),
+							"secret_id": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				// The API does not return the client ID or any of the client secret
+				// configuration, so these cannot be populated on import.
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
+				},
+			},
+			{
+				Config: testAccOAuth2CredentialProviderConfig_externalClientSecret(rName, "updated-client-id", "oauth_client_secret"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_customExternalClientSecret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_customExternalClientSecret(rName, "https://dev-example.auth0.com/.well-known/openid-configuration"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_externalClientSecretConflicts(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccOAuth2CredentialProviderConfig_externalClientSecretWithInlineSecret(rName),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+			{
+				Config:      testAccOAuth2CredentialProviderConfig_externalSourceWithoutConfig(rName),
+				ExpectError: regexache.MustCompile(`Invalid OAuth2 Client Secret Configuration`),
+			},
+		},
+	})
+}
+
 func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -364,6 +498,132 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName, clientId, clientSecret, version, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2)
+}
+
+func testAccOAuth2CredentialProviderConfig_externalSecretBase(rName, jsonKey string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ %[2]q = "test-client-secret" })
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_secretsmanager_secret_policy" "test" {
+  secret_arn = aws_secretsmanager_secret.test.arn
+  policy     = data.aws_iam_policy_document.test.json
+}
+`, rName, jsonKey)
+}
+
+func testAccOAuth2CredentialProviderConfig_externalClientSecret(rName, clientID, jsonKey string) string {
+	return acctest.ConfigCompose(testAccOAuth2CredentialProviderConfig_externalSecretBase(rName, jsonKey), fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
+    github_oauth2_provider_config {
+      client_id            = %[2]q
+      client_secret_source = "EXTERNAL"
+
+      client_secret_config {
+        secret_id = aws_secretsmanager_secret.test.arn
+        json_key  = %[3]q
+      }
+    }
+  }
+
+  depends_on = [
+    aws_secretsmanager_secret_policy.test,
+    aws_secretsmanager_secret_version.test,
+  ]
+}
+`, rName, clientID, jsonKey))
+}
+
+func testAccOAuth2CredentialProviderConfig_customExternalClientSecret(rName, discoveryURL string) string {
+	return acctest.ConfigCompose(testAccOAuth2CredentialProviderConfig_externalSecretBase(rName, "oauth_client_secret"), fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "CustomOauth2"
+  oauth2_provider_config {
+    custom_oauth2_provider_config {
+      client_id = "custom-client-id"
+
+      client_secret_config {
+        secret_id = aws_secretsmanager_secret.test.arn
+        json_key  = "oauth_client_secret"
+      }
+
+      oauth_discovery {
+        discovery_url = %[2]q
+      }
+    }
+  }
+
+  depends_on = [
+    aws_secretsmanager_secret_policy.test,
+    aws_secretsmanager_secret_version.test,
+  ]
+}
+`, rName, discoveryURL))
+}
+
+func testAccOAuth2CredentialProviderConfig_externalClientSecretWithInlineSecret(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
+    github_oauth2_provider_config {
+      client_id     = "test-client-id"
+      client_secret = "test-client-secret"
+
+      client_secret_config {
+        secret_id = "example-secret"
+        json_key  = "oauth_client_secret"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_externalSourceWithoutConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "GithubOauth2"
+  oauth2_provider_config {
+    github_oauth2_provider_config {
+      client_id            = "test-client-id"
+      client_secret        = "test-client-secret"
+      client_secret_source = "EXTERNAL"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccOAuth2CredentialProviderConfig_full(rName string) string {
