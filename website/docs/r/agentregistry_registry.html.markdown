@@ -3,12 +3,12 @@ subcategory: "Agent Registry"
 layout: "aws"
 page_title: "AWS: aws_agentregistry_registry"
 description: |-
-  Terraform resource for managing an AWS Agent Registry Registry.
+  Manages an AWS Agent Registry registry.
 ---
 
 # Resource: aws_agentregistry_registry
 
-Terraform resource for managing an AWS Agent Registry Registry.
+Manages an AWS Agent Registry registry.
 
 A registry allows developers to discover, manage, and govern reusable agentic components such as tools, prompts, guardrails, and knowledge bases.
 
@@ -65,20 +65,22 @@ resource "aws_agentregistry_registry" "example" {
     authorizer_type = "CUSTOM_JWT"
 
     authorizer_configuration {
-      discovery_url    = "https://example.com/.well-known/openid-configuration"
-      allowed_audience = ["https://api.example.com"]
-      allowed_clients  = ["client-id-1"]
-      allowed_scopes   = ["read", "write"]
+      custom_jwt_authorizer {
+        discovery_url    = "https://example.com/.well-known/openid-configuration"
+        allowed_audience = ["https://api.example.com"]
+        allowed_clients  = ["client-id-1"]
+        allowed_scopes   = ["read", "write"]
 
-      custom_claim {
-        inbound_token_claim_name       = "sub"
-        inbound_token_claim_value_type = "STRING"
+        custom_claim {
+          inbound_token_claim_name       = "sub"
+          inbound_token_claim_value_type = "STRING"
 
-        authorizing_claim_match_value {
-          claim_match_operator = "EQUALS"
+          authorizing_claim_match_value {
+            claim_match_operator = "EQUALS"
 
-          claim_match_value {
-            match_value_string = "authorized-user"
+            claim_match_value {
+              match_value_string = "authorized-user"
+            }
           }
         }
       }
@@ -92,14 +94,14 @@ resource "aws_agentregistry_registry" "example" {
 The following arguments are required:
 
 * `discovery_configuration` - (Required) Discovery configuration for the registry. [See below](#discovery_configuration-block).
-* `name` - (Required) Name of the registry. Must contain only letters, numbers, hyphens, and underscores. Maximum length of 64 characters.
+* `name` - (Required) Name of the registry. Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.
 
 The following arguments are optional:
 
 * `approval_configuration` - (Optional) Approval configuration for registry records. [See below](#approval_configuration-block).
 * `description` - (Optional) Description of the registry. Maximum length of 4096 characters.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `approval_configuration` Block
 
@@ -193,8 +195,8 @@ resource "aws_agentregistry_registry" "example" {
 
 #### Optional
 
-* `account_id` (String) AWS account ID for this resource.
-* `region` (String) AWS Region for this resource.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Agent Registry Registry by registry ID. For example:
 
