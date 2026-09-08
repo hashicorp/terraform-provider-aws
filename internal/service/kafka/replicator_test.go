@@ -1153,7 +1153,7 @@ func randKafkaString(prefix string) string { // nosemgrep:ci.kafka-in-func-name
 
 // randKafkaARN returns a non-empty pseudo-random ARN-shaped string. // nosemgrep:ci.kafka-in-func-name
 func randKafkaARN(prefix string) string { // nosemgrep:ci.kafka-in-func-name
-	return fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s-%d", prefix, rand.IntN(1_000_000))
+	return fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s-%d", prefix, rand.IntN(1_000_000)) //lintignore:AWSAT003,AWSAT005
 }
 
 // TestReplicatorApacheKafkaClusterRoundTrip asserts that expanding an apache_kafka_cluster
@@ -1241,7 +1241,7 @@ func TestReplicatorKafkaClusterKindMutualExclusivity(t *testing.T) { // nosemgre
 
 	amazonBlock := func() any {
 		return []any{map[string]any{
-			"msk_cluster_arn": "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1",
+			"msk_cluster_arn": "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1", //lintignore:AWSAT003,AWSAT005
 		}}
 	}
 	apacheBlock := func() any {
@@ -1334,7 +1334,7 @@ func TestReplicatorKafkaClusterIdentifier(t *testing.T) { // nosemgrep:ci.kafka-
 func TestExpandKafkaCluster_amazonMSKCluster(t *testing.T) { // nosemgrep:ci.kafka-in-func-name,ci.msk-in-func-name
 	t.Parallel()
 
-	const arn = "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1"
+	const arn = "arn:aws:kafka:us-east-1:123456789012:cluster/test/00000000-0000-0000-0000-000000000000-1" //lintignore:AWSAT003,AWSAT005
 	tfMap := map[string]any{
 		"amazon_msk_cluster": []any{map[string]any{
 			"msk_cluster_arn": arn,
@@ -1367,7 +1367,7 @@ func TestReplicatorSecretARNValidation(t *testing.T) {
 		t.Fatal("expected a validation error for a malformed secret_arn, got none")
 	}
 
-	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-1"
+	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-1" //lintignore:AWSAT003,AWSAT005
 	if _, errs := secretARN.ValidateFunc(validARN, "secret_arn"); len(errs) != 0 {
 		t.Fatalf("expected no validation error for a well-formed secret_arn, got: %v", errs)
 	}
@@ -1390,7 +1390,7 @@ func TestReplicatorRootCaCertificateValidation(t *testing.T) {
 		t.Fatal("expected a validation error for a malformed root_ca_certificate, got none")
 	}
 
-	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-ca"
+	validARN := "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-ca" //lintignore:AWSAT003,AWSAT005
 	if _, errs := rootCA.ValidateFunc(validARN, "root_ca_certificate"); len(errs) != 0 {
 		t.Fatalf("expected no validation error for a well-formed root_ca_certificate ARN, got: %v", errs)
 	}
