@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -64,12 +65,14 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("aurora", "aurora-postgresql", "db2", "db2-zos", "docdb", "mariadb", "mongodb", "mysql", "oracle", "postgres", "redshift", "sqlserver", "sybase"),
+					stringvalidator.OneOf(dataProviderEngine_Values()...),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -84,6 +87,10 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 			"virtual": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
