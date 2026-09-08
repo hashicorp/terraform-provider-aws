@@ -155,6 +155,58 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 	})
 }
 
+func TestAccDMSDataProvider_virtual(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dms_data_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
+			testAccPreCheckDataProvider(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
+				),
+			},
+			{
+				// Promoting a non-virtual data provider to virtual requires replacement.
+				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtTrue),
+				),
+			},
+			{
+				// Demoting a virtual data provider to non-virtual is an in-place update.
+				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {

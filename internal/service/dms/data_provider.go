@@ -88,7 +88,11 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIf(
+						dataProviderVirtualRequiresReplaceIf,
+						"Promoting a non-virtual data provider to virtual requires replacement",
+						"Promoting a non-virtual data provider to virtual requires replacement",
+					),
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -97,6 +101,16 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 			"settings": dataProviderSettingsBlock(ctx),
 		},
 	}
+}
+
+// dataProviderVirtualRequiresReplaceIf forces replacement only when promoting a
+// non-virtual data provider to virtual.
+func dataProviderVirtualRequiresReplaceIf(_ context.Context, req planmodifier.BoolRequest, resp *boolplanmodifier.RequiresReplaceIfFuncResponse) {
+	if req.StateValue.IsNull() || req.PlanValue.IsUnknown() {
+		return
+	}
+
+	resp.RequiresReplace = !req.StateValue.ValueBool() && req.PlanValue.ValueBool()
 }
 
 func dataProviderSettingsBlock(ctx context.Context) schema.ListNestedBlock {
