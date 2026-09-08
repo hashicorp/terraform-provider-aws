@@ -327,7 +327,8 @@ func (r *exaDBVMClusterResource) Schema(ctx context.Context, _ resource.SchemaRe
 				Description: "Port for SSL/TCP connections to the SCAN listener. Changing this value creates a new resource.",
 			},
 			"shape": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.CaseInsensitiveStringType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -610,7 +611,11 @@ func (r *exaDBVMClusterResource) Update(ctx context.Context, request resource.Up
 }
 
 func (r *exaDBVMClusterResource) flatten(ctx context.Context, exaDBVMCluster *odbtypes.ExadbVmCluster, data *exaDBVMClusterResourceModel) diag.Diagnostics {
+	dataCollectionOptionsWasNull := data.DataCollectionOptions.IsNull()
 	diags := flex.Flatten(ctx, exaDBVMCluster, data, flex.WithFieldNamePrefix("ExadbVmCluster"))
+	if dataCollectionOptionsWasNull {
+		data.DataCollectionOptions = fwtypes.NewListNestedObjectValueOfNull[exaDBVMClusterDataCollectionOptionsModel](ctx)
+	}
 	if exaDBVMCluster.VmFileSystemStorage != nil {
 		data.VMFileSystemStorageTotalSizeInGBs = types.Int32PointerValue(exaDBVMCluster.VmFileSystemStorage.TotalSizeInGBs)
 	}
@@ -783,7 +788,7 @@ type exaDBVMClusterResourceModel struct {
 	ScanIPIDs                         fwtypes.ListValueOf[types.String]                                         `tfsdk:"scan_ip_ids"`
 	ScanListenerPortTCP               types.Int32                                                               `tfsdk:"scan_listener_port_tcp"`
 	ScanListenerPortTCPSSL            types.Int32                                                               `tfsdk:"scan_listener_port_tcp_ssl"`
-	Shape                             types.String                                                              `tfsdk:"shape"`
+	Shape                             fwtypes.CaseInsensitiveString                                             `tfsdk:"shape"`
 	ShapeAttribute                    fwtypes.StringEnum[odbtypes.ShapeAttribute]                               `tfsdk:"shape_attribute"`
 	SnapshotFileSystemStorage         fwtypes.ListNestedObjectValueOf[exaDBVMClusterStorageDetailsModel]        `tfsdk:"snapshot_file_system_storage"`
 	SSHPublicKeys                     fwtypes.SetValueOf[types.String]                                          `tfsdk:"ssh_public_keys"`

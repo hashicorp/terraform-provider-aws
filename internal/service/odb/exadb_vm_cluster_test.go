@@ -7,8 +7,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -105,6 +108,14 @@ func TestExaDBVMClusterResourceSchema(t *testing.T) {
 		}
 	}
 
+	shapeAttribute, ok := response.Schema.Attributes["shape"].(schema.StringAttribute)
+	if !ok {
+		t.Fatalf("shape attribute has type %T, want schema.StringAttribute", response.Schema.Attributes["shape"])
+	}
+	if shapeAttribute.CustomType == nil || !shapeAttribute.CustomType.Equal(fwtypes.CaseInsensitiveStringType) {
+		t.Errorf("shape custom type = %T, want fwtypes.CaseInsensitiveStringType", shapeAttribute.CustomType)
+	}
+
 	dataCollectionBlock, ok := response.Schema.Blocks["data_collection_options"]
 	if !ok {
 		t.Fatal("expected schema block \"data_collection_options\"")
@@ -132,5 +143,29 @@ func TestExaDBVMClusterResourceSchema(t *testing.T) {
 
 	if _, ok := response.Schema.Blocks[names.AttrTimeouts]; !ok {
 		t.Errorf("expected schema block %q", names.AttrTimeouts)
+	}
+}
+
+func TestExaDBVMClusterFlattenPreservesOmittedDataCollectionOptions(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	data := exaDBVMClusterResourceModel{
+		DataCollectionOptions: fwtypes.NewListNestedObjectValueOfNull[exaDBVMClusterDataCollectionOptionsModel](ctx),
+	}
+	apiObject := &odbtypes.ExadbVmCluster{
+		DataCollectionOptions: &odbtypes.DataCollectionOptions{
+			IsDiagnosticsEventsEnabled: aws.Bool(true),
+			IsHealthMonitoringEnabled:  aws.Bool(true),
+			IsIncidentLogsEnabled:      aws.Bool(true),
+		},
+	}
+
+	diags := (&exaDBVMClusterResource{}).flatten(ctx, apiObject, &data)
+	if diags.HasError() {
+		t.Fatalf("flattening ExaDB VM Cluster: %v", diags)
+	}
+	if !data.DataCollectionOptions.IsNull() {
+		t.Errorf("data_collection_options = %s, want null", data.DataCollectionOptions.String())
 	}
 }

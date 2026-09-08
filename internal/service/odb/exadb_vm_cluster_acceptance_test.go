@@ -37,6 +37,7 @@ const (
 	testAccExaDBVMClusterGIVersion                    = "26.0.0.0"
 	testAccExaDBVMClusterNodeCount                    = 2
 	testAccExaDBVMClusterShape                        = "ExaDbXS"
+	testAccExaDBVMClusterShapeCanonical               = "EXADBXS"
 	testAccExaDBVMClusterShapeFamily                  = "EXADB_XS"
 	testAccExaDBVMClusterTotalECPUCount               = 64
 	testAccExaDBVMClusterUpdatedEnabledECPUCount      = 20

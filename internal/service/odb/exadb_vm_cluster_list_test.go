@@ -219,7 +219,7 @@ func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]known
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("node_count"), knownvalue.Int32Exact(testAccExaDBVMClusterNodeCount)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("odb_network_id"), knownvalue.NotNull()),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-		tfquerycheck.KnownValueCheck(tfjsonpath.New("shape"), knownvalue.StringExact(testAccExaDBVMClusterShape)),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("shape"), knownvalue.StringExact(testAccExaDBVMClusterShapeCanonical)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 			acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
