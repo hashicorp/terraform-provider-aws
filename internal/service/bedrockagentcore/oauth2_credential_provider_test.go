@@ -69,9 +69,9 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 						"custom_oauth2_provider_config": knownvalue.ListSizeExact(0),
 						"github_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"client_credentials_wo_version": knownvalue.Null(),
-							"client_id":                     knownvalue.StringExact("test-client-id"),
+							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
 							"client_id_wo":                  knownvalue.Null(),
-							"client_secret":                 knownvalue.StringExact("test-client-secret"),
+							names.AttrClientSecret:          knownvalue.StringExact("test-client-secret"),
 							"client_secret_wo":              knownvalue.Null(),
 							"oauth_discovery":               knownvalue.ListSizeExact(1),
 						})}),
@@ -270,7 +270,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"authorization_server_metadata": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"authorization_endpoint": knownvalue.StringExact("https://auth.company.com/realms/production/protocol/openid-connect/auth"),
-									"issuer":                 knownvalue.StringExact("https://auth.company.com/realms/production"),
+									names.AttrIssuer:         knownvalue.StringExact("https://auth.company.com/realms/production"),
 									"response_types": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("code"),
 										knownvalue.StringExact("id_token"),
