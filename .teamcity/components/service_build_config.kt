@@ -138,3 +138,10 @@ fun BuildSteps.ConfigureGoEnv() {
         scriptContent = File("./scripts/configure_goenv.sh").readText()
     })
 }
+
+fun BuildSteps.InstallTerraform() {
+    step(ScriptBuildStep {
+        name = "Install Terraform"
+        scriptContent = File("./scripts/install_terraform.sh").readText()
+    })
+}

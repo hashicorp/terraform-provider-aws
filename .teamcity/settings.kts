@@ -736,6 +736,10 @@ object SmokeTestsResourceIdentity : BuildType({
 
     params {
         text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
     }
 
     vcs {
@@ -746,6 +750,7 @@ object SmokeTestsResourceIdentity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
             name = "Run smoke-identity"
             scriptContent = File("./scripts/smoke-identity.sh").readText()
