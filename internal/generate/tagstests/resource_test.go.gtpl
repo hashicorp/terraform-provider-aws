@@ -43,12 +43,16 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ end -}}
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttributes -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
 {{ end }}
 {{- end }}
 

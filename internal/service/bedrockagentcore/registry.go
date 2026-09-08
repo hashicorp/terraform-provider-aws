@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -65,7 +64,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
 		Attributes: map[string]schema.Attribute{
-			"approval_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[approvalConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"approval_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[approvalConfigurationModel](ctx),
 			"authorizer_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
 				Optional:   true,
@@ -90,8 +89,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9_-]+$`),
-						"must contain only letters, numbers, hyphens, and underscores",
+						regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`),
+						`Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.`,
 					),
 					stringvalidator.LengthBetween(1, 64),
 				},

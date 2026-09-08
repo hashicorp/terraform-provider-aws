@@ -35,7 +35,7 @@ var _ list.ListResource = &bucketLifecycleConfigurationListResource{}
 type bucketLifecycleConfigurationListResource struct {
 	bucketLifecycleConfigurationResource
 	framework.WithList
-	handler bucketPropertyListHandlerFramework
+	handler bucketPropertyListHandler
 }
 
 func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -79,9 +79,9 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 	}
 }
 
-var _ bucketPropertyListHandlerFramework = bucketLifecycleConfigurationListHandler{}
+var _ bucketPropertyListHandler = bucketLifecycleConfigurationListHandler{}
 
-func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandlerFramework {
+func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandler {
 	return bucketLifecycleConfigurationListHandler{
 		baseBucketPropertyListHandlerFramework: newBaseBucketPropertyListHandlerFramework(lister),
 	}

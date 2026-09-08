@@ -32,7 +32,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
-* `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
+* `ami_type` - Type of AMI associated with the EKS Node Group.
 * `arn` - ARN of the EKS Node Group.
 * `capacity_type` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `disk_size` - Disk size in GiB for worker nodes.

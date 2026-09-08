@@ -317,60 +317,60 @@ The following arguments are required:
 The following arguments are optional:
 
 * `athena_properties` - (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
-* `authentication_configuration` - (Optional) Configuration block for authentication options. See [`authentication_configuration`](#authentication_configuration) below.
+* `authentication_configuration` - (Optional) Configuration block for authentication options. See [`authentication_configuration`](#authentication_configuration-block) below.
 * `catalog_id` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` - (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
 * `connection_type` - (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`. Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
 * `description` - (Optional) Description of the connection.
 * `match_criteria` - (Optional) List of criteria that can be used in selecting this connection.
-* `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements`](#physical_connection_requirements) below.
+* `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements`](#physical_connection_requirements-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `authentication_configuration`
+### `authentication_configuration` Block
 
 The `authentication_configuration` configuration block supports the following arguments:
 
 * `authentication_type` - (Required) Type of authentication. Valid values: `BASIC`, `CUSTOM`, `IAM`, `OAUTH2`.
-* `basic_authentication_credentials` - (Optional) Basic authentication credentials. See [`basic_authentication_credentials`](#basic_authentication_credentials) below.
+* `basic_authentication_credentials` - (Optional) Basic authentication credentials. See [`basic_authentication_credentials`](#basic_authentication_credentials-block) below.
 * `custom_authentication_credentials` - (Optional) Map of custom authentication credentials.
 * `kms_key_arn` - (Optional) ARN of the KMS key used for encryption.
-* `oauth2_properties` - (Optional) OAuth2 properties. See [`oauth2_properties`](#oauth2_properties) below.
+* `oauth2_properties` - (Optional) OAuth2 properties. See [`oauth2_properties`](#oauth2_properties-block) below.
 * `secret_arn` - (Optional) ARN of the Secrets Manager secret containing credentials.
 
-#### `basic_authentication_credentials`
+#### `basic_authentication_credentials` Block
 
 The `basic_authentication_credentials` configuration block supports the following arguments:
 
 * `password` - (Required) Password for authentication.
 * `username` - (Required) Username for authentication.
 
-#### `oauth2_properties`
+#### `oauth2_properties` Block
 
 The `oauth2_properties` configuration block supports the following arguments:
 
-* `authorization_code_properties` - (Optional) Authorization code properties. See [`authorization_code_properties`](#authorization_code_properties) below.
-* `oauth2_client_application` - (Optional) OAuth2 client application details. See [`oauth2_client_application`](#oauth2_client_application) below.
-* `oauth2_credentials` - (Optional) OAuth2 credentials. See [`oauth2_credentials`](#oauth2_credentials) below.
+* `authorization_code_properties` - (Optional) Authorization code properties. See [`authorization_code_properties`](#authorization_code_properties-block) below.
+* `oauth2_client_application` - (Optional) OAuth2 client application details. See [`oauth2_client_application`](#oauth2_client_application-block) below.
+* `oauth2_credentials` - (Optional) OAuth2 credentials. See [`oauth2_credentials`](#oauth2_credentials-block) below.
 * `oauth2_grant_type` - (Optional) OAuth2 grant type. Valid values: `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`, `JWT_BEARER`.
 * `token_url` - (Optional) Token URL for OAuth2 authentication.
 * `token_url_parameters_map` - (Optional) Map of additional parameters for the token URL.
 
-##### `authorization_code_properties`
+##### `authorization_code_properties` Block
 
 The `authorization_code_properties` configuration block supports the following arguments:
 
 * `authorization_code` - (Required) Authorization code.
 * `redirect_uri` - (Required) Redirect URI for OAuth2 flow.
 
-##### `oauth2_client_application`
+##### `oauth2_client_application` Block
 
 The `oauth2_client_application` configuration block supports the following arguments:
 
 * `aws_managed_client_application_reference` - (Optional) Reference to an AWS-managed client application.
 * `user_managed_client_application_client_id` - (Optional) Client ID for a user-managed client application.
 
-##### `oauth2_credentials`
+##### `oauth2_credentials` Block
 
 The `oauth2_credentials` configuration block supports the following arguments:
 
@@ -379,7 +379,7 @@ The `oauth2_credentials` configuration block supports the following arguments:
 * `refresh_token` - (Optional) OAuth2 refresh token.
 * `user_managed_client_application_client_secret` - (Optional) Client secret for user-managed client application.
 
-### `physical_connection_requirements`
+### `physical_connection_requirements` Block
 
 The `physical_connection_requirements` configuration block supports the following arguments:
 

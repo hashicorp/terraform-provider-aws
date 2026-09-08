@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,17 +48,25 @@ func (l *evaluationJobListResource) List(ctx context.Context, request list.ListR
 			arn := aws.ToString(item.JobArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			var job *bedrock.GetEvaluationJobOutput
+			if request.IncludeResource {
+				var err error
+				job, err = findEvaluationJobByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data evaluationJobResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				data.JobARN = fwflex.StringToFramework(ctx, item.JobArn)
 				if request.IncludeResource {
-					job, err := findEvaluationJobByARN(ctx, conn, arn)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-						return
-					}
 					result.Diagnostics.Append(fwflex.Flatten(ctx, job, &data)...)
 					if result.Diagnostics.HasError() {
 						return

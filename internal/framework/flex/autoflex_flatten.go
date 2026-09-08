@@ -670,7 +670,7 @@ func flattenInterface(ctx context.Context, flattener *autoFlattener, vFrom refle
 		//
 		// interface -> types.List(OfObject) or types.Object.
 		//
-		diags.Append(flattenInterfaceToNestedObject(ctx, flattener, vFrom, vFrom.IsNil(), tTo, vTo)...)
+		diags.Append(flattenInterfaceToNestedObject(ctx, flattener, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -1356,10 +1356,11 @@ func flattenStructToNestedObject(ctx context.Context, flattener *autoFlattener, 
 }
 
 // flattenInterfaceToNestedObject copies an AWS API interface value to a compatible Plugin Framework NestedObjectValue value.
-func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if isNullFrom {
+	if vFrom.IsNil() {
+		tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 		val, d := tTo.NullValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1386,7 +1387,7 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.SubsystemError(ctx, subsystemName, "Source does not implement flex.Flattener")
+		tflog.SubsystemError(ctx, subsystemName, "Target does not implement flex.Flattener")
 		// diags.Append(diagFlatteningTargetDoesNotImplementFlexFlattener(reflect.TypeOf(vTo.Interface())))
 		return diags
 	}
@@ -1405,6 +1406,18 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 		return diags
 	}
 
+	if isZero(toFlattener) {
+		tflog.SubsystemWarn(ctx, subsystemName, "No values set by Flatten")
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
 	// Set the target structure as a mapped Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, toFlattener)
 	diags.Append(d...)
@@ -1414,6 +1427,25 @@ func flattenInterfaceToNestedObject(ctx context.Context, _ *autoFlattener, vFrom
 
 	vTo.Set(reflect.ValueOf(val))
 	return diags
+}
+
+func isZero(v any) bool {
+	val := reflect.ValueOf(v)
+	val = reflect.Indirect(val)
+
+	for field := range tfreflect.ExportedStructFields(val.Type()) {
+		fieldVal := val.FieldByIndex(field.Index)
+
+		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		if !ok {
+			continue // Skip non-attr.Type fields.
+		}
+		if !fieldTo.IsNull() {
+			return false
+		}
+	}
+
+	return true
 }
 
 // flattenSliceOfPrimitiveToList copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework List value.
@@ -2716,6 +2748,16 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 	)
 }
 
+func diagFlatteningUnknownUnionMember(unionTag string) diag.WarningDiagnostic {
+	return diag.NewWarningDiagnostic(
+		"Unexpected Result",
+		"The API response contained data with an unrecognized type, which will be ignored by the provider.\n\n"+
+			"This may be resolved by updating the provider. "+
+			"If you are on the latest version of the provider, please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Unrecognized tagged union member with tag %q.", unionTag),
+	)
+}
+
 // handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
 func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sourceFieldName string, valFrom, valTo reflect.Value, _, typeTo reflect.Type, targetPath path.Path, targetFieldName string, flattener *autoFlattener) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -3297,4 +3339,12 @@ func flattenXMLWrapperRule2(ctx context.Context, flattener *autoFlattener, vFrom
 	}
 
 	return diags
+}
+
+// HandleFlattenUnknownUnionMember is used to handle an `awstypes.UnknownUnionMember` when Flattening
+func HandleFlattenUnknownUnionMember(ctx context.Context, unionTag string, diags *diag.Diagnostics) {
+	tflog.Warn(ctx, "Unexpected tagged union member", map[string]any{
+		"tag": unionTag,
+	})
+	diags.Append(diagFlatteningUnknownUnionMember(unionTag))
 }

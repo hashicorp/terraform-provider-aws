@@ -45,7 +45,7 @@ The supported names are `file-system-id` or `volume-id`.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the snapshot.
+* `arn` - ARN of the snapshot.
 * `creation_time` - Time that the resource was created.
 * `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
 * `name` - Name of the snapshot.

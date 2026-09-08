@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_vpn_connection
 
-Fetches details of a Site-to-Site VPN connection. A Site-to-Site VPN connection is an Internet Protocol security (IPsec) VPN connection between a VPC and an on-premises network.
+Fetches details of a Site-to-Site VPN connection. A Site-to-Site VPN connection is an IP security (IPsec) VPN connection between a VPC and an on-premises network.
 
 ## Example Usage
 

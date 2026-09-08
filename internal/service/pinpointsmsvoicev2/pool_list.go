@@ -59,33 +59,33 @@ func (l *poolListResource) List(ctx context.Context, request list.ListRequest, s
 
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), poolID)
 
+			associated, err := findPoolOriginationIdentities(ctx, conn, poolID)
+			if retry.NotFound(err) {
+				tflog.Debug(ctx, "Pool deleted concurrently; skipping in list enumeration")
+				continue
+			}
+			if err != nil {
+				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				return
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data poolResourceModel
-			skipPool := false
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, pool, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
 
-				associated, err := findPoolOriginationIdentities(ctx, conn, poolID)
-				if retry.NotFound(err) {
-					tflog.Debug(ctx, "Pool deleted concurrently; skipping in list enumeration")
-					skipPool = true
-					return
-				}
-				if err != nil {
-					smerr.AddError(ctx, &result.Diagnostics, err, smerr.ID, poolID)
-					return
-				}
 				data.OriginationIdentities = fwflex.FlattenFrameworkStringValueSetOfString(ctx, associated)
 
 				result.DisplayName = poolID
 			})
 
-			if skipPool {
-				continue
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
 			}
 			if !yield(result) {
 				return

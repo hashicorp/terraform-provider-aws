@@ -33,7 +33,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `active_directory_id` - ID for Microsoft Active Directory instance that the file system is joined to.
 * `aliases` - Set of DNS alias names associated with the Amazon FSx file system.
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `audit_log_configuration` - Configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system.
 * `automatic_backup_retention_days` - Number of days to retain automatic backups.
 * `backup_id` - Identifier of the source backup used to create the file system.
@@ -45,6 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
 * `network_interface_ids` - Set of network interface identifiers for the file system.
+* `network_type` - Network type (`IPV4` or `DUAL`).
 * `owner_id` - AWS account identifier that created the file system.
 * `preferred_file_server_ip` - IP address of the primary, or preferred, file server.
 * `preferred_subnet_id` - Subnet in which the preferred file server is located.
@@ -55,5 +56,5 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - IDs of the subnets that the file system is accessible from.
 * `tags` - Tags to associate with the file system.
 * `throughput_capacity` - Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
-* `vpc_id` - ID of the primary virtual private cloud (VPC) for the file system.
+* `vpc_id` - ID of the primary VPC for the file system.
 * `weekly_maintenance_start_time` - Preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.

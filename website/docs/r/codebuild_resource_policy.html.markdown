@@ -84,7 +84,7 @@ resource "aws_codebuild_resource_policy" "example" {
 
 #### Required
 
-- `resource_arn` (String) Amazon Resource Name (ARN) of the CodeBuild resource.
+- `resource_arn` (String) ARN of the CodeBuild resource.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
 

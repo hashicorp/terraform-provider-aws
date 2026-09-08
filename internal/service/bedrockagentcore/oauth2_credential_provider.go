@@ -45,7 +45,10 @@ var (
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
 // @Tags(identifierAttribute="credential_provider_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetOauth2CredentialProviderOutput")
+// @Testing(importIgnore="oauth2_provider_config.0.github_oauth2_provider_config.0.client_id;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckOAuth2CredentialProviders")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &oauth2CredentialProviderResource{}
 	return r, nil

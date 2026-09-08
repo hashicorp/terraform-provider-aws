@@ -68,7 +68,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The hostname of the instance. See also `endpoint` and `port`.
-* `arn` - Amazon Resource Name (ARN) of neptune instance
+* `arn` - ARN of neptune instance
 * `dbi_resource_id` - The region-unique, immutable identifier for the neptune instance.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `id` - The Instance identifier

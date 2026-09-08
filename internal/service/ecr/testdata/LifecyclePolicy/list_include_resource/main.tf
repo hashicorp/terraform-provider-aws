@@ -1,0 +1,42 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  count = var.resource_count
+
+  repository = aws_ecr_repository.test[count.index].name
+
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Expire images older than 14 days"
+      selection = {
+        tagStatus   = "untagged"
+        countType   = "sinceImagePushed"
+        countUnit   = "days"
+        countNumber = 14
+      }
+      action = {
+        type = "expire"
+      }
+    }]
+  })
+}
+
+resource "aws_ecr_repository" "test" {
+  count = var.resource_count
+
+  name = "${var.rName}-${count.index}"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

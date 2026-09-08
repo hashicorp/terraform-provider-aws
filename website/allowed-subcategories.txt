@@ -6,7 +6,9 @@ API Gateway
 API Gateway V2
 ARC (Application Recovery Controller) Region Switch
 ARC (Application Recovery Controller) Zonal Shift
+Account Access
 Account Management
+Agent Registry
 Amazon Q Business
 Amplify
 App Mesh
@@ -93,6 +95,7 @@ DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB
@@ -159,6 +162,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
 Lambda MicroVMs
 Launch Wizard
 Lex Model Building

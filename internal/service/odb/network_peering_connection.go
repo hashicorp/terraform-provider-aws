@@ -214,7 +214,7 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		odbNetwork = plan.OdbNetworkId
 	}
 	//Validation : check is there any peer cidr for removal
-	if len(plan.PeerNetworkCidrs.Elements()) > 0 {
+	if plan.PeerNetworkCidrs.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		err := errors.New("during creation add / removal of peer network cidr is not supported")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),

@@ -1,0 +1,88 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+provider "aws" {
+  default_tags {
+    tags = var.provider_tags
+  }
+  ignore_tags {
+    keys = var.ignore_tag_keys
+  }
+}
+
+resource "aws_bedrockagentcore_harness" "test" {
+  harness_name       = var.rName
+  execution_role_arn = aws_iam_role.test.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+
+  tags = var.resource_tags
+}
+
+resource "aws_iam_role" "test" {
+  name               = var.rName
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "bedrock:InvokeModel",
+      "bedrock:InvokeModelWithResponseStream"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
+
+variable "provider_tags" {
+  type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
+  nullable = false
+}

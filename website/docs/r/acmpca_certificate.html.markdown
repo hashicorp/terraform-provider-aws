@@ -103,7 +103,7 @@ resource "aws_acmpca_certificate" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate.
+- `arn` (String) ARN of the ACM PCA certificate.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ACM PCA Certificates using their ARN. For example:
 

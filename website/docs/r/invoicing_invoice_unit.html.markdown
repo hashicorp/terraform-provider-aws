@@ -84,7 +84,7 @@ resource "aws_invoicing_invoice_unit" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the invoice unit.
+- `arn` (String) ARN of the invoice unit.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Invoice Units using the ARN. For example:
 

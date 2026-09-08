@@ -134,6 +134,110 @@ func dataSourceCluster() *schema.Resource {
 						},
 					},
 				},
+				"kube_api_server_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"event_ttl": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"service_node_port_range": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_port": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"min_port": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"kube_controller_manager_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"horizontal_pod_autoscaler_controller_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"horizontal_pod_autoscaler_sync_period": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"pod_gc_controller_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"terminated_pod_gc_threshold": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"kube_scheduler_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_resources_fit": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"scoring_strategy": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"resource": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrName: {
+																	Type:     schema.TypeString,
+																	Computed: true,
+																},
+																names.AttrWeight: {
+																	Type:     schema.TypeInt,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													names.AttrType: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"kubernetes_network_config": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -402,6 +506,15 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrEndpoint, cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
+	}
+	if err := d.Set("kube_api_server_config", flattenKubeAPIServerConfigResponse(cluster.KubeApiServerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kube_api_server_config: %s", err)
+	}
+	if err := d.Set("kube_controller_manager_config", flattenKubeControllerManagerConfigResponse(cluster.KubeControllerManagerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kube_controller_manager_config: %s", err)
+	}
+	if err := d.Set("kube_scheduler_config", flattenKubeSchedulerConfigResponse(cluster.KubeSchedulerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kube_scheduler_config: %s", err)
 	}
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)

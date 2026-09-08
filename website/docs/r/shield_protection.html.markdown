@@ -39,7 +39,7 @@ resource "aws_shield_protection" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) A friendly name for the Protection you are creating.
-* `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
+* `resource_arn` - (Required) ARN of the resource to be protected.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

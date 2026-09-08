@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the user.
 * `force_destroy` - (Optional, default false) When destroying this user, destroy even if it
   has non-Terraform-managed IAM access keys, login profile or MFA devices. Without `force_destroy`
-  a user with non-Terraform-managed access keys and login profile will fail to be destroyed.
+  a user with non-Terraform-managed access keys and login profile will fail to be destroyed. This only deletes objects when the user is destroyed, not when setting this parameter to true. Once this parameter is set to true, there must be a successful terraform apply run before a destroy is required to update this value in the resource state. Without a successful terraform apply after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the user or destroying the user, this flag will not work. Additionally when importing a user, a successful terraform apply is required to set this value in state before it will take effect on a destroy operation.
 * `tags` - Key-value map of tags for the IAM user. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

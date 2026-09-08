@@ -59,7 +59,7 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ### Transit Gateway Attached Firewall (Cross Account)
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create Network Firewall in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and [`aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter`](/docs/providers/aws/r/networkfirewall_network_firewall_transit_gateway_attachment_accepter.html) resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
+A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create Network Firewall in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and [`aws_networkfirewall_firewall_transit_gateway_attachment_accepter`](/docs/providers/aws/r/networkfirewall_firewall_transit_gateway_attachment_accepter.html) resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
 
 ## Argument Reference
 
@@ -72,7 +72,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A friendly description of the firewall.
 * `enabled_analysis_types` - (Optional) Set of types for which to collect analysis metrics. See [Reporting on network traffic in Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/reporting.html) for details on how to use the data. Valid values: `TLS_SNI`, `HTTP_HOST`. Defaults to `[]`.
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
-* `firewall_policy_arn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
+* `firewall_policy_arn` - (Required) ARN of the VPC Firewall policy.
 * `firewall_policy_change_protection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
 * `subnet_change_protection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
@@ -105,8 +105,8 @@ The `subnet_mapping` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the firewall.
-* `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
+* `id` - ARN that identifies the firewall.
+* `arn` - ARN that identifies the firewall.
 * `firewall_status` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.

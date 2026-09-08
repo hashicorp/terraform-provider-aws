@@ -61,53 +61,53 @@ This resource supports the following arguments:
 #### sharing_settings
 
 * `notebook_output_option` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `Disabled`. Valid values are `Allowed` and `Disabled`.
-* `s3_kms_key_id` - (Optional) When `notebook_output_option` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
+* `s3_kms_key_id` - (Optional) When `notebook_output_option` is Allowed, the KMS encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
 * `s3_output_path` - (Optional) When `notebook_output_option` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
 
 #### code_editor_app_settings
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 #### tensor_board_app_settings
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 
 #### kernel_gateway_app_settings
 
 * `custom_image` - (Optional) A list of custom SageMaker AI images that are configured to run as a KernelGateway app. see [Custom Image](#custom_image) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 #### jupyter_server_app_settings
 
 * `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code_repository) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 #### jupyter_lab_app_settings
 
 * `app_lifecycle_management` - (Optional) Indicates whether idle shutdown is activated for JupyterLab applications. see [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
 * `built_in_lifecycle_config_arn` - (Optional) The lifecycle configuration that runs before the default lifecycle configuration. It can override changes made in the default lifecycle configuration.
 * `code_repository` - (Optional) A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code_repository) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `emr_settings` - (Optional) The configuration parameters that specify the IAM roles assumed by the execution role of SageMaker AI (assumable roles) and the cluster instances or job execution environments (execution roles or runtime roles) to manage and access resources required for running Amazon EMR clusters or Amazon EMR Serverless applications. see [`emr_settings` Block](#emr_settings-block) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 
 #### code_editor_app_settings
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) ARN of the Lifecycle Configurations.
 * `custom_image` - (Optional) A list of custom SageMaker AI images that are configured to run as a CodeEditor app. see [Custom Image](#custom_image) below.
 
 #### r_session_app_settings
 
 * `custom_image` - (Optional) A list of custom SageMaker AI images that are configured to run as a KernelGateway app. see [Custom Image](#custom_image) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 
 #### r_studio_server_pro_domain_settings
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `default_resource_spec` - (Optional) Default instance type and the ARN of the SageMaker AI image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `domain_execution_role_arn` - (Required) The ARN of the execution role for the RStudioServerPro Domain-level app.
 * `r_studio_connect_url` - (Optional) A URL pointing to an RStudio Connect server.
 * `r_studio_package_manager_url` - (Optional) A URL pointing to an RStudio Package Manager server.
@@ -130,7 +130,7 @@ This resource supports the following arguments:
 ##### default_resource_spec
 
 * `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [SageMaker AI Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
-* `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
+* `lifecycle_config_arn` - (Optional) ARN of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker AI image that the image version belongs to.
 * `sagemaker_image_version_alias` - (Optional) The SageMaker AI Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
@@ -167,7 +167,7 @@ This resource supports the following arguments:
 
 ##### model_register_settings
 
-* `cross_account_model_register_role_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker AI model registry account. Required only to register model versions created by a different SageMaker AI Canvas AWS account than the AWS account in which SageMaker AI model registry is set up.
+* `cross_account_model_register_role_arn` - (Optional) ARN of the SageMaker AI model registry account. Required only to register model versions created by a different SageMaker AI Canvas AWS account than the AWS account in which SageMaker AI model registry is set up.
 * `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
 ##### time_series_forecasting_settings
@@ -178,7 +178,7 @@ This resource supports the following arguments:
 ##### workspace_settings
 
 * `s3_artifact_path` - (Optional) The Amazon S3 bucket used to store artifacts generated by Canvas. Updating the Amazon S3 location impacts existing configuration settings, and Canvas users no longer have access to their artifacts. Canvas users must log out and log back in to apply the new location.
-* `s3_kms_key_id` - (Optional) The Amazon Web Services Key Management Service (KMS) encryption key ID that is used to encrypt artifacts generated by Canvas in the Amazon S3 bucket.
+* `s3_kms_key_id` - (Optional) KMS encryption key ID that is used to encrypt artifacts generated by Canvas in the Amazon S3 bucket.
 
 ##### default_ebs_storage_settings
 
@@ -212,19 +212,19 @@ This resource supports the following arguments:
 
 #### `emr_serverless_settings` Block
 
-* `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS IAM role that is assumed for running Amazon EMR Serverless jobs in SageMaker AI Canvas. This role should have the necessary permissions to read and write data attached and a trust relationship with EMR Serverless.
+* `execution_role_arn` - (Optional) ARN of the AWS IAM role that is assumed for running Amazon EMR Serverless jobs in SageMaker AI Canvas. This role should have the necessary permissions to read and write data attached and a trust relationship with EMR Serverless.
 * `status` - (Optional) Describes whether Amazon EMR Serverless job capabilities are enabled or disabled in the SageMaker AI Canvas application. Valid values are: `ENABLED` and `DISABLED`.
 
 #### `emr_settings` Block
 
-* `assumable_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles that the execution role of SageMaker AI can assume for performing operations or tasks related to Amazon EMR clusters or Amazon EMR Serverless applications. These roles define the permissions and access policies required when performing Amazon EMR-related operations, such as listing, connecting to, or terminating Amazon EMR clusters or Amazon EMR Serverless applications. They are typically used in cross-account access scenarios, where the Amazon EMR resources (clusters or serverless applications) are located in a different AWS account than the SageMaker AI domain.
-* `execution_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles used by the Amazon EMR cluster instances or job execution environments to access other AWS services and resources needed during the runtime of your Amazon EMR or Amazon EMR Serverless workloads, such as Amazon S3 for data access, Amazon CloudWatch for logging, or other AWS services based on the particular workload requirements.
+* `assumable_role_arns` - (Optional) Array of ARNs of the IAM roles that the execution role of SageMaker AI can assume for performing operations or tasks related to Amazon EMR clusters or Amazon EMR Serverless applications. These roles define the permissions and access policies required when performing Amazon EMR-related operations, such as listing, connecting to, or terminating Amazon EMR clusters or Amazon EMR Serverless applications. They are typically used in cross-account access scenarios, where the Amazon EMR resources (clusters or serverless applications) are located in a different AWS account than the SageMaker AI domain.
+* `execution_role_arns` - (Optional) Array of ARNs of the IAM roles used by the Amazon EMR cluster instances or job execution environments to access other AWS services and resources needed during the runtime of your Amazon EMR or Amazon EMR Serverless workloads, such as Amazon S3 for data access, Amazon CloudWatch for logging, or other AWS services based on the particular workload requirements.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The user profile Amazon Resource Name (ARN).
+* `arn` - User profile ARN.
 * `home_efs_file_system_uid` - The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -107,8 +106,8 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceNetworkConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"scaling_target":               framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayScalingTargetModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayServiceNetworkConfigurationModel](ctx),
+			"scaling_target":               framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayScalingTargetModel](ctx),
 			"service_arn":                  framework.ARNAttributeComputedOnly(),
 			names.AttrServiceName: schema.StringAttribute{
 				Optional: true,
@@ -143,7 +142,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"aws_logs_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceAWSLogsConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+						"aws_logs_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[expressGatewayServiceAWSLogsConfigurationModel](ctx),
 						"command": schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,

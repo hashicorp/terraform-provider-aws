@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_redshift_namespace_registration: Fixes errors when Importing by ID
+```
+
+```release-note:bug
+resource/aws_redshift_namespace_registration: Fixes errors when Importing by Identity
+```

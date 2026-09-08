@@ -542,7 +542,7 @@ resource "aws_lb_listener" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener.
+- `arn` (String) ARN of the load balancer listener.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import listeners using their ARN. For example:
 

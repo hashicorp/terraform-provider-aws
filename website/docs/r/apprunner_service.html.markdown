@@ -176,14 +176,14 @@ The `network_configuration` block supports the following arguments:
 
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [`egress_configuration`](#egress_configuration) below.
 * `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [`ingress_configuration`](#ingress_configuration) below.
-* `ip_address_type` - (Optional) App Runner provides you with the option to choose between Internet Protocol version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
+* `ip_address_type` - (Optional) App Runner provides you with the option to choose between IP version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
 
 ### `egress_configuration` Block
 
 The `egress_configuration` block supports the following arguments:
 
 * `egress_type` - (Optional) Type of egress configuration. Valid values are: `DEFAULT` and `VPC`.
-* `vpc_connector_arn` - (Optional) Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
+* `vpc_connector_arn` - (Optional) ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
 
 ### `ingress_configuration` Block
 
@@ -280,7 +280,7 @@ resource "aws_apprunner_service" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner service.
+- `arn` (String) ARN of the App Runner service.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Services using the `arn`. For example:
 

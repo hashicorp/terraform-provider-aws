@@ -241,13 +241,21 @@ func testAccTelemetryRuleForOrganization_allRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckTelemetryRuleForOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTelemetryRuleForOrganizationConfig_allRegions(rName),
+				Config: testAccTelemetryRuleForOrganizationConfig_allRegions(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination_configuration.0.retention_in_days", "30"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "organization-telemetry-rule/"+rName)),
 				},
+			},
+			{
+				Config: testAccTelemetryRuleForOrganizationConfig_allRegions(rName, 14),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleForOrganizationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination_configuration.0.retention_in_days", "14"),
+				),
 			},
 			{
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
@@ -386,21 +394,34 @@ resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {
 `, rName)
 }
 
-func testAccTelemetryRuleForOrganizationConfig_allRegions(rName string) string {
+func testAccTelemetryRuleForOrganizationConfig_allRegions(rName string, retentionInDays int) string {
 	return fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_rule_for_organization" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type          = "AWS::EKS::Cluster"
-    telemetry_type         = "Logs"
-    telemetry_source_types = ["EKS_AUDIT_LOGS"]
-    all_regions            = true
+    resource_type  = "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    telemetry_type = "Logs"
+    all_regions    = true
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/alb"
+      retention_in_days   = %[2]d
+
+      elb_load_balancer_logging_parameters {
+        output_format = "json"
+      }
+
+      log_delivery_parameters {
+        log_types = ["ALB_ACCESS_LOGS", "ALB_CONNECTION_LOGS", "ALB_HEALTH_CHECK_LOGS"]
+      }
+    }
   }
 
   depends_on = [aws_observabilityadmin_telemetry_evaluation_for_organization.test]
 }
 
 resource "aws_observabilityadmin_telemetry_evaluation_for_organization" "test" {}
-`, rName)
+`, rName, retentionInDays)
 }

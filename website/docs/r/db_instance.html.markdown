@@ -260,6 +260,30 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### Disabling Master Password Rotation
+
+When `manage_master_user_password` is enabled, Secrets Manager rotates the master user password automatically (every 7 days by default). To disable that rotation while keeping the managed secret, manage the secret's rotation with [`aws_secretsmanager_secret_rotation`](/docs/providers/aws/r/secretsmanager_secret_rotation.html) and set `rotation_enabled = false`.
+
+Referencing `aws_db_instance.default.master_user_secret[0].secret_arn` (as in the example below) ensures the rotation change is applied after the instance is available. Avoid hardcoding the secret ARN, which would remove that ordering.
+
+```terraform
+resource "aws_db_instance" "default" {
+  allocated_storage           = 10
+  db_name                     = "mydb"
+  engine                      = "mysql"
+  engine_version              = "8.0"
+  instance_class              = "db.t3.micro"
+  manage_master_user_password = true
+  username                    = "foo"
+  parameter_group_name        = "default.mysql8.0"
+}
+
+resource "aws_secretsmanager_secret_rotation" "default" {
+  secret_id        = aws_db_instance.default.master_user_secret[0].secret_arn
+  rotation_enabled = false
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -522,7 +546,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 The `master_user_secret` configuration block supports the following attributes:
 
 * `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_arn` - ARN of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
@@ -534,6 +558,32 @@ The `master_user_secret` configuration block supports the following attributes:
 - `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_db_instance.default
+  identity = {
+    identifier = "mydb-rds-instance"
+  }
+}
+
+resource "aws_db_instance" "default" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `identifier` (String) Identifier of the DB Instance.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 

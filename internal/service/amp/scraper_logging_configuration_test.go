@@ -1,0 +1,245 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package amp_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccAMPScraperLoggingConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v amp.DescribeScraperLoggingConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper_logging_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrCloudWatchLogs: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"log_group_arn": knownvalue.NotNull(),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), tfknownvalue.SetNotEmpty()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
+				ImportStateVerifyIdentifierAttribute: "scraper_id",
+			},
+		},
+	})
+}
+
+func TestAccAMPScraperLoggingConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v amp.DescribeScraperLoggingConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper_logging_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ScraperLoggingConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraperLoggingConfiguration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAMPScraperLoggingConfiguration_scraperComponents(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v amp.DescribeScraperLoggingConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper_logging_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperLoggingConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName, awstypes.ScraperComponentTypeCollector, awstypes.ScraperComponentTypeExporter),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeCollector),
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeExporter),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "scraper_id"),
+				ImportStateVerifyIdentifierAttribute: "scraper_id",
+			},
+			{
+				Config: testAccScraperLoggingConfigurationConfig_scraperComponents(rName, awstypes.ScraperComponentTypeServiceDiscovery),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperLoggingConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging_destination"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scraper_components"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.ScraperComponentTypeServiceDiscovery),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckScraperLoggingConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_prometheus_scraper_logging_configuration" {
+				continue
+			}
+
+			_, err := tfamp.FindScraperLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["scraper_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Prometheus Scraper Logging Configuration %s still exists", rs.Primary.Attributes["scraper_id"])
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckScraperLoggingConfigurationExists(ctx context.Context, t *testing.T, n string, v *amp.DescribeScraperLoggingConfigurationOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
+
+		output, err := tfamp.FindScraperLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["scraper_id"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccScraperLoggingConfigurationConfig_scraperComponents(rName string, components ...awstypes.ScraperComponentType) string {
+	return acctest.ConfigCompose(
+		testAccScraperConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/prometheus/scraper-logs/%[1]s"
+}
+
+resource "aws_prometheus_scraper_logging_configuration" "test" {
+  scraper_id = aws_prometheus_scraper.test.id
+
+  scraper_components = [%[2]s]
+
+  logging_destination {
+    cloudwatch_logs {
+      log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
+    }
+  }
+}
+`, rName, acctest.ListOfStrings(components...)))
+}

@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
-* `db_snapshot_arn` - The Amazon Resource Name (ARN) for the DB snapshot.
+* `db_snapshot_arn` - ARN for the DB snapshot.
 * `encrypted` - Specifies whether the DB snapshot is encrypted.
 * `engine` - Specifies the name of the database engine.
 * `engine_version` - Specifies the version of the database engine.

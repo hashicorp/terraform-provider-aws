@@ -67,7 +67,7 @@ resource "aws_prometheus_rule_group_namespace" "demo" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Prometheus rule group namespace.
+- `arn` (String) ARN of the Prometheus rule group namespace.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the prometheus rule group namespace using the arn. For example:
 

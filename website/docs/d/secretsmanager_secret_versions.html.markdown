@@ -59,7 +59,7 @@ This data source exports the following attributes in addition to the arguments a
 * `secret_name` - Name of the secret.
 * `versions` - List of the versions of the secret. Attributes are specified below.
 
-### versions
+### `versions` Block
 
 * `created_time` - Date and time this version of the secret was created.
 * `last_accessed_date` - Date that this version of the secret was last accessed.

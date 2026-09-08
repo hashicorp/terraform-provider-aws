@@ -35,9 +35,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="Api Key Credential Provider")
+// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
 // @Tags(identifierAttribute="credential_provider_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput")
+// @Testing(importIgnore="api_key")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckAPIKeyCredentialProviders")
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil

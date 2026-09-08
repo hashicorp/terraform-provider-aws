@@ -87,7 +87,7 @@ resource "aws_docdbelastic_cluster" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DocDB Elastic cluster.
+- `arn` (String) ARN of the DocDB Elastic cluster.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocDB Elastic Cluster using the `arn`. For example:
 

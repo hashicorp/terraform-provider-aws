@@ -7,6 +7,7 @@ package datazone
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
@@ -81,40 +82,42 @@ func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasourc
 }
 
 func findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client, domainId, name string, managed bool) (*awstypes.EnvironmentBlueprintSummary, error) {
-	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, nil)
-}
-
-func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client, domainId, name string, managed bool, nextToken *string) (*awstypes.EnvironmentBlueprintSummary, error) {
-	in := &datazone.ListEnvironmentBlueprintsInput{
+	input := datazone.ListEnvironmentBlueprintsInput{
 		DomainIdentifier: aws.String(domainId),
 		Managed:          aws.Bool(managed),
 	}
 
-	if nextToken != nil {
-		in.NextToken = aws.String(*nextToken)
-	}
+	results := make([]awstypes.EnvironmentBlueprintSummary, 0, 1)
+	for page, err := range listEnvironmentBlueprints(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
 
-	out, err := conn.ListEnvironmentBlueprints(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	for i := range out.Items {
-		blueprint := out.Items[i]
-		if name == aws.ToString(blueprint.Name) {
-			return &blueprint, nil
+		for _, item := range page {
+			if name == aws.ToString(item.Name) {
+				results = append(results, item)
+			}
 		}
 	}
 
-	if out.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
+	return tfresource.AssertSingleValueResult(results)
+}
 
-	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, out.NextToken)
+func listEnvironmentBlueprints(ctx context.Context, conn *datazone.Client, input *datazone.ListEnvironmentBlueprintsInput) iter.Seq2[[]awstypes.EnvironmentBlueprintSummary, error] {
+	return func(yield func([]awstypes.EnvironmentBlueprintSummary, error) bool) {
+		pages := datazone.NewListEnvironmentBlueprintsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+
+			if !yield(page.Items, nil) {
+				return
+			}
+		}
+	}
 }
 
 type environmentBlueprintDataSourceModel struct {
