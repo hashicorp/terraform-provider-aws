@@ -3247,21 +3247,6 @@ func TestAccRDSCluster_warningEventCategories(t *testing.T) {
 	})
 }
 
-func testAccClusterConfig_warningEventCategories(rName, categories string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "test"
-  engine              = %[2]q
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
-  skip_final_snapshot = true
-
-  warning_event_categories = %[3]s
-}
-`, rName, tfrds.ClusterEngineAuroraMySQL, categories)
-}
-
 func TestAccRDSCluster_performanceInsights_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -7673,4 +7658,19 @@ resource "aws_rds_cluster_instance" "test" {
 
 
 `, rName, parameter, tfrds.ClusterEngineAuroraMySQL, engineVersion)
+}
+
+func testAccClusterConfig_warningEventCategories(rName, categories string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+
+  warning_event_categories = %[3]s
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, categories)
 }

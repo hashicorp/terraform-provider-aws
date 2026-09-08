@@ -29,7 +29,7 @@ func TestAccRDSEventsDataSource_basic(t *testing.T) {
 				Config: testAccEventsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Event content and count are timing-dependent; only
-					// assert the attribute exists and is well-formed.
+					// assert the attribute exists.
 					resource.TestCheckResourceAttrSet(dataSourceName, "events.#"),
 				),
 			},
