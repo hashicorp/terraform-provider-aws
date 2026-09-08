@@ -625,16 +625,14 @@ func warmThroughputSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"read_units_per_second": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.IntAtLeast(12000),
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
 				},
 				"write_units_per_second": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.IntAtLeast(4000),
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
 				},
 			},
 		},
