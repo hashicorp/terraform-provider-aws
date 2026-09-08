@@ -149,8 +149,8 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_api_gateway_deployment.example
   identity = {
-    rest_api_id = "abcde"
-    id          = "12345"
+    rest_api_id = "aabbccddee"
+    id          = "1122334"
   }
 }
 
