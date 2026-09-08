@@ -18,7 +18,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_odb_exadb_vm_cluster", sweepExaDBVMClusters)
-	awsv2.Register("aws_odb_exascale_db_storage_vault", sweepExascaleDBStorageVaults)
+	awsv2.Register("aws_odb_exascale_db_storage_vault", sweepExascaleDBStorageVaults, "aws_odb_exadb_vm_cluster")
 }
 
 func sweepExaDBVMClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
