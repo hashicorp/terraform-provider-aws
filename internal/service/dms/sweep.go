@@ -64,7 +64,6 @@ func sweepEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-
 	conn := client.DMSClient(ctx)
 	input := &dms.DescribeEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
