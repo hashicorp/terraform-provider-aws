@@ -15,8 +15,3 @@ resource "aws_dms_data_provider" "test" {
   }
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
