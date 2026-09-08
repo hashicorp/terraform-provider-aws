@@ -90,10 +90,6 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 	}
 }
 
-type listRegistryModel struct {
-	framework.WithRegionModel
-}
-
 func listRegistries(ctx context.Context, conn *agentregistrycontrol.Client, input *agentregistrycontrol.ListRegistriesInput, optFns ...func(*agentregistrycontrol.Options)) iter.Seq2[awstypes.RegistrySummary, error] {
 	return tfiter.ConcatValuesWithError(listRegistryPages(ctx, conn, input, optFns...))
 }
