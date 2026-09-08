@@ -49,8 +49,6 @@ func newDataProviderResource(_ context.Context) (resource.ResourceWithConfigure,
 	return &dataProviderResource{}, nil
 }
 
-const resNameDataProvider = "Data Provider"
-
 type dataProviderResource struct {
 	framework.ResourceWithModel[dataProviderResourceModel]
 	framework.WithImportByIdentity
