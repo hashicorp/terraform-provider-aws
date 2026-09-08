@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1181,10 +1182,10 @@ func TestReplicatorApacheKafkaClusterRoundTrip(t *testing.T) { // nosemgrep:ci.k
 func TestReplicatorClientAuthenticationRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	mechanisms := []string{
-		string(awstypes.KafkaClusterSaslScramMechanismSha256),
-		string(awstypes.KafkaClusterSaslScramMechanismSha512),
-	}
+	mechanisms := enum.Slice(
+		awstypes.KafkaClusterSaslScramMechanismSha256,
+		awstypes.KafkaClusterSaslScramMechanismSha512,
+	)
 
 	for i := range propertyTestIterations {
 		tfMap := map[string]any{}
