@@ -173,7 +173,7 @@ func TestAccDMSDataProvider_virtual(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, false),
+				Config: testAccDataProviderConfig_update(rName, names.AttrDescription, rName+".example.com", 5432, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
@@ -181,7 +181,7 @@ func TestAccDMSDataProvider_virtual(t *testing.T) {
 			},
 			{
 				// Promoting a non-virtual data provider to virtual requires replacement.
-				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, true),
+				Config: testAccDataProviderConfig_update(rName, names.AttrDescription, rName+".example.com", 5432, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
@@ -194,7 +194,7 @@ func TestAccDMSDataProvider_virtual(t *testing.T) {
 			},
 			{
 				// Demoting a virtual data provider to non-virtual is an in-place update.
-				Config: testAccDataProviderConfig_update(rName, "description", rName+".example.com", 5432, false),
+				Config: testAccDataProviderConfig_update(rName, names.AttrDescription, rName+".example.com", 5432, false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
