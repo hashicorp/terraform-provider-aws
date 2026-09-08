@@ -555,6 +555,7 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         // IAM is foundational to most other services, so run its tests first
         script {
             name = "IAM"
