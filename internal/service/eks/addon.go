@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/yaml"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,6 +55,8 @@ func resourceAddon() *schema.Resource {
 		ReadWithoutTimeout:   resourceAddonRead,
 		UpdateWithoutTimeout: resourceAddonUpdate,
 		DeleteWithoutTimeout: resourceAddonDelete,
+
+		CustomizeDiff: resourceAddonCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -366,6 +370,48 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+// resourceAddonCustomizeDiff suppresses formatting-only changes to
+// configuration_values. The EKS API re-serializes the stored configuration
+// when returning it: JSON documents come back with different key ordering and
+// whitespace than what was sent, and YAML documents are normalized with
+// comments removed. A raw string comparison between the configuration and the
+// API response therefore never converges, and every plan reports an update
+// that applying cannot resolve. When the old and new values decode to equal
+// documents, keep the value already recorded in state so no update is
+// planned. Real value changes still produce a diff and are applied as usual.
+func resourceAddonCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	oldRaw, newRaw := d.GetChange("configuration_values")
+	old, new := oldRaw.(string), newRaw.(string)
+
+	// An empty old or new value means the configuration is being added or
+	// removed, which is never a formatting difference.
+	if old == "" || new == "" || old == new {
+		return nil
+	}
+
+	if configurationValuesEqual(old, new) {
+		return d.SetNew("configuration_values", old)
+	}
+
+	return nil
+}
+
+// configurationValuesEqual returns whether two aws_eks_addon
+// configuration_values documents are semantically equal. YAML decoding also
+// handles JSON documents, so differences in key ordering, whitespace, and
+// comments do not affect the result.
+func configurationValuesEqual(old, new string) bool {
+	var oldDoc, newDoc any
+	if err := yaml.DecodeFromString(old, &oldDoc); err != nil {
+		return false
+	}
+	if err := yaml.DecodeFromString(new, &newDoc); err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(oldDoc, newDoc)
 }
 
 func resourceAddonFlatten(ctx context.Context, conn *eks.Client, addon *types.Addon, d *schema.ResourceData) error {
