@@ -556,71 +556,10 @@ object SmokeTestsCoreServices : BuildType({
     steps {
         ConfigureGoEnv()
         InstallTerraform()
-        // IAM is foundational to most other services, so run its tests first
         script {
-            name = "IAM"
-            scriptContent = File("./scripts/sanity.sh").readText()
+            name = "Smoke Tests - Core Services"
+            scriptContent = File("./scripts/smoke-tests-core-services.sh").readText()
         }
-        script {
-            name = "Logs"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "EC2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ECS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ELBv2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Events"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "KMS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Lambda"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Meta"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Route53"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "S3"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "SSM"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Secrets Manager"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "STS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }  
-        script {
-            name = "Function"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Report Success"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }    
     }
 
     val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
