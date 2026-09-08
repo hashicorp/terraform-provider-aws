@@ -40,7 +40,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(preCheck="testAccPreCheckDataProvider")
-// @Testing(generator=false)
 // @Testing(importStateIdAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 func newDataProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -703,7 +702,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 	var diags diag.Diagnostics
 
 	switch t := v.(type) {
-	case *awstypes.DataProviderSettingsMemberDocDbSettings:
+	case awstypes.DataProviderSettingsMemberDocDbSettings:
 		var model dataProviderDocDBSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -713,7 +712,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.DocDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
+	case awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
 		var model dataProviderIBMDb2LUWSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -723,7 +722,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.IBMDb2LUWSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
+	case awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
 		var model dataProviderIBMDb2ZOSSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -733,7 +732,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.IBMDb2ZOSSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberMariaDbSettings:
+	case awstypes.DataProviderSettingsMemberMariaDbSettings:
 		var model dataProviderMariaDBSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -743,7 +742,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.MariaDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
+	case awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
 		var model dataProviderMicrosoftSQLServerSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -753,7 +752,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.MicrosoftSQLServerSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberMongoDbSettings:
+	case awstypes.DataProviderSettingsMemberMongoDbSettings:
 		var model dataProviderMongoDBSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -763,7 +762,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.MongoDBSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberMySqlSettings:
+	case awstypes.DataProviderSettingsMemberMySqlSettings:
 		var model dataProviderMySQLSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -773,7 +772,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.MySQLSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberOracleSettings:
+	case awstypes.DataProviderSettingsMemberOracleSettings:
 		var model dataProviderOracleSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -783,7 +782,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.OracleSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberPostgreSqlSettings:
+	case awstypes.DataProviderSettingsMemberPostgreSqlSettings:
 		var model dataProviderPostgreSQLSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -793,7 +792,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.PostgreSQLSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberRedshiftSettings:
+	case awstypes.DataProviderSettingsMemberRedshiftSettings:
 		var model dataProviderRedshiftSettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
@@ -803,7 +802,7 @@ func (m *dataProviderSettingsModel) Flatten(ctx context.Context, v any) diag.Dia
 		m.RedshiftSettings, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
-	case *awstypes.DataProviderSettingsMemberSybaseAseSettings:
+	case awstypes.DataProviderSettingsMemberSybaseAseSettings:
 		var model dataProviderSybaseASESettingsModel
 		smerr.AddEnrich(ctx, &diags, flex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {

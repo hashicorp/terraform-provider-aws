@@ -50,6 +50,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5432"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.database_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTagsAll+".%", "0"),
 				),
@@ -221,8 +222,9 @@ resource "aws_dms_data_provider" "test" {
 
   settings {
     postgresql_settings {
-      server_name = "example.com"
-      port        = 5432
+      server_name   = "example.com"
+      port          = 5432
+      database_name = "example"
     }
   }
 }
@@ -239,8 +241,9 @@ resource "aws_dms_data_provider" "test" {
 
   settings {
     postgresql_settings {
-      server_name = %[3]q
-      port        = %[4]d
+      server_name   = %[3]q
+      port          = %[4]d
+      database_name = "example"
     }
   }
 }
