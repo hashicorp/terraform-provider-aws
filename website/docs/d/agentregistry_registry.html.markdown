@@ -63,6 +63,10 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `authorizer_configuration` Block
 
+* `custom_jwt_authorizer` - Configuration for a custom JWT authorizer. [See below](#custom_jwt_authorizer-block).
+
+### `custom_jwt_authorizer` Block
+
 * `allowed_audience` - Audience values accepted during JWT validation.
 * `allowed_clients` - Client identifiers accepted during JWT validation.
 * `allowed_scopes` - Scopes accepted during JWT validation.
