@@ -3,7 +3,6 @@
 
 resource "aws_dms_data_provider" "test" {
 
-  name   = var.rName
   engine = "postgres"
 
   settings {
