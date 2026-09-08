@@ -138,10 +138,10 @@ func TestAccDMSDataProvider_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("settings").AtSliceIndex(0).AtMapKey("postgresql_settings").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"database_name": knownvalue.StringExact("example"),
-							"port":          knownvalue.Int32Exact(5432),
-							"server_name":   knownvalue.StringExact("example.com"),
-							"ssl_mode":      knownvalue.StringExact("none"),
+							names.AttrDatabaseName: knownvalue.StringExact("example"),
+							names.AttrPort:         knownvalue.Int32Exact(5432),
+							"server_name":          knownvalue.StringExact("example.com"),
+							"ssl_mode":             knownvalue.StringExact("none"),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("virtual"), knownvalue.Bool(false)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

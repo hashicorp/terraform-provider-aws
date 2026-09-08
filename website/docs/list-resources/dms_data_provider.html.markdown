@@ -25,10 +25,3 @@ list "aws_dms_data_provider" "example" {
 This list resource supports the following arguments:
 
 * `region` - (Optional) Region to query. Defaults to provider region.
-
-## Attribute Reference
-
-This list resource exports the following attributes:
-
-* `identity` - ARN identity of the data provider.
-* `resource` - Resource attributes, available when `include_resource` is `true`. See the [`aws_dms_data_provider` resource](../r/dms_data_provider.html).
