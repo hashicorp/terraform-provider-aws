@@ -1437,6 +1437,19 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
+func testAccClusterInstanceConfig_warningEventCategories(rName, categories string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+
+  warning_event_categories = %[2]s
+}
+`, rName, categories))
+}
+
 func testAccClusterInstanceConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1840,17 +1853,4 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_retention_period = %[2]d
 }
 `, rName, performanceInsightsRetentionPeriod))
-}
-
-func testAccClusterInstanceConfig_warningEventCategories(rName, categories string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
-resource "aws_rds_cluster_instance" "test" {
-  identifier         = %[1]q
-  engine             = data.aws_rds_engine_version.default.engine
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
-
-  warning_event_categories = %[2]s
-}
-`, rName, categories))
 }
