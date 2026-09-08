@@ -32,6 +32,7 @@ type registryDataSource struct {
 func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"approval_configuration": framework.DataSourceComputedListOfObjectAttribute[approvalConfigurationModel](ctx),
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -39,6 +40,7 @@ func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
+			"discovery_configuration": framework.DataSourceComputedListOfObjectAttribute[discoveryConfigurationModel](ctx),
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -58,104 +60,6 @@ func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed:   true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"approval_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[approvalConfigurationModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"auto_approval_rules": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-					},
-				},
-			},
-			"discovery_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[discoveryConfigurationModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"authorizer_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.RegistryAuthorizerType](),
-							Computed:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"authorizer_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"allowed_audience": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Computed:    true,
-									},
-									"allowed_clients": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Computed:    true,
-									},
-									"allowed_scopes": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										ElementType: types.StringType,
-										Computed:    true,
-									},
-									"discovery_url": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"custom_claim": schema.SetNestedBlock{
-										CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"inbound_token_claim_name": schema.StringAttribute{
-													Computed: true,
-												},
-												"inbound_token_claim_value_type": schema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
-													Computed:   true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"authorizing_claim_match_value": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerAuthorizingClaimMatchValueModel](ctx),
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"claim_match_operator": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
-																Computed:   true,
-															},
-														},
-														Blocks: map[string]schema.Block{
-															"claim_match_value": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerClaimMatchValueModel](ctx),
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		"match_value_string": schema.StringAttribute{
-																			Computed: true,
-																		},
-																		"match_value_string_list": schema.SetAttribute{
-																			CustomType:  fwtypes.SetOfStringType,
-																			ElementType: types.StringType,
-																			Computed:    true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
@@ -168,31 +72,17 @@ func (d *registryDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	conn := d.Meta().AgentRegistryClient(ctx)
 
-	out, err := findRegistryByID(ctx, conn, data.RegistryID.ValueString())
+	registryID := fwflex.StringValueFromFramework(ctx, data.RegistryID)
+	out, err := findRegistryByID(ctx, conn, registryID)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.RegistryID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, registryID)
 		return
 	}
 
-	data.RegistryID = fwflex.StringToFramework(ctx, out.RegistryId)
-	data.RegistryARN = fwflex.StringToFramework(ctx, out.RegistryArn)
-	data.Name = fwflex.StringToFramework(ctx, out.Name)
-	data.Description = fwflex.StringToFramework(ctx, out.Description)
-	data.Status = fwtypes.StringEnumValue(out.Status)
-	data.CreatedAt = timetypes.NewRFC3339TimePointerValue(out.CreatedAt)
-	data.UpdatedAt = timetypes.NewRFC3339TimePointerValue(out.UpdatedAt)
-
-	// Reuse the resource's flatten helpers for the nested configuration blocks.
-	// They operate on a registryResourceModel, so flatten into a scratch model
-	// and copy the shared fields across.
-	var rm registryResourceModel
-	resp.Diagnostics.Append(flattenApprovalConfiguration(ctx, out.ApprovalConfiguration, &rm)...)
-	resp.Diagnostics.Append(flattenDiscoveryConfiguration(ctx, out.DiscoveryConfiguration, &rm)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ApprovalConfiguration = rm.ApprovalConfiguration
-	data.DiscoveryConfiguration = rm.DiscoveryConfiguration
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
