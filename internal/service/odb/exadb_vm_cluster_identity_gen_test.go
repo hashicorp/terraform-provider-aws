@@ -26,8 +26,6 @@ func TestAccODBExaDBVMCluster_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v odbtypes.ExadbVmCluster
-	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")
-	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 
@@ -49,8 +47,6 @@ func TestAccODBExaDBVMCluster_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &v),
@@ -71,8 +67,6 @@ func TestAccODBExaDBVMCluster_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
@@ -85,8 +79,6 @@ func TestAccODBExaDBVMCluster_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -104,8 +96,6 @@ func TestAccODBExaDBVMCluster_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID":  config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")),
-					"TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

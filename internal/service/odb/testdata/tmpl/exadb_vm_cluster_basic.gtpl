@@ -16,17 +16,28 @@ resource "aws_odb_exascale_db_storage_vault" "test" {
   high_capacity_database_storage_total_size_in_gbs = 900
 }
 
+data "aws_odb_gi_minor_versions" "test" {
+{{- template "region" }}
+  availability_zone_id = "use1-az6"
+  gi_version           = "26.0.0.0"
+  shape_family         = "EXADB_XS"
+}
+
+locals {
+  test_ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" # nosemgrep:ci.ssh-key
+}
+
 resource "aws_odb_exadb_vm_cluster" "test" {
 {{- template "region" }}
   display_name                             = var.rName
   enabled_ecpu_count                       = 16
   exascale_db_storage_vault_id             = aws_odb_exascale_db_storage_vault.test.id
-  grid_image_id                            = var.TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID
+  grid_image_id                            = data.aws_odb_gi_minor_versions.test.gi_minor_versions[0].grid_image_id
   hostname                                 = "ofakevmc"
   node_count                               = 2
   odb_network_id                           = aws_odb_network.test.id
   shape                                    = "ExaDbXS"
-  ssh_public_keys                          = [var.TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY]
+  ssh_public_keys                          = [local.test_ssh_public_key]
   total_ecpu_count                         = 64
   vm_file_system_storage_total_size_in_gbs = 440
 {{- template "tags" . }}

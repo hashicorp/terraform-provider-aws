@@ -17,8 +17,8 @@ Provides details about available Oracle Database@AWS GI minor versions and their
 ```terraform
 data "aws_odb_gi_minor_versions" "example" {
   availability_zone_id = "use1-az6"
-  gi_version            = "19.0.0.0"
-  shape_family          = "EXADB_XS"
+  gi_version           = "19.0.0.0"
+  shape_family         = "EXADB_XS"
 }
 ```
 

@@ -17,8 +17,8 @@ Manages an [Oracle Database@AWS ExaDB VM Cluster](https://docs.aws.amazon.com/od
 ```terraform
 data "aws_odb_gi_minor_versions" "example" {
   availability_zone_id = "use1-az6"
-  gi_version            = "19.0.0.0"
-  shape_family          = "EXADB_XS"
+  gi_version           = "19.0.0.0"
+  shape_family         = "EXADB_XS"
 }
 
 resource "aws_odb_exadb_vm_cluster" "example" {

@@ -34,7 +34,7 @@ const (
 	testAccExaDBVMClusterAlternateAvailabilityZoneID  = "euw1-az3"
 	testAccExaDBVMClusterDisplayNamePrefix            = "ofake"
 	testAccExaDBVMClusterEnabledECPUCount             = 16
-	testAccExaDBVMClusterGIVersion                    = "19.0.0.0"
+	testAccExaDBVMClusterGIVersion                    = "26.0.0.0"
 	testAccExaDBVMClusterNodeCount                    = 2
 	testAccExaDBVMClusterShape                        = "ExaDbXS"
 	testAccExaDBVMClusterShapeFamily                  = "EXADB_XS"

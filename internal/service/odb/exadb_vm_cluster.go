@@ -53,8 +53,6 @@ import (
 // @Testing(preCheck="testAccPreCheckExaDBVMCluster")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator="testAccRandomExaDBVMClusterDisplayName(t)")
-// @Testing(requireEnvVarValue="TF_AWS_ODB_EXADB_VM_CLUSTER_GRID_IMAGE_ID")
-// @Testing(requireEnvVarValue="TF_AWS_ODB_EXADB_VM_CLUSTER_SSH_PUBLIC_KEY")
 func newExaDBVMClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exaDBVMClusterResource{}
 
