@@ -547,6 +547,16 @@ object Sweeper : BuildType({
 object SmokeTestsCoreServices : BuildType({
     name = "Smoke Tests - Core Services"
 
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
+
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
 
