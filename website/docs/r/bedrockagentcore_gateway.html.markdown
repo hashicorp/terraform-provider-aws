@@ -142,6 +142,8 @@ The `authorizer_configuration` block supports the following:
 The `custom_jwt_authorizer` block supports the following:
 
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
+
+* `advertised_scope_mapping` - (Optional) Map associating each scope in `allowed_scopes` with the corresponding scope advertised to clients in OAuth protected resource metadata and `WWW-Authenticate` response headers. Scopes without a mapping entry are advertised unchanged.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.

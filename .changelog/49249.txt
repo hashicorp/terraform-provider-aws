@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_configuration.custom_jwt_authorizer.advertised_scope_mapping` argument
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Add `authorizer_configuration.custom_jwt_authorizer.advertised_scope_mapping` argument
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `authorizer_configuration.custom_jwt_authorizer.advertised_scope_mapping` argument
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_registry: Add `authorizer_configuration.custom_jwt_authorizer.advertised_scope_mapping` argument
+```
