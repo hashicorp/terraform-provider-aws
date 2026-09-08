@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_batch_job_definition: Replace private AWS SDK serializers for `container_properties`, `ecs_properties`, and `node_properties` to preserve compatibility with upcoming SDK serialization changes
-```
