@@ -735,7 +735,7 @@ object SmokeTestsResourceIdentity : BuildType({
     name = "Smoke Tests - Resource Identity"
 
     params {
-        text("env.GOFLAGS", "-json")
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
     }
 
     vcs {
