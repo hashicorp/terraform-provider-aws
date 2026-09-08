@@ -253,7 +253,7 @@ The `config` block supports exactly one of the following:
 
 ### `outbound_auth` Block
 
-Exactly one of the following must be specified:
+The `outbound_auth` block supports exactly one of the following:
 
 * `aws_iam` - (Optional) Set to `true` to use AWS IAM authentication.
 * `none` - (Optional) Set to `true` to disable authentication.
@@ -277,6 +277,8 @@ Exactly one of the following must be specified:
 * `input_schema` - (Required, Sensitive) JSON string defining the input schema for the function.
 
 ### `skill` Block
+
+The `skill` block supports exactly one of the following:
 
 * `aws_skills` - (Optional) AWS Skills baked into the harness's underlying runtime. See [`aws_skills` Block](#aws_skills-block) below.
 * `git` - (Optional) Git repository source for the skill. See [`git` Block](#git-block) below.
