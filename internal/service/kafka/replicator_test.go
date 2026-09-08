@@ -1512,7 +1512,7 @@ func TestAccKafkaReplicator_amazonMskClusterOnly_noDiff(t *testing.T) { // nosem
 func testAccReplicatorConfig_selfManagedSASLSCRAM(rName, clusterID, bootstrap, secretARN, targetARN, subnetIDs, securityGroupIDs string) string { // nosemgrep:ci.kafka-in-func-name
 	hclList := func(csv string) string {
 		var quoted []string
-		for _, p := range strings.Split(csv, ",") {
+		for p := range strings.SplitSeq(csv, ",") {
 			if p = strings.TrimSpace(p); p != "" {
 				quoted = append(quoted, fmt.Sprintf("%q", p))
 			}
