@@ -5,7 +5,7 @@ resource "aws_dms_data_provider" "test" {
   count  = var.resource_count
   region = var.region
 
-  name = "${var.rName}-${count.index}"
+  name   = "${var.rName}-${count.index}"
   engine = "postgres"
 
   settings {
