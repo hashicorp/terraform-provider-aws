@@ -303,12 +303,154 @@ func TestAccEKSAddon_serviceAccountRoleARN(t *testing.T) {
 	})
 }
 
+func TestAddonConfigurationValuesEqual(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		old   string
+		new   string
+		equal bool
+	}{
+		"identical JSON": {
+			old:   `{"enableNetworkPolicy":"true","env":{"MINIMUM_IP_TARGET":"30","WARM_IP_TARGET":"20"}}`,
+			new:   `{"enableNetworkPolicy":"true","env":{"MINIMUM_IP_TARGET":"30","WARM_IP_TARGET":"20"}}`,
+			equal: true,
+		},
+		"JSON different key ordering": {
+			old:   `{"env":{"MINIMUM_IP_TARGET":"30","WARM_IP_TARGET":"20"},"enableNetworkPolicy":"true"}`,
+			new:   `{"enableNetworkPolicy":"true","env":{"MINIMUM_IP_TARGET":"30","WARM_IP_TARGET":"20"}}`,
+			equal: true,
+		},
+		"JSON whitespace": {
+			old:   `{ "env" : { "WARM_IP_TARGET" : "20" } }`,
+			new:   `{"env":{"WARM_IP_TARGET":"20"}}`,
+			equal: true,
+		},
+		"JSON different value": {
+			old:   `{"env":{"WARM_IP_TARGET":"20"}}`,
+			new:   `{"env":{"WARM_IP_TARGET":"30"}}`,
+			equal: false,
+		},
+		"JSON different keys": {
+			old:   `{"env":{"WARM_IP_TARGET":"20"}}`,
+			new:   `{"init":{"env":{"DISABLE_TCP_EARLY_DEMUX":"true"}}}`,
+			equal: false,
+		},
+		"JSON different types": {
+			old:   `{"env":{"WARM_IP_TARGET":"20"}}`,
+			new:   `{"env":{"WARM_IP_TARGET":20}}`,
+			equal: false,
+		},
+		"JSON different large integers": {
+			old:   `{"value":9007199254740992}`,
+			new:   `{"value":9007199254740993}`,
+			equal: false,
+		},
+		"JSON different integers beyond uint64": {
+			old:   `{"value":18446744073709551616}`,
+			new:   `{"value":18446744073709551617}`,
+			equal: false,
+		},
+		"JSON large integer and quoted string": {
+			old:   `{"value":18446744073709551616}`,
+			new:   `{"value":"18446744073709551616"}`,
+			equal: false,
+		},
+		"YAML different integers beyond uint64": {
+			old:   "value: 18446744073709551616",
+			new:   "value: 18446744073709551617",
+			equal: false,
+		},
+		"same large integer with formatting": {
+			old:   `{"value":18446744073709551616}`,
+			new:   "{\"value\": 18446744073709551616}\n",
+			equal: true,
+		},
+		"large integers with different key ordering": {
+			old:   `{"first":18446744073709551616,"second":18446744073709551617}`,
+			new:   `{"second":18446744073709551617,"first":18446744073709551616}`,
+			equal: true,
+		},
+		"large integers swapped between fields": {
+			old:   `{"first":18446744073709551616,"second":18446744073709551617}`,
+			new:   `{"first":18446744073709551617,"second":18446744073709551616}`,
+			equal: false,
+		},
+		"nested sequence integer beyond uint64": {
+			old:   `{"values":[18446744073709551616]}`,
+			new:   `{"values":[18446744073709551617]}`,
+			equal: false,
+		},
+		"different precise decimal tokens": {
+			old:   `{"value":1.00000000000000001}`,
+			new:   `{"value":1.00000000000000002}`,
+			equal: false,
+		},
+		"JSON different number forms": {
+			old:   `{"value":1}`,
+			new:   `{"value":1.0}`,
+			equal: false,
+		},
+		"identical YAML": {
+			old:   "corefile: |\n  .:53 {\n    cache 30\n  }\n",
+			new:   "corefile: |\n  .:53 {\n    cache 30\n  }\n",
+			equal: true,
+		},
+		"YAML different key ordering": {
+			old:   "nodeSelector:\n  kubernetes.io/os: linux\ncorefile: |\n  .:53 {\n    cache 30\n  }\n",
+			new:   "corefile: |\n  .:53 {\n    cache 30\n  }\nnodeSelector:\n  kubernetes.io/os: linux\n",
+			equal: true,
+		},
+		"YAML comments removed": {
+			old:   "corefile: |\n  .:53 {\n    cache 30\n  }\n# tolerations:\n#   - key: example\n",
+			new:   "corefile: |\n  .:53 {\n    cache 30\n  }\n",
+			equal: true,
+		},
+		"YAML different corefile": {
+			old:   "corefile: |\n  .:53 {\n    cache 30\n  }\n",
+			new:   "corefile: |\n  .:53 {\n    cache 300\n  }\n",
+			equal: false,
+		},
+		"JSON and YAML representing the same document": {
+			old:   `{"nodeSelector":{"kubernetes.io/os":"linux"}}`,
+			new:   "nodeSelector:\n  kubernetes.io/os: linux\n",
+			equal: true,
+		},
+		"JSON and YAML representing different documents": {
+			old:   `{"nodeSelector":{"kubernetes.io/os":"linux"}}`,
+			new:   "nodeSelector:\n  kubernetes.io/os: windows\n",
+			equal: false,
+		},
+		"non-document strings": {
+			old:   "some value",
+			new:   "another value",
+			equal: false,
+		},
+		"extra YAML document": {
+			old:   "value: 1",
+			new:   "value: 1\n---\nvalue: 1",
+			equal: false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfeks.ConfigurationValuesEqual(testcase.old, testcase.new), testcase.equal; got != want {
+				t.Errorf("ConfigurationValuesEqual(%q, %q) = %v, want %v", testcase.old, testcase.new, got, want)
+			}
+		})
+	}
+}
+
 func TestAccEKSAddon_configurationValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	var addon types.Addon
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
+	formattedConfigurationValues := `{"resources":{"requests":{"memory":"100Mi","cpu":"100m"},"limits":{"memory":"100Mi","cpu":"100m"}},"env":{"ENABLE_POD_ENI":"true","WARM_ENI_TARGET":"2"}}`
 	updateConfigurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"}}}"
 	emptyConfigurationValues := "{}"
 	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
@@ -326,6 +468,17 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 					testAccCheckAddonExists(ctx, t, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
 				),
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, formattedConfigurationValues),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
