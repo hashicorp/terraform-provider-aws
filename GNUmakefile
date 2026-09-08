@@ -572,9 +572,8 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
 
-# The 2 smoke test targets run exactly the same set of acceptance tests.
-# The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
-# The tests must pass on the earliest supported Terraform version (0.12.31).
+# The smoke tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
+# The smoke tests must pass on the earliest supported Terraform version (0.12.31).
 
 SMOKE_TESTS_IAM = \
 	TestAccIAMRole_basic \
@@ -682,7 +681,7 @@ SMOKE_TESTS_STAGE_3 = \
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
+	@echo "make: Like 'smoke-core-services' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
@@ -708,49 +707,6 @@ sane: prereq-go ## Run sane check
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
 		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$'
-
-sanity: prereq-go ## Run sanity check (failures allowed)
-	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sane' but less output and runs all tests despite most errors"
-	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
-	@iam=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$' || true` ; \
-	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
-	passes=$$(( 18-$$fails1 )) ; \
-	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
-	logs=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/logs/... \
-		./internal/service/ec2/... \
-		./internal/service/ecs/... \
-		./internal/service/elbv2/... \
-		./internal/service/events/... \
-		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$' || true` ; \
-	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2 )) ; \
-	passes=$$(( 35-$$tot_fails )) ; \
-	echo "35 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	lambda=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/lambda/... \
-		./internal/service/meta/... \
-		./internal/service/route53/... \
-		./internal/service/s3/... \
-		./internal/service/secretsmanager/... \
-		./internal/service/sts/... \
-		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$' || true` ; \
-	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 54-$$tot_fails )) ; \
-	echo "54 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	if [ $$tot_fails -gt 0 ] ; then \
-		echo "Sanity tests failed"; \
-		exit 1; \
-	fi
 
 schema-validate: ## Validate schemas
 	@echo "make: Validating schemas"
@@ -943,6 +899,10 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	go build
 
 smoke: sane ## Smoke tests (alias of sane)
+
+smoke-core-services: prereq-go ## Run core-service smoke tests
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-core-services.sh'"
 
 smoke-identity: prereq-go ## Run Resource Identity smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
@@ -1397,7 +1357,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-core-heading \
 	quick-fix-heading \
 	sane \
-	sanity \
 	schema-validate \
 	semgrep \
 	semgrep-all \
@@ -1416,6 +1375,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	skaff \
 	skaff-check-compile \
 	smoke \
+	smoke-core-services \
 	smoke-identity \
 	sweep \
 	sweeper \
