@@ -44,7 +44,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`data-provider:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrCreationTime, regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`^dp-\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "postgres"),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
