@@ -9,6 +9,7 @@ description: |-
 # List Resource: aws_agentregistry_registry
 
 Lists Agent Registry registry resources.
+
 ## Example Usage
 
 ```terraform
