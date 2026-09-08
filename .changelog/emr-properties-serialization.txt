@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_emr_cluster: Replace private AWS SDK serializers for auto scaling policies and configurations to preserve compatibility with upcoming SDK serialization changes
+```
+
+```release-note:bug
+resource/aws_emr_instance_group: Replace private AWS SDK serializers for auto scaling policies and configurations to preserve compatibility with upcoming SDK serialization changes
+```
