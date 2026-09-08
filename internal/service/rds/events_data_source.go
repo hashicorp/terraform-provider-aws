@@ -107,7 +107,6 @@ func (d *eventsDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-// findEvents returns all events matching input (paginated).
 func findEvents(ctx context.Context, conn *rds.Client, input *rds.DescribeEventsInput) ([]awstypes.Event, error) {
 	var output []awstypes.Event
 

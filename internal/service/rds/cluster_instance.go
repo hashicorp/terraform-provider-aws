@@ -535,8 +535,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		_, err = waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
+		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 
