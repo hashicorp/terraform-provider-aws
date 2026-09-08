@@ -39,7 +39,6 @@ import (
 // @FrameworkResource("aws_dms_data_provider", name="Data Provider")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.DataProvider")
 // @Testing(preCheck="testAccPreCheckDataProvider")
 // @Testing(generator=false)
 // @Testing(importStateIdAttribute="arn")
