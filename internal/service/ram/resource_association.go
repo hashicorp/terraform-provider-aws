@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +30,12 @@ import (
 )
 
 // @SDKResource("aws_ram_resource_association", name="Resource Association")
+// @IdentityAttribute("resource_share_arn")
+// @IdentityAttribute("resource_arn")
+// @IdAttrFormat("{resource_share_arn}:{resource_arn}")
+// @ImportIDHandler("resourceAssociationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShareAssociation")
+// @Testing(preIdentityVersion="v6.63.0")
 func resourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceAssociationCreate,
@@ -59,27 +65,19 @@ func resourceResourceAssociation() *schema.Resource {
 	}
 }
 
-const (
-	resourceAssociationResourceIDPartCount = 2
-)
-
 func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get(names.AttrResourceARN).(string)
-	id, err := flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	id := createResourceAssociationResourceID(resourceShareARN, resourceARN)
 
-	_, err = findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
+	_, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 	switch {
 	case err == nil:
 		return sdkdiag.AppendFromErr(diags, fmt.Errorf("RAM Resource Association (%s) already exists", id))
 	case retry.NotFound(err):
-		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association: %s", err)
 	}
@@ -97,11 +95,10 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), resourceAssociationResourceIDPartCount, false)
+	resourceShareARN, resourceARN, err := resourceAssociationParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	resourceShareARN, resourceARN := parts[0], parts[1]
 
 	resourceAssociation, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
@@ -125,11 +122,10 @@ func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), resourceAssociationResourceIDPartCount, false)
+	resourceShareARN, resourceARN, err := resourceAssociationParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	resourceShareARN, resourceARN := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting RAM Resource Association: %s", d.Id())
 	if err := deleteResourceShareResourceAssociation(ctx, conn, resourceShareARN, resourceARN); err != nil {
@@ -195,9 +191,7 @@ func findResourceAssociationByTwoPartKey(ctx context.Context, conn *ram.Client, 
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &retry.NotFoundError{
-			Message: string(status),
-		}
+		return nil, &retry.NotFoundError{Message: string(status)}
 	}
 
 	return output, err
@@ -221,9 +215,7 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+			return nil, &retry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -253,9 +245,8 @@ func statusResourceAssociation(conn *ram.Client, resourceShareARN, resourceARN s
 }
 
 func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) (*awstypes.ResourceShareAssociation, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	const timeout = 5 * time.Minute
+
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:  enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
@@ -275,11 +266,13 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 }
 
 func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) (*awstypes.ResourceShareAssociation, error) { //nolint:unparam
-	const (
-		timeout = 5 * time.Minute
-	)
+	const timeout = 5 * time.Minute
+
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
+		Pending: enum.Slice(
+			awstypes.ResourceShareAssociationStatusAssociated,
+			awstypes.ResourceShareAssociationStatusDisassociating,
+		),
 		Target:  []string{},
 		Refresh: statusResourceAssociation(conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
@@ -294,4 +287,42 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	}
 
 	return nil, err
+}
+
+func createResourceAssociationResourceID(resourceShareARN, resourceARN string) string {
+	return fmt.Sprintf("%s:%s", resourceShareARN, resourceARN)
+}
+
+// Split at the resource ARN prefix because both parts are ARNs that contain ":".
+func resourceAssociationParseID(id string) (resourceShareARN, resourceARN string, err error) {
+	i := strings.Index(id, ":arn:")
+	if i < 1 {
+		return "", "", fmt.Errorf("RAM Resource Association id must be of the form <resource_share_arn>:<resource_arn>")
+	}
+
+	resourceShareARN = id[:i]
+	resourceARN = id[i+1:]
+	return
+}
+
+type resourceAssociationImportID struct{}
+
+func (resourceAssociationImportID) Create(d *schema.ResourceData) string {
+	return createResourceAssociationResourceID(
+		d.Get("resource_share_arn").(string),
+		d.Get(names.AttrResourceARN).(string),
+	)
+}
+
+func (resourceAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	resourceShareARN, resourceARN, err := resourceAssociationParseID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"resource_share_arn":  resourceShareARN,
+		names.AttrResourceARN: resourceARN,
+	}
+	return id, result, nil
 }
