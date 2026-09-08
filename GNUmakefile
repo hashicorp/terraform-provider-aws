@@ -945,7 +945,8 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 smoke: sane ## Smoke tests (alias of sane)
 
 smoke-identity: prereq-go ## Run Resource Identity smoke tests
-	@GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=5 sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
 
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
