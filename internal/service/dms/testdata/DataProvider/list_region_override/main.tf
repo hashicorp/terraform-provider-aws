@@ -12,7 +12,7 @@ resource "aws_dms_data_provider" "test" {
     postgresql_settings {
       database_name = "example"
       port          = 5432
-      server_name   = "example${count.index}.com"
+      server_name   = "${var.rName}-${count.index}.example.com"
       ssl_mode      = "none"
     }
   }

@@ -24,6 +24,7 @@ import (
 
 func TestAccDMSDataProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_data_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -37,7 +38,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProviderConfig_basic(),
+				Config: testAccDataProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`data-provider:.+$`)),
@@ -48,7 +49,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", rName+".example.com"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5432"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.database_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTags+".%", "0"),
@@ -68,6 +69,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 
 func TestAccDMSDataProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_data_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -81,7 +83,7 @@ func TestAccDMSDataProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProviderConfig_basic(),
+				Config: testAccDataProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdms.ResourceDataProvider, resourceName),
@@ -116,18 +118,18 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProviderConfig_update(rName, "first description", "example.com", 5432, false),
+				Config: testAccDataProviderConfig_update(rName, "first description", rName+".example.com", 5432, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "first description"),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", rName+".example.com"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5432"),
 				),
 			},
 			{
-				Config: testAccDataProviderConfig_update(rName, "second description", "updated.example.com", 5433, true),
+				Config: testAccDataProviderConfig_update(rName, "second description", "updated."+rName+".example.com", 5433, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -138,7 +140,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "second description"),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "updated.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "updated."+rName+".example.com"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5433"),
 				),
 			},
@@ -215,20 +217,20 @@ func testAccPreCheckDataProvider(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDataProviderConfig_basic() string {
-	return `
+func testAccDataProviderConfig_basic(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_dms_data_provider" "test" {
   engine = "postgres"
 
   settings {
     postgresql_settings {
-      server_name   = "example.com"
+      server_name   = "%[1]s.example.com"
       port          = 5432
       database_name = "example"
     }
   }
 }
-`
+`, rName)
 }
 
 func testAccDataProviderConfig_update(rName, description, serverName string, port int, virtual bool) string {
