@@ -56,7 +56,7 @@ project {
         buildType(Sweeper)
     }
 
-    buildType(Sanity)
+    buildType(SmokeTestsCoreServices)
     buildType(Performance)
     buildType(SmokeTestsResourceIdentity)
 
@@ -544,8 +544,8 @@ object Sweeper : BuildType({
     }
 })
 
-object Sanity : BuildType({
-    name = "Sanity"
+object SmokeTestsCoreServices : BuildType({
+    name = "Smoke Tests - Core Services"
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
