@@ -133,7 +133,7 @@ func TestAccDMSDataProvider_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_dms_data_provider.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("example description")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("postgres")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
