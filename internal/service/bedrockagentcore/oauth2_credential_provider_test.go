@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -45,7 +46,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -80,6 +84,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -111,7 +119,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceOAuth2CredentialProvider, resourceName),
@@ -147,7 +158,14 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("auth0-client-id"),
+					"client_secret":              config.StringVariable("auth0-client-secret"),
+					"client_credentials_version": config.IntegerVariable(1),
+					"discovery_url":              config.StringVariable("https://dev-example.auth0.com/.well-known/openid-configuration"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -156,8 +174,26 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Int64Exact(1),
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"discovery_url": knownvalue.StringExact("https://dev-example.auth0.com/.well-known/openid-configuration"),
+							})}),
+						})}),
+					})})),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("auth0-client-id"),
+					"client_secret":              config.StringVariable("auth0-client-secret"),
+					"client_credentials_version": config.IntegerVariable(1),
+					"discovery_url":              config.StringVariable("https://dev-example.auth0.com/.well-known/openid-configuration"),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -168,7 +204,14 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 				},
 			},
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "updated-client-id", "updated-client-secret", 2, "https://company.okta.com/.well-known/openid-configuration"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("updated-client-id"),
+					"client_secret":              config.StringVariable("updated-client-secret"),
+					"client_credentials_version": config.IntegerVariable(2),
+					"discovery_url":              config.StringVariable("https://company.okta.com/.well-known/openid-configuration"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -176,6 +219,16 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Int64Exact(2),
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"discovery_url": knownvalue.StringExact("https://company.okta.com/.well-known/openid-configuration"),
+							})}),
+						})}),
+					})})),
 				},
 			},
 		},
@@ -322,43 +375,6 @@ func testAccPreCheckOAuth2CredentialProviders(ctx context.Context, t *testing.T)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccOAuth2CredentialProviderConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "GithubOauth2"
-  oauth2_provider_config {
-    github_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, clientId, clientSecret string, version int, discoveryURL string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = %[2]q
-      client_secret_wo              = %[3]q
-      client_credentials_wo_version = %[4]d
-
-      oauth_discovery {
-        discovery_url = %[5]q
-      }
-    }
-  }
-}
-`, rName, clientId, clientSecret, version, discoveryURL)
 }
 
 func testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, clientId, clientSecret string, version int, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2 string) string {
