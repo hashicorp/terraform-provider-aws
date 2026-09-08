@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,6 @@ import (
 
 func TestAccDMSDataProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.DataProvider
 	resourceName := "aws_dms_data_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -41,7 +39,7 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 			{
 				Config: testAccDataProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`data-provider:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrCreationTime, regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`^dp-\d+$`)),
@@ -69,7 +67,6 @@ func TestAccDMSDataProvider_basic(t *testing.T) {
 
 func TestAccDMSDataProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.DataProvider
 	resourceName := "aws_dms_data_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -85,7 +82,7 @@ func TestAccDMSDataProvider_disappears(t *testing.T) {
 			{
 				Config: testAccDataProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdms.ResourceDataProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -104,7 +101,6 @@ func TestAccDMSDataProvider_disappears(t *testing.T) {
 
 func TestAccDMSDataProvider_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.DataProvider
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_data_provider.test"
 
@@ -121,7 +117,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 			{
 				Config: testAccDataProviderConfig_update(rName, "first description", "example.com", 5432, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "first description"),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtFalse),
@@ -137,7 +133,7 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProviderExists(ctx, t, resourceName, &v),
+					testAccCheckDataProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "second description"),
 					resource.TestCheckResourceAttr(resourceName, "virtual", acctest.CtTrue),
@@ -181,7 +177,7 @@ func testAccCheckDataProviderDestroy(ctx context.Context, t *testing.T) resource
 	}
 }
 
-func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, name string, v *awstypes.DataProvider) resource.TestCheckFunc {
+func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -195,12 +191,10 @@ func testAccCheckDataProviderExists(ctx context.Context, t *testing.T, name stri
 
 		ctx := conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
-		output, err := tfdms.FindDataProviderByARN(ctx, conn, arn)
+		_, err := tfdms.FindDataProviderByARN(ctx, conn, arn)
 		if err != nil {
 			return create.Error(names.DMS, create.ErrActionCheckingExistence, "Data Provider", arn, err)
 		}
-
-		*v = *output
 
 		return nil
 	}
