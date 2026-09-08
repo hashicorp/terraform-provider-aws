@@ -252,7 +252,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, "keycloak-client-id", "keycloak-client-secret", 1, "https://auth.company.com/realms/production", "https://auth.company.com/realms/production/protocol/openid-connect/auth", "https://auth.company.com/realms/production/protocol/openid-connect/token", "code", "id_token"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.authorization_server_metadata/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -261,49 +264,29 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_full(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"authorization_server_metadata": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"authorization_endpoint": knownvalue.StringExact("https://auth.company.com/realms/production/protocol/openid-connect/auth"),
+									"issuer":                 knownvalue.StringExact("https://auth.company.com/realms/production"),
+									"response_types": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("code"),
+										knownvalue.StringExact("id_token"),
+									}),
+									"token_endpoint": knownvalue.StringExact("https://auth.company.com/realms/production/protocol/openid-connect/token"),
+								})}),
+							})}),
+						})}),
+					})})),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.authorization_server_metadata/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -375,56 +358,4 @@ func testAccPreCheckOAuth2CredentialProviders(ctx context.Context, t *testing.T)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, clientId, clientSecret string, version int, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2 string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = %[2]q
-      client_secret_wo              = %[3]q
-      client_credentials_wo_version = %[4]d
-
-      oauth_discovery {
-        authorization_server_metadata {
-          issuer                 = %[5]q
-          authorization_endpoint = %[6]q
-          token_endpoint         = %[7]q
-          response_types         = [%[8]q, %[9]q]
-        }
-      }
-    }
-  }
-}
-`, rName, clientId, clientSecret, version, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2)
-}
-
-func testAccOAuth2CredentialProviderConfig_full(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = "full-test-client-id"
-      client_secret_wo              = "full-test-client-secret"
-      client_credentials_wo_version = 1
-
-      oauth_discovery {
-        authorization_server_metadata {
-          issuer                 = "https://auth.example.com/realms/production"
-          authorization_endpoint = "https://auth.example.com/realms/production/protocol/openid-connect/auth"
-          token_endpoint         = "https://auth.example.com/realms/production/protocol/openid-connect/token"
-          response_types         = ["code", "id_token"]
-        }
-      }
-    }
-  }
-}
-`, rName)
 }
