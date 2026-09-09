@@ -14,18 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaFunction_List_basic(t *testing.T) {
+func TestAccLambdaResourcePolicy_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_lambda_function.test[0]"
-	resourceName2 := "aws_lambda_function.test[1]"
+	resourceName1 := "aws_lambda_resource_policy.test[0]"
+	resourceName2 := "aws_lambda_resource_policy.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -35,50 +36,50 @@ func TestAccLambdaFunction_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-1")),
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrResourceARN), checkFunctionARN(rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrResourceARN), checkFunctionARN(rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_lambda_function.test", map[string]knownvalue.Check{
-						"function_name":     knownvalue.StringExact(rName + "-0"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-					querycheck.ExpectIdentity("aws_lambda_function.test", map[string]knownvalue.Check{
-						"function_name":     knownvalue.StringExact(rName + "-1"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_lambda_resource_policy.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_lambda_resource_policy.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
 	})
 }
 
-func TestAccLambdaFunction_List_includeResource(t *testing.T) {
+func TestAccLambdaResourcePolicy_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_lambda_function.test[0]"
+	resourceName1 := "aws_lambda_resource_policy.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	identity1 := tfstatecheck.Identity()
 
@@ -90,35 +91,38 @@ func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrResourceARN), checkFunctionARN(rName+"-0")),
 				},
 			},
 
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_lambda_function.test", identity1.Checks()),
-					querycheck.ExpectResourceKnownValues("aws_lambda_function.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkFunctionARN(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectIdentityFunc("aws_lambda_resource_policy.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_lambda_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrResourceARN), checkFunctionARN(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("revision_id"), knownvalue.NotNull()),
 					}),
 				},
 			},
@@ -126,11 +130,13 @@ func TestAccLambdaFunction_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_List_regionOverride(t *testing.T) {
+func TestAccLambdaResourcePolicy_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_lambda_function.test[0]"
-	resourceName2 := "aws_lambda_function.test[1]"
+	resourceName1 := "aws_lambda_resource_policy.test[0]"
+	resourceName2 := "aws_lambda_resource_policy.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -141,43 +147,39 @@ func TestAccLambdaFunction_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkFunctionARNAlternateRegion(rName+"-0")),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkFunctionARNAlternateRegion(rName+"-1")),
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrResourceARN), checkFunctionARNAlternateRegion(rName+"-0")),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrResourceARN), checkFunctionARNAlternateRegion(rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/Function/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_lambda_function.test", map[string]knownvalue.Check{
-						"function_name":     knownvalue.StringExact(rName + "-0"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-					}),
-					querycheck.ExpectIdentity("aws_lambda_function.test", map[string]knownvalue.Check{
-						"function_name":     knownvalue.StringExact(rName + "-1"),
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_lambda_resource_policy.test", identity1.Checks()),
+
+					tfquerycheck.ExpectIdentityFunc("aws_lambda_resource_policy.test", identity2.Checks()),
 				},
 			},
 		},

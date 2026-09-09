@@ -123,6 +123,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("qualifier", true),
 			}),
 		},
+		{
+			Factory:  newResourcePolicyResourceAsListResource,
+			TypeName: "aws_lambda_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
 	})
 }
 

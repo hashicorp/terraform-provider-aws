@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -15,10 +16,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkFunctionARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`function:`+name+`(:(\$LATEST(\.PUBLISHED)?|[a-zA-Z0-9-_])+)?`))
+}
+
+func checkFunctionARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("lambda", regexache.MustCompile(`function:`+name+`(:(\$LATEST(\.PUBLISHED)?|[a-zA-Z0-9-_])+)?`))
+}
 
 func TestAccLambdaResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -43,7 +53,7 @@ func TestAccLambdaResourcePolicy_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), checkFunctionARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_id"), knownvalue.NotNull()),
 				},
 			},
