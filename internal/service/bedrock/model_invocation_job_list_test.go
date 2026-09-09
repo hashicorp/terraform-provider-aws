@@ -134,8 +134,45 @@ func TestAccBedrockModelInvocationJob_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("end_time"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("error_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("input_data_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_input_data_config": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"s3_bucket_owner": knownvalue.NotNull(),
+										"s3_input_format": knownvalue.StringExact(""),
+										"s3_uri":          knownvalue.StringExact("s3://" + rName + "/input/"),
+									}),
+								}),
+							}),
+						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_expiration_time"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_name"), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("model_id"), knownvalue.StringExact("us.amazon.nova-2-lite-v1:0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("model_invocation_type"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_output_data_config": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"s3_bucket_owner":      knownvalue.NotNull(),
+										"s3_encryption_key_id": knownvalue.Null(),
+										"s3_uri":               knownvalue.StringExact("s3://" + rName + "/output/0/"),
+									}),
+								}),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("processed_record_count"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRoleARN), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:iam::[^:]+:role/.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrSkipDestroy), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("Submitted")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("submit_time"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("success_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("timeout_duration_in_hours"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("total_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListSizeExact(0)),
 					}),
 				},
 			},

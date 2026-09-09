@@ -120,7 +120,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrock_model_invocation_job.example
   identity = {
-    "job_arn" = "arn:aws:bedrock:us-west-2:123456789012:model-invocation-job/abcdefgh1234"
+    job_arn = "arn:aws:bedrock:us-west-2:123456789012:model-invocation-job/abcdefgh1234"
   }
 }
 

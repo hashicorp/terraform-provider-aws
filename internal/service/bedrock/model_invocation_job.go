@@ -11,12 +11,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -161,6 +163,9 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
 					int32planmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Int32{
+					int32validator.Between(24, 168),
 				},
 			},
 			"total_record_count": schema.Int64Attribute{
@@ -388,6 +393,7 @@ func (r *modelInvocationJobResource) Delete(ctx context.Context, req resource.De
 	case awstypes.ModelInvocationJobStatusCompleted,
 		awstypes.ModelInvocationJobStatusFailed,
 		awstypes.ModelInvocationJobStatusStopped,
+		awstypes.ModelInvocationJobStatusStopping,
 		awstypes.ModelInvocationJobStatusPartiallyCompleted,
 		awstypes.ModelInvocationJobStatusExpired:
 		return
@@ -456,17 +462,17 @@ func findModelInvocationJobByARN(ctx context.Context, conn *bedrock.Client, arn 
 	output, err := conn.GetModelInvocationJob(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
