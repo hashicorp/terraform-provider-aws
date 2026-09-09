@@ -61,37 +61,37 @@ resource "aws_mwaaserverless_workflow" "example" {
 
 The following arguments are required:
 
-* `definition_s3_location` - (Required) Amazon S3 location of the workflow definition YAML file. [See below](#definition_s3_location).
+* `definition_s3_location` - (Required) Amazon S3 location of the workflow definition YAML file. See [`definition_s3_location` Block](#definition_s3_location-block) below.
 * `name` - (Required) Name of the workflow. Must be unique within the account. Changing this forces a new resource to be created.
 * `role_arn` - (Required) ARN of the IAM role that MWAA Serverless assumes when executing the workflow.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the workflow.
-* `encryption_configuration` - (Optional) Configuration for encrypting workflow data. Changing this forces a new resource to be created. [See below](#encryption_configuration).
+* `encryption_configuration` - (Optional) Configuration for encrypting workflow data. Changing this forces a new resource to be created. See [`encryption_configuration` Block](#encryption_configuration-block) below.
 * `engine_version` - (Optional) Version of the MWAA Serverless engine to use for the workflow. Currently only `1` is supported.
-* `logging_configuration` - (Optional) Configuration for workflow logging. [See below](#logging_configuration).
-* `network_configuration` - (Optional) Network configuration for the workflow execution environment. [See below](#network_configuration).
+* `logging_configuration` - (Optional) Configuration for workflow logging. See [`logging_configuration` Block](#logging_configuration-block) below.
+* `network_configuration` - (Optional) Network configuration for the workflow execution environment. See [`network_configuration` Block](#network_configuration-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `trigger_mode` - (Optional) Trigger mode for the workflow execution.
 
-### definition_s3_location
+### `definition_s3_location` Block
 
 * `bucket` - (Required) Name of the S3 bucket that contains the workflow definition file.
 * `object_key` - (Required) Key of the S3 object that contains the workflow definition file.
 * `version_id` - (Optional) Version ID of the S3 object.
 
-### encryption_configuration
+### `encryption_configuration` Block
 
-* `type` - (Optional) Encryption type. Valid values are `AWS_MANAGED_KEY` and `CUSTOMER_MANAGED_KEY`.
 * `kms_key_id` - (Optional) ARN of the KMS key used for encryption. Required when `type` is `CUSTOMER_MANAGED_KEY`.
+* `type` - (Optional) Encryption type. Valid values are `AWS_MANAGED_KEY` and `CUSTOMER_MANAGED_KEY`.
 
-### logging_configuration
+### `logging_configuration` Block
 
 * `log_group_name` - (Required) Name of the CloudWatch log group where workflow execution logs are stored.
 
-### network_configuration
+### `network_configuration` Block
 
 * `security_group_ids` - (Optional) Set of security group IDs for the workflow execution environment.
 * `subnet_ids` - (Optional) Set of subnet IDs for the workflow execution environment.
@@ -102,13 +102,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the workflow.
 * `id` - ARN of the workflow.
-* `schedule_configuration` - Schedule configuration derived from the workflow definition. [See below](#schedule_configuration).
+* `schedule_configuration` - Schedule configuration derived from the workflow definition. See [`schedule_configuration` Block](#schedule_configuration-block) below.
 * `status` - Current status of the workflow. Valid values are `READY` and `DELETING`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workflow_definition` - Resolved workflow definition captured at the time of the snapshot.
 * `workflow_version` - Version identifier of the workflow.
 
-### schedule_configuration
+### `schedule_configuration` Block
 
 * `cron_expression` - Cron expression that defines the workflow schedule.
 

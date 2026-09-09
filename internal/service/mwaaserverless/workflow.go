@@ -128,7 +128,7 @@ func (r *workflowResource) Schema(ctx context.Context, _ resource.SchemaRequest,
 					},
 				},
 			},
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -152,20 +152,20 @@ func (r *workflowResource) Schema(ctx context.Context, _ resource.SchemaRequest,
 					},
 				},
 			},
-			"logging_configuration": schema.ListNestedBlock{
+			names.AttrLoggingConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"log_group_name": schema.StringAttribute{
+						names.AttrLogGroupName: schema.StringAttribute{
 							Required: true,
 						},
 					},
 				},
 			},
-			"network_configuration": schema.ListNestedBlock{
+			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
