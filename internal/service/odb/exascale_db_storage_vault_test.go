@@ -191,6 +191,111 @@ func TestAccODBExascaleDBStorageVault_update(t *testing.T) {
 	})
 }
 
+func TestAccODBExascaleDBStorageVault_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var exascaleDBStorageVault odbtypes.ExascaleDbStorageVault
+	rName := acctest.RandomWithPrefix(t, testAccExascaleDBStorageVaultDisplayNamePrefix)
+	resourceName := "aws_odb_exascale_db_storage_vault.test"
+	availabilityZoneID := testAccExascaleDBStorageVaultAvailabilityZoneIDs[acctest.Region()]
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExascaleDBStorageVaultDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExascaleDBStorageVaultConfig_tags(rName, availabilityZoneID, fmt.Sprintf("%s = %q", acctest.CtKey1, acctest.CtValue1)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExascaleDBStorageVaultExists(ctx, t, resourceName, &exascaleDBStorageVault),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccExascaleDBStorageVaultConfig_tags(rName, availabilityZoneID, fmt.Sprintf("%s = %q\n    %s = %q", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExascaleDBStorageVaultExists(ctx, t, resourceName, &exascaleDBStorageVault),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccExascaleDBStorageVaultConfig_tags(rName, availabilityZoneID, fmt.Sprintf("%s = %q", acctest.CtKey2, acctest.CtValue2)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExascaleDBStorageVaultExists(ctx, t, resourceName, &exascaleDBStorageVault),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccExascaleDBStorageVaultConfig_basic(rName, availabilityZoneID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExascaleDBStorageVaultExists(ctx, t, resourceName, &exascaleDBStorageVault),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccODBExascaleDBStorageVault_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -308,6 +413,20 @@ resource "aws_odb_exascale_db_storage_vault" "test" {
   high_capacity_database_storage_total_size_in_gbs = 300
 }
 `, rName, availabilityZoneID)
+}
+
+func testAccExascaleDBStorageVaultConfig_tags(rName, availabilityZoneID, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_odb_exascale_db_storage_vault" "test" {
+  availability_zone_id                             = %[2]q
+  display_name                                     = %[1]q
+  high_capacity_database_storage_total_size_in_gbs = 300
+
+  tags = {
+    %[3]s
+  }
+}
+`, rName, availabilityZoneID, tags)
 }
 
 func testAccExascaleDBStorageVaultConfig_allArguments(rName, availabilityZoneID string) string {
