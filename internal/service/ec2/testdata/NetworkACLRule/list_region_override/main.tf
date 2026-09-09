@@ -8,7 +8,7 @@ resource "aws_network_acl_rule" "test" {
   network_acl_id = aws_network_acl.test.id
   rule_number    = 200 + count.index
   egress         = false
-  protocol       = "tcp"
+  protocol       = "6"
   rule_action    = "allow"
   cidr_block     = "0.0.0.0/0"
   from_port      = 22
