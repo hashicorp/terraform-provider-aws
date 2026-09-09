@@ -59,7 +59,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
+- `arn` - The ARN of the contact or escalation plan.
 - `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -83,7 +83,7 @@ resource "aws_ssmcontacts_contact" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the contact.
+- `arn` (String) ARN of the contact.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact using the `ARN`. For example:
 

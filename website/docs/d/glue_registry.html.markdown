@@ -31,5 +31,5 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of Glue Registry.
+* `arn` - ARN of Glue Registry.
 * `description` - A description of the registry.

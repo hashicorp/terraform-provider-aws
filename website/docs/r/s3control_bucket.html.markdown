@@ -34,9 +34,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the bucket.
+* `arn` - ARN of the bucket.
 * `creation_date` - UTC creation date in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `id` - Amazon Resource Name (ARN) of the bucket.
+* `id` - ARN of the bucket.
 * `public_access_block_enabled` - Boolean whether Public Access Block is enabled.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -63,7 +63,7 @@ resource "aws_s3control_bucket" "example" {
 
 - `arn` (String) ARN of the bucket.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Buckets using Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Buckets using ARN. For example:
 
 ```terraform
 import {
@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (ARN). For example:
+Using `terraform import`, import S3 Control Buckets using ARN. For example:
 
 ```console
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

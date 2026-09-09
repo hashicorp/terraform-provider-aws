@@ -77,7 +77,7 @@ The following arguments are optional:
 The `capacity_provider_strategy` configuration block supports the following:
 
 * `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
-* `capacity_provider` - (Required) Short name or full Amazon Resource Name (ARN) of the capacity provider.
+* `capacity_provider` - (Required) Short name or full ARN of the capacity provider.
 * `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
 
 ### `load_balancer` Block
@@ -119,7 +119,7 @@ The `service_registries` configuration block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) that identifies the task set.
+* `arn` - ARN that identifies the task set.
 * `id` - `task_set_id`, `service` and `cluster` separated by commas (`,`).
 * `stability_status` - Stability status. This indicates whether the task set has reached a steady state.
 * `status` - Status of the task set.

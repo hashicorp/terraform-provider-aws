@@ -296,7 +296,7 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 
 #### `fsx_windows_file_server_volume_configuration.authorization_config` Block
 
-* `credentials_parameter` - (Required) Authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
+* `credentials_parameter` - (Required) Authorization credential option to use. The authorization credential options can be provided using either the ARN of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
 * `domain` - (Required) Fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
 ### `s3files_volume_configuration` Block

@@ -35,6 +35,9 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 
 The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a macOS terminal.
 
+!!! tip
+    With the `t` target you can omit `PKG`/`K`: set `T` to the test name and the package is auto-detected, including non-service packages like `internal/conns`. So `make t T=TestAccIAMRole_basic` equals `make t T=TestAccIAMRole_basic PKG=iam`. No match stops with an error; the legacy `TESTS` variable does not auto-detect. See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for details.
+
 !!! note
     See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
 
@@ -383,6 +386,16 @@ Use the `gen` target to run all the generators associated with the provider. Unl
 ```console
 make gen
 ```
+
+The full run covers every package plus the provider-level and sweeper generators, and can take several minutes. When your change is confined to a single service (for example, editing annotations or registering a new resource in an existing service), scope generation to that package with `PKG`/`K`:
+
+```console
+make gen PKG=<service>
+```
+
+Scoped generation runs only that service's generators (equivalent to `go generate ./internal/service/<service>/...`). It does not run the provider-level (`./internal/provider/...`) or sweeper generators, so changes that affect provider-level registration — such as adding a new service — still require the full `make gen`.
+
+If you changed anything under `internal/generate/` (templates or generator code), scoped `make gen PKG=<service>` is insufficient — run the full `make gen`, since generator changes affect every service.
 
 !!! note
     While running the generators, you may see hundreds or thousands of code changes as `make` and the generators delete and recreate files.

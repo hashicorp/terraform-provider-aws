@@ -907,7 +907,7 @@ func flattenAutoAdjustData(autoAdjustData *awstypes.AutoAdjustData) []map[string
 		"last_auto_adjust_time": aws.ToTime(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
 	}
 
-	if *autoAdjustData.HistoricalOptions != (awstypes.HistoricalOptions{}) { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+	if *autoAdjustData.HistoricalOptions != (awstypes.HistoricalOptions{}) {
 		attrs["historical_options"] = flattenHistoricalOptions(autoAdjustData.HistoricalOptions)
 	}
 

@@ -132,6 +132,32 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
+			"exporter": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[exporterConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"opensearch": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchExporterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"role_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[roleConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -370,6 +396,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 
 	if !new.Alias.Equal(old.Alias) ||
 		!new.Destination.Equal(old.Destination) ||
+		!new.Exporters.Equal(old.Exporters) ||
 		!new.RoleConfiguration.Equal(old.RoleConfiguration) ||
 		!new.ScrapeConfiguration.Equal(old.ScrapeConfiguration) {
 		var input amp.UpdateScraperInput
@@ -456,17 +483,18 @@ func (r *scraperResource) flatten(ctx context.Context, scraper *awstypes.Scraper
 
 type scraperResourceModel struct {
 	framework.WithRegionModel
-	Alias               types.String                                            `tfsdk:"alias"`
-	ARN                 types.String                                            `tfsdk:"arn"`
-	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]       `tfsdk:"destination"`
-	ID                  types.String                                            `tfsdk:"id"`
-	RoleARN             types.String                                            `tfsdk:"role_arn"`
-	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel] `tfsdk:"role_configuration"`
-	ScrapeConfiguration types.String                                            `tfsdk:"scrape_configuration" autoflex:"-"`
-	Source              fwtypes.ListNestedObjectValueOf[sourceModel]            `tfsdk:"source"`
-	Tags                tftags.Map                                              `tfsdk:"tags"`
-	TagsAll             tftags.Map                                              `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                          `tfsdk:"timeouts"`
+	Alias               types.String                                                `tfsdk:"alias"`
+	ARN                 types.String                                                `tfsdk:"arn"`
+	Destination         fwtypes.ListNestedObjectValueOf[destinationModel]           `tfsdk:"destination"`
+	Exporters           fwtypes.ListNestedObjectValueOf[exporterConfigurationModel] `tfsdk:"exporter"`
+	ID                  types.String                                                `tfsdk:"id"`
+	RoleARN             types.String                                                `tfsdk:"role_arn"`
+	RoleConfiguration   fwtypes.ListNestedObjectValueOf[roleConfigurationModel]     `tfsdk:"role_configuration"`
+	ScrapeConfiguration types.String                                                `tfsdk:"scrape_configuration" autoflex:"-"`
+	Source              fwtypes.ListNestedObjectValueOf[sourceModel]                `tfsdk:"source"`
+	Tags                tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                  `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type destinationModel struct {
@@ -542,6 +570,57 @@ type ampConfigurationModel struct {
 
 type cloudWatchConfigurationModel struct {
 	DatasetARN fwtypes.ARN `tfsdk:"dataset_arn"`
+}
+
+type exporterConfigurationModel struct {
+	OpenSearch fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
+}
+
+var (
+	_ fwflex.Expander  = exporterConfigurationModel{}
+	_ fwflex.Flattener = &exporterConfigurationModel{}
+)
+
+func (m exporterConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var v awstypes.ExporterConfiguration
+
+	switch {
+	case !m.OpenSearch.IsNull():
+		data, d := m.OpenSearch.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.ExporterConfigurationMemberOpenSearchConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
+	}
+
+	return v, diags
+}
+
+func (m *exporterConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.ExporterConfigurationMemberOpenSearchConfiguration:
+		var data openSearchExporterConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.OpenSearch = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	}
+
+	return diags
+}
+
+type openSearchExporterConfigurationModel struct {
+	DomainARN fwtypes.ARN `tfsdk:"domain_arn"`
 }
 
 type sourceModel struct {

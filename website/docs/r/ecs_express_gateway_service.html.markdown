@@ -125,7 +125,7 @@ The `primary_container` configuration block supports the following:
 * `container_port` - (Optional) Port on which the container listens for connections. Defaults to `80`.
 * `image` - (Required) Docker image to use for the container.
 
-#### aws_logs_configuration
+#### `aws_logs_configuration` Block
 
 The `aws_logs_configuration` configuration block supports the following:
 
@@ -152,14 +152,14 @@ The `secret` configuration block supports the following:
 * `name` - (Required) Name of the secret.
 * `value_from` - (Required) ARN of the AWS Secrets Manager secret or AWS Systems Manager parameter containing the secret value.
 
-### network_configuration
+### `network_configuration` Block
 
 The `network_configuration` configuration block supports the following:
 
 * `security_groups` - (Optional) Security groups associated with the task. If not specified, the default security group for the VPC is used.
 * `subnets` - (Optional) Subnets associated with the task. At least 2 subnets must be specified when using network configuration. If not specified, default subnets will be used.
 
-### scaling_target
+### `scaling_target` Block
 
 The `scaling_target` configuration block supports the following:
 
@@ -173,10 +173,17 @@ The `scaling_target` configuration block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `current_deployment` - (**Deprecated**) ARN of the current deployment.
-* `ingress_paths` - List of ingress paths with access type and endpoint information.
+* `ingress_paths` - List of ingress paths for the service. See [`ingress_paths` Block](#ingress_paths-block) below.
 * `service_arn` - ARN of the Express Gateway Service.
 * `service_revision_arn` - ARN of the service revision.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `ingress_paths` Block
+
+The `ingress_paths` block exports the following attributes:
+
+* `access_type` - Access type for the ingress path.
+* `endpoint` - Endpoint for the ingress path.
 
 ## Timeouts
 

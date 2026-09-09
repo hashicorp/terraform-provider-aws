@@ -241,7 +241,7 @@ This resource supports the following arguments:
 * `authorization_type` - (Required) Type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
 * `invocation_connectivity_parameters` - (Optional) Parameters to use for invoking a private API. Documented below.
-* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 
 `auth_parameters` support the following:
 
@@ -303,8 +303,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the connection.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
+* `arn` - ARN of the connection.
+* `secret_arn` - ARN of the secret created from the authorization parameters specified for the connection.
 
 ## Import
 

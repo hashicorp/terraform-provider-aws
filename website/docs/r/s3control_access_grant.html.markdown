@@ -69,7 +69,7 @@ The `grantee` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `access_grant_arn` - Amazon Resource Name (ARN) of the S3 Access Grant.
+* `access_grant_arn` - ARN of the S3 Access Grant.
 * `access_grant_id` - Unique ID of the S3 Access Grant.
 * `grant_scope` - Access grant's scope.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -88,5 +88,5 @@ import {
 Using `terraform import`, import S3 Access Grants using the `account_id` and `access_grant_id`, separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_s3control_access_grants_location.example 123456789012,04549c5e-2f3c-4a07-824d-2cafe720aa22
+% terraform import aws_s3control_access_grant.example 123456789012,04549c5e-2f3c-4a07-824d-2cafe720aa22
 ```

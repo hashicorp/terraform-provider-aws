@@ -249,6 +249,13 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return ""
 }
 
+func (sr ServiceRecord) EndpointFIPSSupport() bool {
+	if sr.service.ServiceEndpoints != nil {
+		return !sr.service.ServiceEndpoints.EndpointNoFIPSSupport
+	}
+	return true
+}
+
 func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
 	if sr.service.ServiceEndpoints != nil && len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
 		return maps.Clone(sr.service.ServiceEndpoints.EndpointRegionOverrides)
@@ -340,6 +347,7 @@ type EndpointInfo struct {
 	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
 	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
 	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
+	EndpointNoFIPSSupport   bool              `hcl:"endpoint_no_fips_support,optional"`
 }
 
 type Service struct {

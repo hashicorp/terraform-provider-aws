@@ -41,7 +41,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the resource set.
 * `resource_set_status` - (Optional) Whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but they can't edit or delete the resource set.)
-* `resource_type_list` - (Optional) Determines the resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
+* `resource_type_list` - (Optional) Resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
 * `update_token` - (Optional) Unique identifier for each update to the resource set.
 
 ## Attribute Reference

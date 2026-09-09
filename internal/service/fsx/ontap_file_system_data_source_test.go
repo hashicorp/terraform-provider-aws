@@ -40,6 +40,7 @@ func TestAccFSxONTAPFileSystemDataSource_Id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ha_pairs", resourceName, "ha_pairs"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(datasourceName, "preferred_subnet_id", resourceName, "preferred_subnet_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),

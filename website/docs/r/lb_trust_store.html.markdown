@@ -88,7 +88,7 @@ resource "aws_lb_trust_store" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the trust store.
+- `arn` (String) ARN of the trust store.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Trust Stores using their ARN. For example:
 

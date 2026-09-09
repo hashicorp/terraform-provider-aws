@@ -28,7 +28,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `artifact_store_uri` - (Required) The S3 URI for a general purpose bucket to use as the MLflow Tracking Server artifact store.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow Tracking Server uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions. For more information on IAM permissions for tracking server creation, see [Set up IAM permissions for MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow-create-tracking-server-iam.html).
+* `role_arn` - (Required) ARN for an IAM role in your account that the MLflow Tracking Server uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions. For more information on IAM permissions for tracking server creation, see [Set up IAM permissions for MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow-create-tracking-server-iam.html).
 * `tracking_server_name` - (Required) A unique string identifying the tracking server name. This string is part of the tracking server ARN.
 * `mlflow_version` - (Optional) The version of MLflow that the tracking server uses. To see which MLflow versions are available to use, see [How it works](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html#mlflow-create-tracking-server-how-it-works).
 * `automatic_model_registration` - (Optional) Whether to enable or disable automatic registration of new MLflow models to the SageMaker Model Registry. Defaults to false.
@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this MLFlow Tracking Server.
+* `arn` - ARN assigned by AWS to this MLFlow Tracking Server.
 * `id` - The name of the MLFlow Tracking Server.
 * `tracking_server_url` - The URL to connect to the MLflow user interface for the described tracking server.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -16,7 +16,7 @@ A resilience policy defines your resilience expectations through modular, compos
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-policy"
 
@@ -28,7 +28,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-AZ with Data Recovery
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name        = "example-policy"
   description = "Policy with multi-AZ and data recovery targets"
@@ -55,7 +55,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-Region
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-multi-region-policy"
 
@@ -144,7 +144,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Resilience Hub V2 Policy.
+- `arn` (String) ARN of the Resilience Hub V2 Policy.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resilience Hub V2 Policy using the `arn`. For example:
 

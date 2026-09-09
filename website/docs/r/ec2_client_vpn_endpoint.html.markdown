@@ -72,7 +72,7 @@ One of the following arguments must be supplied:
 ### `client_connect_options` Block Reference
 
 * `enabled` - (Optional) Indicates whether client connect options are enabled. The default is `false` (not enabled).
-* `lambda_function_arn` - (Optional) The Amazon Resource Name (ARN) of the Lambda function used for connection authorization.
+* `lambda_function_arn` - (Optional) ARN of the Lambda function used for connection authorization.
 
 ### `client_login_banner_options` Block Reference
 

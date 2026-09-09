@@ -7,12 +7,14 @@ package secretsmanager
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -36,6 +38,8 @@ func resourceSecretRotation() *schema.Resource {
 		ReadWithoutTimeout:   resourceSecretRotationRead,
 		UpdateWithoutTimeout: resourceSecretRotationUpdate,
 		DeleteWithoutTimeout: resourceSecretRotationDelete,
+
+		CustomizeDiff: resourceSecretRotationCustomizeDiff,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -76,6 +80,7 @@ func resourceSecretRotation() *schema.Resource {
 				},
 				"rotation_enabled": {
 					Type:     schema.TypeBool,
+					Optional: true,
 					Computed: true,
 				},
 				"rotation_lambda_arn": {
@@ -85,7 +90,7 @@ func resourceSecretRotation() *schema.Resource {
 				},
 				"rotation_rules": {
 					Type:     schema.TypeList,
-					Required: true,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -126,6 +131,24 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretID := d.Get("secret_id").(string)
+
+	// When rotation_enabled is explicitly set to false, cancel rotation rather than
+	// configuring it. This allows disabling the automatic rotation that AWS enables
+	// by default for managed secrets, such as RDS master user password secrets.
+	if rotationDisabled(d.GetRawConfig()) {
+		output, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+			SecretId: aws.String(secretID),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
+		}
+
+		d.SetId(aws.ToString(output.ARN))
+
+		return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
+	}
+
 	input := secretsmanager.RotateSecretInput{
 		ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
@@ -202,8 +225,22 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	if d.HasChanges("external_secret_rotation_metadata", "external_secret_rotation_role_arn", "rotation_lambda_arn", "rotation_rules") {
+	if d.HasChanges("external_secret_rotation_metadata", "external_secret_rotation_role_arn", "rotation_enabled", "rotation_lambda_arn", "rotation_rules") {
 		secretID := d.Get("secret_id").(string)
+
+		// Transition to rotation disabled: cancel rotation on the secret.
+		if rotationDisabled(d.GetRawConfig()) {
+			_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+				SecretId: aws.String(secretID),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
+			}
+
+			return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
+		}
+
 		input := secretsmanager.RotateSecretInput{
 			ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 			RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
@@ -251,6 +288,33 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+// rotationDisabled reports whether rotation_enabled is explicitly configured as
+// false. An unset (null) or unknown value is treated as not disabled, preserving
+// the resource's default behavior of configuring rotation.
+func rotationDisabled(rawConfig cty.Value) bool {
+	if rawConfig.IsNull() {
+		return false
+	}
+
+	v := rawConfig.GetAttr("rotation_enabled")
+
+	return v.IsKnown() && !v.IsNull() && v.False()
+}
+
+func resourceSecretRotationCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	disabled := rotationDisabled(d.GetRawConfig())
+	rules := d.Get("rotation_rules").([]any)
+
+	switch {
+	case disabled && len(rules) > 0:
+		return fmt.Errorf("`rotation_rules` cannot be set when `rotation_enabled` is `false`; remove the `rotation_rules` block to disable rotation")
+	case !disabled && len(rules) == 0:
+		return fmt.Errorf("`rotation_rules` is required unless `rotation_enabled` is `false`")
+	}
+
+	return nil
 }
 
 func expandExternalSecretRotationMetadataItems(tfList []any) []types.ExternalSecretRotationMetadataItem {

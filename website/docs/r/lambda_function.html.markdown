@@ -659,22 +659,22 @@ The following arguments are required:
 The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
-* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
+* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-block).
 * `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
-* `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
+* `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-block).
 * `description` - (Optional) Description of what your Lambda Function does.
-* `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-configuration-block). `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
-* `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
-* `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
-* `file_system_config` - (Optional) Configuration block for EFS or S3 Files file system. [See below](#file_system_config-configuration-block).
+* `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-block). `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
+* `environment` - (Optional) Configuration block for environment variables. [See below](#environment-block).
+* `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-block).
+* `file_system_config` - (Optional) Configuration block for EFS or S3 Files file system. [See below](#file_system_config-block).
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
-* `image_config` - (Optional) Container image configuration values. [See below](#image_config-configuration-block).
+* `image_config` - (Optional) Container image configuration values. [See below](#image_config-block).
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
-* `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
-* `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-configuration-block).
+* `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-block).
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
@@ -688,78 +688,78 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Required if `s3_bucket` is set.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
-* `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
+* `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-block).
 * `source_code_hash` - (Optional) User-defined hash of the source code package file. Use this argument to trigger updates when the local function source code changes. This is a synthetic argument tracked only by the AWS provider and does not need to match the hashing algorithm used by Lambda to compute the `CodeSha256` response value. Out-of-band changes to the source code _will not_ be captured by this argument. To include out-of-band source code changes as an update trigger, use the `code_sha256` argument instead.
-* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
+* `source_kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-block).
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
-* `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
-* `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
+* `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-block).
 * `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
-* `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
+* `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-block).
 
-### capacity_provider_config Configuration
+### `capacity_provider_config` Block
 
 ~> **NOTE:** If `capacity_provider_config` is set, `vpc_config` cannot be set.
 
-* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
+* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-block).
 
-### lambda_managed_instances_capacity_provider_config Configuration Block
+### `lambda_managed_instances_capacity_provider_config` Block
 
 * `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
 * `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
 * `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
 
-### dead_letter_config Configuration Block
+### `dead_letter_config` Block
 
 * `target_arn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails.
 
-### durable_config Configuration Block
+### `durable_config` Block
 
 `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 
 * `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
 * `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
 
-### environment Configuration Block
+### `environment` Block
 
 * `variables` - (Optional) Map of environment variables available to your Lambda function during execution.
 
-### ephemeral_storage Configuration Block
+### `ephemeral_storage` Block
 
 * `size` - (Required) Amount of ephemeral storage (`/tmp`) in MB. Valid between 512 MB and 10,240 MB (10 GB).
 
-### file_system_config Configuration Block
+### `file_system_config` Block
 
 * `arn` - (Required) ARN of the Amazon EFS Access Point, or the Amazon S3 Files access point.
 * `local_mount_path` - (Required) Path where the function can access the file system. Must start with `/mnt/`.
 
-### image_config Configuration Block
+### `image_config` Block
 
 * `command` - (Optional) Parameters to pass to the container image.
 * `entry_point` - (Optional) Entry point to your application.
 * `working_directory` - (Optional) Working directory for the container image.
 
-### logging_config Configuration Block
+### `logging_config` Block
 
 * `application_log_level` - (Optional) Detail level of application logs. Valid values: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`.
 * `log_format` - (Required) Log format. Valid values: `Text`, `JSON`.
 * `log_group` - (Optional) CloudWatch log group where logs are sent.
 * `system_log_level` - (Optional) Detail level of Lambda platform logs. Valid values: `DEBUG`, `INFO`, `WARN`.
 
-### snap_start Configuration Block
+### `snap_start` Block
 
 * `apply_on` - (Required) When to apply snap start optimization. Valid value: `PublishedVersions`.
 
-### tenancy_config Configuration Block
+### `tenancy_config` Block
 
 * `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
 
-### tracing_config Configuration Block
+### `tracing_config` Block
 
 * `mode` - (Required) X-Ray tracing mode. Valid values: `Active`, `PassThrough`.
 
-### vpc_config Configuration Block
+### `vpc_config` Block
 
 ~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
 
@@ -776,11 +776,11 @@ This resource exports the following attributes in addition to the arguments abov
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
 * `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
+* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
-* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.

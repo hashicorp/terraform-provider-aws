@@ -14,7 +14,7 @@ Manages an SES Mail Manager Traffic Policy.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_mailmanager_traffic_policy" "example" {
   default_action = "ALLOW"
   name           = "example"

@@ -95,18 +95,26 @@ The following arguments are optional:
 
 ### `maintenance_window` Block
 
-* `days_of_week` - (Optional) Days of the week when maintenance can be performed. Changing this will force terraform to create new resource.
+* `days_of_week` - (Optional) Days of the week when maintenance can be performed. Changing this will force terraform to create new resource. See [`days_of_week` Block](#days_of_week-block) below.
 * `hours_of_day` - (Optional) Hours of the day when maintenance can be performed. Changing this will force terraform to create new resource.
 * `lead_time_in_weeks` - (Optional) Lead time in weeks before the maintenance window. Changing this will force terraform to create new resource.
-* `months` - (Optional) Months when maintenance can be performed. Changing this will force terraform to create new resource.
+* `months` - (Optional) Months when maintenance can be performed. Changing this will force terraform to create new resource. See [`months` Block](#months-block) below.
 * `preference` - (Required) Preference for the maintenance window scheduling. Changing this will force terraform to create new resource.
 * `weeks_of_month` - (Optional) Whether to skip release updates during maintenance. Changing this will force terraform to create new resource.
+
+#### `days_of_week` Block
+
+* `name` - (Required) Name of the day of the week. Valid values are `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, and `SUNDAY`.
+
+#### `months` Block
+
+* `name` - (Required) Name of the month. Valid values are `JANUARY`, `FEBRUARY`, `MARCH`, `APRIL`, `MAY`, `JUNE`, `JULY`, `AUGUST`, `SEPTEMBER`, `OCTOBER`, `NOVEMBER`, and `DECEMBER`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - Progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - Available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_container_databases` - Number of Autonomous CDBs that you can create with the currently available storage.

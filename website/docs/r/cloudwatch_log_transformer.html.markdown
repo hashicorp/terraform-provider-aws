@@ -324,7 +324,7 @@ resource "aws_cloudwatch_log_transformer" "example" {
 
 #### Required
 
-- `log_group_arn` (String) Amazon Resource Name (ARN) of the CloudWatch Logs log group.
+- `log_group_arn` (String) ARN of the CloudWatch Logs log group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Transformer using the `log_group_arn`. For example:
 

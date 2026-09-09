@@ -36,7 +36,7 @@ resource "aws_appintegrations_data_integration" "example" {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Data Integration.
-* `kms_key` - (Required) KMS key Amazon Resource Name (ARN) for the Data Integration.
+* `kms_key` - (Required) KMS key ARN for the Data Integration.
 * `name` - (Required) Name of the Data Integration.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `schedule_config` - (Required) Configuration block that defines the name of the data and how often it should be pulled from the source. See [`schedule_config` Block](#schedule_config-block) for details.
@@ -55,7 +55,7 @@ The `schedule_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Data Integration.
+* `arn` - ARN of the Data Integration.
 * `id` - Identifier of the Data Integration.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

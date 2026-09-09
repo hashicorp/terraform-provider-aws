@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_internet_gateway"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) Internet Gateway resources.
+  Lists EC2 Internet Gateway resources.
 ---
 
 # List Resource: aws_internet_gateway
 
-Lists EC2 (Elastic Compute Cloud) Internet Gateway resources.
+Lists EC2 Internet Gateway resources.
 
 ## Example Usage
 

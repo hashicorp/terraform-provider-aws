@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -62,6 +61,20 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 			hyperParameterTuningJobName := aws.ToString(item.HyperParameterTuningJobName)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), hyperParameterTuningJobName)
 
+			var output *sagemaker.DescribeHyperParameterTuningJobOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findHyperParameterTuningJobByName(ctx, conn, hyperParameterTuningJobName)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data hyperParameterTuningJobResourceModel
@@ -69,16 +82,6 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
-					output, err := findHyperParameterTuningJobByName(ctx, conn, hyperParameterTuningJobName)
-					if retry.NotFound(err) {
-						tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-						return
-					}
-					if err != nil {
-						result.Diagnostics.Append(diag.NewErrorDiagnostic("Reading SageMaker Hyper Parameter Tuning Job", err.Error()))
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
 				}
 

@@ -101,7 +101,7 @@ func (a *putEventsAction) Invoke(ctx context.Context, req action.InvokeRequest, 
 	conn := a.Meta().EventsClient(ctx)
 
 	tflog.Info(ctx, "Putting events", map[string]any{
-		"entry_count": len(model.Entry.Elements()),
+		"entry_count": model.Entry.Length(fwtypes.CollectionLengthUnhandledAsZero),
 	})
 
 	cb := fwactions.NewSendProgressFunc(resp)

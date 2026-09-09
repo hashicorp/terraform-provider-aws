@@ -31,14 +31,14 @@ This resource supports the following arguments:
 
 - `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `target` - (Required) Target to register with the target group. See [`target` Block](#target-block) for details.
-- `target_group_identifier` - (Required) ID or Amazon Resource Name (ARN) of the target group.
+- `target_group_identifier` - (Required) ID or ARN of the target group.
 
 ### `target` Block
 
 The `target` block supports the following arguments:
 
 - `id` - (Required) ID of the target. If the target type of the target group is INSTANCE, this is an instance ID. If the target type is IP , this is an IP address. If the target type is LAMBDA, this is the ARN of the Lambda function. If the target type is ALB, this is the ARN of the Application Load Balancer.
-- `port` - (Optional) This port is used for routing traffic to the target, and defaults to the target group port. However, you can override the default and specify a custom port.
+- `port` - (Optional) Port used for routing traffic to the target, and defaults to the target group port. However, you can override the default and specify a custom port.
 
 ## Attribute Reference
 

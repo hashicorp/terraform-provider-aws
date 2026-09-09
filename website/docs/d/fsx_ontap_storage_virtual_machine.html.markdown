@@ -55,7 +55,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `active_directory_configuration` - Microsoft Active Directory configuration to which the SVM is joined, if applicable. See [Active Directory Configuration](#active-directory-configuration) below.
-* `arn` - Amazon Resource Name of the SVM.
+* `arn` - ARN of the SVM.
 * `creation_time` - Time that the SVM was created.
 * `endpoints` - Endpoints that are used to access data or to manage the SVM using the NetApp ONTAP CLI, REST API, or NetApp CloudManager. They are the Iscsi, Management, Nfs, and Smb endpoints. See [SVM Endpoints](#svm-endpoints) below.
 * `file_system_id` - Identifier of the file system (e.g. `fs-12345678`).

@@ -6,16 +6,12 @@ package bedrockagentcore_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,121 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestOAuth2CredentialProviderTokenEndpointAuthMethodsValidation(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		methods     string
-		expectError *regexp.Regexp
-	}{
-		"empty": {
-			methods:     "[]",
-			expectError: regexache.MustCompile(`list must contain at least 1 elements and at most 2 elements`),
-		},
-		"too many": {
-			methods:     `["client_secret_post", "client_secret_basic", "client_secret_post"]`,
-			expectError: regexache.MustCompile(`list must contain at least 1 elements and at most 2 elements`),
-		},
-		"invalid value": {
-			methods:     `["private_key_jwt"]`,
-			expectError: regexache.MustCompile(`value must match regular expression`),
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			resource.UnitTest(t, resource.TestCase{
-				PreCheck:                 func() {},
-				ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Steps: []resource.TestStep{
-					{
-						Config:      testOAuth2CredentialProviderConfig_tokenEndpointAuthMethods(testCase.methods),
-						ExpectError: testCase.expectError,
-					},
-				},
-			})
-		})
-	}
-}
-
-func TestOAuth2CredentialProviderAuthorizationServerMetadataAutoFlexExpand(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	model := tfbedrockagentcore.OAuth2DiscoveryModel{
-		AuthorizationServerMetadata: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OAuth2AuthorizationServerMetadataModel{
-			AuthorizationEndpoint:    types.StringValue("https://example.com/authorize"),
-			Issuer:                   types.StringValue("https://example.com"),
-			ResponseTypes:            fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"code"}),
-			TokenEndpoint:            types.StringValue("https://example.com/token"),
-			TokenEndpointAuthMethods: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"client_secret_post", "client_secret_basic"}),
-		}),
-		DiscoveryURL: types.StringNull(),
-	}
-	expected := &awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{
-		Value: awstypes.Oauth2AuthorizationServerMetadata{
-			AuthorizationEndpoint:    aws.String("https://example.com/authorize"),
-			Issuer:                   aws.String("https://example.com"),
-			ResponseTypes:            []string{"code"},
-			TokenEndpoint:            aws.String("https://example.com/token"),
-			TokenEndpointAuthMethods: []string{"client_secret_post", "client_secret_basic"},
-		},
-	}
-
-	got, diags := model.Expand(ctx)
-	if diags.HasError() {
-		t.Fatalf("unexpected error: %s", diags[0].Summary())
-	}
-	if diff := cmp.Diff(got, expected, cmpopts.IgnoreUnexported(
-		awstypes.Oauth2AuthorizationServerMetadata{},
-		awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{},
-	)); diff != "" {
-		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-	}
-}
-
-func TestOAuth2CredentialProviderAuthorizationServerMetadataAutoFlexFlatten(t *testing.T) {
-	t.Parallel()
-
-	ctx := acctest.Context(t)
-	apiObject := awstypes.Oauth2DiscoveryMemberAuthorizationServerMetadata{
-		Value: awstypes.Oauth2AuthorizationServerMetadata{
-			AuthorizationEndpoint:    aws.String("https://example.com/authorize"),
-			Issuer:                   aws.String("https://example.com"),
-			ResponseTypes:            []string{"code"},
-			TokenEndpoint:            aws.String("https://example.com/token"),
-			TokenEndpointAuthMethods: []string{"client_secret_post", "client_secret_basic"},
-		},
-	}
-	expected := tfbedrockagentcore.OAuth2DiscoveryModel{
-		AuthorizationServerMetadata: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OAuth2AuthorizationServerMetadataModel{
-			AuthorizationEndpoint:    types.StringValue("https://example.com/authorize"),
-			Issuer:                   types.StringValue("https://example.com"),
-			ResponseTypes:            fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"code"}),
-			TokenEndpoint:            types.StringValue("https://example.com/token"),
-			TokenEndpointAuthMethods: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"client_secret_post", "client_secret_basic"}),
-		}),
-		DiscoveryURL: types.StringNull(),
-	}
-
-	var got tfbedrockagentcore.OAuth2DiscoveryModel
-	diags := got.Flatten(ctx, apiObject)
-	if diags.HasError() {
-		t.Fatalf("unexpected error: %s", diags[0].Summary())
-	}
-	if diff := cmp.Diff(got, expected); diff != "" {
-		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-	}
+func checkOAuth2CredentialProviderARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/`+name))
 }
 
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
@@ -158,7 +46,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -168,15 +59,35 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("client_secret_arn"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`token-vault/default/oauth2credentialprovider/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("client_secret_arn"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"secret_arn": tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`)),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_arn"), checkOAuth2CredentialProviderARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), tfknownvalue.StringExact(awstypes.CredentialProviderVendorTypeGithubOauth2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"github_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Null(),
+							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
+							"client_id_wo":                  knownvalue.Null(),
+							names.AttrClientSecret:          knownvalue.StringExact("test-client-secret"),
+							"client_secret_wo":              knownvalue.Null(),
+							"oauth_discovery":               knownvalue.ListSizeExact(1),
+						})}),
+						"google_oauth2_provider_config":     knownvalue.ListSizeExact(0),
+						"microsoft_oauth2_provider_config":  knownvalue.ListSizeExact(0),
+						"salesforce_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"slack_oauth2_provider_config":      knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -208,7 +119,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceOAuth2CredentialProvider, resourceName),
@@ -244,7 +158,14 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("auth0-client-id"),
+					"client_secret":              config.StringVariable("auth0-client-secret"),
+					"client_credentials_version": config.IntegerVariable(1),
+					"discovery_url":              config.StringVariable("https://dev-example.auth0.com/.well-known/openid-configuration"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -253,8 +174,26 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Int64Exact(1),
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"discovery_url": knownvalue.StringExact("https://dev-example.auth0.com/.well-known/openid-configuration"),
+							})}),
+						})}),
+					})})),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("auth0-client-id"),
+					"client_secret":              config.StringVariable("auth0-client-secret"),
+					"client_credentials_version": config.IntegerVariable(1),
+					"discovery_url":              config.StringVariable("https://dev-example.auth0.com/.well-known/openid-configuration"),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -265,7 +204,14 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 				},
 			},
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "updated-client-id", "updated-client-secret", 2, "https://company.okta.com/.well-known/openid-configuration"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.discovery_url/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:              config.StringVariable(rName),
+					"client_id":                  config.StringVariable("updated-client-id"),
+					"client_secret":              config.StringVariable("updated-client-secret"),
+					"client_credentials_version": config.IntegerVariable(2),
+					"discovery_url":              config.StringVariable("https://company.okta.com/.well-known/openid-configuration"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -273,6 +219,16 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Int64Exact(2),
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"discovery_url": knownvalue.StringExact("https://company.okta.com/.well-known/openid-configuration"),
+							})}),
+						})}),
+					})})),
 				},
 			},
 		},
@@ -296,7 +252,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, "keycloak-client-id", "keycloak-client-secret", 1, "https://auth.company.com/realms/production", "https://auth.company.com/realms/production/protocol/openid-connect/auth", "https://auth.company.com/realms/production/protocol/openid-connect/token", "code", "id_token"),
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.authorization_server_metadata/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
@@ -305,8 +264,29 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"oauth_discovery": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"authorization_server_metadata": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"authorization_endpoint": knownvalue.StringExact("https://auth.company.com/realms/production/protocol/openid-connect/auth"),
+									names.AttrIssuer:         knownvalue.StringExact("https://auth.company.com/realms/production"),
+									"response_types": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("code"),
+										knownvalue.StringExact("id_token"),
+									}),
+									"token_endpoint": knownvalue.StringExact("https://auth.company.com/realms/production/protocol/openid-connect/token"),
+								})}),
+							})}),
+						})}),
+					})})),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/custom_oauth2_provider_config.oauth_discovery.authorization_server_metadata/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
@@ -314,297 +294,6 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
 					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_full(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_atlassian(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_atlassian(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.atlassian_oauth2_provider_config.0.client_secret",
-					"oauth2_provider_config.0.atlassian_oauth2_provider_config.0.client_id",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_linkedin(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_linkedin(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.linkedin_oauth2_provider_config.0.client_secret",
-					"oauth2_provider_config.0.linkedin_oauth2_provider_config.0.client_id",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_included(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_included(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_secret",
-					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_id",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_customTokenExchange(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_customTokenExchange(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config").AtSliceIndex(0).AtMapKey("custom_oauth2_provider_config").AtSliceIndex(0).AtMapKey("client_authentication_method"), knownvalue.StringExact("CLIENT_SECRET_BASIC")),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
-				},
-			},
-		},
-	})
-}
-
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
-				},
-			},
-			{
-				Config: testAccOAuth2CredentialProviderConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccOAuth2CredentialProviderConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
 				},
 			},
 		},
@@ -669,568 +358,4 @@ func testAccPreCheckOAuth2CredentialProviders(ctx context.Context, t *testing.T)
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccOAuth2CredentialProviderConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "GithubOauth2"
-  oauth2_provider_config {
-    github_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customTokenExchange(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = "token-exchange-client-id"
-      client_secret_wo              = "token-exchange-client-secret"
-      client_credentials_wo_version = 1
-      client_authentication_method  = "CLIENT_SECRET_BASIC"
-
-      oauth_discovery {
-        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration"
-      }
-
-      on_behalf_of_token_exchange_config {
-        grant_type = "TOKEN_EXCHANGE"
-
-        token_exchange_grant_type_config {
-          actor_token_content = "M2M"
-          actor_token_scopes  = ["read", "write"]
-        }
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, clientId, clientSecret string, version int, discoveryURL string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = %[2]q
-      client_secret_wo              = %[3]q
-      client_credentials_wo_version = %[4]d
-
-      oauth_discovery {
-        discovery_url = %[5]q
-      }
-    }
-  }
-}
-`, rName, clientId, clientSecret, version, discoveryURL)
-}
-
-func testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, clientId, clientSecret string, version int, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2 string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = %[2]q
-      client_secret_wo              = %[3]q
-      client_credentials_wo_version = %[4]d
-
-      oauth_discovery {
-        authorization_server_metadata {
-          issuer                 = %[5]q
-          authorization_endpoint = %[6]q
-          token_endpoint         = %[7]q
-          response_types         = [%[8]q, %[9]q]
-        }
-      }
-    }
-  }
-}
-`, rName, clientId, clientSecret, version, issuer, authEndpoint, tokenEndpoint, responseType1, responseType2)
-}
-
-func testOAuth2CredentialProviderConfig_tokenEndpointAuthMethods(methods string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name                       = "test-token-endpoint-auth-methods"
-  credential_provider_vendor = "CustomOauth2"
-
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-
-      oauth_discovery {
-        authorization_server_metadata {
-          authorization_endpoint      = "https://example.com/authorize"
-          issuer                      = "https://example.com"
-          response_types              = ["code"]
-          token_endpoint              = "https://example.com/token"
-          token_endpoint_auth_methods = %[1]s
-        }
-      }
-    }
-  }
-}
-`, methods)
-}
-
-func testAccOAuth2CredentialProviderConfig_full(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = "full-test-client-id"
-      client_secret_wo              = "full-test-client-secret"
-      client_credentials_wo_version = 1
-
-      oauth_discovery {
-        authorization_server_metadata {
-          issuer                 = "https://auth.example.com/realms/production"
-          authorization_endpoint = "https://auth.example.com/realms/production/protocol/openid-connect/auth"
-          token_endpoint         = "https://auth.example.com/realms/production/protocol/openid-connect/token"
-          response_types         = ["code", "id_token"]
-        }
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "GithubOauth2"
-  oauth2_provider_config {
-    github_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tag1Key, tag1Value)
-}
-
-func testAccOAuth2CredentialProviderConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "GithubOauth2"
-  oauth2_provider_config {
-    github_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
-}
-
-func testAccOAuth2CredentialProviderConfig_atlassian(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "AtlassianOauth2"
-  oauth2_provider_config {
-    atlassian_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_linkedin(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "LinkedinOauth2"
-  oauth2_provider_config {
-    linkedin_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_included(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "XOauth2"
-  oauth2_provider_config {
-    included_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customExternalSecret(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name                    = %[1]q
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ clientSecret = "external-secret-value" })
-}
-
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name                       = %[1]q
-  credential_provider_vendor = "CustomOauth2"
-
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_authentication_method = "AWS_IAM_ID_TOKEN_JWT"
-      client_secret_source         = "EXTERNAL"
-
-      oauth_discovery {
-        discovery_url = "https://example.com/.well-known/openid-configuration"
-      }
-
-      client_secret_config {
-        json_key  = "clientSecret"
-        secret_id = aws_secretsmanager_secret_version.test.secret_id
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customExternalInlineSecret(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name                       = %[1]q
-  credential_provider_vendor = "CustomOauth2"
-
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_authentication_method = "CLIENT_SECRET_BASIC"
-      client_id                    = "id"
-      client_secret                = "should-not-be-here"
-      client_secret_source         = "EXTERNAL"
-
-      oauth_discovery {
-        discovery_url = "https://example.com/.well-known/openid-configuration"
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customOverridesOnly(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name                       = %[1]q
-  credential_provider_vendor = "CustomOauth2"
-
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id     = "id"
-      client_secret = "secret"
-
-      oauth_discovery {
-        discovery_url = "https://example.com/.well-known/openid-configuration"
-      }
-
-      private_endpoint_overrides {
-        domain = "example.com"
-      }
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_multipleProviders(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name                       = %[1]q
-  credential_provider_vendor = "GithubOauth2"
-
-  oauth2_provider_config {
-    github_oauth2_provider_config {
-      client_id     = "id"
-      client_secret = "secret"
-    }
-    google_oauth2_provider_config {
-      client_id     = "id"
-      client_secret = "secret"
-    }
-  }
-}
-`, rName)
-}
-
-// TestAccBedrockAgentCoreOAuth2CredentialProvider_customExternalSecret exercises
-// the EXTERNAL client-secret path end-to-end (previously unusable). client_secret_source
-// and client_secret_config are input-only fields (absent from GetOauth2CredentialProviderOutput);
-// they cannot be recovered on the initial import, so they appear on ImportStateVerifyIgnore
-// (a single subsequent `terraform apply` reconciles state and further plans are clean).
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_customExternalSecret(t *testing.T) {
-	ctx := acctest.Context(t)
-	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_customExternalSecret(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateVerifyIgnore: []string{
-					// Input-only fields (absent from GetOauth2CredentialProviderOutput).
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
-				},
-			},
-		},
-	})
-}
-
-// TestAccBedrockAgentCoreOAuth2CredentialProvider_validationRules exercises the
-// plan-time validators added for the EXTERNAL secret contract, the
-// private_endpoint_overrides sibling requirement, and the union ExactlyOneOf.
-// These invalid configs previously validated offline and only failed at the API
-// (some after creating orphaned resources).
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_validationRules(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				// EXTERNAL secret source rejects an inline client_secret.
-				Config:      testAccOAuth2CredentialProviderConfig_customExternalInlineSecret(rName),
-				ExpectError: regexache.MustCompile(`client_secret must not be set when client_secret_source is EXTERNAL`),
-			},
-			{
-				// private_endpoint_overrides requires the sibling private_endpoint block.
-				Config:      testAccOAuth2CredentialProviderConfig_customOverridesOnly(rName),
-				ExpectError: regexache.MustCompile(`private_endpoint`),
-			},
-			{
-				// Setting more than one provider block is rejected by ExactlyOneOf.
-				Config:      testAccOAuth2CredentialProviderConfig_multipleProviders(rName),
-				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
-			},
-		},
-	})
-}
-
-// TestAccBedrockAgentCoreOAuth2CredentialProvider_nameRequiresReplace confirms that
-// changing name forces replacement. name is RequiresReplace because the API keys the
-// provider by name and cannot rename it; a regression dropping RequiresReplace would
-// route a rename into UpdateOauth2CredentialProvider and drift.
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_nameRequiresReplace(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &v)),
-			},
-			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName2),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
-			},
-		},
-	})
-}
-
-// TestAccBedrockAgentCoreOAuth2CredentialProvider_vendorRequiresReplace confirms that
-// changing credential_provider_vendor forces replacement; an in-place vendor change is
-// unsupported and would mismatch the oauth2_provider_config union.
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_vendorRequiresReplace(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &v)),
-			},
-			{
-				Config: testAccOAuth2CredentialProviderConfig_google(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
-			},
-		},
-	})
-}
-
-// TestAccBedrockAgentCoreOAuth2CredentialProvider_tokenExchangeClearing confirms that
-// removing the optional on_behalf_of_token_exchange_config block after create converges
-// (no perpetual diff / inconsistent result after apply).
-func TestAccBedrockAgentCoreOAuth2CredentialProvider_tokenExchangeClearing(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckOAuth2CredentialProviders(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOAuth2CredentialProviderConfig_customTokenExchange(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &v)),
-			},
-			{
-				Config: testAccOAuth2CredentialProviderConfig_customTokenExchangeCleared(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-			},
-		},
-	})
-}
-
-func testAccOAuth2CredentialProviderConfig_google(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "GoogleOauth2"
-  oauth2_provider_config {
-    google_oauth2_provider_config {
-      client_id     = "test-client-id"
-      client_secret = "test-client-secret"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccOAuth2CredentialProviderConfig_customTokenExchangeCleared(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
-  name = %[1]q
-
-  credential_provider_vendor = "CustomOauth2"
-  oauth2_provider_config {
-    custom_oauth2_provider_config {
-      client_id_wo                  = "token-exchange-client-id"
-      client_secret_wo              = "token-exchange-client-secret"
-      client_credentials_wo_version = 1
-      client_authentication_method  = "CLIENT_SECRET_BASIC"
-
-      oauth_discovery {
-        discovery_url = "https://dev-example.auth0.com/.well-known/openid-configuration"
-      }
-    }
-  }
-}
-`, rName)
 }

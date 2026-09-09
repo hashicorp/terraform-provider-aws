@@ -68,7 +68,7 @@ resource "aws_xray_group" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the X-Ray group.
+- `arn` (String) ARN of the X-Ray group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Groups using the ARN. For example:
 

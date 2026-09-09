@@ -31,7 +31,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `items` - List of objects containing API Key information. See below.
 
-### `items`
+### `items` Block
 
 * `created_date` - Date and time when the API Key was created.
 * `customer_id` - Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
@@ -40,5 +40,6 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the API Key.
 * `last_updated_date` - Date and time when the API Key was last updated.
 * `name` - Name of the API Key.
+* `stage_keys` - List of stage keys associated with the API Key.
 * `tags` - Map of tags for the resource.
 * `value` - Value of the API Key.

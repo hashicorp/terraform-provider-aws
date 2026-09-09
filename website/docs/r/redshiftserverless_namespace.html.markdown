@@ -33,9 +33,9 @@ This resource supports the following arguments:
 * `admin_user_password_wo_version` - (Optional) Used together with `admin_user_password_wo` to trigger an update. Increment this value when an update to the `admin_user_password_wo` is required
 * `admin_username` - (Optional) The username of the administrator for the first database created in the namespace.
 * `db_name` - (Optional) The name of the first database created in the namespace.
-* `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
+* `default_iam_role_arn` - (Optional) ARN of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
 * `iam_roles` - (Optional) A list of IAM roles to associate with the namespace.
-* `kms_key_id` - (Optional) The ARN of the Amazon Web Services Key Management Service key used to encrypt your data.
+* `kms_key_id` - (Optional) ARN of the Amazon Web Services KMS key used to encrypt your data.
 * `log_exports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespace_name` - (Required) The name of the namespace.
 * `manage_admin_password` - (Optional) Whether to use AWS SecretManager to manage namespace's admin credentials.
@@ -46,8 +46,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `admin_password_secret_arn` - Amazon Resource Name (ARN) of namespace's admin user credentials secret.
-* `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
+* `admin_password_secret_arn` - ARN of namespace's admin user credentials secret.
+* `arn` - ARN of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespace_id` - The Redshift Namespace ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

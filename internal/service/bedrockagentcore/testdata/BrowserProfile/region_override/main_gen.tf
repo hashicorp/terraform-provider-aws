@@ -6,6 +6,7 @@ resource "aws_bedrockagentcore_browser_profile" "test" {
 
   name = var.rName
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

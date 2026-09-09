@@ -70,23 +70,35 @@ The following arguments are required:
 The following arguments are optional:
 
 * `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
-* `customer_contacts_to_send_to_oci` - (Optional) Email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource.
+* `customer_contacts_to_send_to_oci` - (Optional) Email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource. See [`customer_contacts_to_send_to_oci` Block](#customer_contacts_to_send_to_oci-block) below.
 * `database_server_type` - (Optional) Database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_server_type` - (Optional) Storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `tags` - (Optional) Map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+### `customer_contacts_to_send_to_oci` Block
+
+* `email` - (Required) Email address of the contact.
+
 ### `maintenance_window` Block
 
 * `custom_action_timeout_in_mins` - (Required) Custom action timeout in minutes for the maintenance window.
-* `days_of_week` - (Optional) Days of the week when maintenance can be performed.
+* `days_of_week` - (Optional) Days of the week when maintenance can be performed. See [`days_of_week` Block](#days_of_week-block) below.
 * `hours_of_day` - (Optional) Hours of the day when maintenance can be performed.
 * `is_custom_action_timeout_enabled` - (Required) Whether custom action timeout is enabled for the maintenance window.
 * `lead_time_in_weeks` - (Optional) Lead time in weeks before the maintenance window.
-* `months` - (Optional) Months when maintenance can be performed.
+* `months` - (Optional) Months when maintenance can be performed. See [`months` Block](#months-block) below.
 * `patching_mode` - (Required) Patching mode for the maintenance window.
 * `preference` - (Required) Preference for the maintenance window scheduling.
 * `weeks_of_month` - (Optional) Weeks of the month when maintenance can be performed.
+
+#### `days_of_week` Block
+
+* `name` - (Required) Name of the day of the week. Valid values are `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, and `SUNDAY`.
+
+#### `months` Block
+
+* `name` - (Required) Name of the month. Valid values are `JANUARY`, `FEBRUARY`, `MARCH`, `APRIL`, `MAY`, `JUNE`, `JULY`, `AUGUST`, `SEPTEMBER`, `OCTOBER`, `NOVEMBER`, and `DECEMBER`.
 
 ## Attribute Reference
 
@@ -94,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `activated_storage_count` - Number of storage servers requested for the Exadata infrastructure.
 * `additional_storage_count` - Number of storage servers requested for the Exadata infrastructure.
-* `arn` - Amazon Resource Name (ARN) of the Exadata infrastructure.
+* `arn` - ARN of the Exadata infrastructure.
 * `available_storage_size_in_gbs` - Amount of available storage, in gigabytes (GB), for the Exadata infrastructure.
 * `compute_model` - OCI model compute model used when you create or clone an instance: ECPU or OCPU.
 * `cpu_count` - Total number of CPU cores that are allocated to the Exadata infrastructure.

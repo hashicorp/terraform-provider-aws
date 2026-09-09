@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `anycast_ip_list_id` - ID of the Anycast static IP list that is associated with the distribution, if any.
 
-* `arn` - ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
+* `arn` - ARN for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
 * `status` - Current status of the distribution. `Deployed` if the
     distribution's information is fully propagated throughout the Amazon

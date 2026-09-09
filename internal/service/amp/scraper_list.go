@@ -75,6 +75,20 @@ func (l *scraperListResource) List(ctx context.Context, request list.ListRequest
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.Arn))
 
 			scraperID := aws.ToString(item.ScraperId)
+
+			var scraper *awstypes.ScraperDescription
+			if request.IncludeResource {
+				var err error
+				scraper, err = findScraperByID(ctx, conn, scraperID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data scraperResourceModel
@@ -84,15 +98,6 @@ func (l *scraperListResource) List(ctx context.Context, request list.ListRequest
 				data.ID = fwflex.StringValueToFramework(ctx, scraperID)
 
 				if request.IncludeResource {
-					scraper, err := findScraperByID(ctx, conn, scraperID)
-					if retry.NotFound(err) {
-						return
-					}
-					if err != nil {
-						result = fwdiag.NewListResultErrorDiagnostic(err)
-						return
-					}
-
 					result.Diagnostics.Append(l.flatten(ctx, scraper, &data)...)
 					if result.Diagnostics.HasError() {
 						return

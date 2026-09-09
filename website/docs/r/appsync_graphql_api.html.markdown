@@ -268,7 +268,7 @@ The `lambda_authorizer_config` configuration block supports the following argume
 
 The `log_config` configuration block supports the following arguments:
 
-* `cloudwatch_logs_role_arn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
+* `cloudwatch_logs_role_arn` - (Required) ARN of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
 * `exclude_verbose_content` - (Optional) Set to TRUE to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging  level. Valid values: `true`, `false`. Default value: `false`
 * `field_log_level` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
 
