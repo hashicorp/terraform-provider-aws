@@ -347,6 +347,7 @@ object SetUp : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
             name = "Run provider tests"
             scriptContent = File("./scripts/provider_tests/tests.sh").readText()
