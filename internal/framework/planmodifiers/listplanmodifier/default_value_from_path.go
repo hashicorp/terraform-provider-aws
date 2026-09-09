@@ -5,6 +5,7 @@ package listplanmodifier
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,7 +29,7 @@ func (m defaultValueFromPath[T]) Description(ctx context.Context) string {
 }
 
 func (m defaultValueFromPath[T]) MarkdownDescription(context.Context) string {
-	return "The default value of this attribute is another attribute's value."
+	return fmt.Sprintf("The default value of this attribute is %[1]q's value.", m.path)
 }
 
 func (m defaultValueFromPath[T]) PlanModifyList(ctx context.Context, request planmodifier.ListRequest, response *planmodifier.ListResponse) {

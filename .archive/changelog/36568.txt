@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_appsync_api_key: Add `api_key_id` attribute
-```

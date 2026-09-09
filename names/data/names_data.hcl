@@ -51,6 +51,35 @@ service "account" {
   is_global = true
 }
 
+service "accountaccess" {
+  cli_v2_command {
+    aws_cli_v2_command           = "account-access"
+    aws_cli_v2_command_no_dashes = "accountaccess"
+  }
+
+  sdk {
+    id            = "Account Access"
+    arn_namespace = "account-access"
+  }
+
+  names {
+    provider_name_upper = "AccountAccess"
+    human_friendly      = "Account Access"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
+  }
+
+  resource_prefix {
+    correct = "aws_accountaccess_"
+  }
+
+  provider_package_correct = "accountaccess"
+  doc_prefix               = ["accountaccess_"]
+  brand                    = "AWS"
+}
+
 service "acm" {
   sdk {
     id            = "ACM"
@@ -102,6 +131,40 @@ service "acmpca" {
 
   provider_package_correct = "acmpca"
   doc_prefix               = ["acmpca_"]
+  brand                    = "AWS"
+}
+
+service "agentregistry" {
+  cli_v2_command {
+    aws_cli_v2_command           = "agent-registry-control"
+    aws_cli_v2_command_no_dashes = "agentregistrycontrol"
+  }
+
+  go_packages {
+    v2_package = "agentregistrycontrol"
+  }
+
+  sdk {
+    id            = "Agent Registry Control"
+    arn_namespace = "agent-registry"
+  }
+
+  names {
+    provider_name_upper = "AgentRegistry"
+    human_friendly      = "Agent Registry"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListRegistries"
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_agentregistry_"
+  }
+
+  provider_package_correct = "agentregistry"
+  doc_prefix               = ["agentregistry_"]
   brand                    = "AWS"
 }
 
@@ -2826,6 +2889,31 @@ service "directconnect" {
   brand                    = "AWS"
 }
 
+service "directoryservicedata" {
+  sdk {
+    id            = "Directory Service Data"
+    arn_namespace = "ds"
+  }
+
+  names {
+    provider_name_upper = "DirectoryServiceData"
+    human_friendly      = "Directory Service Data"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "DirectoryId: aws.String(\"d-1234567890\")"
+  }
+
+  resource_prefix {
+    correct = "aws_directoryservicedata_"
+  }
+
+  provider_package_correct = "directoryservicedata"
+  doc_prefix               = ["directoryservicedata_"]
+  brand                    = "AWS"
+}
+
 service "dlm" {
   sdk {
     id            = "DLM"
@@ -5093,6 +5181,34 @@ service "lambda" {
   brand                    = "AWS"
 }
 
+service "lambdacore" {
+  cli_v2_command {
+    aws_cli_v2_command           = "lambda-core"
+    aws_cli_v2_command_no_dashes = "lambdacore"
+  }
+
+  sdk {
+    id            = "Lambda Core"
+    arn_namespace = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaCore"
+    human_friendly      = "Lambda Core"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListNetworkConnectors"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdacore_"
+  }
+
+  doc_prefix = ["lambdacore_"]
+  brand      = "AWS"
+}
+
 service "lambdamicrovms" {
   sdk {
     id            = "Lambda Microvms"
@@ -5100,7 +5216,7 @@ service "lambdamicrovms" {
   }
 
   names {
-    provider_name_upper = "LambdaMicrovms"
+    provider_name_upper = "LambdaMicroVMs"
     human_friendly      = "Lambda MicroVMs"
   }
 
@@ -6329,7 +6445,7 @@ service "opensearch" {
 
   provider_package_correct = "opensearch"
   doc_prefix               = ["opensearch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opensearchserverless" {
@@ -6353,7 +6469,7 @@ service "opensearchserverless" {
 
   provider_package_correct = "opensearchserverless"
   doc_prefix               = ["opensearchserverless_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "osis" {
@@ -6365,7 +6481,7 @@ service "osis" {
   names {
     aliases             = ["opensearchingestion"]
     provider_name_upper = "OpenSearchIngestion"
-    human_friendly      = "OpenSearch Ingestion"
+    human_friendly      = "OpenSearch Ingestion (OSIS)"
   }
 
   endpoint_info {
@@ -6378,7 +6494,7 @@ service "osis" {
 
   provider_package_correct = "osis"
   doc_prefix               = ["osis_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "opsworks" {
@@ -7229,6 +7345,35 @@ service "resiliencehub" {
 
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
+  brand                    = "AWS"
+}
+
+service "resiliencehubv2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "resilience-hub-v2"
+    aws_cli_v2_command_no_dashes = "resiliencehubv2"
+  }
+
+  sdk {
+    id            = "resiliencehubv2"
+    arn_namespace = "resiliencehub"
+  }
+
+  names {
+    provider_name_upper = "ResilienceHubV2"
+    human_friendly      = "Resilience Hub V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPolicies"
+  }
+
+  resource_prefix {
+    correct = "aws_resiliencehubv2_"
+  }
+
+  provider_package_correct = "resiliencehubv2"
+  doc_prefix               = ["resiliencehubv2_"]
   brand                    = "AWS"
 }
 

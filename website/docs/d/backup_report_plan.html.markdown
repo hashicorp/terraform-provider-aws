@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `number_of_frameworks` - Number of frameworks a report covers.
 * `organization_units` - List of Organizational Units a report covers.
 * `regions` - List of regions a report covers.
-* `report_template` - Identifies the report template for the report. Reports are built using a report template.
+* `report_template` - Report template for the report. Reports are built using a report template.

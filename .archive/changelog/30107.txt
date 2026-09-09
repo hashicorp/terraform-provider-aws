@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_launch_template: Allow `metadata_options` to be applied when `http_endpoint` is not configured
-```

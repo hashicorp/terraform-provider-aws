@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_imagebuilder_distribution_configuration: Fix validation regex for `ami_distribution_configuration.name`
-```

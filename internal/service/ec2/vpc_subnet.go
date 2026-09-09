@@ -472,6 +472,29 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
+	// If the subnet's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
+	var ipamPoolIDs []string
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		ipamPoolIDs = append(ipamPoolIDs, v.(string))
+	}
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		if ipamPoolID := v.(string); ipamPoolID != amazonIPv6PoolID {
+			ipamPoolIDs = append(ipamPoolIDs, ipamPoolID)
+		}
+	}
+	if len(ipamPoolIDs) > 0 {
+		// IPAM eventual consistency. It can take ~30 min to release allocations.
+		timeout := min(d.Timeout(schema.TimeoutDelete), 35*time.Minute) //nolint:mnd // 35 minutes is the minimum feasible wait time
+		for _, ipamPoolID := range ipamPoolIDs {
+			_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+				return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Id())
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Subnet (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+			}
+		}
+	}
+
 	return diags
 }
 

@@ -1340,6 +1340,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Instances",
 		"KinesisStreams",
 		"ManagedResources",
+		"MultiRegionClusters",
 		"Nodegroups",
 		"Pods",
 		"ReplicationGroups",

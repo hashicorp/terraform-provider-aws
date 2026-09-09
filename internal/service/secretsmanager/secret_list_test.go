@@ -4,10 +4,8 @@
 package secretsmanager_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -16,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -53,10 +50,10 @@ func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					arn1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrARN)),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:`+regexp.QuoteMeta(rName+"-0")+`-.+`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkSecretARN(rName+"-0")),
 
 					arn2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrARN)),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:`+regexp.QuoteMeta(rName+"-1")+`-.+`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkSecretARN(rName+"-1")),
 				},
 			},
 
@@ -120,7 +117,7 @@ func TestAccSecretsManagerSecret_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_secretsmanager_secret.test", identity1.Checks()),
 					querycheck.ExpectResourceKnownValues("aws_secretsmanager_secret.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkSecretARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKMSKeyID), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),

@@ -62,7 +62,7 @@ func (v discriminatorRequires[T]) ValidateString(ctx context.Context, request va
 		if mpVal.IsNull() {
 			response.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 				request.Path,
-				fmt.Sprintf("Attribute %[1]q must be configured when %[2]q equals %[3]q", mp, request.Path, vDiscriminating),
+				fmt.Sprintf("Attribute %[1]s must be configured when %[2]s equals %[3]q", mp, request.Path, vDiscriminating),
 			))
 		}
 	}

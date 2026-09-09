@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_codebuild_fleet: Allow `scaling_configuration` to be removed on Update
-```

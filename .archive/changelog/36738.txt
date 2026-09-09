@@ -1,3 +1,0 @@
-```release-note:bug
-Correctly handles user agents passed using `TF_APPEND_USER_AGENT` which contain `/`,  `(`, `)`, or space.
-```

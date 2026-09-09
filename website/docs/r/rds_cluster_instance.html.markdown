@@ -60,7 +60,7 @@ This resource supports the following arguments:
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Optional, Forces new resource) Specifies the DB subnet group to associate with this DB instance. The default behavior varies depending on whether `db_subnet_group_name` is specified. Please refer to official [AWS documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) to understand how `db_subnet_group_name` and `publicly_accessible` parameters affect DB instance behaviour. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
-* `engine_version` - (Optional) Database engine version. Please note that to upgrade the `engine_version` of the instance, it must be done on the `aws_rds_cluster` `engine_version`. Trying to upgrade in `aws_cluster_instance` will not update the `engine_version`.
+* `engine_version` - (Optional) Database engine version. Please note that to upgrade the `engine_version` of the instance, it must be done on the `aws_rds_cluster` `engine_version`. Trying to upgrade in `aws_rds_cluster_instance` will not update the `engine_version`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `force_destroy` - (Optional) Forces an instance to be destroyed when a part of a read replica cluster. **Note:** will promote the read replica to a standalone cluster before instance deletion.
@@ -77,6 +77,7 @@ This resource supports the following arguments:
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this instance during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events. Requires the `rds:DescribeEvents` IAM permission when set.
 
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
@@ -85,7 +86,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of cluster instance
+* `arn` - ARN of cluster instance
 * `cluster_identifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier

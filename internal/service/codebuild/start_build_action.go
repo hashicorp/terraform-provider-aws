@@ -152,7 +152,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return actionwait.FetchResult[*awstypes.Build]{Status: actionwait.Status(b.BuildStatus), Value: &b}, nil
 	}, actionwait.Options[*awstypes.Build]{
 		Timeout:          timeout,
-		Interval:         actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
+		Interval:         actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay(ctx)),
 		ProgressInterval: 2 * time.Minute,
 		SuccessStates:    []actionwait.Status{actionwait.Status(awstypes.StatusTypeSucceeded)},
 		TransitionalStates: []actionwait.Status{

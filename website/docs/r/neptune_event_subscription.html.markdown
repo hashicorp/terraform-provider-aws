@@ -79,7 +79,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Neptune event notification subscription.
-* `arn` - The Amazon Resource Name of the Neptune event notification subscription.
+* `arn` - ARN of the Neptune event notification subscription.
 * `customer_aws_id` - The AWS customer account associated with the Neptune event notification subscription.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

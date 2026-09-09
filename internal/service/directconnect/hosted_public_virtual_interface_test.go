@@ -231,3 +231,74 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 }
 `, rName))
 }
+
+func TestAccDirectConnectHostedPublicVirtualInterface_rateLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_hosted_public_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(t, 10))
+	amazonAddress := "175.45.176.11/28"
+	customerAddress := "175.45.176.12/28"
+	bgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	vlan := acctest.RandIntRange(t, 2049, 4094)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostedPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, t, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "1Gbps"),
+				),
+			},
+			{
+				Config:            testAccHostedPublicVirtualInterfaceConfig_rateLimit(connectionID, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccHostedPublicVirtualInterfaceConfig_rateLimit(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+# Creator
+resource "aws_dx_hosted_public_virtual_interface" "test" {
+  address_family   = "ipv4"
+  amazon_address   = %[3]q
+  bgp_asn          = %[5]d
+  connection_id    = %[1]q
+  customer_address = %[4]q
+  name             = %[2]q
+  owner_account_id = data.aws_caller_identity.accepter.account_id
+  rate_limit       = "1Gbps"
+  vlan             = %[6]d
+
+  route_filter_prefixes = [
+    "175.45.176.0/22",
+    "210.52.109.0/24",
+  ]
+}
+
+# Accepter
+data "aws_caller_identity" "accepter" {
+  provider = "awsalternate"
+}
+
+resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
+  provider = "awsalternate"
+
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
+}
+`, cid, rName, amzAddr, custAddr, bgpAsn, vlan))
+}

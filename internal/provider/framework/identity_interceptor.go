@@ -251,14 +251,19 @@ func identityIsFullyNull(ctx context.Context, identity *tfsdk.ResourceIdentity, 
 		return true
 	}
 
-	for _, attr := range attributes {
-		var attrVal types.String
-		if diags := identity.GetAttribute(ctx, path.Root(attr.Name()), &attrVal); diags.HasError() {
+	for _, att := range attributes {
+		var attrVal attr.Value
+		if diags := identity.GetAttribute(ctx, path.Root(att.Name()), &attrVal); diags.HasError() {
 			return false
 		}
-		if !attrVal.IsNull() && attrVal.ValueString() != "" {
-			return false
+		if attrVal == nil || attrVal.IsNull() {
+			continue
 		}
+		// Preserve the historical behavior of treating an empty string as null.
+		if s, ok := attrVal.(types.String); ok && s.ValueString() == "" {
+			continue
+		}
+		return false
 	}
 
 	return true

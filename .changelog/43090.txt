@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0.
-```

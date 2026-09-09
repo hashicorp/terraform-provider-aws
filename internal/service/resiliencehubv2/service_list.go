@@ -1,0 +1,124 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package resiliencehubv2
+
+import (
+	"context"
+	"fmt"
+	"iter"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkListResource("aws_resiliencehubv2_service")
+func newServiceResourceAsListResource() list.ListResourceWithConfigure {
+	return &serviceListResource{}
+}
+
+var _ list.ListResource = &serviceListResource{}
+
+type serviceListResource struct {
+	serviceResource
+	framework.WithList
+}
+
+func (l *serviceListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	conn := l.Meta().ResilienceHubV2Client(ctx)
+
+	var query listServiceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		var input resiliencehubv2.ListServicesInput
+		for item, err := range listServices(ctx, conn, &input) {
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			arn := aws.ToString(item.ServiceArn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+
+			var output *awstypes.Service
+			if request.IncludeResource {
+				var err error
+				output, err = findServiceByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
+			result := request.NewListResult(ctx)
+
+			var data serviceResourceModel
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.ServiceARN = fwflex.StringValueToFramework(ctx, arn)
+
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				}
+
+				result.DisplayName = aws.ToString(item.Name)
+			})
+
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+type listServiceModel struct {
+	framework.WithRegionModel
+}
+
+func listServices(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.ServiceSummary, error] {
+	return tfiter.ConcatValuesWithError(listServicePages(ctx, conn, input, optFns...))
+}
+
+func listServicePages(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[[]awstypes.ServiceSummary, error] {
+	return func(yield func([]awstypes.ServiceSummary, error) bool) {
+		pages := resiliencehubv2.NewListServicesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Resilience Hub V2 Services: %w", err))
+				return
+			}
+
+			if !yield(page.ServiceSummaries, nil) {
+				return
+			}
+		}
+	}
+}

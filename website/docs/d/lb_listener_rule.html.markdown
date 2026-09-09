@@ -167,7 +167,8 @@ This data source exports the following attributes in addition to the arguments a
   [Detailed below](#path_pattern).
 * `query_string` - Query string parameters to match.
   [Detailed below](#query_string).
-* `source_ip` - Contains a single attribute `values`, which contains a set of source IPs in CIDR notation.
+* `source_ip` - Source IP address to match.
+  [Detailed below](#source_ip).
 
 #### `host_header`
 
@@ -188,6 +189,11 @@ This data source exports the following attributes in addition to the arguments a
 #### `query_string`
 
 * `values` - Set of `key`-`value` pairs indicating the query string parameters to match.
+
+#### `source_ip`
+
+* `ip_address_type` - IP address type for Network Load Balancers.
+* `values` - Set of source IP addresses in CIDR format for Application Load Balancers
 
 ### `transform`
 

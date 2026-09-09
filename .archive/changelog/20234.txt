@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_storagegateway_smb_file_share: Add `bucket_region`, `oplocks_enabled` and `vpc_endpoint_dns_name` arguments
-```

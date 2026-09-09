@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_query_definition: Support ARNs as valid values for `log_group_names`
-```

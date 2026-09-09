@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_crawler: add `delta_target` argument.
-```

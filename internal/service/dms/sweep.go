@@ -4,14 +4,19 @@
 package dms
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -48,6 +53,8 @@ func RegisterSweepers() {
 		Name: "aws_dms_replication_task",
 		F:    sweepReplicationTasks,
 	})
+
+	awsv2.Register("aws_dms_instance_profile", sweepInstanceProfiles)
 }
 
 func sweepEndpoints(region string) error {
@@ -258,4 +265,26 @@ func sweepReplicationTasks(region string) error {
 	}
 
 	return nil
+}
+
+func sweepInstanceProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.DMSClient(ctx)
+	var input dms.DescribeInstanceProfilesInput
+	var sweepResources []sweep.Sweepable
+
+	pages := dms.NewDescribeInstanceProfilesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.InstanceProfiles {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newInstanceProfileResource, client,
+				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.InstanceProfileArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

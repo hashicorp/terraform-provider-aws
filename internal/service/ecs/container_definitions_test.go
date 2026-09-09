@@ -4,8 +4,134 @@
 package ecs
 
 import (
+	"encoding/json"
 	"testing"
+
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
+
+func TestFlattenContainerDefinitions(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input string
+		want  string
+	}{
+		"nil":              {input: "null", want: "[]"},
+		"empty":            {input: "[]"},
+		"empty definition": {input: "[{}]"},
+		"all fields": {
+			input: `[{
+				"command":["sh","-c","echo \"hello\" <&>\n\u2603"],"cpu":256,"credentialSpecs":["credential-spec"],
+				"dependsOn":[{"condition":"START","containerName":"other"}],"disableNetworking":true,
+				"dnsSearchDomains":["example.com"],"dnsServers":["10.0.0.2"],
+				"dockerLabels":{"MixedCase.Key":"<&>","empty":""},"dockerSecurityOptions":["no-new-privileges"],
+				"entryPoint":["sh"],"environment":[{"name":"Z","value":"last"},{"name":"A","value":""}],
+				"environmentFiles":[{"type":"s3","value":"environment-file"}],"essential":true,
+				"extraHosts":[{"hostname":"host","ipAddress":"10.0.0.3"}],
+				"firelensConfiguration":{"options":{"enable-ecs-log-metadata":"true"},"type":"fluentbit"},
+				"healthCheck":{"command":["CMD-SHELL","exit 0"],"interval":30,"retries":3,"startPeriod":10,"timeout":5},
+				"hostname":"hostname","image":"image","interactive":true,"links":["other"],
+				"linuxParameters":{
+					"capabilities":{"add":["SYS_PTRACE"],"drop":["NET_RAW"]},
+					"devices":[{"containerPath":"/dev/x","hostPath":"/dev/y","permissions":["read","write","mknod"]}],
+					"initProcessEnabled":true,"maxSwap":1024,"sharedMemorySize":64,"swappiness":60,
+					"tmpfs":[{"containerPath":"/tmp","mountOptions":["rw","noexec"],"size":128}]
+				},
+				"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"logs"},"secretOptions":[{"name":"log-secret","valueFrom":"log-value"}]},
+				"memory":512,"memoryReservation":256,"mountPoints":[{"containerPath":"/data","readOnly":true,"sourceVolume":"data"}],
+				"name":"Z","portMappings":[{"appProtocol":"http","containerPort":80,"containerPortRange":"8000-8010","hostPort":8080,"name":"http","protocol":"tcp"}],
+				"privileged":true,"pseudoTerminal":true,"readonlyRootFilesystem":true,
+				"repositoryCredentials":{"credentialsParameter":"credentials"},"resourceRequirements":[{"type":"GPU","value":"1"}],
+				"restartPolicy":{"enabled":true,"ignoredExitCodes":[0,1],"restartAttemptPeriod":60},
+				"secrets":[{"name":"Z","valueFrom":"last"},{"name":"A","valueFrom":"first"}],
+				"startTimeout":10,"stopTimeout":20,"systemControls":[{"namespace":"net.ipv4.ip_forward","value":"1"}],
+				"ulimits":[{"hardLimit":1024,"name":"nofile","softLimit":512}],"user":"1000","versionConsistency":"enabled",
+				"volumesFrom":[{"readOnly":true,"sourceContainer":"other"}],"workingDirectory":"/app"
+			},{"name":"A","image":"other-image"}]`,
+		},
+		"explicit zero values": {
+			input: `[{
+				"command":[""],"credentialSpecs":[""],"dependsOn":[{"containerName":""}],"disableNetworking":false,
+				"dnsSearchDomains":[""],"dnsServers":[""],"dockerLabels":{"":""},"dockerSecurityOptions":[""],
+				"entryPoint":[""],"environment":[{"name":"","value":""}],"environmentFiles":[{"value":""}],"essential":false,
+				"extraHosts":[{"hostname":"","ipAddress":""}],"firelensConfiguration":{"options":{"":""}},
+				"healthCheck":{"command":[""],"interval":0,"retries":0,"startPeriod":0,"timeout":0},
+				"hostname":"","image":"","interactive":false,"links":[""],
+				"linuxParameters":{"capabilities":{"add":[""],"drop":[""]},"devices":[{"containerPath":"","hostPath":"","permissions":[""]}],
+					"initProcessEnabled":false,"maxSwap":0,"sharedMemorySize":0,"swappiness":0,"tmpfs":[{"containerPath":"","mountOptions":[""],"size":0}]},
+				"logConfiguration":{"options":{"":""},"secretOptions":[{"name":"","valueFrom":""}]},
+				"memory":0,"memoryReservation":0,"mountPoints":[{"containerPath":"","readOnly":false,"sourceVolume":""}],"name":"",
+				"portMappings":[{"containerPort":0,"containerPortRange":"","hostPort":0,"name":""}],
+				"privileged":false,"pseudoTerminal":false,"readonlyRootFilesystem":false,
+				"repositoryCredentials":{"credentialsParameter":""},"resourceRequirements":[{"value":""}],
+				"restartPolicy":{"enabled":false,"ignoredExitCodes":[0],"restartAttemptPeriod":0},"secrets":[{"name":"","valueFrom":""}],
+				"startTimeout":0,"stopTimeout":0,"systemControls":[{"namespace":"","value":""}],
+				"ulimits":[{"hardLimit":0,"softLimit":0}],"user":"","volumesFrom":[{"readOnly":false,"sourceContainer":""}],"workingDirectory":""
+			}]`,
+		},
+		"empty collections": {
+			input: `[{
+				"command":[],"credentialSpecs":[],"dependsOn":[],"dnsSearchDomains":[],"dnsServers":[],"dockerLabels":{},"dockerSecurityOptions":[],
+				"entryPoint":[],"environment":[],"environmentFiles":[],"extraHosts":[],"firelensConfiguration":{"options":{}},"healthCheck":{"command":[]},
+				"links":[],"linuxParameters":{"capabilities":{"add":[],"drop":[]},"devices":[],"tmpfs":[]},
+				"logConfiguration":{"options":{},"secretOptions":[]},"mountPoints":[],"portMappings":[],"repositoryCredentials":{},
+				"resourceRequirements":[],"restartPolicy":{"ignoredExitCodes":[]},"secrets":[],"systemControls":[],"ulimits":[],"volumesFrom":[]
+			}]`,
+		},
+		"empty nested objects": {
+			input: `[{
+				"dependsOn":[{}],"environment":[{}],"environmentFiles":[{}],"extraHosts":[{}],"firelensConfiguration":{},"healthCheck":{},
+				"linuxParameters":{"capabilities":{},"devices":[{},{"permissions":[]}]},"logConfiguration":{"secretOptions":[{}]},
+				"mountPoints":[{}],"portMappings":[{}],"repositoryCredentials":{},"resourceRequirements":[{}],"restartPolicy":{},
+				"secrets":[{}],"systemControls":[{}],"volumesFrom":[{}]
+			}]`,
+		},
+		"required zero fields retained": {
+			input: `[{"linuxParameters":{"tmpfs":[{},{"mountOptions":[]}]},"ulimits":[{}]}]`,
+			want:  `[{"linuxParameters":{"tmpfs":[{"size":0},{"mountOptions":[],"size":0}]},"ulimits":[{"hardLimit":0,"softLimit":0}]}]`,
+		},
+		"zero cpu and empty enums omitted": {
+			input: `[{"cpu":0,"versionConsistency":"","dependsOn":[{"condition":""}],"environmentFiles":[{"type":""}],"firelensConfiguration":{"type":""},"logConfiguration":{"logDriver":""},"portMappings":[{"appProtocol":"","protocol":""}],"resourceRequirements":[{"type":""}],"ulimits":[{"name":""}]}]`,
+			want:  `[{"dependsOn":[{}],"environmentFiles":[{}],"firelensConfiguration":{},"logConfiguration":{},"portMappings":[{}],"resourceRequirements":[{}],"ulimits":[{"hardLimit":0,"softLimit":0}]}]`,
+		},
+		"unknown enums retained": {
+			input: `[{"versionConsistency":"FUTURE","dependsOn":[{"condition":"FUTURE"}],"environmentFiles":[{"type":"FUTURE"}],"firelensConfiguration":{"type":"FUTURE"},"logConfiguration":{"logDriver":"FUTURE"},"portMappings":[{"appProtocol":"FUTURE","protocol":"FUTURE"}],"resourceRequirements":[{"type":"FUTURE"}],"ulimits":[{"name":"FUTURE","hardLimit":0,"softLimit":0}]}]`,
+		},
+		"nil fields omitted": {
+			input: `[{"command":null,"environment":null,"essential":null,"dockerLabels":null,"linuxParameters":null,"healthCheck":null,"restartPolicy":null}]`,
+			want:  `[{}]`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var input []awstypes.ContainerDefinition
+			if err := tfjson.DecodeFromString(tc.input, &input); err != nil {
+				t.Fatal(err)
+			}
+			got, err := flattenContainerDefinitions(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := tc.want
+			if want == "" {
+				want = tc.input
+			}
+			if !json.Valid([]byte(got)) {
+				t.Fatalf("invalid JSON: %s", got)
+			}
+			// jsoncmp compares object roots, so wrap the container arrays.
+			if diff := jsoncmp.Diff(`{"definitions":`+want+`}`, `{"definitions":`+got+`}`); diff != "" {
+				t.Errorf("unexpected JSON (+got, -want): %s", diff)
+			}
+		})
+	}
+}
 
 func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 	t.Parallel()

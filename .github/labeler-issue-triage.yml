@@ -34,10 +34,14 @@ service/accessanalyzer:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accessanalyzer_'
 service/account:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_account_'
+service/accountaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accountaccess_'
 service/acm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acm_'
 service/acmpca:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_acmpca_'
+service/agentregistry:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_agentregistry_'
 service/alexaforbusiness:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_alexaforbusiness_'
 service/amp:
@@ -230,6 +234,8 @@ service/devopsguru:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_devopsguru_'
 service/directconnect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dx_'
+service/directoryservicedata:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directoryservicedata_'
 service/discovery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_discovery_'
 service/dlm:
@@ -418,6 +424,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/lambdacore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdacore_'
 service/lambdamicrovms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambdamicrovms_'
 service/launchwizard:
@@ -604,6 +612,8 @@ service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resiliencehub_'
+service/resiliencehubv2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resiliencehubv2_'
 service/resourceexplorer2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourceexplorer2_'
 service/resourcegroups:

@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix `index out of range [0] with length 0` panic
-```

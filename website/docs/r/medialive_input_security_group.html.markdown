@@ -3,12 +3,12 @@ subcategory: "Elemental MediaLive"
 layout: "aws"
 page_title: "AWS: aws_medialive_input_security_group"
 description: |-
-  Terraform resource for managing an AWS MediaLive InputSecurityGroup.
+  Manages an AWS MediaLive Input Security Group.
 ---
 
 # Resource: aws_medialive_input_security_group
 
-Terraform resource for managing an AWS MediaLive InputSecurityGroup.
+Manages an AWS MediaLive Input Security Group.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) A map of tags to assign to the InputSecurityGroup. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Whitelist Rules
 
@@ -59,7 +59,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive InputSecurityGroup using the `id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_medialive_input_security_group.example
+  identity = {
+    id = "123456"
+  }
+}
+
+resource "aws_medialive_input_security_group" "example" {
+  # Configuration omitted for brevity
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Input Security Group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive Input Security Group using the `id`. For example:
 
 ```terraform
 import {
@@ -68,7 +94,7 @@ import {
 }
 ```
 
-Using `terraform import`, import MediaLive InputSecurityGroup using the `id`. For example:
+Using `terraform import`, import MediaLive Input Security Group using the `id`. For example:
 
 ```console
 % terraform import aws_medialive_input_security_group.example 123456

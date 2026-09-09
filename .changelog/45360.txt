@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_s3tables_table_bucket_replication
-```
-
-```release-note:new-resource
-aws_s3tables_table_replication
-```

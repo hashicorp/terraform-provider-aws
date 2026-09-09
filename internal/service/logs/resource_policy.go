@@ -36,6 +36,7 @@ import (
 // @ImportIDHandler("resourcePolicyImportID")
 // @Testing(preIdentityVersion="v6.51.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.ResourcePolicy")
+// @Testing(identityTestCases="accountscope")
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
@@ -132,10 +133,12 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	var resourcePolicy *awstypes.ResourcePolicy
 	var err error
-	if v, ok := d.GetOk("policy_scope"); ok && awstypes.PolicyScope(v.(string)) == awstypes.PolicyScopeResource {
-		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, d.Id())
+	if v, ok := d.GetOk(names.AttrResourceARN); ok {
+		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, v.(string))
+	} else if v, ok := d.GetOk("policy_name"); ok {
+		resourcePolicy, err = findResourcePolicyByName(ctx, conn, v.(string))
 	} else {
-		resourcePolicy, err = findResourcePolicyByName(ctx, conn, d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Resource Policy (%s): missing required policy_name or resource_arn", d.Id())
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -279,13 +282,11 @@ func (resourcePolicyImportID) Parse(id string) (string, map[string]any, error) {
 	var result map[string]any
 	if arn.IsARN(id) {
 		result = map[string]any{
-			"policy_scope":        awstypes.PolicyScopeResource,
 			names.AttrResourceARN: id,
 		}
 	} else {
 		result = map[string]any{
-			"policy_name":  id,
-			"policy_scope": awstypes.PolicyScopeAccount,
+			"policy_name": id,
 		}
 	}
 

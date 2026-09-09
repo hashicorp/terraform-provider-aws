@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_db_instance: Creating resource from point-in-time recovery now handles `password` attribute correctly
-```

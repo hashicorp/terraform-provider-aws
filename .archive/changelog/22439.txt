@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_trigger: Add `start_on_creation` argument
-```

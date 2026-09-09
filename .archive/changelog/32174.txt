@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Mask all sensitive values that appear when `TF_LOG` level is `TRACE`
-```

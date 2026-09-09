@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_mwaa_environment: Increase resource creation timeout to 2 hours
-```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kms_key: Fix order-related diffs in `policy`
-```

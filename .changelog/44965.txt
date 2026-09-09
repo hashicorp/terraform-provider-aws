@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_domain: Add `domain_settings.trusted_identity_propagation_settings` argument
-```

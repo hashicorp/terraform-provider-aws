@@ -310,7 +310,7 @@ The `root_block_device` block supports the following:
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
 * `encrypted` - (Optional) Whether to enable volume encryption. Defaults to `false`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) ARN of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 * `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
@@ -324,7 +324,7 @@ Each `ebs_block_device` block supports the following:
 * `device_name` - (Required) Name of the device to mount.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume. Defaults to `false`. Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) ARN of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 * `snapshot_id` - (Optional) Snapshot ID to mount.
 * `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.

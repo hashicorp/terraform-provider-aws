@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_connect_instance: Fix crash when reading instances with `CREATION_FAILED` status
-```

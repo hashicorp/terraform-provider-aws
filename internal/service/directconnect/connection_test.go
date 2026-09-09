@@ -40,10 +40,12 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLocation),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "rate_limiter_status.#"),
 				),
 			},
 			{

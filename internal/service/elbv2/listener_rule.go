@@ -507,13 +507,18 @@ func resourceListenerRule() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										names.AttrIPAddressType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SourceIpAddressTypeEnum](),
+										},
 										names.AttrValues: {
 											Type: schema.TypeSet,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
 												ValidateFunc: verify.ValidCIDRNetworkAddress,
 											},
-											Required: true,
+											Optional: true,
 										},
 									},
 								},
@@ -756,7 +761,8 @@ func resourceListenerRuleFlatten(_ context.Context, rule *awstypes.Rule, d *sche
 		case "source-ip":
 			conditionMap["source_ip"] = []any{
 				map[string]any{
-					names.AttrValues: flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
+					names.AttrIPAddressType: condition.SourceIpConfig.IpAddressType,
+					names.AttrValues:        flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
 				},
 			}
 		}
@@ -1053,10 +1059,14 @@ func expandRuleConditions(tfList []any) ([]awstypes.RuleCondition, error) {
 		if sourceIp, ok := tfMap["source_ip"].([]any); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
-			values := sourceIp[0].(map[string]any)[names.AttrValues].(*schema.Set)
 
-			apiObjects[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
-				Values: flex.ExpandStringValueSet(values),
+			apiObjects[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{}
+
+			if v, ok := sourceIp[0].(map[string]any)[names.AttrIPAddressType]; ok && v.(string) != "" {
+				apiObjects[i].SourceIpConfig.IpAddressType = awstypes.SourceIpAddressTypeEnum(v.(string))
+			}
+			if v, ok := sourceIp[0].(map[string]any)[names.AttrValues]; ok && v != nil {
+				apiObjects[i].SourceIpConfig.Values = flex.ExpandStringValueSet(v.(*schema.Set))
 			}
 		}
 

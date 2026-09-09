@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_image_builder: Correctly create resource with `image_arn` argument
-```

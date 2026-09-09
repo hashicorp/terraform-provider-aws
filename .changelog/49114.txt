@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_cluster: Add plan-time validation to reject transit_encryption_enabled for Redis and Valkey engines, which are only supported on aws_elasticache_replication_group
+```

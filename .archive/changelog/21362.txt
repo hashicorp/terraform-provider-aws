@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_codedeploy_deployment_group: Correctly update `deployment_group_name` argument
-```

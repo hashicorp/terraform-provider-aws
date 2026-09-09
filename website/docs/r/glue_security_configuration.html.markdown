@@ -50,17 +50,17 @@ This resource supports the following arguments:
 #### cloudwatch_encryption Argument Reference
 
 * `cloudwatch_encryption_mode` - (Optional) Encryption mode to use for CloudWatch data. Valid values: `DISABLED`, `SSE-KMS`. Default value: `DISABLED`.
-* `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
+* `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
 
 #### job_bookmarks_encryption Argument Reference
 
 * `job_bookmarks_encryption_mode` - (Optional) Encryption mode to use for job bookmarks data. Valid values: `CSE-KMS`, `DISABLED`. Default value: `DISABLED`.
-* `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
+* `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
 
 #### s3_encryption Argument Reference
 
 * `s3_encryption_mode` - (Optional) Encryption mode to use for S3 data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-S3`. Default value: `DISABLED`.
-* `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
+* `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
 
 ## Attribute Reference
 

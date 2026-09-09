@@ -686,7 +686,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
-				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: @Tags specification does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", v.packageName, v.functionName))
 				return
 			}
 			if d.HasInherentRegionIdentity() {

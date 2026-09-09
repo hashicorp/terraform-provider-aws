@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_opsworks_stack: Defaults to default VPC when not supplied
-```

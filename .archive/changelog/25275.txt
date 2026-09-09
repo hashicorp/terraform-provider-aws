@@ -1,3 +1,0 @@
-```release-note:enhancement
-aws_cognito_user_pool_domain: Add ability to update `certificate_arn` in place
-```

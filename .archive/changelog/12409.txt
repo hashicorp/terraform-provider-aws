@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_ec2_transit_gateway_vpc_attachments
-```

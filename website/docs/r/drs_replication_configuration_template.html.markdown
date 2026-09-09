@@ -1,7 +1,7 @@
 ---
 subcategory: "DRS (Elastic Disaster Recovery)"
 layout: "aws"
-page_title: "AWS: drs_replication_configuration_template"
+page_title: "AWS: aws_drs_replication_configuration_template"
 description: |-
   Provides an Elastic Disaster Recovery replication configuration template resource.
 ---

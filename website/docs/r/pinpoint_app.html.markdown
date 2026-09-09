@@ -64,7 +64,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `application_id` - Application ID of the End User Messaging App.
-* `arn` - Amazon Resource Name (ARN) of the PinPoint Application.
+* `arn` - ARN of the PinPoint Application.
 * `campaign_hook[0].lambda_function_name` - Lambda function name or ARN to be called for delivery.
 * `campaign_hook[0].mode` - What mode Lambda should be invoked in.
 * `campaign_hook[0].web_url` - Web URL to call for hook.
