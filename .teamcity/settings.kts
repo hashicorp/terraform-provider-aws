@@ -154,10 +154,7 @@ class PullRequest(terraformVersion: String) : BuildType({
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
         ConfigureGoEnv()
-        script {
-            name = "Install Terraform Core"
-            scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
-        }
+        InstallTerraform()
         script {
             name = "Install Github CLI"
             scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
