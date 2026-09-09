@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // TestChainConfigureWrappers verifies that wrappers compose so that the
@@ -179,5 +181,73 @@ func TestVCRTestCase_ShortCircuitsWhenAutoWrapDisabled(t *testing.T) {
 	if reflect.ValueOf(tc.ProtoV5ProviderFactories).Pointer() !=
 		reflect.ValueOf(original).Pointer() {
 		t.Error("vcrTestCase replaced ProtoV5ProviderFactories despite the auto-wrap-disabled marker")
+	}
+}
+
+// TestProtoV5FactoriesPlusProvidersAlternate_VCREnabled verifies that the
+// providers handed back to a multi-region test survive VCR setup.
+func TestProtoV5FactoriesPlusProvidersAlternate_VCREnabled(t *testing.T) {
+	t.Setenv("VCR_MODE", "RECORD_ONLY")
+	t.Setenv("VCR_PATH", t.TempDir())
+
+	var providers []*schema.Provider
+	factories := ProtoV5FactoriesPlusProvidersAlternate(context.Background(), t, &providers)
+
+	if len(providers) != 2 {
+		t.Fatalf("recorded %d providers, want 2", len(providers))
+	}
+
+	tc := resource.TestCase{ProtoV5ProviderFactories: factories}
+	if !vcrTestCase(context.Background(), t, &tc) {
+		t.Fatal("vcrTestCase returned false; want true so the test still runs")
+	}
+
+	if reflect.ValueOf(tc.ProtoV5ProviderFactories).Pointer() !=
+		reflect.ValueOf(factories).Pointer() {
+		t.Error("vcrTestCase replaced the factories serving the recorded providers")
+	}
+}
+
+// TestRegionProviderFunc_UnconfiguredProvider verifies that an unconfigured
+// provider is skipped rather than dereferenced. Provider construction installs
+// a placeholder AWSClient as Meta, so a non-nil Meta is not enough to call
+// Region on.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/49795
+func TestRegionProviderFunc_UnconfiguredProvider(t *testing.T) {
+	t.Parallel()
+
+	unconfigured := &schema.Provider{}
+	unconfigured.SetMeta(new(conns.AWSClient))
+	providers := []*schema.Provider{nil, unconfigured}
+
+	if p := RegionProviderFunc(context.Background(), "us-west-2", &providers)(); p != nil {
+		t.Errorf("returned provider %v, want nil", p)
+	}
+}
+
+// TestCheckWithProviders_UnconfiguredProvider verifies that CheckWithProviders
+// skips a provider whose Meta is an unconfigured AWSClient, so CheckDestroy
+// does not request a service client from it.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/49795
+func TestCheckWithProviders_UnconfiguredProvider(t *testing.T) {
+	t.Parallel()
+
+	unconfigured := &schema.Provider{}
+	unconfigured.SetMeta(new(conns.AWSClient))
+	providers := []*schema.Provider{unconfigured}
+
+	called := false
+	check := CheckWithProviders(func(*terraform.State, *schema.Provider) error {
+		called = true
+		return nil
+	}, &providers)
+
+	if err := check(nil); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if called {
+		t.Error("check was invoked with an unconfigured provider")
 	}
 }

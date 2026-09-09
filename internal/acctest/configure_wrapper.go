@@ -91,3 +91,23 @@ func ProtoV5ProviderFactoriesWithWrappers(
 		},
 	}
 }
+
+// composeVCRWrapper composes VCR record/replay onto p's ConfigureContextFunc
+// when VCR is enabled, and marks t so the auto-wrap path in [vcrTestCase] does
+// not build a second set of providers.
+//
+// Factory builders that hand the caller the *schema.Provider itself must call
+// this. Those providers are what [RegionProviderFunc], [CheckWithProviders],
+// and [ProviderAccountID] read their Meta from, and the auto-wrap path
+// substitutes providers of its own, leaving the caller's instances
+// unconfigured.
+func composeVCRWrapper(t *testing.T, p *schema.Provider) {
+	t.Helper()
+
+	if !vcr.IsEnabled() {
+		return
+	}
+
+	disableVCRAutoWrap(t)
+	p.ConfigureContextFunc = chainConfigureWrappers(p.ConfigureContextFunc, vcrConfigureWrapper(p, t))
+}

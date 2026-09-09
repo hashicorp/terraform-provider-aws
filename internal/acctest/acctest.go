@@ -202,6 +202,8 @@ func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, provid
 			t.Fatal(err)
 		}
 
+		composeVCRWrapper(t, p)
+
 		factories[name] = func() (tfprotov5.ProviderServer, error) { //nolint:unparam
 			return providerServerFactory(), nil
 		}
@@ -223,6 +225,8 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		composeVCRWrapper(t, p)
 
 		factories[name] = func() (tfprotov5.ProviderServer, error) { //nolint:unparam
 			return providerServerFactory(), nil
@@ -348,17 +352,9 @@ func PreCheck(ctx context.Context, t *testing.T) {
 
 // ProviderAccountID returns the account ID of an AWS provider
 func ProviderAccountID(ctx context.Context, provider *schema.Provider) string {
-	if provider == nil {
-		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
-		return ""
-	}
-	if provider.Meta() == nil {
-		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
-		return ""
-	}
-	client, ok := provider.Meta().(*conns.AWSClient)
+	client, ok := providerClient(provider)
 	if !ok {
-		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
+		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured provider")
 		return ""
 	}
 	return client.AccountID(ctx)
@@ -1559,16 +1555,9 @@ func RegionProviderFunc(ctx context.Context, region string, providers *[]*schema
 
 		log.Printf("[DEBUG] Checking providers for AWS region: %s", region)
 		for _, provo := range *providers {
-			// Ignore if Meta is empty, this can happen for validation providers
-			if provo == nil || provo.Meta() == nil {
-				log.Printf("[DEBUG] Skipping empty provider")
-				continue
-			}
-
-			// Ignore if Meta is not conns.AWSClient, this will happen for other providers
-			client, ok := provo.Meta().(*conns.AWSClient)
+			client, ok := providerClient(provo)
 			if !ok {
-				log.Printf("[DEBUG] Skipping non-AWS provider")
+				log.Printf("[DEBUG] Skipping non-AWS or unconfigured provider")
 				continue
 			}
 
@@ -1678,8 +1667,8 @@ func CheckWithProviders(f TestCheckWithProviderFunc, providers *[]*schema.Provid
 	return func(s *terraform.State) error {
 		numberOfProviders := len(*providers)
 		for i, provo := range *providers {
-			if provo.Meta() == nil {
-				log.Printf("[DEBUG] Skipping empty provider %d (total: %d)", i, numberOfProviders)
+			if _, ok := providerClient(provo); !ok {
+				log.Printf("[DEBUG] Skipping unconfigured provider %d (total: %d)", i, numberOfProviders)
 				continue
 			}
 			log.Printf("[DEBUG] Calling check with provider %d (total: %d)", i, numberOfProviders)
@@ -1695,8 +1684,8 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 	return func(s *terraform.State) error {
 		numberOfProviders := len(providers)
 		for k, provo := range providers {
-			if provo.Meta() == nil {
-				log.Printf("[DEBUG] Skipping empty provider %q (total: %d)", k, numberOfProviders)
+			if _, ok := providerClient(provo); !ok {
+				log.Printf("[DEBUG] Skipping unconfigured provider %q (total: %d)", k, numberOfProviders)
 				continue
 			}
 			log.Printf("[DEBUG] Calling check with provider %q (total: %d)", k, numberOfProviders)
@@ -1706,6 +1695,24 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 		}
 		return nil
 	}
+}
+
+// providerClient returns provo's configured AWS client.
+//
+// It reports false for a nil provider, a non-AWS provider, and an AWS provider
+// whose ConfigureContextFunc has not run.
+func providerClient(provo *schema.Provider) (*conns.AWSClient, bool) {
+	if provo == nil {
+		return nil, false
+	}
+
+	client, ok := provo.Meta().(*conns.AWSClient)
+
+	if !ok || !client.Configured() {
+		return nil, false
+	}
+
+	return client, true
 }
 
 type TestCheckWithRegionFunc func(*terraform.State, string) error

@@ -75,6 +75,10 @@ func (c *AWSClient) TerraformVersion(_ context.Context) string {
 	return c.terraformVersion
 }
 
+func (c *AWSClient) Configured() bool {
+	return c != nil && c.awsConfig != nil
+}
+
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
 func (c *AWSClient) CredentialsProvider(context.Context) aws.CredentialsProvider {
 	if c.awsConfig == nil {
