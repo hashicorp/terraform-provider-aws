@@ -35,14 +35,6 @@ type automationRuleV2ListResource struct {
 func (l *automationRuleV2ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SecurityHubClient(ctx)
 
-	var query listAutomationRuleV2Model
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input securityhub.ListAutomationRulesV2Input
 		for item, err := range listAutomationRuleV2s(ctx, conn, &input) {
@@ -79,10 +71,6 @@ func (l *automationRuleV2ListResource) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listAutomationRuleV2Model struct {
-	framework.WithRegionModel
 }
 
 func listAutomationRuleV2s(ctx context.Context, conn *securityhub.Client, input *securityhub.ListAutomationRulesV2Input) iter.Seq2[awstypes.AutomationRulesMetadataV2, error] {
