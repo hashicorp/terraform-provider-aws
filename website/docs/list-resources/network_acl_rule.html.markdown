@@ -8,12 +8,12 @@ description: |-
 
 # List Resource: aws_ec2_network_acl_rule
 
-Lists EC2 (Elastic Compute Cloud) Network ACL Rule resources.
+Lists EC2 Network ACL Rule resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_ec2_network_acl_rule" "example" {
+list "aws_network_acl_rule" "example" {
   provider = aws
 }
 ```
