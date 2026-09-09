@@ -38,14 +38,6 @@ type policyEngineListResource struct {
 func (l *policyEngineListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listPolicyEngineModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListPolicyEnginesInput
 		for item, err := range listPolicyEngines(ctx, conn, &input) {
@@ -92,10 +84,6 @@ func (l *policyEngineListResource) List(ctx context.Context, request list.ListRe
 			}
 		}
 	}
-}
-
-type listPolicyEngineModel struct {
-	framework.WithRegionModel
 }
 
 func listPolicyEngines(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListPolicyEnginesInput) iter.Seq2[awstypes.PolicyEngine, error] {
