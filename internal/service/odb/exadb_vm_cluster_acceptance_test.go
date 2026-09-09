@@ -610,5 +610,5 @@ resource "aws_odb_exadb_vm_cluster" "test" {
   vm_file_system_storage_total_size_in_gbs = %[8]d
 %[12]s
 }
-`, rName, hostname, availabilityZoneID, gridImageID, publicKey, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs, testAccExaDBVMClusterVaultStorageSizeInGBs, testAccExaDBVMClusterNodeCount, testAccExaDBVMClusterShape, extra)
+`, rName, hostname, availabilityZoneID, gridImageID, publicKey, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs, testAccExaDBVMClusterVaultStorageSizeInGBs, testAccExaDBVMClusterNodeCount, testAccExaDBVMClusterShapeCanonical, extra)
 }

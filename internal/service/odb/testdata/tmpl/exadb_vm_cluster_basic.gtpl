@@ -46,7 +46,7 @@ resource "aws_odb_exadb_vm_cluster" "test" {
   hostname                                 = "ofakevmc"
   node_count                               = 2
   odb_network_id                           = aws_odb_network.test.id
-  shape                                    = "ExaDbXS"
+  shape                                    = "EXADBXS"
   ssh_public_keys                          = [local.test_ssh_public_key]
   total_ecpu_count                         = 64
   vm_file_system_storage_total_size_in_gbs = 440
