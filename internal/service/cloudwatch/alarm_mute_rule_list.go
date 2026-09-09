@@ -39,14 +39,6 @@ type alarmMuteRuleListResource struct {
 func (l *alarmMuteRuleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CloudWatchClient(ctx)
 
-	var query listAlarmMuteRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cloudwatch.ListAlarmMuteRulesInput
 		for item, err := range listAlarmMuteRules(ctx, conn, &input) {
@@ -95,10 +87,6 @@ func (l *alarmMuteRuleListResource) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
-}
-
-type listAlarmMuteRuleModel struct {
-	framework.WithRegionModel
 }
 
 func listAlarmMuteRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListAlarmMuteRulesInput) iter.Seq2[awstypes.AlarmMuteRuleSummary, error] {
