@@ -23,7 +23,8 @@ func TestAccODBExaDBVMClusterDataSource_basic(t *testing.T) {
 	var exaDBVMCluster odbtypes.ExadbVmCluster
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
+	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 	dataSourceName := "data.aws_odb_exadb_vm_cluster.test"
@@ -31,7 +32,7 @@ func TestAccODBExaDBVMClusterDataSource_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheckExaDBVMCluster(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -39,7 +40,7 @@ func TestAccODBExaDBVMClusterDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterDataSourceConfig_basic(rName, hostname, gridImageID, publicKey),
+				Config: testAccExaDBVMClusterDataSourceConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -67,9 +68,9 @@ func TestAccODBExaDBVMClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccExaDBVMClusterDataSourceConfig_basic(rName, hostname, gridImageID, publicKey string) string {
+func testAccExaDBVMClusterDataSourceConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey string) string {
 	return acctest.ConfigCompose(
-		testAccExaDBVMClusterConfig_basic(rName, hostname, gridImageID, publicKey),
+		testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey),
 		`
 data "aws_odb_exadb_vm_cluster" "test" {
   id = aws_odb_exadb_vm_cluster.test.id

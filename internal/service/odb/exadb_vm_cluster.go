@@ -46,10 +46,8 @@ import (
 // @FrameworkResource("aws_odb_exadb_vm_cluster", name="ExaDB VM Cluster")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
-// The generated region override identity test is disabled because Grid Infrastructure image IDs are regional.
-// @Testing(identityRegionOverrideTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/odb/types;odbtypes;odbtypes.ExadbVmCluster")
-// @Testing(preCheckRegion="us-east-1")
+// @Testing(preCheckRegion="us-east-1;eu-west-1")
 // @Testing(preCheck="testAccPreCheckExaDBVMCluster")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator="testAccRandomExaDBVMClusterDisplayName(t)")

@@ -1,6 +1,6 @@
 resource "aws_odb_network" "test" {
 {{- template "region" }}
-  availability_zone_id        = "use1-az6"
+  availability_zone_id        = local.availability_zone_id
   backup_subnet_cidr          = "10.2.1.0/24"
   client_subnet_cidr          = "10.2.0.0/24"
   delete_associated_resources = true
@@ -11,20 +11,30 @@ resource "aws_odb_network" "test" {
 
 resource "aws_odb_exascale_db_storage_vault" "test" {
 {{- template "region" }}
-  availability_zone_id                             = "use1-az6"
+  availability_zone_id                             = local.availability_zone_id
   display_name                                     = "${var.rName}-vault"
   high_capacity_database_storage_total_size_in_gbs = 900
 }
 
 data "aws_odb_gi_minor_versions" "test" {
 {{- template "region" }}
-  availability_zone_id = "use1-az6"
+  availability_zone_id = local.availability_zone_id
   gi_version           = "26.0.0.0"
   shape_family         = "EXADB_XS"
 }
 
+data "aws_region" "current" {
+{{- template "region" }}
+}
+
 locals {
-  test_ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" # nosemgrep:ci.ssh-key
+  availability_zone_ids = {
+    "eu-west-1" = "euw1-az3"
+    "us-east-1" = "use1-az6"
+  }
+
+  availability_zone_id = local.availability_zone_ids[data.aws_region.current.name]
+  test_ssh_public_key   = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" # nosemgrep:ci.ssh-key
 }
 
 resource "aws_odb_exadb_vm_cluster" "test" {

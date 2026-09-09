@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_odb_network" "test" {
+  region = var.region
+
   availability_zone_id        = local.availability_zone_id
   backup_subnet_cidr          = "10.2.1.0/24"
   client_subnet_cidr          = "10.2.0.0/24"
@@ -12,18 +14,24 @@ resource "aws_odb_network" "test" {
 }
 
 resource "aws_odb_exascale_db_storage_vault" "test" {
+  region = var.region
+
   availability_zone_id                             = local.availability_zone_id
   display_name                                     = "${var.rName}-vault"
   high_capacity_database_storage_total_size_in_gbs = 900
 }
 
 data "aws_odb_gi_minor_versions" "test" {
+  region = var.region
+
   availability_zone_id = local.availability_zone_id
   gi_version           = "26.0.0.0"
   shape_family         = "EXADB_XS"
 }
 
 data "aws_region" "current" {
+  region = var.region
+
 }
 
 locals {
@@ -37,6 +45,8 @@ locals {
 }
 
 resource "aws_odb_exadb_vm_cluster" "test" {
+  region = var.region
+
   display_name                             = var.rName
   enabled_ecpu_count                       = 16
   exascale_db_storage_vault_id             = aws_odb_exascale_db_storage_vault.test.id
@@ -52,6 +62,12 @@ resource "aws_odb_exadb_vm_cluster" "test" {
 
 variable "rName" {
   description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
   type        = string
   nullable    = false
 }

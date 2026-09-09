@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_odb_network" "test" {
-  availability_zone_id        = "use1-az6"
+  availability_zone_id        = var.availability_zone_id
   backup_subnet_cidr          = "10.2.1.0/24"
   client_subnet_cidr          = "10.2.0.0/24"
   delete_associated_resources = true
@@ -12,7 +12,7 @@ resource "aws_odb_network" "test" {
 }
 
 resource "aws_odb_exascale_db_storage_vault" "test" {
-  availability_zone_id                             = "use1-az6"
+  availability_zone_id                             = var.availability_zone_id
   display_name                                     = "${var.rName}-vault"
   high_capacity_database_storage_total_size_in_gbs = 900
 }
@@ -31,6 +31,12 @@ resource "aws_odb_exadb_vm_cluster" "test" {
   ssh_public_keys                          = [var.ssh_public_key]
   total_ecpu_count                         = 64
   vm_file_system_storage_total_size_in_gbs = 440
+}
+
+variable "availability_zone_id" {
+  description = "Availability Zone ID"
+  type        = string
+  nullable    = false
 }
 
 variable "grid_image_id" {
