@@ -12,7 +12,11 @@ if [[ -z "${version}" ]]; then
   echo "WARN: failed to resolve gh CLI version from GitHub API, falling back to ${version}" >&2
 fi
 
-mkdir -p tools \
-  && wget -O gh.tar.gz "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz" \
+echo "Downloading gh ${version}..."
+
+tools_dir="%TOOLS_DIR%"
+mkdir -p "${tools_dir}"
+
+wget -O gh.tar.gz "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz" \
   && tar -xzf gh.tar.gz \
-  && mv "gh_${version}_linux_amd64/bin/gh" tools/gh
+  && mv "gh_${version}_linux_amd64/bin/gh" "${tools_dir}"/gh
