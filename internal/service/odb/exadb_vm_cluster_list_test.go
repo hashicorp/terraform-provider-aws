@@ -141,6 +141,60 @@ func TestAccODBExaDBVMCluster_List_includeResource(t *testing.T) {
 	})
 }
 
+func TestAccODBExaDBVMCluster_List_storageVaultFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName1 := "aws_odb_exadb_vm_cluster.test[0]"
+	resourceName2 := "aws_odb_exadb_vm_cluster.test[1]"
+	rName := testAccRandomExaDBVMClusterDisplayName(t)
+	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
+	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, endpoints.UsEast1RegionID, testAccExaDBVMClusterAvailabilityZoneID)
+	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheckExaDBVMCluster(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_storage_vault_filter/"),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, gridImageID, publicKey, 2),
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					identity2.GetIdentity(resourceName2),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_storage_vault_filter/"),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, gridImageID, publicKey, 2),
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_odb_exadb_vm_cluster.test", 1),
+					tfquerycheck.ExpectIdentityFunc("aws_odb_exadb_vm_cluster.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+					tfquerycheck.ExpectNoIdentityFunc("aws_odb_exadb_vm_cluster.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccODBExaDBVMCluster_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -221,6 +275,7 @@ func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]known
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("shape"), knownvalue.StringExact(testAccExaDBVMClusterShapeCanonical)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("system_version"), knownvalue.NotNull()),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 			acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 		})),

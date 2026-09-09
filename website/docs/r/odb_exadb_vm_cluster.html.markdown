@@ -50,7 +50,7 @@ resource "aws_odb_exadb_vm_cluster" "example" {
 
 The following arguments are required:
 
-* `display_name` - (Required) User-friendly name for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Must start with a letter or underscore and contain only letters, numbers, underscores, and hyphens.
+* `display_name` - (Required) User-friendly name for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Must start with a letter or underscore, contain only letters, numbers, underscores, or hyphens, and not contain consecutive hyphens.
 * `enabled_ecpu_count` - (Required) Number of ECPUs enabled for the ExaDB VM Cluster. Value must be at least `0`.
 * `exascale_db_storage_vault_id` - (Required) ID of the Exascale DB Storage Vault for the ExaDB VM Cluster. Length must be between `6` and `2048` characters. Changing this value creates a new resource.
 * `grid_image_id` - (Required) Grid Infrastructure software image ID for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Use the [`aws_odb_gi_minor_versions` data source](/docs/providers/aws/d/odb_gi_minor_versions.html) to retrieve available IDs.
@@ -72,7 +72,7 @@ The following arguments are optional:
 * `scan_listener_port_tcp_ssl` - (Optional) Port for SSL/TCP connections to the SCAN listener. Valid values are from `1024` through `8999`. Changing this value creates a new resource.
 * `shape_attribute` - (Optional) Shape attribute for the ExaDB VM Cluster. Valid values are `SMART_STORAGE` and `BLOCK_STORAGE`. Changing this value creates a new resource.
 * `system_version` - (Optional) Operating system version of the image for the ExaDB VM Cluster. Length must be between `1` and `255` characters.
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `time_zone` - (Optional) Time zone for the ExaDB VM Cluster. Length must be between `1` and `255` characters. Changing this value creates a new resource.
 
 ### `data_collection_options` Block

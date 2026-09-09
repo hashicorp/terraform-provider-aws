@@ -43,7 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Date and time when the Exascale DB storage vault was created.
 * `description` - Description of the Exascale DB storage vault.
 * `display_name` - User-friendly name for the Exascale DB storage vault.
-* `high_capacity_database_storage` - High-capacity database storage details for the Exascale DB storage vault. See [`high_capacity_database_storage`](#high_capacity_database_storage) below.
+* `high_capacity_database_storage` - High-capacity database storage details for the Exascale DB storage vault. See [`high_capacity_database_storage` Block](#high_capacity_database_storage-block) below.
 * `is_autoscale_enabled` - Whether autoscaling is enabled for the Exascale DB storage vault.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the Exascale DB storage vault.
 * `oci_url` - HTTPS URL for the Exascale DB storage vault in OCI.

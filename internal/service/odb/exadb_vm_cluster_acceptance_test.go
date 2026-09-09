@@ -90,6 +90,7 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "shape", testAccExaDBVMClusterShape),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_keys.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
+					resource.TestCheckResourceAttrSet(resourceName, "system_version"),
 					resource.TestCheckResourceAttr(resourceName, "total_ecpu_count", fmt.Sprintf("%d", testAccExaDBVMClusterTotalECPUCount)),
 					resource.TestCheckResourceAttr(resourceName, "vm_file_system_storage.0.total_size_in_gbs", fmt.Sprintf("%d", testAccExaDBVMClusterVMFileSystemSizeInGBs)),
 					resource.TestCheckResourceAttr(resourceName, "vm_file_system_storage_total_size_in_gbs", fmt.Sprintf("%d", testAccExaDBVMClusterVMFileSystemSizeInGBs)),

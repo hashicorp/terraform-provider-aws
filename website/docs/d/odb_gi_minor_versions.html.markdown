@@ -39,7 +39,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `gi_minor_versions` - Available GI minor versions and their Grid Infrastructure software image IDs. See [`gi_minor_versions`](#gi_minor_versions) below.
+* `gi_minor_versions` - Available GI minor versions and their Grid Infrastructure software image IDs. See [`gi_minor_versions` Block](#gi_minor_versions-block) below.
 
 ### `gi_minor_versions` Block
 

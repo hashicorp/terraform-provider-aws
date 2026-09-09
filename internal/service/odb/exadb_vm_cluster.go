@@ -107,7 +107,10 @@ func (r *exaDBVMClusterResource) Schema(ctx context.Context, _ resource.SchemaRe
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`), "must start with a letter or underscore and contain only letters, numbers, underscores, and hyphens"),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[a-zA-Z_](?:[a-zA-Z0-9_]|-[a-zA-Z0-9_])*-?$`),
+						"must start with a letter or underscore, contain only letters, numbers, underscores, or hyphens, and must not contain consecutive hyphens",
+					),
 				},
 				Description: "User-friendly name for the ExaDB VM Cluster.",
 			},
