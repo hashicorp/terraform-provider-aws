@@ -28,6 +28,8 @@ ENHANCEMENTS:
 * resource/aws_bedrockagentcore_harness: Change `max_tokens` to Optional and Computed ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
 * resource/aws_bedrockagentcore_harness: Change `skill.path` to Optional ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
 * resource/aws_bedrockagentcore_harness: Change `system_prompt` to Required ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add Resource Identity support ([#49900](https://github.com/hashicorp/terraform-provider-aws/issues/49900))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add configurable resource timeouts ([#49900](https://github.com/hashicorp/terraform-provider-aws/issues/49900))
 * resource/aws_cloudwatch_metric_alarm: Add `warm_up_configuration` configuration block ([#49873](https://github.com/hashicorp/terraform-provider-aws/issues/49873))
 * resource/aws_db_instance: Add `warning_event_categories` argument. When set, surface a warning diagnostic for each matching RDS event reported during create or update. Requires the `rds:DescribeEvents` IAM permission ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 * resource/aws_ecs_capacity_provider: Add `managed_instances_provider.auto_repair_configuration` configuration block ([#49763](https://github.com/hashicorp/terraform-provider-aws/issues/49763))
