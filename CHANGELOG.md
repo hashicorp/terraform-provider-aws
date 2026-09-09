@@ -8,11 +8,13 @@ FEATURES:
 * **New Data Source:** `aws_rds_events` ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 * **New List Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
 * **New List Resource:** `aws_agentregistry_registry` ([#49549](https://github.com/hashicorp/terraform-provider-aws/issues/49549))
+* **New List Resource:** `aws_dms_data_provider` ([#49897](https://github.com/hashicorp/terraform-provider-aws/issues/49897))
 * **New List Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
 * **New List Resource:** `aws_fis_safety_lever_state` ([#49841](https://github.com/hashicorp/terraform-provider-aws/issues/49841))
 * **New List Resource:** `aws_lambda_alias` ([#49706](https://github.com/hashicorp/terraform-provider-aws/issues/49706))
 * **New Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
 * **New Resource:** `aws_agentregistry_registry` ([#49549](https://github.com/hashicorp/terraform-provider-aws/issues/49549))
+* **New Resource:** `aws_dms_data_provider` ([#49897](https://github.com/hashicorp/terraform-provider-aws/issues/49897))
 * **New Resource:** `aws_dms_instance_profile` ([#49747](https://github.com/hashicorp/terraform-provider-aws/issues/49747))
 * **New Resource:** `aws_fis_safety_lever_state` ([#49841](https://github.com/hashicorp/terraform-provider-aws/issues/49841))
 
