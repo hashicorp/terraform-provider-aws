@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_accountaccess_application` ([#49553](https://github.com/hashicorp/terraform-provider-aws/issues/49553))
 * **New Data Source:** `aws_accountaccess_entitlements` ([#49554](https://github.com/hashicorp/terraform-provider-aws/issues/49554))
+* **New Data Source:** `aws_agentregistry_registry` ([#49806](https://github.com/hashicorp/terraform-provider-aws/issues/49806))
 * **New Data Source:** `aws_rds_events` ([#49783](https://github.com/hashicorp/terraform-provider-aws/issues/49783))
 * **New List Resource:** `aws_accountaccess_entitlement` ([#49552](https://github.com/hashicorp/terraform-provider-aws/issues/49552))
 * **New List Resource:** `aws_agentregistry_registry` ([#49549](https://github.com/hashicorp/terraform-provider-aws/issues/49549))
@@ -18,6 +19,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_workspaces_directory: Add `workspace_access_properties.access_endpoint_config` attribute ([#49849](https://github.com/hashicorp/terraform-provider-aws/issues/49849))
+* resource/aws_appconfig_hosted_configuration_version: Add `version_label` argument ([#49881](https://github.com/hashicorp/terraform-provider-aws/issues/49881))
 * resource/aws_bedrockagentcore_harness: Add `model.bedrock_model_config.additional_params` argument ([#48498](https://github.com/hashicorp/terraform-provider-aws/issues/48498))
 * resource/aws_bedrockagentcore_harness: Add `model.bedrock_model_config.api_format` and `model.openai_model_config.api_format` arguments ([#48521](https://github.com/hashicorp/terraform-provider-aws/issues/48521))
 * resource/aws_bedrockagentcore_harness: Add `model.gemini_model_config.additional_params` and `model.openai_model_config.additional_params` arguments ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
