@@ -29,6 +29,8 @@ func newDataProviderResourceAsListResource() list.ListResourceWithConfigure {
 	return &dataProviderListResource{}
 }
 
+var _ list.ListResource = &dataProviderListResource{}
+
 type dataProviderListResource struct {
 	dataProviderResource
 	framework.WithList
