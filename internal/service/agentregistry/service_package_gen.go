@@ -33,6 +33,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			}),
 			Region: inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newRegistryRecordDataSource,
+			TypeName: "aws_agentregistry_registry_record",
+			Name:     "Registry Record",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "record_arn",
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
