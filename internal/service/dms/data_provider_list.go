@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -52,7 +52,7 @@ func (l *dataProviderListResource) List(ctx context.Context, request list.ListRe
 			if request.IncludeResource {
 				var err error
 				tags, err = listTags(ctx, conn, arn)
-				if errs.IsA[*awstypes.ResourceNotFoundFault](err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Unable to find") {
+				if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[smithy.APIError](err, "Unable to find an data provider matching the resource name") {
 					continue
 				}
 				if err != nil {
