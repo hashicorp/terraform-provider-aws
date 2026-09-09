@@ -35,7 +35,8 @@ func TestAccAgentRegistryRegistryRecordDataSource_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDescription), resourceName, tfjsonpath.New(names.AttrDescription), compare.ValuesSame()),
-					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("descriptors"), resourceName, tfjsonpath.New("descriptors"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("descriptors"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("descriptors").AtSliceIndex(0).AtMapKey("custom").AtSliceIndex(0).AtMapKey("data"), resourceName, tfjsonpath.New("descriptors").AtSliceIndex(0).AtMapKey("custom").AtSliceIndex(0).AtMapKey("data"), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDisplayName), resourceName, tfjsonpath.New(names.AttrDisplayName), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("record_arn"), resourceName, tfjsonpath.New("record_arn"), compare.ValuesSame()),
