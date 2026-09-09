@@ -4,7 +4,27 @@
 resource "aws_ram_resource_association" "test" {
   count = var.resource_count
 
+  resource_arn       = aws_ec2_managed_prefix_list.test[count.index].arn
+  resource_share_arn = aws_ram_resource_share.test[count.index].arn
+}
+
+resource "aws_ram_resource_share" "test" {
+  count = var.resource_count
+
   name = "${var.rName}-${count.index}"
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  count = var.resource_count
+
+  name           = "${var.rName}-${count.index}"
+  address_family = "IPv4"
+  max_entries    = 1
+
+  entry {
+    cidr        = "10.0.0.0/8"
+    description = "Test entry"
+  }
 }
 
 variable "rName" {

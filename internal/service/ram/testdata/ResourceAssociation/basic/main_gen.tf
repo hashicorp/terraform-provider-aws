@@ -20,6 +20,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
     description = "Test entry"
   }
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
