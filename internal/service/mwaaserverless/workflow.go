@@ -44,9 +44,12 @@ import (
 func newWorkflowResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &workflowResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	// Workflows are created and updated synchronously (the API has no CREATING
+	// state and defines no waiters), so create/update only need to absorb
+	// eventual consistency. Deletion is asynchronous (DELETING state).
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }

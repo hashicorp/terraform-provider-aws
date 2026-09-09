@@ -125,11 +125,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
+MWAA Serverless workflows are created and updated synchronously — unlike an MWAA (non-serverless) environment, there is no long-running provisioning step — so the create and update timeouts only need to accommodate eventual consistency. Deletion is asynchronous.
+
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -139,7 +141,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_mwaaserverless_workflow.example
   identity = {
-    "arn" = "arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example/abcd1234"
+    "arn" = "arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example-a1b2c3d4e5"
   }
 }
 
@@ -159,12 +161,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_mwaaserverless_workflow.example
-  id = "arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example/abcd1234"
+  id = "arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example-a1b2c3d4e5"
 }
 ```
 
 Using `terraform import`, import MWAA Serverless Workflow using the `arn`. For example,
 
 ```console
-% terraform import aws_mwaaserverless_workflow.example arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example/abcd1234
+% terraform import aws_mwaaserverless_workflow.example arn:aws:airflow-serverless:us-east-1:000011112222:workflow/example-a1b2c3d4e5
 ```
