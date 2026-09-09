@@ -91,7 +91,7 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_count", fmt.Sprintf("%d", testAccExaDBVMClusterNodeCount)),
 					resource.TestCheckResourceAttrSet(resourceName, "odb_network_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "odb_network_id", "aws_odb_network.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "shape", testAccExaDBVMClusterShape),
+					resource.TestCheckResourceAttr(resourceName, "shape", testAccExaDBVMClusterShapeCanonical),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_keys.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
 					resource.TestCheckResourceAttrSet(resourceName, "system_version"),
