@@ -6,11 +6,13 @@ package dms
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -38,11 +40,16 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(hasNoPreExistingResource=true)
 func newMigrationProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &migrationProjectResource{}, nil
+	r := &migrationProjectResource{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+
+	return r, nil
 }
 
 type migrationProjectResource struct {
 	framework.ResourceWithModel[migrationProjectResourceModel]
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -103,6 +110,9 @@ func (r *migrationProjectResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"source_data_provider_descriptor": migrationProjectDataProviderDescriptorBlock(ctx),
 			"target_data_provider_descriptor": migrationProjectDataProviderDescriptorBlock(ctx),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+			}),
 		},
 	}
 }
@@ -152,7 +162,12 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 	input.InstanceProfileIdentifier = plan.InstanceProfileARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateMigrationProject(ctx, &input)
+	// DMS can't assume a just-created IAM role until it propagates, so retry the
+	// AccessDeniedFault that surfaces during that window.
+	out, err := tfresource.RetryWhenIsA[*databasemigrationservice.CreateMigrationProjectOutput, *awstypes.AccessDeniedFault](ctx, r.CreateTimeout(ctx, plan.Timeouts),
+		func(ctx context.Context) (*databasemigrationservice.CreateMigrationProjectOutput, error) {
+			return conn.CreateMigrationProject(ctx, &input)
+		})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
@@ -311,6 +326,7 @@ type migrationProjectResourceModel struct {
 	TargetDataProviderDescriptors         fwtypes.ListNestedObjectValueOf[migrationProjectDataProviderDescriptorModel]  `tfsdk:"target_data_provider_descriptor"`
 	Tags                                  tftags.Map                                                                    `tfsdk:"tags"`
 	TagsAll                               tftags.Map                                                                    `tfsdk:"tags_all"`
+	Timeouts                              timeouts.Value                                                                `tfsdk:"timeouts"`
 	TransformationRules                   types.String                                                                  `tfsdk:"transformation_rules"`
 }
 
@@ -326,20 +342,14 @@ type migrationProjectDataProviderDescriptorModel struct {
 	SecretsManagerSecretID      types.String `tfsdk:"secrets_manager_secret_id"`
 }
 
-// Expand converts the descriptor model into the API's descriptor definition,
-// mapping the ARN attribute to the identifier field the API expects on input.
+// Expand bridges a field-name mismatch AutoFlex can't resolve: the create/modify
+// input names this field DataProviderIdentifier (which accepts an ARN), while the
+// model uses DataProviderARN to match the DataProviderArn field on the Read
+// response. AutoFlex matches by name, and those two names aren't fuzzy-equivalent.
 func (m migrationProjectDataProviderDescriptorModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	descriptor := awstypes.DataProviderDescriptorDefinition{
-		DataProviderIdentifier: m.DataProviderARN.ValueStringPointer(),
-	}
-	if !m.SecretsManagerAccessRoleARN.IsNull() {
-		descriptor.SecretsManagerAccessRoleArn = m.SecretsManagerAccessRoleARN.ValueStringPointer()
-	}
-	if !m.SecretsManagerSecretID.IsNull() {
-		descriptor.SecretsManagerSecretId = m.SecretsManagerSecretID.ValueStringPointer()
-	}
-
-	return descriptor, diags
+	return &awstypes.DataProviderDescriptorDefinition{
+		DataProviderIdentifier:      m.DataProviderARN.ValueStringPointer(),
+		SecretsManagerAccessRoleArn: m.SecretsManagerAccessRoleARN.ValueStringPointer(),
+		SecretsManagerSecretId:      m.SecretsManagerSecretID.ValueStringPointer(),
+	}, nil
 }
