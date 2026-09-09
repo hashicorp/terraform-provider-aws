@@ -72,6 +72,8 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
 							"client_id_wo":                  knownvalue.Null(),
 							names.AttrClientSecret:          knownvalue.StringExact("test-client-secret"),
+							"client_secret_config":          knownvalue.ListSizeExact(0),
+							"client_secret_source":          knownvalue.Null(),
 							"client_secret_wo":              knownvalue.Null(),
 							"oauth_discovery":               knownvalue.ListSizeExact(1),
 						})}),
@@ -94,8 +96,11 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version",
 					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},
@@ -200,7 +205,11 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 			{
@@ -293,7 +302,80 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_clientSecretSourceExternal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/client_secret_source.EXTERNAL/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"github_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"client_credentials_wo_version": knownvalue.Null(),
+							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
+							"client_id_wo":                  knownvalue.Null(),
+							names.AttrClientSecret:          knownvalue.Null(),
+							"client_secret_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"json_key":  knownvalue.StringExact("clientSecret"),
+								"secret_id": knownvalue.NotNull(),
+							})}),
+							"client_secret_source": tfknownvalue.StringExact(awstypes.SecretSourceTypeExternal),
+							"client_secret_wo":     knownvalue.Null(),
+							"oauth_discovery":      knownvalue.ListSizeExact(1),
+						})}),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/client_secret_source.EXTERNAL/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 		},

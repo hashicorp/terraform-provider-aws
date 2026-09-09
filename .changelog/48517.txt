@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_secret_source` and `client_secret_config` arguments to all OAuth2 provider configuration blocks
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_secret_config` and `client_secret_source` arguments to `oauth2_provider_config.custom_oauth2_provider_config`, `oauth2_provider_config.github_oauth2_provider_config`, `oauth2_provider_config.google_oauth2_provider_config`, `oauth2_provider_config.microsoft_oauth2_provider_config`, `oauth2_provider_config.salesforce_oauth2_provider_config`, and `oauth2_provider_config.slack_oauth2_provider_config` configuration blocks
 ```
 
 ```release-note:enhancement
