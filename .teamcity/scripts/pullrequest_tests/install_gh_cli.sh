@@ -2,6 +2,8 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+set -euo pipefail
+
 version=$(curl -fsSL \
   ${GH_TOKEN:+-H "Authorization: Bearer ${GH_TOKEN}"} \
   https://api.github.com/repos/cli/cli/releases/latest \
@@ -17,6 +19,9 @@ echo "Downloading gh ${version}..."
 tools_dir="%TOOLS_DIR%"
 mkdir -p "${tools_dir}"
 
-wget -O gh.tar.gz "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz" \
-  && tar -xzf gh.tar.gz \
-  && mv "gh_${version}_linux_amd64/bin/gh" "${tools_dir}"/gh
+tar_file=$(mktemp --suffix=.tar.gz)
+trap 'rm -f "${tar_file}"' EXIT
+
+wget -O "${tar_file}" "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz"
+tar -xzf "${tar_file}"
+mv "gh_${version}_linux_amd64/bin/gh" "${tools_dir}"/gh
