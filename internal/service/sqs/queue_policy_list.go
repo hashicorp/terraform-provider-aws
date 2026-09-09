@@ -36,21 +36,9 @@ type queuePolicyListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listQueuePolicyModel struct {
-	framework.WithRegionModel
-}
-
 func (l *queuePolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.SQSClient(ctx)
-
-	var query listQueuePolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	h := &queueAttributeHandler{
 		AttributeName: sqstypes.QueueAttributeNamePolicy,
