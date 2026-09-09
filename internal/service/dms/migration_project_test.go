@@ -203,7 +203,60 @@ func testAccPreCheckMigrationProject(ctx context.Context, t *testing.T) {
 
 func testAccMigrationProjectConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_dms_instance_profile" "test" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "secretsmanager:*"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_secretsmanager_secret" "source" {
+  name                    = "%[1]s-source"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "source" {
+  secret_id     = aws_secretsmanager_secret.source.id
+  secret_string = jsonencode({ username = "example", password = "Example123456" })
+}
+
+resource "aws_secretsmanager_secret" "target" {
+  name                    = "%[1]s-target"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "target" {
+  secret_id     = aws_secretsmanager_secret.target.id
+  secret_string = jsonencode({ username = "example", password = "Example123456" })
+}
 
 resource "aws_dms_data_provider" "source" {
   engine = "postgres"
@@ -239,12 +292,18 @@ resource "aws_dms_migration_project" "test" {
   instance_profile_arn = aws_dms_instance_profile.test.arn
 
   source_data_provider_descriptor {
-    data_provider_arn = aws_dms_data_provider.source.arn
+    data_provider_arn               = aws_dms_data_provider.source.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret.source.arn
   }
 
   target_data_provider_descriptor {
-    data_provider_arn = aws_dms_data_provider.target.arn
+    data_provider_arn               = aws_dms_data_provider.target.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret.target.arn
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `)
 }
@@ -257,12 +316,18 @@ resource "aws_dms_migration_project" "test" {
   instance_profile_arn = aws_dms_instance_profile.test.arn
 
   source_data_provider_descriptor {
-    data_provider_arn = aws_dms_data_provider.source.arn
+    data_provider_arn               = aws_dms_data_provider.source.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret.source.arn
   }
 
   target_data_provider_descriptor {
-    data_provider_arn = aws_dms_data_provider.target.arn
+    data_provider_arn               = aws_dms_data_provider.target.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret.target.arn
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, description))
 }
