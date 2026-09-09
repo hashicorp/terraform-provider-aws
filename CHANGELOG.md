@@ -1,5 +1,11 @@
 ## 6.65.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
+* **New List Resource:** `aws_network_acl_rule` ([#49916](https://github.com/hashicorp/terraform-provider-aws/issues/49916))
+* **New Resource:** `aws_lambda_resource_policy` ([#49866](https://github.com/hashicorp/terraform-provider-aws/issues/49866))
+
 ## 6.64.0 (September 9, 2026)
 
 FEATURES:
