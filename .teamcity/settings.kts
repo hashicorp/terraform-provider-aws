@@ -56,7 +56,7 @@ project {
         buildType(Sweeper)
     }
 
-    buildType(Sanity)
+    buildType(SmokeTestsCoreServices)
     buildType(Performance)
     buildType(SmokeTestsResourceIdentity)
 
@@ -544,8 +544,18 @@ object Sweeper : BuildType({
     }
 })
 
-object Sanity : BuildType({
-    name = "Sanity"
+object SmokeTestsCoreServices : BuildType({
+    name = "Smoke Tests - Core Services"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
@@ -555,71 +565,11 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
-        // IAM is foundational to most other services, so run its tests first
+        InstallTerraform()
         script {
-            name = "IAM"
-            scriptContent = File("./scripts/sanity.sh").readText()
+            name = "Smoke Tests - Core Services"
+            scriptContent = File("./scripts/smoke-tests-core-services.sh").readText()
         }
-        script {
-            name = "Logs"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "EC2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ECS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ELBv2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Events"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "KMS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Lambda"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Meta"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Route53"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "S3"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "SSM"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Secrets Manager"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "STS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }  
-        script {
-            name = "Function"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Report Success"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }    
     }
 
     val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
