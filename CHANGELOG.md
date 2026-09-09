@@ -45,6 +45,7 @@ BUG FIXES:
 
 * data-source/aws_workspaces_directory: Fix `setting workspace_access_properties: Invalid address to set` errors ([#49849](https://github.com/hashicorp/terraform-provider-aws/issues/49849))
 * resource/aws_bedrockagentcore_harness: Retry `Role validation failed for '...'. Please verify that the role exists and its trust policy allows assumption by this service` IAM eventual consistency errors on Create. Because this error is returned while waiting for a newly-created harness to stabilize, the failed harness is deleted and creation is restarted. You may see CloudTrail events that reflect this sequence of operations ([#48656](https://github.com/hashicorp/terraform-provider-aws/issues/48656))
+* resource/aws_db_instance: Fix error when restoring multi-az SQL Server from snapshot. ([#49846](https://github.com/hashicorp/terraform-provider-aws/issues/49846))
 * resource/aws_rds_global_cluster: Fix potential eventual consistency error when re-creating resource. ([#49804](https://github.com/hashicorp/terraform-provider-aws/issues/49804))
 
 ## 6.63.0 (September 3, 2026)
