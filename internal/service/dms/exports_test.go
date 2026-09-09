@@ -6,6 +6,7 @@ package dms
 // Exports for use in tests only.
 var (
 	ResourceCertificate            = resourceCertificate
+	ResourceDataProvider           = newDataProviderResource
 	ResourceEndpoint               = resourceEndpoint
 	ResourceEventSubscription      = resourceEventSubscription
 	ResourceInstanceProfile        = newInstanceProfileResource
@@ -16,6 +17,7 @@ var (
 	ResourceS3Endpoint             = resourceS3Endpoint
 
 	FindCertificateByID            = findCertificateByID
+	FindDataProviderByARN          = findDataProviderByARN
 	FindEndpointByID               = findEndpointByID
 	FindEventSubscriptionByName    = findEventSubscriptionByName
 	FindInstanceProfileByARN       = findInstanceProfileByARN

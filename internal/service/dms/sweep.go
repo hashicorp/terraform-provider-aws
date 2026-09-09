@@ -54,6 +54,7 @@ func RegisterSweepers() {
 		F:    sweepReplicationTasks,
 	})
 
+	awsv2.Register("aws_dms_data_provider", sweepDataProviders)
 	awsv2.Register("aws_dms_instance_profile", sweepInstanceProfiles)
 }
 
@@ -97,6 +98,19 @@ func sweepEndpoints(region string) error {
 	}
 
 	return nil
+}
+
+func sweepDataProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input dms.DescribeDataProvidersInput
+	var sweepResources []sweep.Sweepable
+	for item, err := range listDataProviders(ctx, client.DMSClient(ctx), &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		sweepResources = append(sweepResources, sweepfw.NewSweepResource(newDataProviderResource, client,
+			sweepfw.NewAttribute(names.AttrARN, aws.ToString(item.DataProviderArn))))
+	}
+	return sweepResources, nil
 }
 
 func sweepReplicationConfigs(region string) error {

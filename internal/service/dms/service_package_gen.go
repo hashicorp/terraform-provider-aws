@@ -40,6 +40,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDataProviderResource,
+			TypeName: "aws_dms_data_provider",
+			Name:     "Data Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newInstanceProfileResource,
 			TypeName: "aws_dms_instance_profile",
 			Name:     "Instance Profile",
@@ -57,6 +70,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newDataProviderResourceAsListResource,
+			TypeName: "aws_dms_data_provider",
+			Name:     "Data Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 		{
 			Factory:  newInstanceProfileResourceAsListResource,
 			TypeName: "aws_dms_instance_profile",
