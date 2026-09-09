@@ -70,7 +70,27 @@ type modelInvocationJobResource struct {
 func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"end_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"error_record_count": schema.Int64Attribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			"job_arn": framework.ARNAttributeComputedOnly(),
+			"job_expiration_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"job_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -96,6 +116,12 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"processed_record_count": schema.Int64Attribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -103,12 +129,10 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"timeout_duration_in_hours": schema.Int32Attribute{
+			names.AttrSkipDestroy: schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.UseStateForUnknown(),
-					int32planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -125,48 +149,24 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"end_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"job_expiration_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"error_record_count": schema.Int64Attribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			"processed_record_count": schema.Int64Attribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
-			},
 			"success_record_count": schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
+			"timeout_duration_in_hours": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+					int32planmodifier.RequiresReplace(),
+				},
+			},
 			"total_record_count": schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrSkipDestroy: schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -190,12 +190,6 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"s3_uri": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											fwvalidators.S3URI(),
-										},
-									},
 									"s3_bucket_owner": schema.StringAttribute{
 										Optional: true,
 										Computed: true,
@@ -209,6 +203,12 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 										Computed:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"s3_uri": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											fwvalidators.S3URI(),
 										},
 									},
 								},
@@ -236,12 +236,6 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"s3_uri": schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											fwvalidators.S3URI(),
-										},
-									},
 									"s3_bucket_owner": schema.StringAttribute{
 										Optional: true,
 										Computed: true,
@@ -257,12 +251,22 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
+									"s3_uri": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											fwvalidators.S3URI(),
+										},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
 			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[modelInvocationJobVpcConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
@@ -292,10 +296,6 @@ func (r *modelInvocationJobResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Delete: true,
-			}),
 		},
 	}
 }
