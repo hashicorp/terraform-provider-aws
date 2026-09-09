@@ -71,6 +71,7 @@ class Service(name: String, spec: ServiceSpec) {
             val serviceDir = "./internal/service/$packageName"
             steps {
                 ConfigureGoEnv()
+                InstallTerraform()
                 script {
                     name = "Compile Test Binary"
                     workingDir = serviceDir
