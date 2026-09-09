@@ -147,11 +147,19 @@ func TestAccDMSDataProvider_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				Config: testAccDataProviderConfig_noDescription(rName, "updated."+rName+".example.com", 5433, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.server_name", "updated."+rName+".example.com"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.postgresql_settings.0.port", "5433"),
+				),
 			},
 		},
 	})
@@ -304,4 +312,22 @@ resource "aws_dms_data_provider" "test" {
   }
 }
 `, rName, description, serverName, port, virtual)
+}
+
+func testAccDataProviderConfig_noDescription(rName, serverName string, port int, virtual bool) string {
+	return fmt.Sprintf(`
+resource "aws_dms_data_provider" "test" {
+  name    = %[1]q
+  engine  = "postgres"
+  virtual = %[4]t
+
+  settings {
+    postgresql_settings {
+      server_name   = %[2]q
+      port          = %[3]d
+      database_name = "example"
+    }
+  }
+}
+`, rName, serverName, port, virtual)
 }

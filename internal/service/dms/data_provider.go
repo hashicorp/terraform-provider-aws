@@ -65,9 +65,6 @@ func (r *dataProviderResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
 			},
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
@@ -493,6 +490,11 @@ func (r *dataProviderResource) Update(ctx context.Context, req resource.UpdateRe
 		input.DataProviderIdentifier = state.ARN.ValueStringPointer()
 		// Replace rather than merge settings so removed arguments are cleared.
 		input.ExactSettings = aws.Bool(true)
+		// AutoFlex omits a null description, so explicitly send an empty string
+		// to clear a previously-set description.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.Description = aws.String("")
+		}
 
 		out, err := conn.ModifyDataProvider(ctx, &input)
 		if err != nil {
@@ -504,10 +506,13 @@ func (r *dataProviderResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
+		description := plan.Description
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.DataProvider, &plan, flex.WithFieldNamePrefix("DataProvider")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		plan.Description = description
+		plan.CreationTime = state.CreationTime
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
