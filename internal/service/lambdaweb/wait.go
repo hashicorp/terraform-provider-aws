@@ -99,7 +99,7 @@ func findLatestRevisionID(ctx context.Context, conn *lambdaweb.Client, functionN
 			return nil, smarterr.NewError(err)
 		}
 		for i := range out.Revisions {
-			if latest == nil || createdBefore(aws.ToString(latest.CreatedAt), aws.ToString(out.Revisions[i].CreatedAt)) {
+			if latest == nil || createdBefore(latest.CreatedAt, out.Revisions[i].CreatedAt) {
 				latest = &out.Revisions[i]
 			}
 		}
@@ -115,19 +115,10 @@ func findLatestRevisionID(ctx context.Context, conn *lambdaweb.Client, functionN
 	return latest.RevisionId, nil
 }
 
-// createdBefore reports whether timestamp a is earlier than b. Timestamps are
-// modeled as strings, so they are parsed rather than compared
-// lexicographically: string comparison silently picks the wrong item if the
-// service ever returns fractional seconds with variable precision. Values that
-// cannot be parsed fall back to string comparison.
-func createdBefore(a, b string) bool {
-	at, aerr := time.Parse(time.RFC3339Nano, a)
-	bt, berr := time.Parse(time.RFC3339Nano, b)
-	if aerr == nil && berr == nil {
-		return at.Before(bt)
-	}
-
-	return a < b
+// createdBefore reports whether timestamp a is earlier than b. A nil
+// timestamp is treated as the zero time (earliest).
+func createdBefore(a, b *time.Time) bool {
+	return aws.ToTime(a).Before(aws.ToTime(b))
 }
 
 func statusFunction(conn *lambdaweb.Client, name string) retry.StateRefreshFunc {

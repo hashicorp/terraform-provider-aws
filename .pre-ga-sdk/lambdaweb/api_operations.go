@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
@@ -30,8 +31,8 @@ type CreateWebFunctionOutput struct {
 	FunctionArn  *string                   `json:"functionArn,omitempty"`
 	State        awstypes.FunctionState    `json:"state,omitempty"`
 	StateReason  *string                   `json:"stateReason,omitempty"`
-	CreatedAt    *string                   `json:"createdAt,omitempty"`
-	UpdatedAt    *string                   `json:"updatedAt,omitempty"`
+	CreatedAt    *time.Time                `json:"createdAt,omitempty"`
+	UpdatedAt    *time.Time                `json:"updatedAt,omitempty"`
 	Revision     *awstypes.RevisionSummary `json:"revision,omitempty"`
 	Endpoint     *awstypes.EndpointSummary `json:"endpoint,omitempty"`
 	Tags         map[string]string         `json:"tags,omitempty"`
@@ -62,8 +63,8 @@ type GetWebFunctionOutput struct {
 	FunctionArn  *string                `json:"functionArn,omitempty"`
 	State        awstypes.FunctionState `json:"state,omitempty"`
 	StateReason  *string                `json:"stateReason,omitempty"`
-	CreatedAt    *string                `json:"createdAt,omitempty"`
-	UpdatedAt    *string                `json:"updatedAt,omitempty"`
+	CreatedAt    *time.Time             `json:"createdAt,omitempty"`
+	UpdatedAt    *time.Time             `json:"updatedAt,omitempty"`
 	Tags         map[string]string      `json:"tags,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
@@ -151,7 +152,7 @@ type CreateWebFunctionRevisionOutput struct {
 	ServiceConfig *awstypes.ServiceConfig `json:"serviceConfig,omitempty"`
 	State         awstypes.RevisionState  `json:"state,omitempty"`
 	StateReason   *string                 `json:"stateReason,omitempty"`
-	CreatedAt     *string                 `json:"createdAt,omitempty"`
+	CreatedAt     *time.Time              `json:"createdAt,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
 
@@ -186,7 +187,7 @@ type GetWebFunctionRevisionOutput struct {
 	ServiceConfig *awstypes.ServiceConfig `json:"serviceConfig,omitempty"`
 	State         awstypes.RevisionState  `json:"state,omitempty"`
 	StateReason   *string                 `json:"stateReason,omitempty"`
-	CreatedAt     *string                 `json:"createdAt,omitempty"`
+	CreatedAt     *time.Time              `json:"createdAt,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
 
@@ -289,8 +290,8 @@ type CreateWebFunctionEndpointOutput struct {
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`
 	UpdateStatusReason *string                              `json:"updateStatusReason,omitempty"`
 	RegionalEndpoints  map[string]awstypes.RegionalEndpoint `json:"regionalEndpoints,omitempty"`
-	CreatedAt          *string                              `json:"createdAt,omitempty"`
-	UpdatedAt          *string                              `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time                           `json:"createdAt,omitempty"`
+	UpdatedAt          *time.Time                           `json:"updatedAt,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
 
@@ -333,8 +334,8 @@ type GetWebFunctionEndpointOutput struct {
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`
 	UpdateStatusReason *string                              `json:"updateStatusReason,omitempty"`
 	RegionalEndpoints  map[string]awstypes.RegionalEndpoint `json:"regionalEndpoints,omitempty"`
-	CreatedAt          *string                              `json:"createdAt,omitempty"`
-	UpdatedAt          *string                              `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time                           `json:"createdAt,omitempty"`
+	UpdatedAt          *time.Time                           `json:"updatedAt,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
 
@@ -383,8 +384,8 @@ type UpdateWebFunctionEndpointOutput struct {
 	UpdateStatus       awstypes.EndpointUpdateStatus        `json:"updateStatus,omitempty"`
 	UpdateStatusReason *string                              `json:"updateStatusReason,omitempty"`
 	RegionalEndpoints  map[string]awstypes.RegionalEndpoint `json:"regionalEndpoints,omitempty"`
-	CreatedAt          *string                              `json:"createdAt,omitempty"`
-	UpdatedAt          *string                              `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time                           `json:"createdAt,omitempty"`
+	UpdatedAt          *time.Time                           `json:"updatedAt,omitempty"`
 
 	ResultMetadata smithymiddleware.Metadata `json:"-"`
 

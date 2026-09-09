@@ -875,7 +875,7 @@ func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName 
 			return "", err
 		}
 		for i := range out.Endpoints {
-			if oldest == nil || createdBefore(aws.ToString(out.Endpoints[i].CreatedAt), aws.ToString(oldest.CreatedAt)) {
+			if oldest == nil || createdBefore(out.Endpoints[i].CreatedAt, oldest.CreatedAt) {
 				oldest = &out.Endpoints[i]
 			}
 		}
