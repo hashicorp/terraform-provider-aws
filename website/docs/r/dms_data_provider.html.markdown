@@ -242,8 +242,6 @@ import {
 
 * `arn` (String) ARN of the data provider.
 
-#### Optional
-
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a DMS data provider using its full ARN. For example:
 
 ```terraform
