@@ -5,6 +5,7 @@ package mwaaserverless
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaaserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -124,6 +126,35 @@ func (r *workflowResource) Schema(ctx context.Context, _ resource.SchemaRequest,
 						},
 						"version_id": schema.StringAttribute{
 							Optional: true,
+						},
+					},
+				},
+			},
+			"code": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[codeModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"s3_location": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucket: schema.StringAttribute{
+										Required: true,
+									},
+									"object_key": schema.StringAttribute{
+										Required: true,
+									},
+									"version_id": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -302,7 +333,8 @@ func (r *workflowResource) Update(ctx context.Context, request resource.UpdateRe
 	// Only the arguments accepted by UpdateWorkflow are considered here. Changes to
 	// "name" and "encryption_configuration" force a new resource. Tag-only changes
 	// are handled by the transparent tagging interceptor.
-	if !plan.DefinitionS3Location.Equal(state.DefinitionS3Location) ||
+	if !plan.Code.Equal(state.Code) ||
+		!plan.DefinitionS3Location.Equal(state.DefinitionS3Location) ||
 		!plan.RoleARN.Equal(state.RoleARN) ||
 		!plan.Description.Equal(state.Description) ||
 		!plan.EngineVersion.Equal(state.EngineVersion) ||
@@ -455,6 +487,7 @@ func waitWorkflowDeleted(ctx context.Context, conn *mwaaserverless.Client, arn s
 type workflowResourceModel struct {
 	framework.WithRegionModel
 	ARN                     types.String                                                  `tfsdk:"arn"`
+	Code                    fwtypes.ListNestedObjectValueOf[codeModel]                    `tfsdk:"code"`
 	DefinitionS3Location    fwtypes.ListNestedObjectValueOf[s3LocationModel]              `tfsdk:"definition_s3_location"`
 	Description             types.String                                                  `tfsdk:"description"`
 	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
@@ -478,6 +511,54 @@ type s3LocationModel struct {
 	Bucket    types.String `tfsdk:"bucket"`
 	ObjectKey types.String `tfsdk:"object_key"`
 	VersionID types.String `tfsdk:"version_id"`
+}
+
+type codeModel struct {
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
+}
+
+var (
+	_ fwflex.Expander  = codeModel{}
+	_ fwflex.Flattener = &codeModel{}
+)
+
+func (m codeModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if m.S3Location.IsNull() {
+		return nil, diags
+	}
+
+	s3, d := m.S3Location.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return &awstypes.CodeMemberS3Location{
+		Value: awstypes.S3Location{
+			Bucket:    s3.Bucket.ValueStringPointer(),
+			ObjectKey: s3.ObjectKey.ValueStringPointer(),
+			VersionId: s3.VersionID.ValueStringPointer(),
+		},
+	}, diags
+}
+
+func (m *codeModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.CodeMemberS3Location:
+		m.S3Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3LocationModel{
+			Bucket:    fwflex.StringToFramework(ctx, v.Value.Bucket),
+			ObjectKey: fwflex.StringToFramework(ctx, v.Value.ObjectKey),
+			VersionID: fwflex.StringToFramework(ctx, v.Value.VersionId),
+		})
+	default:
+		diags.AddError("Unexpected Code Type", fmt.Sprintf("code flatten: unexpected type %T", v))
+	}
+
+	return diags
 }
 
 type encryptionConfigurationModel struct {

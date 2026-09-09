@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `code` - (Optional) Amazon S3 location of code artifacts for the workflow. The service copies the code from this location at the time of the request. See [`code` Block](#code-block) below.
 * `description` - (Optional) Description of the workflow.
 * `encryption_configuration` - (Optional) Configuration for encrypting workflow data. Changing this forces a new resource to be created. See [`encryption_configuration` Block](#encryption_configuration-block) below.
 * `engine_version` - (Optional) Version of the MWAA Serverless engine to use for the workflow. Currently only `1` is supported.
@@ -80,6 +81,16 @@ The following arguments are optional:
 
 * `bucket` - (Required) Name of the S3 bucket that contains the workflow definition file.
 * `object_key` - (Required) Key of the S3 object that contains the workflow definition file.
+* `version_id` - (Optional) Version ID of the S3 object.
+
+### `code` Block
+
+* `s3_location` - (Optional) Amazon S3 location of the code artifacts. See [`s3_location` Block](#s3_location-block) below.
+
+### `s3_location` Block
+
+* `bucket` - (Required) Name of the S3 bucket that contains the code artifacts.
+* `object_key` - (Required) Key of the S3 object that contains the code artifacts.
 * `version_id` - (Optional) Version ID of the S3 object.
 
 ### `encryption_configuration` Block
