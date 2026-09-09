@@ -42,10 +42,6 @@ func resourceResourceAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceResourceAssociationRead,
 		DeleteWithoutTimeout: resourceResourceAssociationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrResourceARN: {
