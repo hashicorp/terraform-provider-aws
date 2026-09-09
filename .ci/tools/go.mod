@@ -9,7 +9,7 @@ require (
 	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/tctest v1.3.3
-	github.com/katbyte/terrafmt v1.0.0
+	github.com/katbyte/terrafmt v1.0.1
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.12
 	github.com/terraform-linters/tflint v0.64.0
@@ -232,8 +232,6 @@ require (
 	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/julz/importas v0.2.0 // indirect
 	github.com/karamaru-alpha/copyloopvar v1.2.2 // indirect
-	github.com/katbyte/andreyvit-diff v0.0.3 // indirect
-	github.com/katbyte/sergi-go-diff v1.2.3 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.10.0 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
