@@ -22,6 +22,23 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newSubmitRegistryRecordForApprovalAction,
+			TypeName: "aws_agentregistry_submit_registry_record_for_approval",
+			Name:     "Submit Registry Record For Approval",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newUpdateRegistryRecordStatusAction,
+			TypeName: "aws_agentregistry_update_registry_record_status",
+			Name:     "Update Registry Record Status",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
