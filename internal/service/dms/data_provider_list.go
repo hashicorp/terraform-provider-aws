@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -66,7 +66,7 @@ func (l *dataProviderListResource) List(ctx context.Context, request list.ListRe
 			result := request.NewListResult(ctx)
 			var data dataProviderResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, flex.Flatten(ctx, &item, &data, flex.WithFieldNamePrefix("DataProvider")))
+				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data, fwflex.WithFieldNamePrefix("DataProvider")))
 				if result.Diagnostics.HasError() {
 					return
 				}
