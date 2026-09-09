@@ -5,13 +5,13 @@ package lambda
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -45,6 +45,11 @@ type resourcePolicyResource struct {
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType:  fwtypes.IAMPolicyType,
+				Required:    true,
+				Description: "JSON-formatted resource-based policy document to attach to the Lambda resource. This replaces the entire policy, including any statements added with aws_lambda_permission.",
+			},
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
@@ -52,11 +57,6 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.Schema
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrPolicy: schema.StringAttribute{
-				CustomType:  fwtypes.IAMPolicyType,
-				Required:    true,
-				Description: "JSON-formatted resource-based policy document to attach to the Lambda resource. This replaces the entire policy, including any statements added with aws_lambda_permission.",
 			},
 			"revision_id": schema.StringAttribute{
 				Computed:    true,
@@ -75,24 +75,22 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	input := lambda.PutResourcePolicyInput{
-		Policy:      plan.Policy.ValueStringPointer(),
-		ResourceArn: plan.ResourceARN.ValueStringPointer(),
+	var input lambda.PutResourcePolicyInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	out, err := tfresource.RetryWhenIsA[*lambda.PutResourcePolicyOutput, *awstypes.ResourceConflictException](ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*lambda.PutResourcePolicyOutput, error) {
 		return conn.PutResourcePolicy(ctx, &input)
 	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, fwflex.StringValueFromFramework(ctx, plan.ResourceARN))
 		return
 	}
-	if out == nil || out.Policy == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
-		return
-	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	plan.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+
+	// Set values for unknowns.
+	plan.RevisionID = fwflex.StringToFramework(ctx, out.RevisionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -106,19 +104,22 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := findResourcePolicyByARN(ctx, conn, state.ResourceARN.ValueString())
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
+	out, err := findResourcePolicyByARN(ctx, conn, resourceARN)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
-	state.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	state.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -132,24 +133,22 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	input := lambda.PutResourcePolicyInput{
-		Policy:      plan.Policy.ValueStringPointer(),
-		ResourceArn: plan.ResourceARN.ValueStringPointer(),
+	var input lambda.PutResourcePolicyInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	out, err := tfresource.RetryWhenIsA[*lambda.PutResourcePolicyOutput, *awstypes.ResourceConflictException](ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*lambda.PutResourcePolicyOutput, error) {
 		return conn.PutResourcePolicy(ctx, &input)
 	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, fwflex.StringValueFromFramework(ctx, plan.ResourceARN))
 		return
 	}
-	if out == nil || out.Policy == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
-		return
-	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	plan.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+
+	// Set values for unknowns.
+	plan.RevisionID = fwflex.StringToFramework(ctx, out.RevisionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -163,19 +162,24 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
 	input := lambda.DeleteResourcePolicyInput{
-		ResourceArn: state.ResourceARN.ValueStringPointer(),
+		ResourceArn: aws.String(resourceARN),
 	}
-
 	_, err := conn.DeleteResourcePolicy(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		return
+	}
+}
+
+func (r *resourcePolicyResource) flatten(ctx context.Context, out *lambda.GetResourcePolicyOutput, data *resourcePolicyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	return diags
 }
 
 const resourcePolicyPropagationTimeout = 2 * time.Minute
@@ -184,15 +188,19 @@ func findResourcePolicyByARN(ctx context.Context, conn *lambda.Client, resourceA
 	input := lambda.GetResourcePolicyInput{
 		ResourceArn: aws.String(resourceARN),
 	}
+	return findResourcePolicy(ctx, conn, &input)
+}
 
-	out, err := conn.GetResourcePolicy(ctx, &input)
+func findResourcePolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetResourcePolicyInput) (*lambda.GetResourcePolicyOutput, error) {
+	out, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
 	}
 
