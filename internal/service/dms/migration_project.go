@@ -284,33 +284,18 @@ func findMigrationProjectByARN(ctx context.Context, conn *databasemigrationservi
 }
 
 func findMigrationProject(ctx context.Context, conn *databasemigrationservice.Client, input *databasemigrationservice.DescribeMigrationProjectsInput) (*awstypes.MigrationProject, error) {
-	output, err := findMigrationProjects(ctx, conn, input)
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
-}
-
-func findMigrationProjects(ctx context.Context, conn *databasemigrationservice.Client, input *databasemigrationservice.DescribeMigrationProjectsInput) ([]awstypes.MigrationProject, error) {
 	var output []awstypes.MigrationProject
-
-	pages := databasemigrationservice.NewDescribeMigrationProjectsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for item, err := range listMigrationProjects(ctx, conn, input) {
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
+			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 		}
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
-
-		output = append(output, page.MigrationProjects...)
+		output = append(output, item)
 	}
 
-	return output, nil
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 type migrationProjectResourceModel struct {
