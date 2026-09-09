@@ -249,7 +249,7 @@ func resourceNetworkACLRuleFlatten(d *schema.ResourceData, naclEntry *awstypes.N
 		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
 
 		d.Set(names.AttrProtocol, strconv.Itoa(protocolNumber))

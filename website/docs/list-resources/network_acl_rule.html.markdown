@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_ec2_network_acl_rule"
+page_title: "AWS: aws_network_acl_rule"
 description: |-
   Lists EC2 (Elastic Compute Cloud) Network ACL Rule resources.
 ---
 
-# List Resource: aws_ec2_network_acl_rule
+# List Resource: aws_network_acl_rule
 
 Lists EC2 Network ACL Rule resources.
 
