@@ -58,6 +58,7 @@ project {
 
     buildType(Sanity)
     buildType(Performance)
+    buildType(SmokeTestsResourceIdentity)
 
     params {
         if (acctestParallelism != "") {
@@ -726,6 +727,70 @@ object Performance : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
+    }
+})
+
+object SmokeTestsResourceIdentity : BuildType({
+    name = "Smoke Tests - Resource Identity"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        InstallTerraform()
+        script {
+            name = "Run smoke-identity"
+            scriptContent = File("./scripts/smoke-identity.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("smoke_identity_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
+        }
+
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
     }
 })
