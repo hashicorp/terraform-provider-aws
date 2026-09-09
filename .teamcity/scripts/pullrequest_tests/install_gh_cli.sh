@@ -22,6 +22,6 @@ mkdir -p "${tools_dir}"
 tar_file=$(mktemp --suffix=.tar.gz)
 trap 'rm -f "${tar_file}"' EXIT
 
-wget -O "${tar_file}" "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz"
-tar -xzf "${tar_file}"
-mv "gh_${version}_linux_amd64/bin/gh" "${tools_dir}"/gh
+wget -O "${tar_file}" \
+  "https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz"
+tar -xzf "${tar_file}" --strip-components=2 -C "${tools_dir}" "gh_${version}_linux_amd64/bin/gh"
