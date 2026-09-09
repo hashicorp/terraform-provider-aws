@@ -83,9 +83,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newPolicyResource,
-			TypeName: "aws_lambda_policy",
-			Name:     "Policy",
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_lambda_resource_policy",
+			Name:     "Resource Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 			Import: inttypes.FrameworkImport{

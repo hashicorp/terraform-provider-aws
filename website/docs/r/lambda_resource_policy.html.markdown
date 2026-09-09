@@ -1,23 +1,23 @@
 ---
 subcategory: "Lambda"
 layout: "aws"
-page_title: "AWS: aws_lambda_policy"
+page_title: "AWS: aws_lambda_resource_policy"
 description: |-
   Manages a full IAM resource-based policy for an AWS Lambda resource.
 ---
 
-# Resource: aws_lambda_policy
+# Resource: aws_lambda_resource_policy
 
 Manages the complete IAM resource-based policy document for an AWS Lambda function, function version, or alias.
 
-~> **Note:** `PutResourcePolicy` (used by this resource) replaces the *entire* resource-based policy on the Lambda resource, including any statements added with [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html). Do not use `aws_lambda_policy` and `aws_lambda_permission` on the same Lambda function, version, or alias — every apply of one will overwrite statements managed by the other.
+~> **Note:** `PutResourcePolicy` (used by this resource) replaces the *entire* resource-based policy on the Lambda resource, including any statements added with [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html). Do not use `aws_lambda_resource_policy` and `aws_lambda_permission` on the same Lambda function, version, or alias — every apply of one will overwrite statements managed by the other.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_lambda_policy" "example" {
+resource "aws_lambda_resource_policy" "example" {
   resource_arn = aws_lambda_function.example.arn
   policy       = data.aws_iam_policy_document.example.json
 }
@@ -49,7 +49,7 @@ data "aws_caller_identity" "current" {}
 ### Multiple Principals
 
 ```terraform
-resource "aws_lambda_policy" "example" {
+resource "aws_lambda_resource_policy" "example" {
   resource_arn = aws_lambda_function.example.arn
   policy       = data.aws_iam_policy_document.example.json
 }
@@ -109,13 +109,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_lambda_policy.example
+  to = aws_lambda_resource_policy.example
   identity = {
     "resource_arn" = "arn:aws:lambda:us-east-1:123456789012:function:example"
   }
 }
 
-resource "aws_lambda_policy" "example" {
+resource "aws_lambda_resource_policy" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -130,7 +130,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lambda_policy.example
+  to = aws_lambda_resource_policy.example
   id = "arn:aws:lambda:us-east-1:123456789012:function:example"
 }
 ```
@@ -138,5 +138,5 @@ import {
 Using `terraform import`, import Lambda policies using the `resource_arn`. For example:
 
 ```console
-% terraform import aws_lambda_policy.example arn:aws:lambda:us-east-1:123456789012:function:example
+% terraform import aws_lambda_resource_policy.example arn:aws:lambda:us-east-1:123456789012:function:example
 ```

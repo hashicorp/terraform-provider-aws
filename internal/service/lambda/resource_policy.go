@@ -28,21 +28,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_lambda_policy", name="Policy")
+// @FrameworkResource("aws_lambda_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
 // Ignore `policy` because JSON is not normalized during attribute comparison.
 // @Testing(importIgnore="policy")
-func newPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &policyResource{}, nil
+func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourcePolicyResource{}, nil
 }
 
-type policyResource struct {
-	framework.ResourceWithModel[policyResourceModel]
+type resourcePolicyResource struct {
+	framework.ResourceWithModel[resourcePolicyResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: schema.StringAttribute{
@@ -66,10 +66,10 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourcePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var plan policyResourceModel
+	var plan resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -97,10 +97,10 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var state policyResourceModel
+	var state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,10 +123,10 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var plan policyResourceModel
+	var plan resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -154,10 +154,10 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var state policyResourceModel
+	var state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -203,7 +203,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *lambda.Client, resourceA
 	return out, nil
 }
 
-type policyResourceModel struct {
+type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`

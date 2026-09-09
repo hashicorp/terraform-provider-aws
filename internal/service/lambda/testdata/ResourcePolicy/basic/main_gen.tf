@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_lambda_policy" "test" {
+resource "aws_lambda_resource_policy" "test" {
   resource_arn = aws_lambda_function.test.arn
   policy       = data.aws_iam_policy_document.test.json
 }

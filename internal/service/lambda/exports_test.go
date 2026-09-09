@@ -17,7 +17,7 @@ var (
 	ResourceLayerVersion                 = resourceLayerVersion
 	ResourceLayerVersionPermission       = resourceLayerVersionPermission
 	ResourcePermission                   = resourcePermission
-	ResourcePolicy                       = newPolicyResource
+	ResourcePolicy                       = newResourcePolicyResource
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey

@@ -21,28 +21,28 @@ import (
 )
 
 const (
-	ResNamePolicy = "Policy"
+	ResNameResourcePolicy = "Policy"
 )
 
-func TestAccLambdaPolicy_basic(t *testing.T) {
+func TestAccLambdaResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_policy.test"
+	resourceName := "aws_lambda_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_lambda_function.test", names.AttrARN),
@@ -62,61 +62,61 @@ func TestAccLambdaPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPolicy_update(t *testing.T) {
+func TestAccLambdaResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_policy.test"
+	resourceName := "aws_lambda_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_updated(rName),
+				Config: testAccResourcePolicyConfig_updated(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLambdaPolicy_disappears(t *testing.T) {
+func TestAccLambdaResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_policy.test"
+	resourceName := "aws_lambda_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambda.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -130,12 +130,12 @@ func TestAccLambdaPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_lambda_policy" {
+			if rs.Type != "aws_lambda_resource_policy" {
 				continue
 			}
 
@@ -146,21 +146,21 @@ func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestC
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, ResNamePolicy, resourceARN, err)
+				return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, ResNameResourcePolicy, resourceARN, err)
 			}
 
-			return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, ResNamePolicy, resourceARN, errors.New("not destroyed"))
+			return create.Error(names.Lambda, create.ErrActionCheckingDestroyed, ResNameResourcePolicy, resourceARN, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.Lambda, create.ErrActionCheckingExistence, ResNamePolicy, name, errors.New("not found"))
+			return create.Error(names.Lambda, create.ErrActionCheckingExistence, ResNameResourcePolicy, name, errors.New("not found"))
 		}
 
 		resourceARN := rs.Primary.Attributes[names.AttrResourceARN]
@@ -172,8 +172,8 @@ func testAccCheckPolicyExists(ctx context.Context, t *testing.T, name string) re
 	}
 }
 
-func testAccPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), `
+func testAccResourcePolicyConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccResourcePolicyConfig_base(rName), `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -198,15 +198,15 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_lambda_policy" "test" {
+resource "aws_lambda_resource_policy" "test" {
   resource_arn = aws_lambda_function.test.arn
   policy       = data.aws_iam_policy_document.test.json
 }
 `)
 }
 
-func testAccPolicyConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_base(rName), `
+func testAccResourcePolicyConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccResourcePolicyConfig_base(rName), `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -246,14 +246,14 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_lambda_policy" "test" {
+resource "aws_lambda_resource_policy" "test" {
   resource_arn = aws_lambda_function.test.arn
   policy       = data.aws_iam_policy_document.test.json
 }
 `)
 }
 
-func testAccPolicyConfig_base(rName string) string {
+func testAccResourcePolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"

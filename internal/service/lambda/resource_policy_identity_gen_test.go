@@ -19,10 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
+func TestAccLambdaResourcePolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_lambda_policy.test"
+	resourceName := "aws_lambda_resource_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -31,17 +31,17 @@ func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -54,7 +54,7 @@ func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -71,7 +71,7 @@ func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -91,7 +91,7 @@ func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -111,10 +111,10 @@ func TestAccLambdaPolicy_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
+func TestAccLambdaResourcePolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_lambda_policy.test"
+	resourceName := "aws_lambda_resource_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -144,7 +144,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command with appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -162,7 +162,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import command without appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -180,7 +180,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Import ID and appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -201,7 +201,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -222,7 +222,7 @@ func TestAccLambdaPolicy_Identity_regionOverride(t *testing.T) {
 
 			// Step 6: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

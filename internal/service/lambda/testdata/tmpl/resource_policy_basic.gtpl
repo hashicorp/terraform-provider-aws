@@ -1,4 +1,4 @@
-resource "aws_lambda_policy" "test" {
+resource "aws_lambda_resource_policy" "test" {
 {{- template "region" }}
   resource_arn = aws_lambda_function.test.arn
   policy       = data.aws_iam_policy_document.test.json
