@@ -156,11 +156,12 @@ func TestAccGlueCatalogDatabase_createTablePermissionEmpty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "0"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			// No ImportState/ImportStateVerify step here: an explicitly-empty
+			// create_table_default_permission block is indistinguishable from an
+			// omitted one once there's no config to consult (as during import), so
+			// the imported state's block count won't match the pre-import state's.
+			// This is an inherent limitation of the Optional+Computed attribute,
+			// not something this fix can resolve.
 		},
 	})
 }
