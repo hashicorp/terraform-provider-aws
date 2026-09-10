@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -52,7 +53,8 @@ var (
 // @IdentityAttribute("name")
 // @Tags(identifierAttribute="credential_provider_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetOauth2CredentialProviderOutput")
-// @Testing(importIgnore="oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version;oauth2_provider_config.0.github_oauth2_provider_config.0.client_id;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret;oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config;oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source")
+// Generated tests use only github_oauth2_provider_config. Testing other providers requires ignoring their client credential attributes on import.
+// @Testing(importIgnore="oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version;oauth2_provider_config.0.github_oauth2_provider_config.0.client_id;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config;oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source")
 // @Testing(importStateIdAttribute="name")
 // @Testing(preCheck="testAccPreCheckOAuth2CredentialProviders")
 // @Testing(preIdentityVersion="v6.63.0")
@@ -72,6 +74,8 @@ type oauth2CredentialProviderResource struct {
 	framework.WithImportByIdentity
 }
 
+// Client credentials schema shared by all OAuth2 providers.
+// See oauth2ProviderClientCredentialsModel.
 func oauth2ProviderClientCredentialsAttributes(context.Context) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"client_credentials_wo_version": schema.Int64Attribute{
@@ -184,6 +188,8 @@ func secretReferenceBlock(ctx context.Context) schema.Block {
 	}
 }
 
+// Configuration schema shared by all non-custom OAuth2 providers.
+// See basicOAuth2ProviderConfigModel.
 func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.Block {
 	attrs := oauth2ProviderClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
@@ -210,6 +216,16 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 			"credential_provider_vendor": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.CredentialProviderVendorType](),
 				Required:   true,
+				Validators: []validator.String{
+					tfstringvalidator.DiscriminatorRequires(map[awstypes.CredentialProviderVendorType]path.Expression{
+						awstypes.CredentialProviderVendorTypeCustomOauth2:     r.providerConfigPathExpression("custom_oauth2_provider_config"),
+						awstypes.CredentialProviderVendorTypeGithubOauth2:     r.providerConfigPathExpression("github_oauth2_provider_config"),
+						awstypes.CredentialProviderVendorTypeGoogleOauth2:     r.providerConfigPathExpression("google_oauth2_provider_config"),
+						awstypes.CredentialProviderVendorTypeMicrosoftOauth2:  r.providerConfigPathExpression("microsoft_oauth2_provider_config"),
+						awstypes.CredentialProviderVendorTypeSalesforceOauth2: r.providerConfigPathExpression("salesforce_oauth2_provider_config"),
+						awstypes.CredentialProviderVendorTypeSlackOauth2:      r.providerConfigPathExpression("slack_oauth2_provider_config"),
+					}),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -234,6 +250,16 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							r.providerConfigPathExpression("custom_oauth2_provider_config"),
+							r.providerConfigPathExpression("github_oauth2_provider_config"),
+							r.providerConfigPathExpression("google_oauth2_provider_config"),
+							r.providerConfigPathExpression("microsoft_oauth2_provider_config"),
+							r.providerConfigPathExpression("salesforce_oauth2_provider_config"),
+							r.providerConfigPathExpression("slack_oauth2_provider_config"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"custom_oauth2_provider_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customOAuth2ProviderConfigModel](ctx),
@@ -243,12 +269,19 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 							NestedObject: schema.NestedBlockObject{
 								Attributes: oauth2ProviderClientCredentialsAttributes(ctx),
 								Blocks: map[string]schema.Block{
+									"client_secret_config": secretReferenceBlock(ctx),
 									"oauth_discovery": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("authorization_server_metadata"),
+													path.MatchRelative().AtName("discovery_url"),
+												),
+											},
 											Attributes: map[string]schema.Attribute{
 												"discovery_url": schema.StringAttribute{
 													Optional: true,
@@ -357,10 +390,7 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics,
-		fwflex.Flatten(ctx, provider, &plan,
-			fwflex.WithFieldNameSuffix("Output"),
-		))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, provider, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -399,9 +429,7 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 	// Stuff the client credentials into Context for AutoFlEx.
 	ctx = oauth2ClientCredentialsCtxKey.NewContext(ctx, clientCredentials)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics,
-		fwflex.Flatten(ctx, out, &data,
-			fwflex.WithFieldNameSuffix("Output")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -461,16 +489,13 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 			return
 		}
 
-		got, err := waitOAuth2CredentialProviderUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
+		provider, err := waitOAuth2CredentialProviderUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics,
-			fwflex.Flatten(ctx, got, &plan,
-				fwflex.WithFieldNameSuffix("Output"),
-			))
+		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, provider, &plan))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -505,6 +530,20 @@ func (r *oauth2CredentialProviderResource) Delete(ctx context.Context, request r
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.Name, name)
 		return
 	}
+}
+
+func (r *oauth2CredentialProviderResource) flatten(ctx context.Context, out *bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, data *oauth2CredentialProviderResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, out, data, fwflex.WithFieldNameSuffix("Output"))...)
+	return diags
+}
+
+func (*oauth2CredentialProviderResource) providerConfigPath(name string) path.Path {
+	return path.Root("oauth2_provider_config").AtListIndex(0).AtName(name)
+}
+
+func (r *oauth2CredentialProviderResource) providerConfigPathExpression(name string) path.Expression {
+	return r.providerConfigPath(name).Expression()
 }
 
 func findOAuth2CredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetOauth2CredentialProviderOutput, error) {
@@ -868,6 +907,7 @@ func (m *oauth2ProviderConfigModel) clientCredentials(ctx context.Context) (oaut
 	return inttypes.Zero[oauth2ProviderClientCredentialsModel](), diags
 }
 
+// Client credentials attributes shared by all OAuth2 providers.
 type oauth2ProviderClientCredentialsModel struct {
 	ClientCredentialsWOVersion types.Int64                                           `tfsdk:"client_credentials_wo_version"`
 	ClientID                   types.String                                          `tfsdk:"client_id"`
@@ -888,33 +928,25 @@ type oauth2DiscoveryModel struct {
 	DiscoveryURL                types.String                                                            `tfsdk:"discovery_url"`
 }
 
+// Configuration attributes shared by all OAuth2 providers.
 type basicOAuth2ProviderConfigModel struct {
 	oauth2ProviderClientCredentialsModel
 	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
 }
 
 type customOAuth2ProviderConfigModel struct {
-	oauth2ProviderClientCredentialsModel
-	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
-}
-
-type githubOAuth2ProviderConfigModel struct {
 	basicOAuth2ProviderConfigModel
 }
 
-type googleOAuth2ProviderConfigModel struct {
-	basicOAuth2ProviderConfigModel
-}
+// These OAuth2 providers have only the common attributes.
+type (
+	githubOAuth2ProviderConfigModel     basicOAuth2ProviderConfigModel
+	googleOAuth2ProviderConfigModel     basicOAuth2ProviderConfigModel
+	salesforceOAuth2ProviderConfigModel basicOAuth2ProviderConfigModel
+	slackOAuth2ProviderConfigModel      basicOAuth2ProviderConfigModel
+)
 
 type microsoftOAuth2ProviderConfigModel struct {
-	basicOAuth2ProviderConfigModel
-}
-
-type salesforceOAuth2ProviderConfigModel struct {
-	basicOAuth2ProviderConfigModel
-}
-
-type slackOAuth2ProviderConfigModel struct {
 	basicOAuth2ProviderConfigModel
 }
 

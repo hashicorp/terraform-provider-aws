@@ -74,7 +74,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Identity_basic(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 
@@ -170,7 +170,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_Identity_regionOverride(t *
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore: []string{
-					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.custom_oauth2_provider_config.0.client_secret_source",
+					"oauth2_provider_config.0.github_oauth2_provider_config.0.client_credentials_wo_version", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_id", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_config", "oauth2_provider_config.0.github_oauth2_provider_config.0.client_secret_source",
 				},
 			},
 
