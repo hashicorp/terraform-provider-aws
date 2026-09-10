@@ -328,6 +328,26 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrKMSKeyARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -653,13 +673,13 @@ type registryResourceModel struct {
 	AutoDetectionConfiguration fwtypes.ListNestedObjectValueOf[autoDetectionConfigurationModel] `tfsdk:"auto_detection_configuration"`
 	Description                types.String                                                     `tfsdk:"description"`
 	DiscoveryConfiguration     fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel]     `tfsdk:"discovery_configuration"`
-	// EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
-	Name        types.String   `tfsdk:"name"`
-	RegistryARN types.String   `tfsdk:"registry_arn"`
-	RegistryID  types.String   `tfsdk:"registry_id"`
-	Tags        tftags.Map     `tfsdk:"tags"`
-	TagsAll     tftags.Map     `tfsdk:"tags_all"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	EncryptionConfiguration    fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel]    `tfsdk:"encryption_configuration"`
+	Name                       types.String                                                     `tfsdk:"name"`
+	RegistryARN                types.String                                                     `tfsdk:"registry_arn"`
+	RegistryID                 types.String                                                     `tfsdk:"registry_id"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 
 type approvalConfigurationModel struct {
@@ -791,4 +811,8 @@ func (m claimMatchValueTypeModel) Expand(ctx context.Context) (any, diag.Diagnos
 	}
 
 	return nil, diags
+}
+
+type encryptionConfigurationModel struct {
+	KmsKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
 }

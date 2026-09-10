@@ -101,6 +101,7 @@ The following arguments are optional:
 * `approval_configuration` - (Optional) Approval configuration for registry records. [See below](#approval_configuration-block).
 * `auto_detection_configuration` - (Optional) Auto-detection configuration for the registry. When provided, the registry is automatically populated with resources discovered according to the configuration. [See below](#auto_detection_configuration-block).
 * `description` - (Optional) Description of the registry. Maximum length of 4096 characters.
+* `encryption_configuration` - (Optional) Server-side encryption configuration for the registry. [See below](#encryption_configuration-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -161,6 +162,12 @@ The `claim_match_value` configuration block supports exactly one of the followin
 
 * `match_value_string` - (Optional) Single string value to match. Must contain only letters, numbers, and the characters `_`, `.`, `-`, `:`.
 * `match_value_string_list` - (Optional) Set of string values to match. Each value must contain only letters, numbers, and the characters `_`, `.`, `-`, `:`.
+
+### `encryption_configuration` Block
+
+The `encryption_configuration` configuration block supports the following arguments:
+
+* `kms_key_arn` - (Required) ARN of the customer-managed AWS KMS key used to encrypt the registry's content.
 
 ## Attribute Reference
 

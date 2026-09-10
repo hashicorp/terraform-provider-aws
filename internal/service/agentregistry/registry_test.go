@@ -61,6 +61,7 @@ func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
 						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
@@ -149,6 +150,7 @@ func TestAccAgentRegistryRegistry_name(t *testing.T) {
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
 						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
@@ -187,6 +189,7 @@ func TestAccAgentRegistryRegistry_name(t *testing.T) {
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
 						"authorizer_type":          tfknownvalue.StringExact(awstypes.RegistryAuthorizerTypeAwsIam),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_arn"), checkRegistryARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("registry_id"), knownvalue.NotNull()),
@@ -643,6 +646,51 @@ func TestAccAgentRegistryRegistry_autoDetectionConfiguration(t *testing.T) {
 						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
 					})})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccAgentRegistryRegistry_encryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_agentregistry_registry.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AgentRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/encryption_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrKMSKeyARN: knownvalue.NotNull(),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/encryption_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
 			},
 		},
 	})
