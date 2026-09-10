@@ -523,7 +523,7 @@ func (r *exaDBVMClusterResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, created, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, created, &plan, exaDBVMClusterFlattenModeManagedResource))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -551,7 +551,7 @@ func (r *exaDBVMClusterResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &state, exaDBVMClusterFlattenModeManagedResource))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -603,7 +603,7 @@ func (r *exaDBVMClusterResource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, updated, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, updated, &plan, exaDBVMClusterFlattenModeManagedResource))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -611,8 +611,15 @@ func (r *exaDBVMClusterResource) Update(ctx context.Context, request resource.Up
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
-func (r *exaDBVMClusterResource) flatten(ctx context.Context, exaDBVMCluster *odbtypes.ExadbVmCluster, data *exaDBVMClusterResourceModel) diag.Diagnostics {
-	dataCollectionOptionsWasNull := data.DataCollectionOptions.IsNull()
+type exaDBVMClusterFlattenMode int
+
+const (
+	exaDBVMClusterFlattenModeManagedResource exaDBVMClusterFlattenMode = iota
+	exaDBVMClusterFlattenModeListResource
+)
+
+func (r *exaDBVMClusterResource) flatten(ctx context.Context, exaDBVMCluster *odbtypes.ExadbVmCluster, data *exaDBVMClusterResourceModel, mode exaDBVMClusterFlattenMode) diag.Diagnostics {
+	dataCollectionOptionsWasNull := mode == exaDBVMClusterFlattenModeManagedResource && data.DataCollectionOptions.IsNull()
 	diags := flex.Flatten(ctx, exaDBVMCluster, data, flex.WithFieldNamePrefix("ExadbVmCluster"))
 	if dataCollectionOptionsWasNull {
 		data.DataCollectionOptions = fwtypes.NewListNestedObjectValueOfNull[exaDBVMClusterDataCollectionOptionsModel](ctx)

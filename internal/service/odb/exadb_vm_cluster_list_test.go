@@ -264,6 +264,10 @@ func testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilit
 func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]knownvalue.Check, displayName, hostname string) querycheck.QueryResultCheck {
 	return querycheck.ExpectResourceKnownValues("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identityChecks), []querycheck.KnownValueCheck{
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("odb", regexache.MustCompile(`exadb-vm-cluster/.+`))),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("data_collection_options"), knownvalue.ListSizeExact(1)),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("data_collection_options").AtSliceIndex(0).AtMapKey("is_diagnostics_events_enabled"), knownvalue.Bool(true)),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("data_collection_options").AtSliceIndex(0).AtMapKey("is_health_monitoring_enabled"), knownvalue.Bool(false)),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("data_collection_options").AtSliceIndex(0).AtMapKey("is_incident_logs_enabled"), knownvalue.Bool(true)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("enabled_ecpu_count"), knownvalue.Int32Exact(testAccExaDBVMClusterEnabledECPUCount)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("exascale_db_storage_vault_id"), knownvalue.NotNull()),

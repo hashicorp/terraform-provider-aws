@@ -146,26 +146,74 @@ func TestExaDBVMClusterResourceSchema(t *testing.T) {
 	}
 }
 
-func TestExaDBVMClusterFlattenPreservesOmittedDataCollectionOptions(t *testing.T) {
+func TestExaDBVMClusterFlattenDataCollectionOptions(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
-	data := exaDBVMClusterResourceModel{
-		DataCollectionOptions: fwtypes.NewListNestedObjectValueOfNull[exaDBVMClusterDataCollectionOptionsModel](ctx),
-	}
-	apiObject := &odbtypes.ExadbVmCluster{
-		DataCollectionOptions: &odbtypes.DataCollectionOptions{
-			IsDiagnosticsEventsEnabled: aws.Bool(true),
-			IsHealthMonitoringEnabled:  aws.Bool(true),
-			IsIncidentLogsEnabled:      aws.Bool(true),
+	testCases := []struct {
+		TestName                     string
+		Mode                         exaDBVMClusterFlattenMode
+		WantNull                     bool
+		WantDiagnosticsEventsEnabled bool
+		WantHealthMonitoringEnabled  bool
+		WantIncidentLogsEnabled      bool
+	}{
+		{
+			TestName: "managed resource preserves omitted configuration",
+			Mode:     exaDBVMClusterFlattenModeManagedResource,
+			WantNull: true,
+		},
+		{
+			TestName:                     "list resource includes API values",
+			Mode:                         exaDBVMClusterFlattenModeListResource,
+			WantDiagnosticsEventsEnabled: true,
+			WantHealthMonitoringEnabled:  false,
+			WantIncidentLogsEnabled:      true,
 		},
 	}
 
-	diags := (&exaDBVMClusterResource{}).flatten(ctx, apiObject, &data)
-	if diags.HasError() {
-		t.Fatalf("flattening ExaDB VM Cluster: %v", diags)
-	}
-	if !data.DataCollectionOptions.IsNull() {
-		t.Errorf("data_collection_options = %s, want null", data.DataCollectionOptions.String())
+	for _, tc := range testCases {
+		t.Run(tc.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			data := exaDBVMClusterResourceModel{
+				DataCollectionOptions: fwtypes.NewListNestedObjectValueOfNull[exaDBVMClusterDataCollectionOptionsModel](ctx),
+			}
+			apiObject := &odbtypes.ExadbVmCluster{
+				DataCollectionOptions: &odbtypes.DataCollectionOptions{
+					IsDiagnosticsEventsEnabled: aws.Bool(true),
+					IsHealthMonitoringEnabled:  aws.Bool(false),
+					IsIncidentLogsEnabled:      aws.Bool(true),
+				},
+			}
+
+			diags := (&exaDBVMClusterResource{}).flatten(ctx, apiObject, &data, tc.Mode)
+			if diags.HasError() {
+				t.Fatalf("flattening ExaDB VM Cluster: %v", diags)
+			}
+			if got := data.DataCollectionOptions.IsNull(); got != tc.WantNull {
+				t.Fatalf("data_collection_options null = %t, want %t", got, tc.WantNull)
+			}
+			if tc.WantNull {
+				return
+			}
+
+			options, diags := data.DataCollectionOptions.ToPtr(ctx)
+			if diags.HasError() {
+				t.Fatalf("converting data_collection_options: %v", diags)
+			}
+			if options == nil {
+				t.Fatal("data_collection_options is nil")
+			}
+			if got := options.IsDiagnosticsEventsEnabled.ValueBool(); got != tc.WantDiagnosticsEventsEnabled {
+				t.Errorf("is_diagnostics_events_enabled = %t, want %t", got, tc.WantDiagnosticsEventsEnabled)
+			}
+			if got := options.IsHealthMonitoringEnabled.ValueBool(); got != tc.WantHealthMonitoringEnabled {
+				t.Errorf("is_health_monitoring_enabled = %t, want %t", got, tc.WantHealthMonitoringEnabled)
+			}
+			if got := options.IsIncidentLogsEnabled.ValueBool(); got != tc.WantIncidentLogsEnabled {
+				t.Errorf("is_incident_logs_enabled = %t, want %t", got, tc.WantIncidentLogsEnabled)
+			}
+		})
 	}
 }

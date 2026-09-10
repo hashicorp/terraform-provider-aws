@@ -99,7 +99,7 @@ func (l *exaDBVMClusterListResource) List(ctx context.Context, request list.List
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
-					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data, exaDBVMClusterFlattenModeListResource))
 					if result.Diagnostics.HasError() {
 						return
 					}

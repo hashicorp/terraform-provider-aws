@@ -38,6 +38,12 @@ resource "aws_odb_exadb_vm_cluster" "test" {
   total_ecpu_count                         = 64
   vm_file_system_storage_total_size_in_gbs = 440
 
+  data_collection_options {
+    is_diagnostics_events_enabled = true
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = true
+  }
+
   tags = var.resource_tags
 }
 
