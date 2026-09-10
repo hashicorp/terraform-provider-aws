@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -32,11 +30,8 @@ import (
 const (
 	testAccExaDBVMClusterDisplayNamePrefix            = "ofake"
 	testAccExaDBVMClusterEnabledECPUCount             = 16
-	testAccExaDBVMClusterGIVersion                    = "26.0.0.0"
 	testAccExaDBVMClusterNodeCount                    = 2
-	testAccExaDBVMClusterShape                        = "ExaDbXS"
 	testAccExaDBVMClusterShapeCanonical               = "EXADBXS"
-	testAccExaDBVMClusterShapeFamily                  = "EXADB_XS"
 	testAccExaDBVMClusterTotalECPUCount               = 64
 	testAccExaDBVMClusterUpdatedEnabledECPUCount      = 20
 	testAccExaDBVMClusterUpdatedTotalECPUCount        = 80
@@ -61,7 +56,6 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -76,7 +70,7 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey),
+				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "odb", regexache.MustCompile(`exadb-vm-cluster/.+$`)),
@@ -85,7 +79,7 @@ func TestAccODBExaDBVMCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled_ecpu_count", fmt.Sprintf("%d", testAccExaDBVMClusterEnabledECPUCount)),
 					resource.TestCheckResourceAttrSet(resourceName, "exascale_db_storage_vault_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "exascale_db_storage_vault_id", "aws_odb_exascale_db_storage_vault.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "grid_image_id", gridImageID),
+					resource.TestCheckResourceAttrPair(resourceName, "grid_image_id", "data.aws_odb_gi_minor_versions.test", "gi_minor_versions.0.grid_image_id"),
 					resource.TestCheckResourceAttr(resourceName, "hostname", hostname),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "node_count", fmt.Sprintf("%d", testAccExaDBVMClusterNodeCount)),
@@ -125,7 +119,6 @@ func TestAccODBExaDBVMCluster_allArguments(t *testing.T) {
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	clusterName := testAccRandomExaDBVMClusterClusterName(t)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -140,7 +133,7 @@ func TestAccODBExaDBVMCluster_allArguments(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterConfig_allArguments(rName, hostname, clusterName, availabilityZoneID, gridImageID, publicKey),
+				Config: testAccExaDBVMClusterConfig_allArguments(rName, hostname, clusterName, availabilityZoneID, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, clusterName),
@@ -176,7 +169,6 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey1 := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	publicKey2 := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
@@ -192,7 +184,7 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterConfig_updateBefore(rName, hostname, availabilityZoneID, gridImageID, publicKey1),
+				Config: testAccExaDBVMClusterConfig_updateBefore(rName, hostname, availabilityZoneID, publicKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
@@ -203,7 +195,7 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, gridImageID, publicKey2, true),
+				Config: testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, publicKey2, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -223,7 +215,7 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, gridImageID, publicKey2, false),
+				Config: testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, publicKey2, false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -254,7 +246,6 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -269,7 +260,7 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, gridImageID, publicKey, fmt.Sprintf("%s = %q", acctest.CtKey1, acctest.CtValue1)),
+				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, publicKey, fmt.Sprintf("%s = %q", acctest.CtKey1, acctest.CtValue1)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -277,7 +268,7 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, gridImageID, publicKey, fmt.Sprintf("%s = %q\n    %s = %q", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2)),
+				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, publicKey, fmt.Sprintf("%s = %q\n    %s = %q", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -286,7 +277,7 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, gridImageID, publicKey, fmt.Sprintf("%s = %q", acctest.CtKey2, "")),
+				Config: testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, publicKey, fmt.Sprintf("%s = %q", acctest.CtKey2, "")),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExaDBVMClusterExists(ctx, t, resourceName, &exaDBVMCluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -295,7 +286,7 @@ func TestAccODBExaDBVMCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey),
+				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, publicKey),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -320,7 +311,6 @@ func TestAccODBExaDBVMCluster_disappears(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostname := testAccRandomExaDBVMClusterHostname(t)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 	resourceName := "aws_odb_exadb_vm_cluster.test"
 
@@ -335,7 +325,7 @@ func TestAccODBExaDBVMCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckExaDBVMClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey),
+				Config: testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceExaDBVMCluster, resourceName),
 				),
@@ -411,78 +401,6 @@ func testAccPreCheckExaDBVMCluster(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccExaDBVMClusterGridImageIDForRegion(ctx context.Context, t *testing.T, region, availabilityZoneID string) string {
-	t.Helper()
-
-	acctest.PreCheck(ctx, t)
-	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
-	regionOption := func(options *odb.Options) {
-		options.Region = region
-	}
-
-	giVersionFound := false
-	giVersionsPaginator := odb.NewListGiVersionsPaginator(conn, &odb.ListGiVersionsInput{
-		Shape: aws.String(testAccExaDBVMClusterShape),
-	})
-	for giVersionsPaginator.HasMorePages() {
-		page, err := giVersionsPaginator.NextPage(ctx, regionOption)
-		if acctest.PreCheckSkipError(err) {
-			t.Skipf("skipping acceptance testing: listing GI versions: %s", err)
-		}
-		if err != nil {
-			t.Fatalf("listing GI versions: %s", err)
-		}
-
-		for _, giVersion := range page.GiVersions {
-			if aws.ToString(giVersion.Version) == testAccExaDBVMClusterGIVersion {
-				giVersionFound = true
-				break
-			}
-		}
-	}
-	if !giVersionFound {
-		t.Fatalf("GI version %q is not available for shape %q in Region %q", testAccExaDBVMClusterGIVersion, testAccExaDBVMClusterShape, region)
-	}
-
-	var latestVersion *version.Version
-	var gridImageID string
-	giMinorVersionsPaginator := odb.NewListGiMinorVersionsPaginator(conn, &odb.ListGiMinorVersionsInput{
-		AvailabilityZoneId: aws.String(availabilityZoneID),
-		GiVersion:          aws.String(testAccExaDBVMClusterGIVersion),
-		ShapeFamily:        aws.String(testAccExaDBVMClusterShapeFamily),
-	})
-	for giMinorVersionsPaginator.HasMorePages() {
-		page, err := giMinorVersionsPaginator.NextPage(ctx, regionOption)
-		if acctest.PreCheckSkipError(err) {
-			t.Skipf("skipping acceptance testing: listing GI minor versions: %s", err)
-		}
-		if err != nil {
-			t.Fatalf("listing GI minor versions: %s", err)
-		}
-
-		for _, giMinorVersion := range page.GiMinorVersions {
-			candidateGridImageID := aws.ToString(giMinorVersion.GridImageId)
-			if candidateGridImageID == "" {
-				continue
-			}
-
-			candidateVersion, err := version.NewVersion(aws.ToString(giMinorVersion.Version))
-			if err != nil {
-				t.Fatalf("parsing GI minor version %q: %s", aws.ToString(giMinorVersion.Version), err)
-			}
-			if latestVersion == nil || candidateVersion.GreaterThan(latestVersion) {
-				latestVersion = candidateVersion
-				gridImageID = candidateGridImageID
-			}
-		}
-	}
-	if gridImageID == "" {
-		t.Fatalf("no Grid Image ID is available for GI version %q, shape family %q, and Availability Zone ID %q in Region %q", testAccExaDBVMClusterGIVersion, testAccExaDBVMClusterShapeFamily, availabilityZoneID, region)
-	}
-
-	return gridImageID
-}
-
 func testAccRandomExaDBVMClusterDisplayName(t *testing.T) string {
 	return acctest.RandomWithPrefix(t, testAccExaDBVMClusterDisplayNamePrefix)
 }
@@ -504,11 +422,11 @@ func testAccRandomExaDBVMClusterSSHPublicKey(t *testing.T) string {
 	return publicKey
 }
 
-func testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, gridImageID, publicKey string) string {
-	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, gridImageID, publicKey, "")
+func testAccExaDBVMClusterConfig_basic(rName, hostname, availabilityZoneID, publicKey string) string {
+	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, publicKey, "")
 }
 
-func testAccExaDBVMClusterConfig_allArguments(rName, hostname, clusterName, availabilityZoneID, gridImageID, publicKey string) string {
+func testAccExaDBVMClusterConfig_allArguments(rName, hostname, clusterName, availabilityZoneID, publicKey string) string {
 	extra := fmt.Sprintf(`
   cluster_name               = %[1]q
   license_model              = "LICENSE_INCLUDED"
@@ -528,10 +446,10 @@ func testAccExaDBVMClusterConfig_allArguments(rName, hostname, clusterName, avai
   }
 `, clusterName, rName)
 
-	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, gridImageID, publicKey, extra)
+	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, publicKey, extra)
 }
 
-func testAccExaDBVMClusterConfig_updateBefore(rName, hostname, availabilityZoneID, gridImageID, publicKey string) string {
+func testAccExaDBVMClusterConfig_updateBefore(rName, hostname, availabilityZoneID, publicKey string) string {
 	extra := `
   license_model = "LICENSE_INCLUDED"
 
@@ -542,10 +460,10 @@ func testAccExaDBVMClusterConfig_updateBefore(rName, hostname, availabilityZoneI
   }
 `
 
-	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, gridImageID, publicKey, extra)
+	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, publicKey, extra)
 }
 
-func testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, gridImageID, publicKey string, includeLicenseModel bool) string {
+func testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID, publicKey string, includeLicenseModel bool) string {
 	licenseModel := ""
 	if includeLicenseModel {
 		licenseModel = `license_model = "BRING_YOUR_OWN_LICENSE"`
@@ -561,24 +479,24 @@ func testAccExaDBVMClusterConfig_updateAfter(rName, hostname, availabilityZoneID
   }
 `, licenseModel)
 
-	return testAccExaDBVMClusterConfigWithSizes(rName+"-updated", hostname, availabilityZoneID, gridImageID, publicKey, testAccExaDBVMClusterUpdatedEnabledECPUCount, testAccExaDBVMClusterUpdatedTotalECPUCount, testAccExaDBVMClusterUpdatedVMFileSystemSizeInGBs, extra)
+	return testAccExaDBVMClusterConfigWithSizes(rName+"-updated", hostname, availabilityZoneID, publicKey, testAccExaDBVMClusterUpdatedEnabledECPUCount, testAccExaDBVMClusterUpdatedTotalECPUCount, testAccExaDBVMClusterUpdatedVMFileSystemSizeInGBs, extra)
 }
 
-func testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, gridImageID, publicKey, tags string) string {
+func testAccExaDBVMClusterConfig_tags(rName, hostname, availabilityZoneID, publicKey, tags string) string {
 	extra := fmt.Sprintf(`
   tags = {
     %s
   }
 `, tags)
 
-	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, gridImageID, publicKey, extra)
+	return testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, publicKey, extra)
 }
 
-func testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, gridImageID, publicKey, extra string) string {
-	return testAccExaDBVMClusterConfigWithSizes(rName, hostname, availabilityZoneID, gridImageID, publicKey, testAccExaDBVMClusterEnabledECPUCount, testAccExaDBVMClusterTotalECPUCount, testAccExaDBVMClusterVMFileSystemSizeInGBs, extra)
+func testAccExaDBVMClusterConfig(rName, hostname, availabilityZoneID, publicKey, extra string) string {
+	return testAccExaDBVMClusterConfigWithSizes(rName, hostname, availabilityZoneID, publicKey, testAccExaDBVMClusterEnabledECPUCount, testAccExaDBVMClusterTotalECPUCount, testAccExaDBVMClusterVMFileSystemSizeInGBs, extra)
 }
 
-func testAccExaDBVMClusterConfigWithSizes(rName, hostname, availabilityZoneID, gridImageID, publicKey string, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs int, extra string) string {
+func testAccExaDBVMClusterConfigWithSizes(rName, hostname, availabilityZoneID, publicKey string, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs int, extra string) string {
 	return fmt.Sprintf(`
 resource "aws_odb_network" "test" {
   availability_zone_id        = %[3]q
@@ -593,22 +511,28 @@ resource "aws_odb_network" "test" {
 resource "aws_odb_exascale_db_storage_vault" "test" {
   availability_zone_id                             = %[3]q
   display_name                                     = "%[1]s-vault"
-  high_capacity_database_storage_total_size_in_gbs = %[9]d
+  high_capacity_database_storage_total_size_in_gbs = %[8]d
+}
+
+data "aws_odb_gi_minor_versions" "test" {
+  availability_zone_id = %[3]q
+  gi_version           = "26.0.0.0"
+  shape_family         = "EXADB_XS"
 }
 
 resource "aws_odb_exadb_vm_cluster" "test" {
   display_name                             = %[1]q
-  enabled_ecpu_count                       = %[6]d
+  enabled_ecpu_count                       = %[5]d
   exascale_db_storage_vault_id             = aws_odb_exascale_db_storage_vault.test.id
-  grid_image_id                            = %[4]q
+  grid_image_id                            = data.aws_odb_gi_minor_versions.test.gi_minor_versions[0].grid_image_id
   hostname                                 = %[2]q
-  node_count                               = %[10]d
+  node_count                               = %[9]d
   odb_network_id                           = aws_odb_network.test.id
-  shape                                    = %[11]q
-  ssh_public_keys                          = [%[5]q]
-  total_ecpu_count                         = %[7]d
-  vm_file_system_storage_total_size_in_gbs = %[8]d
-%[12]s
+  shape                                    = %[10]q
+  ssh_public_keys                          = [%[4]q]
+  total_ecpu_count                         = %[6]d
+  vm_file_system_storage_total_size_in_gbs = %[7]d
+%[11]s
 }
-`, rName, hostname, availabilityZoneID, gridImageID, publicKey, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs, testAccExaDBVMClusterVaultStorageSizeInGBs, testAccExaDBVMClusterNodeCount, testAccExaDBVMClusterShapeCanonical, extra)
+`, rName, hostname, availabilityZoneID, publicKey, enabledECPUCount, totalECPUCount, vmFileSystemSizeInGBs, testAccExaDBVMClusterVaultStorageSizeInGBs, testAccExaDBVMClusterNodeCount, testAccExaDBVMClusterShapeCanonical, extra)
 }

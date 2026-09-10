@@ -17,13 +17,19 @@ resource "aws_odb_exascale_db_storage_vault" "test" {
   high_capacity_database_storage_total_size_in_gbs = 900
 }
 
+data "aws_odb_gi_minor_versions" "test" {
+  availability_zone_id = var.availability_zone_id
+  gi_version           = "26.0.0.0"
+  shape_family         = "EXADB_XS"
+}
+
 resource "aws_odb_exadb_vm_cluster" "test" {
   count = var.resource_count
 
   display_name                             = "${var.rName}-${count.index}"
   enabled_ecpu_count                       = 16
   exascale_db_storage_vault_id             = aws_odb_exascale_db_storage_vault.test.id
-  grid_image_id                            = var.grid_image_id
+  grid_image_id                            = data.aws_odb_gi_minor_versions.test.gi_minor_versions[0].grid_image_id
   hostname                                 = "ofake${count.index}${var.hostname_suffix}"
   node_count                               = 2
   odb_network_id                           = aws_odb_network.test.id
@@ -35,12 +41,6 @@ resource "aws_odb_exadb_vm_cluster" "test" {
 
 variable "availability_zone_id" {
   description = "Availability Zone ID"
-  type        = string
-  nullable    = false
-}
-
-variable "grid_image_id" {
-  description = "Grid Infrastructure image ID"
   type        = string
   nullable    = false
 }

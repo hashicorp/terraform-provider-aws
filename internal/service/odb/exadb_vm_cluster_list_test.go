@@ -35,7 +35,6 @@ func TestAccODBExaDBVMCluster_List_basic(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
@@ -56,7 +55,7 @@ func TestAccODBExaDBVMCluster_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_basic/"),
-				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2),
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("odb", regexache.MustCompile(`exadb-vm-cluster/.+`))),
@@ -67,7 +66,7 @@ func TestAccODBExaDBVMCluster_List_basic(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_basic/"),
-				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_odb_exadb_vm_cluster.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
@@ -93,12 +92,11 @@ func TestAccODBExaDBVMCluster_List_includeResource(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
-	variables := testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2)
+	variables := testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2)
 	variables[acctest.CtResourceTags] = config.MapVariable(map[string]config.Variable{
 		acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 	})
@@ -133,10 +131,10 @@ func TestAccODBExaDBVMCluster_List_includeResource(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_odb_exadb_vm_cluster.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					testAccExaDBVMClusterListKnownValues(identity1.Checks(), rName+"-0", "ofake0"+hostnameSuffix, gridImageID),
+					testAccExaDBVMClusterListKnownValues(identity1.Checks(), rName+"-0", "ofake0"+hostnameSuffix),
 					tfquerycheck.ExpectIdentityFunc("aws_odb_exadb_vm_cluster.test", identity2.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
-					testAccExaDBVMClusterListKnownValues(identity2.Checks(), rName+"-1", "ofake1"+hostnameSuffix, gridImageID),
+					testAccExaDBVMClusterListKnownValues(identity2.Checks(), rName+"-1", "ofake1"+hostnameSuffix),
 				},
 			},
 		},
@@ -155,7 +153,6 @@ func TestAccODBExaDBVMCluster_List_storageVaultFilter(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.Region()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.Region(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
@@ -176,7 +173,7 @@ func TestAccODBExaDBVMCluster_List_storageVaultFilter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_storage_vault_filter/"),
-				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2),
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					identity2.GetIdentity(resourceName2),
@@ -185,7 +182,7 @@ func TestAccODBExaDBVMCluster_List_storageVaultFilter(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/ExaDBVMCluster/list_storage_vault_filter/"),
-				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2),
+				ConfigVariables: testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectLength("aws_odb_exadb_vm_cluster.test", 1),
 					tfquerycheck.ExpectIdentityFunc("aws_odb_exadb_vm_cluster.test", identity1.Checks()),
@@ -210,12 +207,11 @@ func TestAccODBExaDBVMCluster_List_regionOverride(t *testing.T) {
 	rName := testAccRandomExaDBVMClusterDisplayName(t)
 	hostnameSuffix := acctest.RandStringFromCharSet(t, 5, acctest.CharSetAlphaNum)
 	availabilityZoneID := testAccExaDBVMClusterAvailabilityZoneIDs[acctest.AlternateRegion()]
-	gridImageID := testAccExaDBVMClusterGridImageIDForRegion(ctx, t, acctest.AlternateRegion(), availabilityZoneID)
 	publicKey := testAccRandomExaDBVMClusterSSHPublicKey(t)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
-	variables := testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey, 2)
+	variables := testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey, 2)
 	variables[names.AttrRegion] = config.StringVariable(acctest.AlternateRegion())
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -255,24 +251,23 @@ func TestAccODBExaDBVMCluster_List_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, gridImageID, publicKey string, resourceCount int) config.Variables {
+func testAccExaDBVMClusterListConfigVariables(rName, hostnameSuffix, availabilityZoneID, publicKey string, resourceCount int) config.Variables {
 	return config.Variables{
 		acctest.CtRName:        config.StringVariable(rName),
 		"availability_zone_id": config.StringVariable(availabilityZoneID),
-		"grid_image_id":        config.StringVariable(gridImageID),
 		"hostname_suffix":      config.StringVariable(hostnameSuffix),
 		"resource_count":       config.IntegerVariable(resourceCount),
 		"ssh_public_key":       config.StringVariable(publicKey),
 	}
 }
 
-func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]knownvalue.Check, displayName, hostname, gridImageID string) querycheck.QueryResultCheck {
+func testAccExaDBVMClusterListKnownValues(identityChecks func() map[string]knownvalue.Check, displayName, hostname string) querycheck.QueryResultCheck {
 	return querycheck.ExpectResourceKnownValues("aws_odb_exadb_vm_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identityChecks), []querycheck.KnownValueCheck{
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("odb", regexache.MustCompile(`exadb-vm-cluster/.+`))),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("enabled_ecpu_count"), knownvalue.Int32Exact(testAccExaDBVMClusterEnabledECPUCount)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("exascale_db_storage_vault_id"), knownvalue.NotNull()),
-		tfquerycheck.KnownValueCheck(tfjsonpath.New("grid_image_id"), knownvalue.StringExact(gridImageID)),
+		tfquerycheck.KnownValueCheck(tfjsonpath.New("grid_image_id"), knownvalue.NotNull()),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("hostname"), knownvalue.StringExact(hostname)),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		tfquerycheck.KnownValueCheck(tfjsonpath.New("node_count"), knownvalue.Int32Exact(testAccExaDBVMClusterNodeCount)),
