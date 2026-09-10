@@ -527,8 +527,7 @@ func testAccRoutingRuleConfig_privateAPI(rName, certificate, key string, count, 
 		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
 		fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name = "%[1]s.example.com"
-  
+  domain_name          = "%[1]s.example.com"
   certificate_arn      = aws_acm_certificate.test[%[2]d].arn
   endpoint_access_mode = "STRICT"
   endpoint_configuration {
