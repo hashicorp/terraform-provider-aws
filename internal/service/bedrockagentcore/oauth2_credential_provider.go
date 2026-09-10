@@ -209,6 +209,70 @@ func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.Block {
 	}
 }
 
+func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
+	block := basicOAuth2ProviderConfigBlock[customOAuth2ProviderConfigModel](ctx).(schema.ListNestedBlock)
+	// Replace the Computed oauth_discovery attribute with a configurable block.
+	delete(block.NestedObject.Attributes, "oauth_discovery")
+	maps.Copy(block.NestedObject.Blocks, map[string]schema.Block{
+		"oauth_discovery": schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
+			NestedObject: schema.NestedBlockObject{
+				Validators: []validator.Object{
+					tfobjectvalidator.ExactlyOneOfChildren(
+						path.MatchRelative().AtName("authorization_server_metadata"),
+						path.MatchRelative().AtName("discovery_url"),
+					),
+				},
+				Attributes: map[string]schema.Attribute{
+					"discovery_url": schema.StringAttribute{
+						Optional: true,
+					},
+				},
+				Blocks: map[string]schema.Block{
+					"authorization_server_metadata": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2AuthorizationServerMetadataModel](ctx),
+						Validators: []validator.List{
+							listvalidator.SizeAtMost(1),
+						},
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"authorization_endpoint": schema.StringAttribute{
+									Required: true,
+								},
+								names.AttrIssuer: schema.StringAttribute{
+									Required: true,
+								},
+								"response_types": schema.SetAttribute{
+									CustomType: fwtypes.SetOfStringType,
+									Optional:   true,
+								},
+								"token_endpoint": schema.StringAttribute{
+									Required: true,
+								},
+								"token_endpoint_auth_methods": schema.ListAttribute{
+									CustomType: fwtypes.ListOfStringType,
+									Optional:   true,
+									Validators: []validator.List{
+										listvalidator.SizeBetween(1, 2),
+										listvalidator.ValueStringsAre(
+											stringvalidator.RegexMatches(regexache.MustCompile(`^(client_secret_post|client_secret_basic)$`), ""),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	return block
+}
+
 func includedOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 	block := basicOAuth2ProviderConfigBlock[includedOAuth2ProviderConfigModel](ctx).(schema.ListNestedBlock)
 	maps.Copy(block.NestedObject.Attributes, map[string]schema.Attribute{
@@ -285,64 +349,8 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 						),
 					},
 					Blocks: map[string]schema.Block{
-						"atlassian_oauth2_provider_config": basicOAuth2ProviderConfigBlock[atlassianOAuth2ProviderConfigModel](ctx),
-						"custom_oauth2_provider_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[customOAuth2ProviderConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: oauth2ProviderClientCredentialsAttributes(ctx),
-								Blocks: map[string]schema.Block{
-									"client_secret_config": secretReferenceBlock(ctx),
-									"oauth_discovery": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2DiscoveryModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Validators: []validator.Object{
-												tfobjectvalidator.ExactlyOneOfChildren(
-													path.MatchRelative().AtName("authorization_server_metadata"),
-													path.MatchRelative().AtName("discovery_url"),
-												),
-											},
-											Attributes: map[string]schema.Attribute{
-												"discovery_url": schema.StringAttribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"authorization_server_metadata": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[oauth2AuthorizationServerMetadataModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"authorization_endpoint": schema.StringAttribute{
-																Required: true,
-															},
-															names.AttrIssuer: schema.StringAttribute{
-																Required: true,
-															},
-															"response_types": schema.SetAttribute{
-																CustomType:  fwtypes.SetOfStringType,
-																ElementType: types.StringType,
-																Optional:    true,
-															},
-															"token_endpoint": schema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+						"atlassian_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[atlassianOAuth2ProviderConfigModel](ctx),
+						"custom_oauth2_provider_config":     customOAuth2ProviderConfigBlock(ctx),
 						"github_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[githubOAuth2ProviderConfigModel](ctx),
 						"google_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx),
 						"included_oauth2_provider_config":   includedOAuth2ProviderConfigBlock(ctx),
@@ -1166,8 +1174,9 @@ func (m oauth2DiscoveryModel) Expand(ctx context.Context) (any, diag.Diagnostics
 }
 
 type oauth2AuthorizationServerMetadataModel struct {
-	AuthorizationEndpoint types.String        `tfsdk:"authorization_endpoint"`
-	Issuer                types.String        `tfsdk:"issuer"`
-	ResponseTypes         fwtypes.SetOfString `tfsdk:"response_types"`
-	TokenEndpoint         types.String        `tfsdk:"token_endpoint"`
+	AuthorizationEndpoint    types.String         `tfsdk:"authorization_endpoint"`
+	Issuer                   types.String         `tfsdk:"issuer"`
+	ResponseTypes            fwtypes.SetOfString  `tfsdk:"response_types"`
+	TokenEndpoint            types.String         `tfsdk:"token_endpoint"`
+	TokenEndpointAuthMethods fwtypes.ListOfString `tfsdk:"token_endpoint_auth_methods"`
 }
