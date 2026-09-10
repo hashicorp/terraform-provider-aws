@@ -55,6 +55,7 @@ func TestAccAgentRegistryRegistry_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
@@ -142,6 +143,7 @@ func TestAccAgentRegistryRegistry_name(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
@@ -179,6 +181,7 @@ func TestAccAgentRegistryRegistry_name(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("discovery_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"authorizer_configuration": knownvalue.ListSizeExact(0),
@@ -317,7 +320,6 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"description":   config.StringVariable("description1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
@@ -498,6 +500,128 @@ func TestAccAgentRegistryRegistry_customJWTAuthorizerFull(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
 				ImportStateVerifyIdentifierAttribute: "registry_id",
+			},
+		},
+	})
+}
+
+func TestAccAgentRegistryRegistry_autoDetectionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_agentregistry_registry.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-organizations.html.
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/agent-registry.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "agent-registry.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AgentRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"enabled":       config.BoolVariable(true),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(true),
+						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"enabled":       config.BoolVariable(false),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(false),
+						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"enabled":       config.BoolVariable(true),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(true),
+						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"enabled":       config.BoolVariable(false),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegistryExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_detection_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(false),
+						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
+					})})),
+				},
 			},
 		},
 	})

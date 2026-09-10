@@ -99,6 +99,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `approval_configuration` - (Optional) Approval configuration for registry records. [See below](#approval_configuration-block).
+* `auto_detection_configuration` - (Optional) Auto-detection configuration for the registry. When provided, the registry is automatically populated with resources discovered according to the configuration. [See below](#auto_detection_configuration-block).
 * `description` - (Optional) Description of the registry. Maximum length of 4096 characters.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -108,6 +109,13 @@ The following arguments are optional:
 The `approval_configuration` configuration block supports the following arguments:
 
 * `auto_approval_rules` - (Optional) Set of rules that determine which registry records are automatically approved on submission. Valid values: `APPROVE_ALL`. When omitted or empty, submitted records require manual review.
+
+### `auto_detection_configuration` Block
+
+The `auto_detection_configuration` configuration block supports the following arguments:
+
+* `enabled` - (Required) Whether auto-detection is requested for the registry.
+* `scope` - (Required) Source from which resources are detected. Valid values: `ORGANIZATION`.
 
 ### `discovery_configuration` Block
 

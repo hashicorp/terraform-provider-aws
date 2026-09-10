@@ -105,6 +105,23 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
+			"auto_detection_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[autoDetectionConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrEnabled: schema.BoolAttribute{
+							Required: true,
+						},
+						names.AttrScope: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.AutoDetectionScope](),
+							Required:   true,
+						},
+					},
+				},
+			},
 			"discovery_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[discoveryConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -433,6 +450,16 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 			}
 		}
 
+		if !plan.AutoDetectionConfiguration.Equal(state.AutoDetectionConfiguration) {
+			input.AutoDetectionConfiguration = &awstypes.UpdatedAutoDetectionConfiguration{}
+			if !plan.AutoDetectionConfiguration.IsNull() {
+				smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan.AutoDetectionConfiguration, &input.AutoDetectionConfiguration.OptionalValue))
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
+		}
+
 		if !plan.Description.Equal(state.Description) {
 			input.Description = &awstypes.UpdatedDescription{}
 			if !plan.Description.IsNull() {
@@ -605,10 +632,10 @@ func registryIDFromARN(registryyARN string) (string, error) {
 
 type registryResourceModel struct {
 	framework.WithRegionModel
-	ApprovalConfiguration fwtypes.ListNestedObjectValueOf[approvalConfigurationModel] `tfsdk:"approval_configuration"`
-	// AutoDetectionConfiguration fwtypes.ListNestedObjectValueOf[autoDetectionConfigurationModel] `tfsdk:"auto_detection_configuration"`
-	Description            types.String                                                 `tfsdk:"description"`
-	DiscoveryConfiguration fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel] `tfsdk:"discovery_configuration"`
+	ApprovalConfiguration      fwtypes.ListNestedObjectValueOf[approvalConfigurationModel]      `tfsdk:"approval_configuration"`
+	AutoDetectionConfiguration fwtypes.ListNestedObjectValueOf[autoDetectionConfigurationModel] `tfsdk:"auto_detection_configuration"`
+	Description                types.String                                                     `tfsdk:"description"`
+	DiscoveryConfiguration     fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel]     `tfsdk:"discovery_configuration"`
 	// EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
 	Name        types.String   `tfsdk:"name"`
 	RegistryARN types.String   `tfsdk:"registry_arn"`
@@ -620,6 +647,11 @@ type registryResourceModel struct {
 
 type approvalConfigurationModel struct {
 	AutoApprovalRules fwtypes.SetOfStringEnum[awstypes.AutoApprovalRule] `tfsdk:"auto_approval_rules"`
+}
+
+type autoDetectionConfigurationModel struct {
+	Enabled types.Bool                                      `tfsdk:"enabled"`
+	Scope   fwtypes.StringEnum[awstypes.AutoDetectionScope] `tfsdk:"scope"`
 }
 
 type discoveryConfigurationModel struct {
