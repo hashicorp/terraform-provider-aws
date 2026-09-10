@@ -34,20 +34,8 @@ type relayListResource struct {
 	framework.WithList
 }
 
-type listRelayModel struct {
-	framework.WithRegionModel
-}
-
 func (l *relayListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().MailManagerClient(ctx)
-
-	var query listRelayModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input mailmanager.ListRelaysInput

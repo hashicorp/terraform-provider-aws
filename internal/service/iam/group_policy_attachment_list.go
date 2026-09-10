@@ -32,19 +32,8 @@ type groupPolicyAttachmentListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listGroupPolicyAttachmentModel struct {
-}
-
 func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().IAMClient(ctx)
-
-	var query listGroupPolicyAttachmentModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input iam.ListGroupsInput
 	tflog.Info(ctx, "Listing Resources")

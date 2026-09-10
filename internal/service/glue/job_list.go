@@ -33,21 +33,9 @@ type jobListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listJobModel struct {
-	framework.WithRegionModel
-}
-
 func (l *jobListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.GlueClient(ctx)
-
-	var query listJobModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing Glue jobs")
 	stream.Results = func(yield func(list.ListResult) bool) {

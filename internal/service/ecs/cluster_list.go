@@ -35,14 +35,6 @@ type listResourceCluster struct {
 func (l *listResourceCluster) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ECSClient(ctx)
 
-	var query listClusterModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing ECS (Elastic Container) Cluster")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input ecs.ListClustersInput
@@ -94,10 +86,6 @@ func (l *listResourceCluster) List(ctx context.Context, request list.ListRequest
 			}
 		}
 	}
-}
-
-type listClusterModel struct {
-	framework.WithRegionModel
 }
 
 func listClusterARNs(ctx context.Context, conn *ecs.Client, input *ecs.ListClustersInput) iter.Seq2[string, error] {

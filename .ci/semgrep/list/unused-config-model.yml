@@ -1,0 +1,43 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: list-resource-unused-config-model
+    languages: [go]
+    message: >-
+      List resource configuration is decoded into `query`, but `query` is never used.
+      Remove the decode block and its region-only model.
+    severity: WARNING
+    paths:
+      include:
+        - "/internal/service/**/*_list.go"
+    patterns:
+      - pattern: |
+          func ($R *$TYPE) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+            ...
+            var query $MODEL
+            if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+              if diags := request.Config.Get(ctx, &query); diags.HasError() {
+                stream.Results = list.ListResultsStreamDiagnostics(diags)
+                return
+              }
+            }
+            ...
+          }
+      # Applied to the source text of the range matched above, i.e. the whole
+      # `List` method.
+      #
+      #   \bquery\b          the bare identifier `query`; the word boundaries
+      #                      stop `queryString`, `subquery`, and `queries` from
+      #                      counting as a use
+      #   (?<!var )          not preceded by `var `, which exempts the
+      #                      declaration `var query fooListResourceModel`
+      #   (?<!Get\(ctx, &)   not preceded by `Get(ctx, &`, which exempts
+      #                      `request.Config.Get(ctx, &query)` and nothing else;
+      #                      a `&query` passed anywhere else is a real use
+      #
+      # Both lookbehinds are fixed-width literals. The check is lexical, so a
+      # `query` in a comment or string literal also suppresses the finding. This
+      # is a known, accepted trade off to simplify the rule implementation.
+      - pattern-not-regex: '(?<!var )(?<!Get\(ctx, &)\bquery\b'
+      - focus-metavariable: $MODEL

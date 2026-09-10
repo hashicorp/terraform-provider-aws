@@ -30,21 +30,9 @@ type tableListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type tableListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *tableListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.DynamoDBClient(ctx)
-
-	var query tableListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing DynamoDB tables")
 	stream.Results = func(yield func(list.ListResult) bool) {

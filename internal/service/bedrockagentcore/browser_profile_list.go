@@ -36,14 +36,6 @@ type browserProfileListResource struct {
 func (l *browserProfileListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listBrowserProfileModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListBrowserProfilesInput
 		for item, err := range listBrowserProfiles(ctx, conn, &input) {
@@ -73,10 +65,6 @@ func (l *browserProfileListResource) List(ctx context.Context, request list.List
 			}
 		}
 	}
-}
-
-type listBrowserProfileModel struct {
-	framework.WithRegionModel
 }
 
 func listBrowserProfiles(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListBrowserProfilesInput) iter.Seq2[awstypes.BrowserProfileSummary, error] {

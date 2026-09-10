@@ -32,19 +32,7 @@ type aliasListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type aliasListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *aliasListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query aliasListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.KMSClient(ctx)
 
