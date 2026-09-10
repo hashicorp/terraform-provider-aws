@@ -908,6 +908,13 @@ smoke-identity: prereq-go ## Run Resource Identity smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
 
+SMOKE_LOGGING_LEVELS := DEBUG WARN
+
+smoke-logging: $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS)) ## Run logging smoke tests at all log levels
+
+smoke-logging-%: prereq-go ## Run logging smoke tests at a specific log level (e.g. make smoke-logging-DEBUG)
+	GO_BIN=$(GO_VER) TF_LOG=$* sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-logging.sh'"
+
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
@@ -1377,6 +1384,8 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke \
 	smoke-core-services \
 	smoke-identity \
+	smoke-logging \
+	smoke-logging-% \
 	sweep \
 	sweeper \
 	sweeper-check \

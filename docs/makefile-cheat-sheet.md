@@ -175,6 +175,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `smoke` | Smoke tests (alias of `sane`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `smoke-core-services`<sup>D</sup> | Run core-service smoke tests |  |  | `GO_VER` |
 | `smoke-identity`<sup>D</sup> | Run Resource Identity smoke tests |  |  | `GO_VER` |
+| `smoke-logging`<sup>M</sup> | Run logging smoke tests at all log levels |  |  | `GO_VER` |
+| `smoke-logging-%`<sup>D</sup> | Run logging smoke tests at a specific log level (e.g. `make smoke-logging-DEBUG`) |  |  | `GO_VER` |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
 | `sweeper`<sup>D</sup> | Run sweepers with failures allowed |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP` |
 | `sweeper-check`<sup>M</sup> | Provider Checks / Sweeper Linked, Unlinked | ✔️ |  |  |

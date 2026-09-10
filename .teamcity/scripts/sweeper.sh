@@ -9,12 +9,11 @@ if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
     conf=$(pwd)/aws.conf
 
     function cleanup {
-        rm "${conf}"
+        rm -f "${conf}"
     }
     trap cleanup EXIT
 
-    touch "${conf}"
-    chmod 600 "${conf}"
+    install -m 600 /dev/null "${conf}"
     cat <<EOF >"${conf}"
 [profile sweeper]
 role_arn       = %ACCTEST_ROLE_ARN%

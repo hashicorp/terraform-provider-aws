@@ -9,12 +9,11 @@ if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
     conf=$(pwd)/aws.conf
 
     function cleanup {
-        rm "${conf}"
+        rm -f "${conf}"
     }
     trap cleanup EXIT
 
-    touch "${conf}"
-    chmod 600 "${conf}"
+    install -m 600 /dev/null "${conf}"
     cat <<EOF >"${conf}"
 [profile perftest]
 role_arn       = %ACCTEST_ROLE_ARN%
@@ -34,4 +33,4 @@ fi
 
 export PACKAGE_PARALLELISM=$(( "%teamcity.agent.hardware.cpuCount%" / 2 ))
 
-exec "%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-identity.sh"
+"%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-identity.sh"

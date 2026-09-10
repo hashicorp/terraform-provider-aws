@@ -31,6 +31,4 @@ EOF
     export AWS_PROFILE=perftest
 fi
 
-export PACKAGE_PARALLELISM=$(( "%teamcity.agent.hardware.cpuCount%" / 2 ))
-
-"%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-core-services.sh"
+"%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-logging.sh"
