@@ -24,7 +24,7 @@ resource "aws_cognito_user_pool" "test" {
 
 resource "aws_cognito_user_pool_domain" "test" {
 {{- template "region" }}
-  domain = var.rName
+  domain       = var.rName
   user_pool_id = aws_cognito_user_pool.test.id
 }
 
@@ -33,9 +33,9 @@ resource "aws_cognito_user_pool_client" "test" {
   name                                 = var.rName
   user_pool_id                         = aws_cognito_user_pool.test.id
   generate_secret                      = true
-  allowed_oauth_flows                   = ["code"]
-  allowed_oauth_flows_user_pool_client  = true
-  allowed_oauth_scopes                  = ["openid", "email", "profile"]
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
   callback_urls                        = ["https://example.com/callback"]
   supported_identity_providers         = ["COGNITO"]
 }
@@ -44,7 +44,7 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
 {{- template "region" }}
   name                       = var.rName
   credential_provider_vendor = "CustomOauth2"
-  depends_on = [aws_cognito_user_pool_domain.test]
+  depends_on                 = [aws_cognito_user_pool_domain.test]
 
   oauth2_provider_config {
     custom_oauth2_provider_config {
@@ -66,7 +66,7 @@ resource "aws_bedrockagentcore_gateway" "test" {
 
   authorizer_configuration {
     custom_jwt_authorizer {
-      discovery_url  = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
+      discovery_url   = "https://${aws_cognito_user_pool.test.endpoint}/.well-known/openid-configuration"
       allowed_clients = [aws_cognito_user_pool_client.test.id]
     }
   }

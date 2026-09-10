@@ -23,12 +23,12 @@ func TestConsentPortalFlattenExpand(t *testing.T) {
 	ctx := t.Context()
 	out := bedrockagentcorecontrol.GetConsentPortalOutput{
 		ConsentPortalId:  aws.String("example-1234567890"),
-		ConsentPortalArn: aws.String("arn:aws:bedrock-agentcore:us-west-2:123456789012:consent-portal/example-1234567890"), //lintignore:AWSAT003
+		ConsentPortalArn: aws.String("arn:aws:bedrock-agentcore:us-west-2:123456789012:consent-portal/example-1234567890"), //lintignore:AWSAT003,AWSAT005
 		Name:             aws.String("example"),
-		ExecutionRoleArn: aws.String("arn:aws:iam::123456789012:role/example"),
+		ExecutionRoleArn: aws.String("arn:aws:iam::123456789012:role/example"), //lintignore:AWSAT005
 		PortalUrl:        aws.String("https://example.com"),
 		IdpConfig: &awstypes.ConsentPortalIdpConfig{
-			CredentialProviderArn: aws.String("arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/oauth2credentialprovider/example"), //lintignore:AWSAT003
+			CredentialProviderArn: aws.String("arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/oauth2credentialprovider/example"), //lintignore:AWSAT003,AWSAT005
 			Scopes:                []string{"openid", names.AttrEmail},
 			Audience:              aws.String("example-audience"),
 		},
@@ -85,7 +85,13 @@ func TestConsentPortalStatus(t *testing.T) {
 		identifier string
 		wantError  bool
 	}{
-		{name: names.AttrARN, identifier: "arn:aws:bedrock-agentcore:us-west-2:123456789012:consent-portal/example", code: http.StatusOK, body: map[string]any{names.AttrStatus: "ACTIVE", "consentPortalId": "example"}, wantStatus: "ACTIVE"}, //lintignore:AWSAT003
+		{
+			name:       names.AttrARN,
+			identifier: "arn:aws:bedrock-agentcore:us-west-2:123456789012:consent-portal/example", //lintignore:AWSAT003,AWSAT005
+			code:       http.StatusOK,
+			body:       map[string]any{names.AttrStatus: "ACTIVE", "consentPortalId": "example"},
+			wantStatus: "ACTIVE",
+		},
 		{name: "active", code: http.StatusOK, body: map[string]any{names.AttrStatus: "ACTIVE", "consentPortalId": "example"}, wantStatus: "ACTIVE"},
 		{name: "missing", code: http.StatusNotFound, body: map[string]any{"__type": "ResourceNotFoundException", names.AttrMessage: "missing"}},
 		{name: "access denied", code: http.StatusForbidden, body: map[string]any{"__type": "AccessDeniedException", names.AttrMessage: "denied"}, wantError: true},
@@ -110,7 +116,7 @@ func TestConsentPortalStatus(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			conn := bedrockagentcorecontrol.New(bedrockagentcorecontrol.Options{Region: "us-west-2", BaseEndpoint: aws.String(server.URL), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1}) //lintignore:AWSAT003
+			conn := bedrockagentcorecontrol.New(bedrockagentcorecontrol.Options{Region: "us-west-2", BaseEndpoint: aws.String(server.URL), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1}) //lintignore:AWSAT003,AWSAT005
 			id := tc.identifier
 			if id == "" {
 				id = "example"
@@ -138,7 +144,7 @@ func TestConsentPortalWaitFailure(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	conn := bedrockagentcorecontrol.New(bedrockagentcorecontrol.Options{Region: "us-west-2", BaseEndpoint: aws.String(server.URL), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1}) //lintignore:AWSAT003
+	conn := bedrockagentcorecontrol.New(bedrockagentcorecontrol.Options{Region: "us-west-2", BaseEndpoint: aws.String(server.URL), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1}) //lintignore:AWSAT003,AWSAT005
 	_, err := waitConsentPortalCreated(t.Context(), conn, "example", time.Second)
 	if err == nil || !strings.Contains(err.Error(), "invalid identity provider") {
 		t.Fatalf("expected AWS failure reason, got %v", err)
