@@ -162,8 +162,6 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 	input.InstanceProfileIdentifier = plan.InstanceProfileARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
-	// DMS can't assume a just-created IAM role until it propagates, so retry the
-	// AccessDeniedFault that surfaces during that window.
 	out, err := tfresource.RetryWhenIsA[*databasemigrationservice.CreateMigrationProjectOutput, *awstypes.AccessDeniedFault](ctx, r.CreateTimeout(ctx, plan.Timeouts),
 		func(ctx context.Context) (*databasemigrationservice.CreateMigrationProjectOutput, error) {
 			return conn.CreateMigrationProject(ctx, &input)
