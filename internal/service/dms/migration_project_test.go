@@ -171,6 +171,67 @@ func TestAccDMSMigrationProject_transformationRules(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
+			// unset case
+			{
+				Config: testAccMigrationProjectConfig_named(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMigrationProjectExists(ctx, t, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "transformation_rules"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDMSMigrationProject_schemaConversionApplicationAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dms_migration_project.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
+			testAccPreCheckMigrationProject(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMigrationProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMigrationProjectConfig_schemaConversionApplicationAttributes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMigrationProjectExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_conversion_application_attributes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "schema_conversion_application_attributes.0.s3_bucket_path"),
+					resource.TestCheckResourceAttrPair(resourceName, "schema_conversion_application_attributes.0.s3_bucket_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// unset case
+			{
+				Config: testAccMigrationProjectConfig_named(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMigrationProjectExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_conversion_application_attributes.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
 		},
 	})
 }
@@ -366,6 +427,84 @@ resource "aws_dms_migration_project" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, description))
+}
+
+func testAccMigrationProjectConfig_named(rName string) string {
+	return acctest.ConfigCompose(testAccMigrationProjectConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_migration_project" "test" {
+  name                 = %[1]q
+  instance_profile_arn = aws_dms_instance_profile.test.arn
+
+  source_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.source.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.source.arn
+  }
+
+  target_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.target.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.target.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func testAccMigrationProjectConfig_schemaConversionApplicationAttributes(rName string) string {
+	return acctest.ConfigCompose(testAccMigrationProjectConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role_policy" "s3" {
+  name = "%[1]s-s3"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:*"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_dms_migration_project" "test" {
+  name                 = %[1]q
+  instance_profile_arn = aws_dms_instance_profile.test.arn
+
+  schema_conversion_application_attributes {
+    s3_bucket_path     = "${aws_s3_bucket.test.id}/schema-conversion"
+    s3_bucket_role_arn = aws_iam_role.test.arn
+  }
+
+  source_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.source.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.source.arn
+  }
+
+  target_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.target.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.target.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_iam_role_policy.s3, aws_s3_bucket_versioning.test]
+}
+`, rName))
 }
 
 func testAccMigrationProjectConfig_transformationRules(rName, transformationRules string) string {

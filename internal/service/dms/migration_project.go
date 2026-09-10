@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -90,6 +91,12 @@ func (r *migrationProjectResource) Schema(ctx context.Context, req resource.Sche
 			"transformation_rules": schema.StringAttribute{
 				CustomType: jsontypes.NormalizedType{},
 				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					// change is possible but not unset
+					stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+						resp.RequiresReplace = req.PlanValue.IsNull() && !req.StateValue.IsNull()
+					}, "Replace when transformation_rules is removed", "Replace when transformation_rules is removed"),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -97,6 +104,12 @@ func (r *migrationProjectResource) Schema(ctx context.Context, req resource.Sche
 				CustomType: fwtypes.NewListNestedObjectTypeOf[migrationProjectSCApplicationAttributesModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					// change is possible but not unset
+					listplanmodifier.RequiresReplaceIf(func(ctx context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+						resp.RequiresReplace = req.PlanValue.IsNull() && !req.StateValue.IsNull()
+					}, "Replace when schema_conversion_application_attributes is removed", "Replace when schema_conversion_application_attributes is removed"),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -164,7 +177,7 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 	input.InstanceProfileIdentifier = plan.InstanceProfileARN.ValueStringPointer()
 	input.Tags = getTagsIn(ctx)
 
-	out, err := tfresource.RetryWhenIsA[*databasemigrationservice.CreateMigrationProjectOutput, *awstypes.AccessDeniedFault](ctx, r.CreateTimeout(ctx, plan.Timeouts),
+	out, err := tfresource.RetryWhenIsOneOf2[*databasemigrationservice.CreateMigrationProjectOutput, *awstypes.AccessDeniedFault, *awstypes.S3AccessDeniedFault](ctx, r.CreateTimeout(ctx, plan.Timeouts),
 		func(ctx context.Context) (*databasemigrationservice.CreateMigrationProjectOutput, error) {
 			return conn.CreateMigrationProject(ctx, &input)
 		})
