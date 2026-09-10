@@ -36,7 +36,7 @@ import (
 // @IdentityAttribute("id")
 // @ImportIDHandler("integrationImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetIntegrationOutput")
-// @Testing(preIdentityVersion="v6.50.0")
+// @Testing(preIdentityVersion="v6.64.0")
 // @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
 // @CustomImport
 func resourceIntegration() *schema.Resource {
