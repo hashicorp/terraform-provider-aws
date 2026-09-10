@@ -168,12 +168,6 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
 		dbInput.CreateTableDefaultPermissions = expandPrincipalPermissionses(v.([]any))
-	} else if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
-		// The block is explicitly configured as empty (`create_table_default_permission {}`),
-		// which means "Lake Formation manages new-table permissions" (no automatic
-		// IAM_ALLOWED_PRINCIPALS grant). Send an explicit empty list rather than leaving the
-		// field unset, which would let AWS apply its own default instead.
-		dbInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -289,12 +283,6 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
 			dbInput.CreateTableDefaultPermissions = expandPrincipalPermissionses(v.([]any))
-		} else if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
-			// The block is explicitly configured as empty (`create_table_default_permission {}`),
-			// which means "Lake Formation manages new-table permissions" (no automatic
-			// IAM_ALLOWED_PRINCIPALS grant). Send an explicit empty list rather than leaving the
-			// field unset, which would leave AWS's existing default in place.
-			dbInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -496,7 +484,7 @@ func expandPrincipalPermissionses(tfList []any) []awstypes.PrincipalPermissions 
 		return nil
 	}
 
-	var apiObjects []awstypes.PrincipalPermissions
+	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -504,10 +492,33 @@ func expandPrincipalPermissionses(tfList []any) []awstypes.PrincipalPermissions 
 			continue
 		}
 
+		// A block with neither permissions nor a principal represents an explicitly
+		// empty `create_table_default_permission {}`, meaning Lake Formation should
+		// manage default permissions (no automatic IAM_ALLOWED_PRINCIPALS grant). It
+		// must be sent to AWS as a genuinely empty list, not a single entry with a
+		// null Principal, which AWS rejects with "Principal in PrincipalPrivileges
+		// cannot be null". Skipping it here — while still returning the non-nil
+		// (possibly zero-length) apiObjects slice above — achieves that.
+		if isEmptyPrincipalPermissionsBlock(tfMap) {
+			continue
+		}
+
 		apiObjects = append(apiObjects, expandPrincipalPermissions(tfMap))
 	}
 
 	return apiObjects
+}
+
+func isEmptyPrincipalPermissionsBlock(tfMap map[string]any) bool {
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
+		return false
+	}
+
+	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
+		return false
+	}
+
+	return true
 }
 
 func expandPrincipalPermissions(tfMap map[string]any) awstypes.PrincipalPermissions {
