@@ -30,21 +30,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_catalog_table", name="Catalog Table")
+// @IdentityAttribute("name")
+// @IdentityAttribute("database_name")
+// @IdentityAttribute("catalog_id")
+// @ImportIDHandler("catalogTableImportID")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,
 		ReadWithoutTimeout:   resourceCatalogTableRead,
 		UpdateWithoutTimeout: resourceCatalogTableUpdate,
 		DeleteWithoutTimeout: resourceCatalogTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -2029,4 +2031,27 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
 	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
+}
+
+var _ inttypes.SDKv2ImportID = catalogTableImportID{}
+
+type catalogTableImportID struct{}
+
+func (catalogTableImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s:%s:%s", d.Get(names.AttrCatalogID).(string), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string))
+}
+
+func (catalogTableImportID) Parse(id string) (string, map[string]any, error) {
+	catalogId, databaseName, tableName, err := catalogTableParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrCatalogID:    catalogId,
+		names.AttrDatabaseName: databaseName,
+		names.AttrName:         tableName,
+	}
+
+	return id, result, nil
 }

@@ -129,6 +129,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrDatabaseName, true),
+				inttypes.StringIdentityAttribute(names.AttrCatalogID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      catalogTableImportID{},
+			},
 		},
 		{
 			Factory:  resourceClassifier,
