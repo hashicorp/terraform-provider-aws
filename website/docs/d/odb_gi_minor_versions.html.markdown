@@ -16,9 +16,7 @@ Provides details about available Oracle Database@AWS GI minor versions and their
 
 ```terraform
 data "aws_odb_gi_minor_versions" "example" {
-  availability_zone_id = "use1-az6"
-  gi_version           = "19.0.0.0"
-  shape_family         = "EXADB_XS"
+  gi_version = "19.0.0.0"
 }
 ```
 
@@ -27,13 +25,13 @@ data "aws_odb_gi_minor_versions" "example" {
 The following arguments are required:
 
 * `gi_version` - (Required) GI major version. Length must be between `1` and `255` characters.
-* `shape_family` - (Required) Shape family for the GI minor versions. Length must be between `1` and `255` characters.
 
 The following arguments are optional:
 
 * `availability_zone` - (Optional) Availability Zone to filter GI minor versions and retrieve Grid Infrastructure software image IDs. Length must be between `1` and `255` characters.
 * `availability_zone_id` - (Optional) Availability Zone ID to filter GI minor versions and retrieve Grid Infrastructure software image IDs. Length must be between `1` and `255` characters.
 * `region` - (Optional) Region where this data source will be [read](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `shape_family` - (Optional) Shape family to filter GI minor versions. Length must be between `1` and `255` characters.
 
 ## Attribute Reference
 

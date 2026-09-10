@@ -58,7 +58,7 @@ func (d *giMinorVersionsDataSource) Schema(ctx context.Context, _ datasource.Sch
 				},
 			},
 			"shape_family": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Description: "Shape family for the GI minor versions.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
@@ -78,14 +78,16 @@ func (d *giMinorVersionsDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	input := odb.ListGiMinorVersionsInput{
-		GiVersion:   data.GIVersion.ValueStringPointer(),
-		ShapeFamily: data.ShapeFamily.ValueStringPointer(),
+		GiVersion: data.GIVersion.ValueStringPointer(),
 	}
 	if !data.AvailabilityZone.IsNull() {
 		input.AvailabilityZone = data.AvailabilityZone.ValueStringPointer()
 	}
 	if !data.AvailabilityZoneID.IsNull() {
 		input.AvailabilityZoneId = data.AvailabilityZoneID.ValueStringPointer()
+	}
+	if !data.ShapeFamily.IsNull() {
+		input.ShapeFamily = data.ShapeFamily.ValueStringPointer()
 	}
 
 	var output odb.ListGiMinorVersionsOutput

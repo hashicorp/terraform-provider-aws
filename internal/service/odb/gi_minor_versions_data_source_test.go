@@ -97,8 +97,7 @@ func TestAccODBGIMinorVersionsDataSource_availabilityZoneID(t *testing.T) {
 
 const testAccGIMinorVersionsConfig_basic = `
 data "aws_odb_gi_minor_versions" "test" {
-  gi_version   = "19.0.0.0"
-  shape_family = "EXADB_XS"
+  gi_version = "19.0.0.0"
 }
 `
 
