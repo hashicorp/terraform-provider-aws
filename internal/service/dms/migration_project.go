@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -155,7 +155,7 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	var input databasemigrationservice.CreateMigrationProjectInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("MigrationProject")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("MigrationProject")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -175,7 +175,7 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.MigrationProject, &plan, flex.WithFieldNamePrefix("MigrationProject")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.MigrationProject, &plan, fwflex.WithFieldNamePrefix("MigrationProject")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -203,7 +203,7 @@ func (r *migrationProjectResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("MigrationProject")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("MigrationProject")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -221,7 +221,7 @@ func (r *migrationProjectResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -229,7 +229,7 @@ func (r *migrationProjectResource) Update(ctx context.Context, req resource.Upda
 
 	if diff.HasChanges() {
 		var input databasemigrationservice.ModifyMigrationProjectInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("MigrationProject")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("MigrationProject")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -252,7 +252,7 @@ func (r *migrationProjectResource) Update(ctx context.Context, req resource.Upda
 		}
 
 		description := plan.Description
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.MigrationProject, &plan, flex.WithFieldNamePrefix("MigrationProject")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.MigrationProject, &plan, fwflex.WithFieldNamePrefix("MigrationProject")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -340,7 +340,7 @@ type migrationProjectDataProviderDescriptorModel struct {
 	SecretsManagerSecretID      types.String `tfsdk:"secrets_manager_secret_id"`
 }
 
-var _ flex.Expander = migrationProjectDataProviderDescriptorModel{}
+var _ fwflex.Expander = migrationProjectDataProviderDescriptorModel{}
 
 // Expand maps DataProviderARN onto the input's DataProviderIdentifier field,
 // which AutoFlex can't name-match.
