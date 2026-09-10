@@ -190,7 +190,7 @@ func (r *migrationProjectResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.MigrationProject, &plan, fwflex.WithFieldNamePrefix("MigrationProject")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.MigrationProject, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -218,7 +218,7 @@ func (r *migrationProjectResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("MigrationProject")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -267,7 +267,7 @@ func (r *migrationProjectResource) Update(ctx context.Context, req resource.Upda
 		}
 
 		description := plan.Description
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.MigrationProject, &plan, fwflex.WithFieldNamePrefix("MigrationProject")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.MigrationProject, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -298,6 +298,10 @@ func (r *migrationProjectResource) Delete(ctx context.Context, req resource.Dele
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
+}
+
+func (r *migrationProjectResource) flatten(ctx context.Context, apiObject *awstypes.MigrationProject, model *migrationProjectResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, apiObject, model, fwflex.WithFieldNamePrefix("MigrationProject"))
 }
 
 func findMigrationProjectByARN(ctx context.Context, conn *databasemigrationservice.Client, arn string) (*awstypes.MigrationProject, error) {

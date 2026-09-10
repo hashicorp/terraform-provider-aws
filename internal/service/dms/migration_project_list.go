@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -66,7 +65,7 @@ func (l *migrationProjectListResource) List(ctx context.Context, request list.Li
 			result := request.NewListResult(ctx)
 			var data migrationProjectResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, &item, &data, fwflex.WithFieldNamePrefix("MigrationProject")))
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 				if result.Diagnostics.HasError() {
 					return
 				}
