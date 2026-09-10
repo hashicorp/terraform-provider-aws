@@ -53,7 +53,7 @@ func (l *migrationProjectListResource) List(ctx context.Context, request list.Li
 			if request.IncludeResource {
 				var err error
 				tags, err = listTags(ctx, conn, arn)
-				if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[smithy.APIError](err, "Unable to find an migration project matching the resource name") {
+				if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[smithy.APIError](err, "Unable to find") {
 					continue
 				}
 				if err != nil {
