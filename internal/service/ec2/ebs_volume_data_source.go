@@ -72,6 +72,10 @@ func dataSourceEBSVolume() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrSize: {
 					Type:     schema.TypeInt,
 					Computed: true,
@@ -144,7 +148,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.SetId(aws.ToString(volume.VolumeId))
-	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, volume.VolumeArn)
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
@@ -152,6 +156,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set(names.AttrOutpostARN, volume.OutpostArn)
+	d.Set(names.AttrOwnerID, volume.OwnerId)
 	d.Set(names.AttrSize, volume.Size)
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
