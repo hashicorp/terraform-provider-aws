@@ -336,6 +336,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_included(t *testing.T) {
 						"github_oauth2_provider_config":    knownvalue.ListSizeExact(0),
 						"google_oauth2_provider_config":    knownvalue.ListSizeExact(0),
 						"included_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authorization_endpoint":        knownvalue.Null(),
 							"client_credentials_wo_version": knownvalue.Null(),
 							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
 							"client_id_wo":                  knownvalue.Null(),
@@ -343,7 +344,9 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_included(t *testing.T) {
 							"client_secret_config":          knownvalue.ListSizeExact(0),
 							"client_secret_source":          knownvalue.Null(),
 							"client_secret_wo":              knownvalue.Null(),
+							names.AttrIssuer:                knownvalue.Null(),
 							"oauth_discovery":               knownvalue.ListSizeExact(1),
+							"token_endpoint":                knownvalue.Null(),
 						})}),
 						"linkedin_oauth2_provider_config":   knownvalue.ListSizeExact(0),
 						"microsoft_oauth2_provider_config":  knownvalue.ListSizeExact(0),
@@ -354,6 +357,84 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_included(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/included_oauth2_provider_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_secret_config",
+					"oauth2_provider_config.0.included_oauth2_provider_config.0.client_secret_source",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_includedIssuer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/included_oauth2_provider_config.issuer/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_vendor"), tfknownvalue.StringExact(awstypes.CredentialProviderVendorTypeOktaOauth2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oauth2_provider_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"atlassian_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"custom_oauth2_provider_config":    knownvalue.ListSizeExact(0),
+						"github_oauth2_provider_config":    knownvalue.ListSizeExact(0),
+						"google_oauth2_provider_config":    knownvalue.ListSizeExact(0),
+						"included_oauth2_provider_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authorization_endpoint":        knownvalue.StringExact("https://auth.example.com/oauth2/identity"),
+							"client_credentials_wo_version": knownvalue.Null(),
+							names.AttrClientID:              knownvalue.StringExact("test-client-id"),
+							"client_id_wo":                  knownvalue.Null(),
+							names.AttrClientSecret:          knownvalue.StringExact("test-client-secret"),
+							"client_secret_config":          knownvalue.ListSizeExact(0),
+							"client_secret_source":          knownvalue.Null(),
+							"client_secret_wo":              knownvalue.Null(),
+							names.AttrIssuer:                knownvalue.StringExact("https://auth.example.com"),
+							"oauth_discovery":               knownvalue.ListSizeExact(1),
+							"token_endpoint":                knownvalue.StringExact("https://auth.example.com/oauth2/token"),
+						})}),
+						"linkedin_oauth2_provider_config":   knownvalue.ListSizeExact(0),
+						"microsoft_oauth2_provider_config":  knownvalue.ListSizeExact(0),
+						"salesforce_oauth2_provider_config": knownvalue.ListSizeExact(0),
+						"slack_oauth2_provider_config":      knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OAuth2CredentialProvider/included_oauth2_provider_config.issuer/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
