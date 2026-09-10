@@ -15,7 +15,14 @@ if [[ -z "${version}" ]]; then
         grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4)
 fi
 
-echo "Downloading Terraform ${version}..."
+machine=$(uname -m)
+case "${machine}" in
+  x86_64)        arch="amd64" ;;
+  aarch64|arm64) arch="arm64" ;;
+  *)             echo "ERROR: unsupported architecture: ${machine}" >&2; exit 1 ;;
+esac
+
+echo "Downloading Terraform ${version} (${arch})..."
 
 tools_dir="%TOOLS_DIR%"
 mkdir -p "${tools_dir}"
@@ -24,6 +31,6 @@ zip_file=$(mktemp --suffix=.zip)
 trap 'rm -f "${zip_file}"' EXIT
 
 wget --no-verbose -O "${zip_file}" \
-    "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_amd64.zip"
+    "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
 
 unzip -o -d "${tools_dir}" "${zip_file}" terraform
