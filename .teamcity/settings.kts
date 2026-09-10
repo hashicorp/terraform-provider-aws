@@ -59,6 +59,7 @@ project {
     buildType(SmokeTestsCoreServices)
     buildType(Performance)
     buildType(SmokeTestsResourceIdentity)
+    buildType(SmokeTestsLogging)
 
     params {
         if (acctestParallelism != "") {
@@ -732,6 +733,73 @@ object SmokeTestsResourceIdentity : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
+        }
+    }
+})
+
+object SmokeTestsLogging : BuildType({
+    name = "Smoke Tests - Logging"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        InstallTerraform()
+        script {
+            name = "Smoke Tests - Logging"
+            scriptContent = File("./scripts/smoke-logging.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("smoke_logging_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
+        }
+
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
+        }
+
+        matrix {
+            param("env.TF_LOG", listOf(
+                value("DEBUG"),
+                value("WARN")
+            ))
         }
     }
 })
