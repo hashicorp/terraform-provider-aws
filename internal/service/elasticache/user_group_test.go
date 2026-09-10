@@ -201,8 +201,6 @@ func TestAccElastiCacheUserGroup_rotate(t *testing.T) {
 	})
 }
 
-// Replacing a group member destroys the outgoing user first, so the update removes a user
-// ElastiCache has already detached while adding a new one.
 func TestAccElastiCacheUserGroup_replaceMember(t *testing.T) {
 	ctx := acctest.Context(t)
 	var userGroup awstypes.UserGroup
