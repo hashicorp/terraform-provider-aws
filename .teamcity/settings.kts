@@ -123,6 +123,12 @@ project {
             text("POST_GITHUB_COMMENT", "false")
             password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
         }
+
+        // Parameters used by `install_terraform.sh`
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
     }
 
     subProject(Services)
@@ -132,7 +138,6 @@ class PullRequest(terraformVersion: String) : BuildType({
     name = "Pull Request"
 
     params {
-        text("env.TF_ACC_TERRAFORM_PATH", "%system.teamcity.build.checkoutDir%/tools/terraform")
         text("TERRAFORM_CORE_VERSION", terraformVersion)
 
         text("env.GOFLAGS", "-modcacherw")
@@ -154,10 +159,7 @@ class PullRequest(terraformVersion: String) : BuildType({
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
         ConfigureGoEnv()
-        script {
-            name = "Install Terraform Core"
-            scriptContent = File("./scripts/pullrequest_tests/install_terraform_core.sh").readText()
-        }
+        InstallTerraform()
         script {
             name = "Install Github CLI"
             scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
@@ -347,6 +349,7 @@ object SetUp : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
             name = "Run provider tests"
             scriptContent = File("./scripts/provider_tests/tests.sh").readText()
@@ -546,10 +549,6 @@ object SmokeTestsCoreServices : BuildType({
     params {
         text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
 
-        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
-        text("env.TERRAFORM_CORE_VERSION", "")
-        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
-
         text("env.TF_LOG", "")
     }
 
@@ -682,10 +681,6 @@ object SmokeTestsResourceIdentity : BuildType({
 
     params {
         text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
-
-        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
-        text("env.TERRAFORM_CORE_VERSION", "")
-        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
 
         text("env.TF_LOG", "")
     }
