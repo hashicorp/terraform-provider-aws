@@ -138,7 +138,7 @@ func TestAccDMSMigrationProject_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("instance_profile_name"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("schema_conversion_application_attributes"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("schema_conversion_application_attributes"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("source_data_provider_descriptor"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"data_provider_arn":               tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`)),
