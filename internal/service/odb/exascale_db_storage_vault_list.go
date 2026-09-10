@@ -39,14 +39,6 @@ type exascaleDBStorageVaultListResource struct {
 func (l *exascaleDBStorageVaultListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ODBClient(ctx)
 
-	var query listExascaleDBStorageVaultModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Oracle Database@AWS Exascale DB Storage Vaults")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -102,10 +94,6 @@ func (l *exascaleDBStorageVaultListResource) List(ctx context.Context, request l
 			}
 		}
 	}
-}
-
-type listExascaleDBStorageVaultModel struct {
-	framework.WithRegionModel
 }
 
 func listExascaleDBStorageVaults(ctx context.Context, conn *odb.Client, input *odb.ListExascaleDbStorageVaultsInput) iter.Seq2[awstypes.ExascaleDbStorageVaultSummary, error] {
