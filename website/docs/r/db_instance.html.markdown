@@ -391,8 +391,7 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
 * `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
 * `port` - (Optional) The port on which the DB accepts connections.
-* `publicly_accessible` - (Optional) Bool to control if instance is publicly
-accessible. Default is `false`.
+* `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. The default value depends on the DB subnet group: `false` when a non-default DB subnet group is specified, `true` when the default VPC DB subnet group is used. See the documentation on [Creating DB Instances](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) for more details on controlling this property.
 * `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
 is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replica database, and to use this value as the source database.
