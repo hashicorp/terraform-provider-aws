@@ -32,8 +32,7 @@ type registryDataSource struct {
 func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"approval_configuration":       framework.DataSourceComputedListOfObjectAttribute[approvalConfigurationModel](ctx),
-			"auto_detection_configuration": framework.DataSourceComputedListOfObjectAttribute[autoDetectionConfigurationModel](ctx),
+			"approval_configuration": framework.DataSourceComputedListOfObjectAttribute[approvalConfigurationModel](ctx),
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -90,15 +89,14 @@ func (d *registryDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 type registryDataSourceModel struct {
 	framework.WithRegionModel
-	ApprovalConfiguration      fwtypes.ListNestedObjectValueOf[approvalConfigurationModel]      `tfsdk:"approval_configuration"`
-	AutoDetectionConfiguration fwtypes.ListNestedObjectValueOf[autoDetectionConfigurationModel] `tfsdk:"auto_detection_configuration"`
-	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
-	Description                types.String                                                     `tfsdk:"description"`
-	DiscoveryConfiguration     fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel]     `tfsdk:"discovery_configuration"`
-	Name                       types.String                                                     `tfsdk:"name"`
-	RegistryARN                types.String                                                     `tfsdk:"registry_arn"`
-	RegistryID                 types.String                                                     `tfsdk:"registry_id"`
-	Status                     fwtypes.StringEnum[awstypes.RegistryStatus]                      `tfsdk:"status"`
-	Tags                       tftags.Map                                                       `tfsdk:"tags"`
-	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
+	ApprovalConfiguration  fwtypes.ListNestedObjectValueOf[approvalConfigurationModel]  `tfsdk:"approval_configuration"`
+	CreatedAt              timetypes.RFC3339                                            `tfsdk:"created_at"`
+	Description            types.String                                                 `tfsdk:"description"`
+	DiscoveryConfiguration fwtypes.ListNestedObjectValueOf[discoveryConfigurationModel] `tfsdk:"discovery_configuration"`
+	Name                   types.String                                                 `tfsdk:"name"`
+	RegistryARN            types.String                                                 `tfsdk:"registry_arn"`
+	RegistryID             types.String                                                 `tfsdk:"registry_id"`
+	Status                 fwtypes.StringEnum[awstypes.RegistryStatus]                  `tfsdk:"status"`
+	Tags                   tftags.Map                                                   `tfsdk:"tags"`
+	UpdatedAt              timetypes.RFC3339                                            `tfsdk:"updated_at"`
 }
