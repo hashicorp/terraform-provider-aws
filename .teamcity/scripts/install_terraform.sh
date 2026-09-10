@@ -23,7 +23,7 @@ mkdir -p "${tools_dir}"
 zip_file=$(mktemp --suffix=.zip)
 trap 'rm -f "${zip_file}"' EXIT
 
-curl -fsSL -o "${zip_file}" \
+wget --no-verbose -O "${zip_file}" \
     "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_amd64.zip"
 
 unzip -o -d "${tools_dir}" "${zip_file}" terraform
