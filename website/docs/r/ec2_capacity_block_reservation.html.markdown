@@ -17,21 +17,17 @@ Provides an EC2 Capacity Block Reservation. This allows you to purchase capacity
 ## Example Usage
 
 ```terraform
-
 data "aws_ec2_capacity_block_offering" "test" {
   capacity_duration_hours = 24
   end_date_range          = "2024-05-30T15:04:05Z"
   instance_count          = 1
-  instance_type           = "p4d.24xlarge"
+  instance_type           = "p5.4xlarge"
   start_date_range        = "2024-04-28T15:04:05Z"
 }
 
 resource "aws_ec2_capacity_block_reservation" "example" {
   capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.capacity_block_offering_id
   instance_platform          = "Linux/UNIX"
-  tags = {
-    "Environment" = "dev"
-  }
 }
 ```
 
@@ -56,6 +52,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `end_date_type` - Indicates the way in which the Capacity Reservation ends.
 * `id` - The ID of the Capacity Block Reservation.
 * `instance_count` - The number of instances for which to reserve capacity.
+  This value will not be set until the Capacity Block Reservation is active.
+  The requested instance count is set in the tag `aws:ec2capacityreservation:incrementalRequestedQuantity`.
 * `instance_type` - The instance type for which to reserve capacity.
 * `outpost_arn` - The ARN of the Outpost on which to create the Capacity Block Reservation.
 * `placement_group_arn` - The ARN of the placement group in which to create the Capacity Block Reservation.

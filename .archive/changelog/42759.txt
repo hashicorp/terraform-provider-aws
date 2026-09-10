@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_securityhub_standards_subscription: Add configurable Create and Delete timeouts
-```

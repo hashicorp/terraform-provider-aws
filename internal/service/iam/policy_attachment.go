@@ -29,6 +29,9 @@ import (
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
+// @ArnIdentity("policy_arn", duplicatesIdAttr=false)
+// @NoImport
+// @Testing(preIdentityVersion="v6.52.0")
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,

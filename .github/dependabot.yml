@@ -7,8 +7,11 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    ignore:
-      - dependency-name: "github/gh-aw-actions/*" # Managed by "gh aw compile".
+    groups:
+      actions-cache:
+        patterns:
+          - "actions/cache"
+          - "actions/cache/*"
   - package-ecosystem: "gomod"
     directories:
       - "/"

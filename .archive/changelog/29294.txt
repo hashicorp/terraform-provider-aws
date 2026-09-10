@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant
-```

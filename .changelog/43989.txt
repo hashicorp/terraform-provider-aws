@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_synthetics_canary: Add `vpc_config.ipv6_allowed_for_dual_stack` argument
-```

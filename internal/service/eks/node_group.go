@@ -378,6 +378,38 @@ func resourceNodeGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"warm_pool_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_group_prepared_capacity": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(-1),
+							},
+							"min_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"pool_state": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.WarmPoolState](),
+							},
+							"reuse_on_scale_in": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -385,7 +417,6 @@ func resourceNodeGroup() *schema.Resource {
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
@@ -452,6 +483,10 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Version = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("warm_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
+	}
+
 	_, err := conn.CreateNodegroup(ctx, &input)
 
 	if err != nil {
@@ -469,7 +504,6 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -489,62 +523,15 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
-	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
-	d.Set("disk_size", nodeGroup.DiskSize)
-	d.Set("instance_types", nodeGroup.InstanceTypes)
-	d.Set("labels", nodeGroup.Labels)
-	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+	if err := resourceNodeGroupFlatten(ctx, nodeGroup, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("node_group_name", nodeGroup.NodegroupName)
-	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
-	if nodeGroup.NodeRepairConfig != nil {
-		if err := d.Set("node_repair_config", []any{flattenNodeRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting node_repair_config: %s", err)
-		}
-	} else {
-		d.Set("node_repair_config", nil)
-	}
-	d.Set("node_role_arn", nodeGroup.NodeRole)
-	d.Set("release_version", nodeGroup.ReleaseVersion)
-	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
-	}
-	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-	}
-	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []any{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
-		}
-	} else {
-		d.Set("scaling_config", nil)
-	}
-	d.Set(names.AttrStatus, nodeGroup.Status)
-	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
-	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting taint: %s", err)
-	}
-	if nodeGroup.UpdateConfig != nil {
-		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
-		}
-	} else {
-		d.Set("update_config", nil)
-	}
-	d.Set(names.AttrVersion, nodeGroup.Version)
-
-	setTagsOut(ctx, nodeGroup.Tags)
 
 	return diags
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -602,7 +589,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "node_repair_config", "scaling_config", "taint", "update_config", "warm_pool_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -632,6 +619,14 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
+		if d.HasChange("warm_pool_config") {
+			if v, ok := d.GetOk("warm_pool_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
+			} else {
+				input.WarmPoolConfig = &types.WarmPoolConfig{Enabled: aws.Bool(false)}
+			}
+		}
+
 		output, err := conn.UpdateNodegroupConfig(ctx, &input)
 
 		if err != nil {
@@ -650,7 +645,6 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := nodeGroupParseResourceID(d.Id())
@@ -678,6 +672,67 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return diags
+}
+
+func resourceNodeGroupFlatten(ctx context.Context, nodeGroup *types.Nodegroup, d *schema.ResourceData) error {
+	d.Set("ami_type", nodeGroup.AmiType)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
+	d.Set("disk_size", nodeGroup.DiskSize)
+	d.Set("instance_types", nodeGroup.InstanceTypes)
+	d.Set("labels", nodeGroup.Labels)
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+		return fmt.Errorf("setting launch_template: %w", err)
+	}
+	d.Set("node_group_name", nodeGroup.NodegroupName)
+	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
+	if nodeGroup.NodeRepairConfig != nil {
+		if err := d.Set("node_repair_config", []any{flattenNodeRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
+			return fmt.Errorf("setting node_repair_config: %w", err)
+		}
+	} else {
+		d.Set("node_repair_config", nil)
+	}
+	d.Set("node_role_arn", nodeGroup.NodeRole)
+	d.Set("release_version", nodeGroup.ReleaseVersion)
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+		return fmt.Errorf("setting remote_access: %w", err)
+	}
+	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
+		return fmt.Errorf("setting resources: %w", err)
+	}
+	if nodeGroup.ScalingConfig != nil {
+		if err := d.Set("scaling_config", []any{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+			return fmt.Errorf("setting scaling_config: %w", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
+	}
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
+	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
+		return fmt.Errorf("setting taint: %w", err)
+	}
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return fmt.Errorf("setting update_config: %w", err)
+		}
+	} else {
+		d.Set("update_config", nil)
+	}
+	d.Set(names.AttrVersion, nodeGroup.Version)
+	if nodeGroup.WarmPoolConfig != nil {
+		if err := d.Set("warm_pool_config", []any{flattenWarmPoolConfig(nodeGroup.WarmPoolConfig)}); err != nil {
+			return fmt.Errorf("setting warm_pool_config: %w", err)
+		}
+	} else {
+		d.Set("warm_pool_config", nil)
+	}
+
+	setTagsOut(ctx, nodeGroup.Tags)
+
+	return nil
 }
 
 func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {
@@ -1005,6 +1060,34 @@ func expandNodegroupUpdateConfig(tfMap map[string]any) *types.NodegroupUpdateCon
 	return apiObject
 }
 
+func expandWarmPoolConfig(tfMap map[string]any) *types.WarmPoolConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.WarmPoolConfig{
+		Enabled: aws.Bool(true),
+	}
+
+	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok {
+		apiObject.MaxGroupPreparedCapacity = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["min_size"].(int); ok {
+		apiObject.MinSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["pool_state"].(string); ok && v != "" {
+		apiObject.PoolState = types.WarmPoolState(v)
+	}
+
+	if v, ok := tfMap["reuse_on_scale_in"].(bool); ok {
+		apiObject.ReuseOnScaleIn = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandNodeRepairConfig(tfMap map[string]any) *types.NodeRepairConfig {
 	if tfMap == nil {
 		return nil
@@ -1218,7 +1301,9 @@ func flattenNodeRepairConfigOverrides(apiObjects []types.NodeRepairConfigOverrid
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]any)
+		tfMap := map[string]any{
+			"repair_action": apiObject.RepairAction,
+		}
 
 		if v := apiObject.MinRepairWaitTimeMins; v != nil {
 			tfMap["min_repair_wait_time_mins"] = aws.ToInt32(v)
@@ -1232,8 +1317,6 @@ func flattenNodeRepairConfigOverrides(apiObjects []types.NodeRepairConfigOverrid
 			tfMap["node_unhealthy_reason"] = aws.ToString(v)
 		}
 
-		tfMap["repair_action"] = string(apiObject.RepairAction)
-
 		tfList = append(tfList, tfMap)
 	}
 
@@ -1245,7 +1328,9 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 		return nil
 	}
 
-	tfMap := map[string]any{}
+	tfMap := map[string]any{
+		"update_strategy": apiObject.UpdateStrategy,
+	}
 
 	if v := apiObject.MaxUnavailable; v != nil {
 		tfMap["max_unavailable"] = aws.ToInt32(v)
@@ -1255,8 +1340,28 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 		tfMap["max_unavailable_percentage"] = aws.ToInt32(v)
 	}
 
-	if apiObject.UpdateStrategy != "" {
-		tfMap["update_strategy"] = string(apiObject.UpdateStrategy)
+	return tfMap
+}
+
+func flattenWarmPoolConfig(apiObject *types.WarmPoolConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"pool_state": apiObject.PoolState,
+	}
+
+	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
+		tfMap["max_group_prepared_capacity"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MinSize; v != nil {
+		tfMap["min_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.ReuseOnScaleIn; v != nil {
+		tfMap["reuse_on_scale_in"] = aws.ToBool(v)
 	}
 
 	return tfMap

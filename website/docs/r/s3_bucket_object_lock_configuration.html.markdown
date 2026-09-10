@@ -47,21 +47,20 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
-* `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
-* `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule).
-* `token` - (Optional,Deprecated) This argument is deprecated and no longer needed to enable Object Lock.
-To enable Object Lock for an existing bucket, you must first enable versioning on the bucket and then enable Object Lock. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
+* `object_lock_enabled` - (Optional, Forces new resource) Whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule-block).
+* `token` - (Optional) Token to allow Object Lock to be enabled for an existing bucket. To enable Object Lock for an existing bucket, you must first enable versioning on the bucket and then enable Object Lock. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 
-### rule
+### `rule` Block
 
 The `rule` configuration block supports the following arguments:
 
-* `default_retention` - (Required) Configuration block for specifying the default Object Lock retention settings for new objects placed in the specified bucket. [See below](#default_retention).
+* `default_retention` - (Required) Configuration block for specifying the default Object Lock retention settings for new objects placed in the specified bucket. [See below](#default_retention-block).
 
-### default_retention
+### `default_retention` Block
 
 The `default_retention` configuration block supports the following arguments:
 
@@ -73,7 +72,7 @@ The `default_retention` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 

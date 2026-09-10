@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_globalaccelerator_accelerator: The `id` attribute is now computed only
-```

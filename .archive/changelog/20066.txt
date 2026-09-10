@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_model: Add `inference_execution_config`.
-```

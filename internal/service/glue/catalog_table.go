@@ -592,16 +592,19 @@ func resourceCatalogTable() *schema.Resource {
 										"validation_connection": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 										"view_expanded_text": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(0, 409600),
 										},
 										"view_original_text": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											Computed:     true,
 											ValidateFunc: validation.StringLenBetween(0, 409600),
 										},
 									},
@@ -734,7 +737,20 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("target_table", nil)
 	}
 	if table.ViewDefinition != nil {
-		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition)}); err != nil {
+		// Glue does not echo back ValidationConnection, ViewOriginalText, or
+		// ViewExpandedText for validated ATHENA views — GetTable returns them as
+		// null. Preserve user supplied values.
+		var priorRepresentations []any
+		if v, ok := d.GetOk("view_definition"); ok {
+			vdList := v.([]any)
+			if len(vdList) > 0 && vdList[0] != nil {
+				vdMap := vdList[0].(map[string]any)
+				if reps, ok := vdMap["representations"].([]any); ok {
+					priorRepresentations = reps
+				}
+			}
+		}
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition, priorRepresentations)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
 		}
 	} else {
@@ -952,6 +968,31 @@ func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, d
 	return output, err
 }
 
+// viewDefinitionHasDialect returns true if view_definition.representations
+// contains at least one entry whose dialect matches the given value.
+func viewDefinitionHasDialect(d *schema.ResourceData, dialect awstypes.ViewDialect) bool {
+	v, ok := d.GetOk("view_definition")
+	if !ok {
+		return false
+	}
+	vdList := v.([]any)
+	if len(vdList) == 0 || vdList[0] == nil {
+		return false
+	}
+	reps, ok := vdList[0].(map[string]any)["representations"].([]any)
+	if !ok {
+		return false
+	}
+	for _, raw := range reps {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d == string(dialect) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 	apiObject := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
@@ -979,7 +1020,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("storage_descriptor"); ok {
+	// For validated ATHENA views, Glue forbids StorageDescriptor on both
+	// CreateTable and UpdateTable. Skip it when any representation carries
+	// dialect = ATHENA, regardless of what is in state.
+	if v, ok := d.GetOk("storage_descriptor"); ok && !viewDefinitionHasDialect(d, awstypes.ViewDialectAthena) {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
@@ -993,6 +1037,16 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
+	}
+
+	// SPARK-dialect views require a StorageDescriptor with columns on both
+	// CreateTable and UpdateTable. If the user did not supply one explicitly,
+	// synthesise a minimal descriptor so Glue accepts the request. Glue will
+	// populate the actual columns after validating the view SQL.
+	if viewDefinitionHasDialect(d, awstypes.ViewDialectSpark) && apiObject.StorageDescriptor == nil {
+		apiObject.StorageDescriptor = &awstypes.StorageDescriptor{
+			Columns: []awstypes.Column{},
+		}
 	}
 
 	if v, ok := d.GetOk("view_expanded_text"); ok {
@@ -1549,7 +1603,7 @@ func expandSchemaId(tfList []any) *awstypes.SchemaId {
 
 func flattenStorageDescriptor(apiObject *awstypes.StorageDescriptor) []any {
 	if apiObject == nil {
-		return make([]any, 0)
+		return nil
 	}
 
 	tfList := make([]any, 1)
@@ -1870,7 +1924,7 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	return apiObjects
 }
 
-func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition, priorRepresentations []any) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1894,7 +1948,7 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	}
 
 	if v := apiObject.Representations; len(v) > 0 {
-		tfMap["representations"] = flattenViewRepresentations(v)
+		tfMap["representations"] = flattenViewRepresentations(v, priorRepresentations)
 	}
 
 	tfMap["view_version_id"] = apiObject.ViewVersionId
@@ -1906,15 +1960,34 @@ func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
 	return tfMap
 }
 
-func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation) []any {
+// flattenViewRepresentations flattens API representations, falling back to
+// prior state values for fields Glue does not echo back on GetTable
+// (ValidationConnection, ViewOriginalText, ViewExpandedText). Matching is by
+// dialect so the merge is order-independent.
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation, prior []any) []any {
+	// Build a lookup of prior state representations keyed by dialect string.
+	priorByDialect := make(map[string]map[string]any, len(prior))
+	for _, raw := range prior {
+		if m, ok := raw.(map[string]any); ok {
+			if d, ok := m["dialect"].(string); ok && d != "" {
+				priorByDialect[d] = m
+			}
+		}
+	}
+
 	tfList := make([]any, len(apiObjects))
 	for i, v := range apiObjects {
-		tfList[i] = flattenViewRepresentation(v)
+		tfList[i] = flattenViewRepresentation(v, priorByDialect[string(v.Dialect)])
 	}
 	return tfList
 }
 
-func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string]any {
+// flattenViewRepresentation flattens one API representation. For the three
+// fields Glue strips on validated views (ValidationConnection,
+// ViewOriginalText, ViewExpandedText), the API value takes precedence when
+// non-empty; otherwise the prior state value is preserved so state stays
+// consistent with what the user configured.
+func flattenViewRepresentation(apiObject awstypes.ViewRepresentation, prior map[string]any) map[string]any {
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Dialect; v != "" {
@@ -1925,16 +1998,30 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 		tfMap["dialect_version"] = v
 	}
 
+	// Glue does not store these fields back for validated ATHENA views.
+	// Use the API value when present; fall back to prior state otherwise.
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
 		tfMap["validation_connection"] = v
+	} else if prior != nil {
+		if v, ok := prior["validation_connection"].(string); ok && v != "" {
+			tfMap["validation_connection"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewExpandedText); v != "" {
 		tfMap["view_expanded_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_expanded_text"].(string); ok && v != "" {
+			tfMap["view_expanded_text"] = v
+		}
 	}
 
 	if v := aws.ToString(apiObject.ViewOriginalText); v != "" {
 		tfMap["view_original_text"] = v
+	} else if prior != nil {
+		if v, ok := prior["view_original_text"].(string); ok && v != "" {
+			tfMap["view_original_text"] = v
+		}
 	}
 
 	return tfMap

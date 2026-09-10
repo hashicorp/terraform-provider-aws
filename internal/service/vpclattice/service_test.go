@@ -116,12 +116,52 @@ func TestAccVPCLatticeService_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "custom_domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout_seconds", "120"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("service/.+$")),
 				),
 			},
 			{
 				ResourceName: resourceName,
 				ImportState:  true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeService_idleTimeoutSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var service vpclattice.GetServiceOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_idleTimeoutSeconds(rName, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout_seconds", "120"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
+			{
+				Config: testAccServiceConfig_idleTimeoutSeconds(rName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout_seconds", "300"),
+				),
 			},
 		},
 	})
@@ -259,11 +299,22 @@ resource "aws_vpclattice_service" "test" {
 func testAccServiceConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
-  name               = %[1]q
-  auth_type          = "AWS_IAM"
-  custom_domain_name = "example.com"
+  name                 = "%[1]s"
+  auth_type            = "AWS_IAM"
+  custom_domain_name   = "example.com"
+  idle_timeout_seconds = 120
 }
 `, rName)
+}
+
+func testAccServiceConfig_idleTimeoutSeconds(rName string, idleTimeoutSeconds int) string {
+	return fmt.Sprintf(`
+resource "aws_vpclattice_service" "test" {
+  name = "%[1]s"
+
+  idle_timeout_seconds = %[2]d
+}
+`, rName, idleTimeoutSeconds)
 }
 
 func testAccServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {

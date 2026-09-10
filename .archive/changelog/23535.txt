@@ -1,3 +1,0 @@
-```new-data-source
-aws_ecrpublic_authorization_token
-```

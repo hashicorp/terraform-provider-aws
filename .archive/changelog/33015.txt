@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_budgets_budget_action: No longer times out when creating a non-triggered action
-```

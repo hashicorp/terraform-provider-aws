@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_medialive_multiplex_program: The `statemux_settings` attribute has been removed. Use `statmux_settings` argument instead
-```

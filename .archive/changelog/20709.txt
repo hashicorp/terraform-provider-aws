@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_distribution: Fix default value of `origin_path` in `origin` block
-```

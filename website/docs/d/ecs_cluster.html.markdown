@@ -23,18 +23,18 @@ data "aws_ecs_cluster" "ecs-mongo" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_name` - (Required) Name of the ECS Cluster
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the ECS Cluster
-* `status` - Status of the ECS Cluster
 * `pending_tasks_count` - Number of pending tasks for the ECS Cluster
+* `registered_container_instances_count` - Number of registered container instances for the ECS Cluster
 * `running_tasks_count` - Number of running tasks for the ECS Cluster
-* `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
-* `service_connect_defaults` - The default Service Connect namespace
+* `service_connect_defaults` - Default Service Connect namespace
 * `setting` - Settings associated with the ECS Cluster
+* `status` - Status of the ECS Cluster
 * `tags` - Key-value map of resource tags

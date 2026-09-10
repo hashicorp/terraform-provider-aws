@@ -50,7 +50,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the rule
+* `arn` - ARN of the rule
 
 ## Timeouts
 

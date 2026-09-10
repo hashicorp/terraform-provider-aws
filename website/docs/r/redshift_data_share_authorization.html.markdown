@@ -25,7 +25,7 @@ resource "aws_redshift_data_share_authorization" "example" {
 The following arguments are required:
 
 * `consumer_identifier` - (Required) Identifier of the data consumer that is authorized to access the datashare. This identifier is an AWS account ID or a keyword, such as `ADX`.
-* `data_share_arn` - (Required) Amazon Resource Name (ARN) of the datashare that producers are to authorize sharing for.
+* `data_share_arn` - (Required) ARN of the datashare that producers are to authorize sharing for.
 
 The following arguments are optional:
 
@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A comma-delimited string concatenating `data_share_arn` and `consumer_identifier`.
 * `managed_by` - Identifier of a datashare to show its managing entity.
-* `producer_arn` - Amazon Resource Name (ARN) of the producer.
+* `producer_arn` - ARN of the producer.
 
 ## Import
 

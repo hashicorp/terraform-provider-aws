@@ -33,7 +33,7 @@ data "aws_shield_protection" "example" {
 This data source supports the following arguments:
 
 * `protection_id` - (Optional) Unique identifier for the protection.
-* `resource_arn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
+* `resource_arn` - (Optional) ARN of the resource being protected.
 
 ~> Exactly one of `protection_id` or `resource_arn` is required.
 

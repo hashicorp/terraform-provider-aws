@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Fix bug causing spurious diffs with and preventing proper updating of `stream_enabled` and `stream_view_type`
-```

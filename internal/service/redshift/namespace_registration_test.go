@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
+func TestAccRedshiftNamespaceRegistration_basic_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_namespace_registration.test"
@@ -28,16 +28,28 @@ func TestAccRedshiftNamespaceRegistration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceRegistrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceRegistrationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccNamespaceRegistrationConfig_basic_serverless(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_type", "serverless"),
+					resource.TestCheckNoResourceAttr(resourceName, "provisioned_cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "serverless_namespace_identifier", "aws_redshiftserverless_namespace.test", "namespace_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "serverless_workgroup_identifier", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccNamespaceRegistrationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "consumer_identifier",
 			},
 		},
 	})
 }
 
-func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
+func TestAccRedshiftNamespaceRegistration_basic_provisioned(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_namespace_registration.test"
@@ -49,10 +61,22 @@ func TestAccRedshiftNamespaceRegistration_cluster(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceRegistrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceRegistrationConfig_cluster(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccNamespaceRegistrationConfig_basic_provisioned(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceRegistrationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "consumer_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "namespace_type", "provisioned"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned_cluster_identifier", "aws_redshift_cluster.test", names.AttrClusterIdentifier),
+					resource.TestCheckNoResourceAttr(resourceName, "serverless_namespace_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "serverless_workgroup_identifier"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccNamespaceRegistrationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "consumer_identifier",
 			},
 		},
 	})
@@ -112,7 +136,25 @@ func testAccCheckNamespaceRegistrationExists(ctx context.Context, t *testing.T, 
 	}
 }
 
-func testAccNamespaceRegistrationConfig_basic(rName string) string {
+func testAccNamespaceRegistrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		switch rs.Primary.Attributes["namespace_type"] {
+		case "serverless":
+			return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes["consumer_identifier"], rs.Primary.Attributes["serverless_namespace_identifier"], rs.Primary.Attributes["serverless_workgroup_identifier"]), nil
+		case "provisioned":
+			return fmt.Sprintf("%s,%s", rs.Primary.Attributes["consumer_identifier"], rs.Primary.Attributes["provisioned_cluster_identifier"]), nil
+		default:
+			return "", fmt.Errorf("unexpected namespace_type: %q", rs.Primary.Attributes["namespace_type"])
+		}
+	}
+}
+
+func testAccNamespaceRegistrationConfig_basic_serverless(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -135,7 +177,7 @@ resource "aws_redshift_namespace_registration" "test" {
 `, rName)
 }
 
-func testAccNamespaceRegistrationConfig_cluster(rName string) string {
+func testAccNamespaceRegistrationConfig_basic_provisioned(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

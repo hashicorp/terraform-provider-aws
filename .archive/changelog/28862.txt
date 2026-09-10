@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types 
-```

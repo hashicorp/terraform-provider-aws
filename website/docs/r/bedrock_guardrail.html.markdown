@@ -216,6 +216,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `guardrail_arn` - ARN of the Guardrail.
 * `guardrail_id` - ID of the Guardrail.
 * `status` - Status of the Bedrock Guardrail. One of `READY`, `FAILED`.
+* `updated_at` - Date and time that the Guardrail list was last updated.
 * `version` - Version of the Guardrail.
 
 ## Timeouts

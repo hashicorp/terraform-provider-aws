@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_connect_security_profile: Set correct `tags` in state
-```

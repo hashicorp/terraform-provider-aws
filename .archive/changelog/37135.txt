@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_pipes_pipe: Add `log_configuration` argument
-```

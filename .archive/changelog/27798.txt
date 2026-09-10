@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_config_config_rule: Update validation regex on name to allow for 128 characters.
-```

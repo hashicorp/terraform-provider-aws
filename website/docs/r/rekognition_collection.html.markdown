@@ -26,7 +26,7 @@ resource "aws_rekognition_collection" "example" {
 
 The following arguments are required:
 
-* `collection_id` - (Required) The name of the collection
+* `collection_id` - (Required) Name of the collection
 
 The following arguments are optional:
 
@@ -38,8 +38,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Collection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `face_model_version` - The Face Model Version that the collection was initialized with
+* `face_model_version` - Face Model Version that the collection was initialized with
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -48,6 +48,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `2m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rekognition_collection.example
+  identity = {
+    collection_id = "collection-id-12345678"
+  }
+}
+
+resource "aws_rekognition_collection" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `collection_id` - (String) The name of the collection.
+
+#### Optional
+
+* `account_id` - (String) AWS Account where this resource is managed.
+* `region` - (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Collection using the `collection_id`. For example:
 

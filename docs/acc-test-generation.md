@@ -94,7 +94,7 @@ This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well a
 
 #### Exists and Destroy Checks
 
-Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
+Some `Exists` functions used in acceptance tests take a pointer to the returned API object.
 To specify the type of this parameter, use the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
 `<package path>;[<package alias>;]<function call>`.
@@ -158,6 +158,10 @@ To override the common name, set the annotation `@Testing(tlsKeyDomain=<referenc
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 
+Some acceptance tests require an SSH public key.
+This can be included by setting the annotation `@Testing(sshKeyPair=true)`.
+The Terraform variable name will be `public_key`.
+
 Some acceptance tests require a TLS ECDSA public key PEM.
 This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.
 The Terraform variable name will be `rTlsEcdsaPublicKeyPem`.
@@ -206,6 +210,15 @@ For example, the resource type `aws_ssoadmin_application` has an ARN Identity an
 
 Otherwise, if the resource type has an `id` attribute that is set to the same value as an identity attribute,
 add an `@Testing(idAttrDuplicates="<attribute_name>")` annotation.
+
+If the resource type implemented using Plugin SDK
+and it has an ARN Identity, Single Parameter Identity, Singleton Identity, or Custom Inherent Region Identity,
+by default the `id` attribute will match the Identity attribute.
+In some rare cases, the value in the `id` attribute cannot be used as the identifying attribute;
+in this case, add the `duplicatesIdAttr=false` parameter to the identity annotation
+For example, the resource type `aws_iam_policy_attachment` sets the `id` attribute to the value of the `name`,
+but the `policy_arn` is the identifying attribute,
+so the annotation is `@ArnIdentity("policy_arn", duplicatesIdAttr=false)`.
 
 #### Composed Attribute Values
 

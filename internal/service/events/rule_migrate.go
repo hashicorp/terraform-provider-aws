@@ -30,7 +30,7 @@ func resourceRuleV0() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
-					Default:  DefaultEventBusName,
+					Default:  defaultEventBusName,
 				},
 				"event_pattern": {
 					Type:     schema.TypeString,

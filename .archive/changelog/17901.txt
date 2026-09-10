@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_neptune_cluster_instance: Add "storage-optimization" to Neptune cluster instance create/update pending states
-```

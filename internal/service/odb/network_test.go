@@ -14,12 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -44,21 +42,21 @@ func TestAccODBNetworkResource_basic(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network),
 				),
 			},
 			{
@@ -80,22 +78,22 @@ func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.networkWithAllParams(rName, "julia.com", endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"cross_region_s3_restore_sources_access.#",
@@ -127,22 +125,22 @@ func TestAccODBNetworkResource_ec2PlacementGroupIDs(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkFroEC2PlacementGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network),
 					resource.TestCheckResourceAttrWith(resourceName, "ec2_placement_group_ids.#", func(value string) error {
 						count, err := strconv.Atoi(value)
 						if err != nil {
@@ -174,22 +172,22 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1, network2 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 				),
 			},
 			{
@@ -201,7 +199,7 @@ func TestAccODBNetworkResource_updateManagedService(t *testing.T) {
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
 							return errors.New("should not  create a new cloud odb network")
@@ -229,22 +227,22 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1, network2 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 				),
 			},
 			{
@@ -256,7 +254,7 @@ func TestAccODBNetworkResource_disableManagedService(t *testing.T) {
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
 							return errors.New("should not  create a new cloud odb network")
@@ -289,29 +287,29 @@ func TestAccODBNetworkResource_updateTags(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1, network2 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 				),
 			},
 			{
 				Config: oracleDBNetworkResourceTestEntity.updateNetworkTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
 							return errors.New("should not  create a new cloud odb network")
@@ -339,22 +337,22 @@ func TestAccODBNetworkResource_disappears(t *testing.T) {
 	}
 
 	var network odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.OracleDBNetwork, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -380,22 +378,22 @@ func TestAccODBNetworkResource_updateDeleteAssociatedResource(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1, network2 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithWithDeleteAssociatedResourceFalse(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 				),
 			},
 			{
@@ -407,7 +405,7 @@ func TestAccODBNetworkResource_updateDeleteAssociatedResource(t *testing.T) {
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetwork(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
 							return errors.New("should not  create a new cloud odb network")
@@ -435,22 +433,22 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 		"delete_associated_resources",
 	}
 	var network1, network2 odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNetworkResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx),
+		CheckDestroy:             oracleDBNetworkResourceTestEntity.testAccCheckNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNetworkResourceTestEntity.basicNetworkWithActiveManagedService(rName, endpoints.UsWest2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network1),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"cross_region_s3_restore_sources_access.#",
@@ -472,7 +470,7 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 			{
 				Config: oracleDBNetworkResourceTestEntity.updateNetworkCrossRegionRestore(rName, endpoints.UsEast2RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, t, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if *(network1.OdbNetworkId) != *(network2.OdbNetworkId) {
 							return errors.New("should not create a new cloud odb network")
@@ -501,9 +499,9 @@ func TestAccODBNetworkResource_updateCrossRegionRestore(t *testing.T) {
 	})
 }
 
-func (oracleDBNetworkResourceTest) testAccCheckNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNetworkResourceTest) testAccCheckNetworkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network" {
@@ -524,7 +522,7 @@ func (oracleDBNetworkResourceTest) testAccCheckNetworkDestroy(ctx context.Contex
 	}
 }
 
-func (oracleDBNetworkResourceTest) testAccCheckNetworkExists(ctx context.Context, name string, network *odbtypes.OdbNetwork) resource.TestCheckFunc {
+func (oracleDBNetworkResourceTest) testAccCheckNetworkExists(ctx context.Context, t *testing.T, name string, network *odbtypes.OdbNetwork) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -535,7 +533,7 @@ func (oracleDBNetworkResourceTest) testAccCheckNetworkExists(ctx context.Context
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameNetwork, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		resp, err := tfodb.FindOracleDBNetworkResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -549,7 +547,7 @@ func (oracleDBNetworkResourceTest) testAccCheckNetworkExists(ctx context.Context
 }
 
 func (oracleDBNetworkResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListOdbNetworksInput{}
 	_, err := conn.ListOdbNetworks(ctx, &input)
 	if acctest.PreCheckSkipError(err) {

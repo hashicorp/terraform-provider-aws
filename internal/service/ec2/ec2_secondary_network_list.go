@@ -32,14 +32,6 @@ type secondaryNetworkListResource struct {
 func (r *secondaryNetworkListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var query listSecondaryNetworkModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input ec2.DescribeSecondaryNetworksInput
@@ -72,10 +64,6 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listSecondaryNetworkModel struct {
-	framework.WithRegionModel
 }
 
 func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) iter.Seq2[awstypes.SecondaryNetwork, error] {

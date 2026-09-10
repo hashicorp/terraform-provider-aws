@@ -103,7 +103,7 @@ func (d *collectionGroupDataSource) Read(ctx context.Context, request datasource
 
 	data.CreatedDate = timetypes.NewRFC3339ValueMust(flex.Int64ToRFC3339StringValue(output.CreatedDate))
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (d *collectionGroupDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {

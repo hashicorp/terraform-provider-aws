@@ -30,8 +30,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the access point.
-* `arn` - Amazon Resource Name of the file system.
-* `file_system_arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
+* `file_system_arn` - ARN of the file system.
 * `file_system_id` - ID of the file system for which the access point is intended.
 * `posix_user` - Single element list containing operating system user and group applied to all file system requests made using the access point.
     * `gid` - Group ID

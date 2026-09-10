@@ -109,6 +109,22 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"bootstrap_brokers_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"broker_node_group_info": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -1163,6 +1179,10 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.ClusterInfo, out
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivitySaslIam)))
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivitySaslScram)))
 	d.Set("bootstrap_brokers_vpc_connectivity_tls", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivityTls)))
+	d.Set("bootstrap_brokers_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringIpv6)))
+	d.Set("bootstrap_brokers_sasl_iam_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringSaslIamIpv6)))
+	d.Set("bootstrap_brokers_sasl_scram_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringSaslScramIpv6)))
+	d.Set("bootstrap_brokers_tls_ipv6", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringTlsIpv6)))
 	if cluster.BrokerNodeGroupInfo != nil {
 		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
 			return fmt.Errorf("setting broker_node_group_info: %w", err)

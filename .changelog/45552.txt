@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_odb_cloud_vm_cluster: Enable deletion of vm cluster in resource shared account.
-```

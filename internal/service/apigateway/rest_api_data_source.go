@@ -50,6 +50,10 @@ func dataSourceRestAPI() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"endpoint_access_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"endpoint_configuration": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -92,6 +96,10 @@ func dataSourceRestAPI() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"security_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -119,6 +127,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 	d.Set(names.AttrDescription, match.Description)
+	d.Set("endpoint_access_mode", match.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
@@ -129,6 +138,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
 	d.Set(names.AttrPolicy, match.Policy)
+	d.Set("security_policy", match.SecurityPolicy)
 
 	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_imagebuilder_distribution_configuration: Improve validation error message of `name` argument
-```

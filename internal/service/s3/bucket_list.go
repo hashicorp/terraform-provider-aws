@@ -38,14 +38,6 @@ type listResourceBucket struct {
 func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().S3Client(ctx)
 
-	var query listBucketModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -102,21 +94,20 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 	}
 }
 
-type listBucketModel struct {
-	framework.WithRegionModel
-}
-
 func listBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) iter.Seq2[awstypes.Bucket, error] {
 	return func(yield func(awstypes.Bucket, error) bool) {
-		output, err := conn.ListBuckets(ctx, input)
-		if err != nil {
-			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
-			return
-		}
-
-		for _, item := range output.Buckets {
-			if !yield(item, nil) {
+		pages := s3.NewListBucketsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
 				return
+			}
+
+			for _, item := range page.Buckets {
+				if !yield(item, nil) {
+					return
+				}
 			}
 		}
 	}

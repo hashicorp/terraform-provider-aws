@@ -193,6 +193,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_scheduler_schedule.example
+  identity = {
+    group_name = "my-schedule-group"
+    name       = "my-schedule"
+  }
+}
+
+resource "aws_scheduler_schedule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `group_name` - (String) Name of the schedule group.
+* `name` - (String) Name of the schedule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 
 ```terraform

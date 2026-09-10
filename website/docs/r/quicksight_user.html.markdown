@@ -68,7 +68,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` -  Amazon Resource Name (ARN) for the user.
+* `arn` -  ARN for the user.
 * `id` - Unique identifier consisting of the account ID, the namespace, and the user name separated by `/`s.
 * `user_invitation_url` - URL the user visits to complete registration and provide a password. Returned only for users with an identity type of `QUICKSIGHT`.
 

@@ -47,9 +47,9 @@ func TestStatusNetwork_NilOutput(t *testing.T) {
 
 	// API returns 200 with no odbNetwork field → Find returns nil + EmptyResultError.
 	conn := newTestClient(t, jsonHandler(http.StatusOK, map[string]any{}))
-	refreshFunc := statusNetwork(ctx, conn, "odn-doesnotexist")
+	refreshFunc := statusNetwork(conn, "odn-doesnotexist")
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	// The Find function returns a NotFoundError‐style empty result error,
 	// and statusNetwork swallows NotFound errors.  The key assertion is that
@@ -77,9 +77,9 @@ func TestStatusNetwork_ValidOutput(t *testing.T) {
 			names.AttrStatus: "AVAILABLE",
 		},
 	}))
-	refreshFunc := statusNetwork(ctx, conn, "odn-12345")
+	refreshFunc := statusNetwork(conn, "odn-12345")
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -102,9 +102,9 @@ func TestStatusNetwork_NotFound(t *testing.T) {
 		"__type":          "ResourceNotFoundException",
 		names.AttrMessage: "ODB network not found",
 	}))
-	refreshFunc := statusNetwork(ctx, conn, "odn-doesnotexist")
+	refreshFunc := statusNetwork(conn, "odn-doesnotexist")
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	if err != nil {
 		t.Fatalf("expected no error for NotFound, got: %v", err)
@@ -140,9 +140,9 @@ func TestStatusManagedService_NilManagedServices(t *testing.T) {
 			names.AttrStatus: "AVAILABLE",
 		},
 	}))
-	refreshFunc := statusManagedService(ctx, conn, "odn-12345", s3ManagedResourceStatus)
+	refreshFunc := statusManagedService(conn, "odn-12345", s3ManagedResourceStatus)
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
@@ -166,9 +166,9 @@ func TestStatusManagedService_NilOutput(t *testing.T) {
 
 	// API returns 200 with no odbNetwork field → Find returns nil + EmptyResultError.
 	conn := newTestClient(t, jsonHandler(http.StatusOK, map[string]any{}))
-	refreshFunc := statusManagedService(ctx, conn, "odn-doesnotexist", s3ManagedResourceStatus)
+	refreshFunc := statusManagedService(conn, "odn-doesnotexist", s3ManagedResourceStatus)
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	// Find returns EmptyResultError (which is a NotFoundError), but
 	// statusManagedService treats any error as propagated.  The critical
@@ -197,9 +197,9 @@ func TestStatusManagedService_WithManagedServices(t *testing.T) {
 			},
 		},
 	}))
-	refreshFunc := statusManagedService(ctx, conn, "odn-12345", s3ManagedResourceStatus)
+	refreshFunc := statusManagedService(conn, "odn-12345", s3ManagedResourceStatus)
 
-	result, state, err := refreshFunc()
+	result, state, err := refreshFunc(ctx)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -222,9 +222,9 @@ func TestStatusManagedService_NotFound(t *testing.T) {
 		"__type":          "ResourceNotFoundException",
 		names.AttrMessage: "ODB network not found",
 	}))
-	refreshFunc := statusManagedService(ctx, conn, "odn-doesnotexist", s3ManagedResourceStatus)
+	refreshFunc := statusManagedService(conn, "odn-doesnotexist", s3ManagedResourceStatus)
 
-	_, _, err := refreshFunc()
+	_, _, err := refreshFunc(ctx)
 
 	// statusManagedService does NOT have a NotFound guard (unlike statusNetwork),
 	// so it propagates the error.

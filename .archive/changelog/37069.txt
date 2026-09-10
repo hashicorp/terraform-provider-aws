@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudformation_stack_set: Adds guidance on permissions when using delegated administrator account
-```

@@ -26,18 +26,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_bus", name="Event Bus")
+// @SDKResource("aws_cloudwatch_event_bus", name="Bus")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEventBusOutput")
 func resourceBus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusCreate,
 		ReadWithoutTimeout:   resourceBusRead,
 		UpdateWithoutTimeout: resourceBusUpdate,
 		DeleteWithoutTimeout: resourceBusDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -266,7 +266,11 @@ func findEventBusByName(ctx context.Context, conn *eventbridge.Client, name stri
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeEventBus(ctx, &input)
+	return findEventBus(ctx, conn, &input)
+}
+
+func findEventBus(ctx context.Context, conn *eventbridge.Client, input *eventbridge.DescribeEventBusInput) (*eventbridge.DescribeEventBusOutput, error) {
+	output, err := conn.DescribeEventBus(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

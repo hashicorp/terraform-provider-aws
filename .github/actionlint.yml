@@ -12,4 +12,3 @@ paths:
   .github/workflows/*.lock.yml:
     ignore:
       - 'unexpected key "queue" for "concurrency" section'
-      - 'unknown permission scope "copilot-requests"'

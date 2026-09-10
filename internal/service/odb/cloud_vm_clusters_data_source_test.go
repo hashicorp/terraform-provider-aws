@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +28,7 @@ func TestAccODBListVmClustersDataSource_basic(t *testing.T) {
 	var vmcListTest = listVMCListDSTest{}
 	var output odb.ListCloudVmClustersOutput
 	dataSourceName := "data.aws_odb_cloud_vm_clusters.test"
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmcListTest.testAccPreCheck(ctx, t)
@@ -42,7 +41,7 @@ func TestAccODBListVmClustersDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 
 					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						vmcListTest.count(ctx, dataSourceName, &output)
+						vmcListTest.count(ctx, t, dataSourceName, &output)
 						resource.TestCheckResourceAttr(dataSourceName, "cloud_autonomous_vm_clusters.#", strconv.Itoa(len(output.CloudVmClusters)))
 						return nil
 					},
@@ -57,13 +56,13 @@ func (listVMCListDSTest) basic() string {
 	return `data "aws_odb_cloud_vm_clusters" "test" {}`
 }
 
-func (listVMCListDSTest) count(ctx context.Context, name string, list *odb.ListCloudVmClustersOutput) resource.TestCheckFunc {
+func (listVMCListDSTest) count(ctx context.Context, t *testing.T, name string, list *odb.ListCloudVmClustersOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudVmClustersList, name, errors.New("not found"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		resp, err := tfodb.ListCloudVmClusters(ctx, conn)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.DSNameCloudVmClustersList, rs.Primary.ID, err)
@@ -73,7 +72,7 @@ func (listVMCListDSTest) count(ctx context.Context, name string, list *odb.ListC
 	}
 }
 func (listVMCListDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	_, err := tfodb.ListCloudVmClusters(ctx, conn)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

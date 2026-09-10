@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -394,6 +395,61 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	})
 }
 
+// TestAccCloudFrontResponseHeadersPolicy_Distribution_removal verifies that a response
+// headers policy which is referenced by a distribution's default cache behavior
+// can be removed from the configuration together with the reference.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/21730
+//
+// Doing so requires a create_before_destroy lifecycle argument on
+// the policy resource to modify the graph order during destroy:
+//
+// Ref: https://github.com/hashicorp/terraform/blob/v1.15.8/docs/destroying.md#create-before-destroy
+func TestAccCloudFrontResponseHeadersPolicy_Distribution_removal(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	distributionResourceName := "aws_cloudfront_distribution.test"
+	resourceName := "aws_cloudfront_response_headers_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckDistributionDestroy(ctx, t),
+			testAccCheckResponseHeadersPolicyDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponseHeadersPolicyConfig_Distribution_initial(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(ctx, t, resourceName),
+					testAccCheckDistributionExists(ctx, t, distributionResourceName, &distribution),
+					resource.TestCheckResourceAttrPair(distributionResourceName, "default_cache_behavior.0.response_headers_policy_id", resourceName, names.AttrID),
+				),
+			},
+			{
+				Config: testAccResponseHeadersPolicyConfig_Distribution_removed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, distributionResourceName, &distribution),
+					resource.TestCheckResourceAttr(distributionResourceName, "default_cache_behavior.0.response_headers_policy_id", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
+						plancheck.ExpectResourceAction(distributionResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckResponseHeadersPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
@@ -619,4 +675,112 @@ resource "aws_cloudfront_response_headers_policy" "test" {
   }
 }
 `, rName, enabled, rate)
+}
+
+func testAccResponseHeadersPolicyConfig_Distribution_initial(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_response_headers_policy" "test" {
+  name = %[1]q
+
+  security_headers_config {
+    content_security_policy {
+      content_security_policy = "default-src 'none';"
+      override                = true
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "test"
+    viewer_protocol_policy     = "allow-all"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.test.id
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, rName)
+}
+
+func testAccResponseHeadersPolicyConfig_Distribution_removed() string {
+	return `
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`
 }

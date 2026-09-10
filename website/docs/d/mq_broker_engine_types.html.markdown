@@ -29,13 +29,13 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `broker_engine_types` - List of available engine types and versions. See [Engine Types](#engine-types).
+* `broker_engine_types` - List of available engine types and versions. See [`broker_engine_types` Block](#broker_engine_types-block).
 
-### Engine Types
+### `broker_engine_types` Block
 
 * `engine_type` - Broker's engine type.
-* `engine_versions` - List of engine versions. See [Engine Versions](#engine-versions).
+* `engine_versions` - List of engine versions. See [`engine_versions` Block](#engine_versions-block).
 
-### Engine Versions
+### `engine_versions` Block
 
 * `name` - Name of the engine version.

@@ -37,7 +37,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_user_settings", name="User Settings")
 // @Tags(identifierAttribute="user_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
 // @Testing(importStateIdAttribute="user_settings_arn")

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_route53_zone
 
-Manages a Route53 Hosted Zone. For managing Domain Name System Security Extensions (DNSSEC), see the [`aws_route53_key_signing_key`](route53_key_signing_key.html) and [`aws_route53_hosted_zone_dnssec`](route53_hosted_zone_dnssec.html) resources.
+Manages a Route53 Hosted Zone. For managing DNS Security Extensions (DNSSEC), see the [`aws_route53_key_signing_key`](route53_key_signing_key.html) and [`aws_route53_hosted_zone_dnssec`](route53_hosted_zone_dnssec.html) resources.
 
 ## Example Usage
 
@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
+* `arn` - ARN of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
@@ -139,7 +139,6 @@ import {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
 

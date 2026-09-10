@@ -50,4 +50,10 @@ var (
 	FindVPCOriginByID                          = findVPCOriginByID
 
 	WaitDistributionDeployed = waitDistributionDeployed
+
+	DefaultConnectionAttempts = defaultConnectionAttempts
+	DefaultConnectionTimeout  = defaultConnectionTimeout
+
+	DefaultOriginKeepaliveTimeout = defaultOriginKeepaliveTimeout
+	DefaultOriginReadTimeout      = defaultOriginReadTimeout
 )

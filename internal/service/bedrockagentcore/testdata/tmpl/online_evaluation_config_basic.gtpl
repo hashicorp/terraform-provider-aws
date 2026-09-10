@@ -21,11 +21,15 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
     }
   }
 
+  depends_on = [aws_iam_role_policy.test]
+
 {{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" -}}
+}
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {

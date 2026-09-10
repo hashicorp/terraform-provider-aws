@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_express_gateway_service: Fix `Resource Already Exists` error when recreating a service after deletion
-```

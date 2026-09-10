@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency
-```

@@ -63,6 +63,22 @@ func dataSourceBootstrapBrokers() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"bootstrap_brokers_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_iam_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_sasl_scram_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bootstrap_brokers_tls_ipv6": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"cluster_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -95,6 +111,10 @@ func dataSourceBootstrapBrokersRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
 	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
 	d.Set("bootstrap_brokers_vpc_connectivity_tls", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivityTls)))
+	d.Set("bootstrap_brokers_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringIpv6)))
+	d.Set("bootstrap_brokers_sasl_iam_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIamIpv6)))
+	d.Set("bootstrap_brokers_sasl_scram_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslScramIpv6)))
+	d.Set("bootstrap_brokers_tls_ipv6", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringTlsIpv6)))
 
 	return diags
 }

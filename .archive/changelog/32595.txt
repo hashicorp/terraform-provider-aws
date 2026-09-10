@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_kms_grant: Allow usage of service principal as grantee and revoker
-```

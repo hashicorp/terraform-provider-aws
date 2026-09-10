@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_globalaccelerator_accelerator: Add resource identity support
-```

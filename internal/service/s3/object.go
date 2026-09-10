@@ -295,6 +295,12 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrARN, arn.String())
 
+	return resourceObjectFlatten(d, output)
+}
+
+func resourceObjectFlatten(d *schema.ResourceData, output *s3.HeadObjectOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)

@@ -145,7 +145,7 @@ resource "aws_ce_cost_category" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer cost category.
+- `arn` (String) ARN of the Cost Explorer cost category.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the id. For example:
 

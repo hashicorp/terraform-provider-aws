@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_firehose_delivery_stream: Add `ForceNew` to `dynamic_partitioning_configuration` attribute
-```

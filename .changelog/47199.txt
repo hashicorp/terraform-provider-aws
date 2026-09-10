@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_multitenant_distribution: Fix `origin` block ordering producing inconsistent result after apply when multiple origins are configured
-```

@@ -121,7 +121,7 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/batch/
-        text: 'SA1019: apiObject.ImageId is deprecated: This field is deprecated'
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/bedrockagentcore/
@@ -146,6 +146,10 @@ linters:
           - staticcheck
         path: internal/service/ecr/
         text: 'SA1019: (\w+\.)+\w+ is deprecated: This field is deprecated.'
+      - linters:
+          - staticcheck
+        path: internal/service/eks/
+        text: 'SA1019: (\w+\.)+\w+ is deprecated:'
       - linters:
           - staticcheck
         path: internal/service/elastictranscoder/

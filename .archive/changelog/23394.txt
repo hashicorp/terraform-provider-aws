@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_synthetics_canary: Retry canary creation if it fails because of IAM propagation.
-```

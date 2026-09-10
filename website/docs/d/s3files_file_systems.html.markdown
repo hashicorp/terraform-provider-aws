@@ -28,7 +28,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `file_systems` - List of file systems. See [`file_systems`](#file_systems-attribute-reference) below.
 
-### `file_systems` Attribute Reference
+### `file_systems` Block
 
 * `arn` - ARN of the file system.
 * `bucket` - S3 bucket ARN.
@@ -37,7 +37,6 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_id` - KMS key ID for encryption.
 * `name` - File system name.
 * `owner_id` - AWS account ID of the owner.
-* `prefix` - S3 bucket prefix.
 * `role_arn` - IAM role ARN for S3 access.
 * `status` - File system status.
 * `status_message` - Status message.
