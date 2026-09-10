@@ -405,7 +405,10 @@ func (r *trafficPolicyResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	if shouldSendEmptyPolicyStatements(data.PolicyStatements) {
+	// CreateTrafficPolicy requires PolicyStatements but accepts an empty slice.
+	// AutoFlex expands an omitted policy_statement block to nil, so send an
+	// explicit empty slice to allow policies with only a default_action.
+	if input.PolicyStatements == nil {
 		input.PolicyStatements = []awstypes.PolicyStatement{}
 	}
 
@@ -491,7 +494,7 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 			return
 		}
 
-		if shouldSendEmptyPolicyStatements(plan.PolicyStatements) {
+		if input.PolicyStatements == nil {
 			input.PolicyStatements = []awstypes.PolicyStatement{}
 		}
 
@@ -518,13 +521,11 @@ func (r *trafficPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func shouldSendEmptyPolicyStatements(v fwtypes.ListNestedObjectValueOf[policyStatementModel]) bool {
-	return v.IsNull() || v.IsUnknown() || v.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0
-}
-
+// normalizePolicyStatements keeps an empty API result null so an omitted
+// policy_statement block (null in configuration) round-trips without a diff.
 func normalizePolicyStatements(ctx context.Context, data *trafficPolicyResourceModel, policyStatements []awstypes.PolicyStatement) {
 	if len(policyStatements) == 0 {
-		data.PolicyStatements = fwtypes.NewListNestedObjectValueOfEmpty[policyStatementModel](ctx)
+		data.PolicyStatements = fwtypes.NewListNestedObjectValueOfNull[policyStatementModel](ctx)
 	}
 }
 
