@@ -32,4 +32,4 @@ EOF
     export AWS_PROFILE=perftest
 fi
 
-exec "%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-logging.sh"
+"%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-logging.sh"

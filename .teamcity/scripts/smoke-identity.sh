@@ -34,4 +34,4 @@ fi
 
 export PACKAGE_PARALLELISM=$(( "%teamcity.agent.hardware.cpuCount%" / 2 ))
 
-exec "%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-identity.sh"
+"%teamcity.build.checkoutDir%/.ci/scripts/smoke-tests-identity.sh"
