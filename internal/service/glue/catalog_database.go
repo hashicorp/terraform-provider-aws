@@ -168,6 +168,12 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
 		dbInput.CreateTableDefaultPermissions = expandPrincipalPermissionses(v.([]any))
+	} else if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
+		// The block is explicitly configured as empty (`create_table_default_permission {}`),
+		// which means "Lake Formation manages new-table permissions" (no automatic
+		// IAM_ALLOWED_PRINCIPALS grant). Send an explicit empty list rather than leaving the
+		// field unset, which would let AWS apply its own default instead.
+		dbInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -228,7 +234,21 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, databaseARN(ctx, c, name))
 	d.Set(names.AttrCatalogID, database.CatalogId)
-	if err := d.Set("create_table_default_permission", flattenPrincipalPermissionses(database.CreateTableDefaultPermissions)); err != nil {
+	createTableDefaultPermission := flattenPrincipalPermissionses(database.CreateTableDefaultPermissions)
+	if len(createTableDefaultPermission) == 0 {
+		// AWS returned no default permissions. If the config explicitly set an empty
+		// `create_table_default_permission {}` block (rather than omitting the argument),
+		// echo that back so the plan doesn't perpetually want to re-apply it.
+		if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
+			createTableDefaultPermission = []any{
+				map[string]any{
+					names.AttrPermissions: []any{},
+					names.AttrPrincipal:   []any{},
+				},
+			}
+		}
+	}
+	if err := d.Set("create_table_default_permission", createTableDefaultPermission); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
 	}
 	d.Set(names.AttrDescription, database.Description)
@@ -269,6 +289,12 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
 			dbInput.CreateTableDefaultPermissions = expandPrincipalPermissionses(v.([]any))
+		} else if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
+			// The block is explicitly configured as empty (`create_table_default_permission {}`),
+			// which means "Lake Formation manages new-table permissions" (no automatic
+			// IAM_ALLOWED_PRINCIPALS grant). Send an explicit empty list rather than leaving the
+			// field unset, which would leave AWS's existing default in place.
+			dbInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
