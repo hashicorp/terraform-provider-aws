@@ -43,6 +43,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `approval_configuration` - Approval configuration for registry records. [See below](#approval_configuration-block).
+* `auto_detection_configuration` - Auto-detection configuration for the registry. [See below](#auto_detection_configuration-block).
 * `created_at` - Timestamp when the registry was created.
 * `description` - Description of the registry.
 * `discovery_configuration` - Discovery configuration for the registry. [See below](#discovery_configuration-block).
@@ -55,6 +56,11 @@ This data source exports the following attributes in addition to the arguments a
 ### `approval_configuration` Block
 
 * `auto_approval_rules` - Set of rules that determine which registry records are automatically approved on submission. When empty, submitted records require manual review.
+
+### `auto_detection_configuration` Block
+
+* `enabled` - Whether auto-detection is requested for the registry.
+* `scope` - Source from which resources are detected.
 
 ### `discovery_configuration` Block
 
