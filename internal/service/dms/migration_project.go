@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -87,7 +88,8 @@ func (r *migrationProjectResource) Schema(ctx context.Context, req resource.Sche
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"transformation_rules": schema.StringAttribute{
-				Optional: true,
+				CustomType: jsontypes.NormalizedType{},
+				Optional:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -325,7 +327,7 @@ type migrationProjectResourceModel struct {
 	Tags                                  tftags.Map                                                                    `tfsdk:"tags"`
 	TagsAll                               tftags.Map                                                                    `tfsdk:"tags_all"`
 	Timeouts                              timeouts.Value                                                                `tfsdk:"timeouts"`
-	TransformationRules                   types.String                                                                  `tfsdk:"transformation_rules"`
+	TransformationRules                   jsontypes.Normalized                                                          `tfsdk:"transformation_rules"`
 }
 
 type migrationProjectSCApplicationAttributesModel struct {

@@ -139,6 +139,42 @@ func TestAccDMSMigrationProject_update(t *testing.T) {
 	})
 }
 
+func TestAccDMSMigrationProject_transformationRules(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dms_migration_project.test"
+
+	// A single transformation rule that adds the "demo_" prefix to every table.
+	transformationRules := `{"rules":[{"rule-type":"transformation","rule-id":1,"rule-name":"1","rule-action":"add-prefix","rule-target":"table","object-locator":{"schema-name":"%","table-name":"%"},"value":"demo_"}]}`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DMS)
+			testAccPreCheckMigrationProject(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMigrationProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMigrationProjectConfig_transformationRules(rName, transformationRules),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMigrationProjectExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "transformation_rules", transformationRules),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckMigrationProjectDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -330,4 +366,28 @@ resource "aws_dms_migration_project" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, description))
+}
+
+func testAccMigrationProjectConfig_transformationRules(rName, transformationRules string) string {
+	return acctest.ConfigCompose(testAccMigrationProjectConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_migration_project" "test" {
+  name                 = %[1]q
+  instance_profile_arn = aws_dms_instance_profile.test.arn
+  transformation_rules = %[2]q
+
+  source_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.source.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.source.arn
+  }
+
+  target_data_provider_descriptor {
+    data_provider_arn               = aws_dms_data_provider.target.arn
+    secrets_manager_access_role_arn = aws_iam_role.test.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.target.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, transformationRules))
 }
