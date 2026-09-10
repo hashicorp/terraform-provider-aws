@@ -6,6 +6,7 @@ package apigatewayv2
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
@@ -35,11 +36,6 @@ type integrationListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type integrationListResourceModel struct {
-	framework.WithRegionModel
-	ApiId types.String `tfsdk:"api_id"`
-}
-
 func (l *integrationListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
@@ -52,71 +48,93 @@ func (l *integrationListResource) ListResourceConfigSchema(ctx context.Context, 
 }
 
 func (l *integrationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query integrationListResourceModel
-	if diags := request.Config.Get(ctx, &query); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
+	conn := l.Meta().APIGatewayV2Client(ctx)
 
-	awsClient := l.Meta()
-	conn := awsClient.APIGatewayV2Client(ctx)
+	var query listIntegrationModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
 
 	apiID := query.ApiId.ValueString()
 
-	tflog.Info(ctx, "Listing API Gateway V2 Integrations", map[string]any{
+	tflog.Info(ctx, "Listing Resources", map[string]any{
 		logging.ResourceAttributeKey("api_id"): apiID,
 	})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &apigatewayv2.GetIntegrationsInput{
+		input := apigatewayv2.GetIntegrationsInput{
 			ApiId: aws.String(apiID),
 		}
+		for item, err := range listIntegrations(ctx, conn, &input) {
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			integrationID := aws.ToString(item.IntegrationId)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("integration_id"), integrationID)
+
+			result := request.NewListResult(ctx)
+
+			rd := l.ResourceData()
+			rd.SetId(integrationID)
+			rd.Set("api_id", apiID)
+
+			if request.IncludeResource {
+				if err := flattenIntegrationPage(rd, item); err != nil {
+					tflog.Error(ctx, "Reading API Gateway V2 Integration", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+			}
+
+			// e.g. "MOCK", "AWS_PROXY arn:aws:lambda:us-east-1:123456789012:function:myFunc"
+			displayName := string(item.IntegrationType)
+			if uri := aws.ToString(item.IntegrationUri); uri != "" {
+				displayName = fmt.Sprintf("%s %s", displayName, uri)
+			}
+			result.DisplayName = displayName
+
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+type listIntegrationModel struct {
+	framework.WithRegionModel
+	ApiId types.String `tfsdk:"api_id"`
+}
+
+func listIntegrations(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetIntegrationsInput) iter.Seq2[awstypes.Integration, error] {
+	return func(yield func(awstypes.Integration, error) bool) {
+		var stopped bool
 		err := getIntegrationsPages(ctx, conn, input, func(page *apigatewayv2.GetIntegrationsOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 			for _, item := range page.Items {
-				integrationID := aws.ToString(item.IntegrationId)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("integration_id"), integrationID)
-
-				result := request.NewListResult(ctx)
-
-				rd := l.ResourceData()
-				rd.SetId(integrationID)
-				rd.Set("api_id", apiID)
-
-				if request.IncludeResource {
-					if err := flattenIntegrationPage(rd, item); err != nil {
-						tflog.Error(ctx, "Reading API Gateway V2 Integration", map[string]any{
-							"error": err.Error(),
-						})
-						continue
-					}
-				}
-
-				// e.g. "MOCK", "AWS_PROXY arn:aws:lambda:us-east-1:123456789012:function:myFunc"
-				displayName := string(item.IntegrationType)
-				if uri := aws.ToString(item.IntegrationUri); uri != "" {
-					displayName = fmt.Sprintf("%s %s", displayName, uri)
-				}
-				result.DisplayName = displayName
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return false
-				}
-
-				if !yield(result) {
+				if !yield(item, nil) {
+					stopped = true
 					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			result := fwdiag.NewListResultErrorDiagnostic(err)
-			yield(result)
-			return
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Integration](), fmt.Errorf("listing API Gateway V2 Integrations: %w", err))
 		}
 	}
 }
