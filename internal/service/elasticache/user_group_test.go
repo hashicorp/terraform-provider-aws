@@ -201,6 +201,54 @@ func TestAccElastiCacheUserGroup_rotate(t *testing.T) {
 	})
 }
 
+// Replacing a group member destroys the outgoing user first, so the update removes a user
+// ElastiCache has already detached while adding a new one.
+func TestAccElastiCacheUserGroup_replaceMember(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userGroup awstypes.UserGroup
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user_group.test"
+	user1ResourceName := "aws_elasticache_user.test1"
+	user2ResourceName := "aws_elasticache_user.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserGroupConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", rName+"-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", rName+"-2"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_rotate(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(user1ResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(user2ResourceName, plancheck.ResourceActionReplace),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", rName+"-1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", rName+"-3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheUserGroup_engineValkey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var userGroup awstypes.UserGroup

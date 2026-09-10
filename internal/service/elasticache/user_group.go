@@ -8,6 +8,7 @@ package elasticache
 import (
 	"context"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -159,9 +160,11 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		input := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}
+		modified := false
 
 		if d.HasChange(names.AttrEngine) {
 			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+			modified = true
 		}
 
 		if d.HasChange("user_ids") {
@@ -170,20 +173,35 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 			if add.Len() > 0 {
 				input.UserIdsToAdd = flex.ExpandStringValueSet(add)
+				modified = true
 			}
+
 			if del.Len() > 0 {
-				input.UserIdsToRemove = flex.ExpandStringValueSet(del)
+				// Deleting a user detaches it from its groups, so a stale removal would fail
+				// the whole request, discarding any pending additions with it.
+				userGroup, err := findUserGroupByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group (%s): %s", d.Id(), err)
+				}
+
+				if remove := tfslices.Filter(flex.ExpandStringValueSet(del), func(v string) bool {
+					return slices.Contains(userGroup.UserIds, v)
+				}); len(remove) > 0 {
+					input.UserIdsToRemove = remove
+					modified = true
+				}
 			}
 		}
 
-		_, err := conn.ModifyUserGroup(ctx, input)
+		if modified {
+			if _, err := conn.ModifyUserGroup(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
+			}
 
-		if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not a member of user group") {
-			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
-		}
-
-		if _, err := waitUserGroupUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group (%s) update: %s", d.Id(), err)
+			if _, err := waitUserGroupUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 
