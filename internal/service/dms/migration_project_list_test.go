@@ -134,16 +134,34 @@ func TestAccDMSMigrationProject_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`migration-project:.+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("example description")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("instance_profile_arn"), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`instance-profile:.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("instance_profile_name"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("source_data_provider_descriptor").AtSliceIndex(0).AtMapKey("data_provider_arn"), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`))),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_data_provider_descriptor").AtSliceIndex(0).AtMapKey("data_provider_arn"), tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("schema_conversion_application_attributes"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("source_data_provider_descriptor"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"data_provider_arn":               tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`)),
+								"data_provider_name":              knownvalue.NotNull(),
+								"secrets_manager_access_role_arn": tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(`role/.+$`)),
+								"secrets_manager_secret_id":       tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+$`)),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("target_data_provider_descriptor"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"data_provider_arn":               tfknownvalue.RegionalARNRegexp("dms", regexache.MustCompile(`data-provider:.+$`)),
+								"data_provider_name":              knownvalue.NotNull(),
+								"secrets_manager_access_role_arn": tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(`role/.+$`)),
+								"secrets_manager_secret_id":       tfknownvalue.RegionalARNRegexp("secretsmanager", regexache.MustCompile(`secret:.+$`)),
+							}),
+						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("transformation_rules"), knownvalue.Null()),
 					}),
 				},
 			},
