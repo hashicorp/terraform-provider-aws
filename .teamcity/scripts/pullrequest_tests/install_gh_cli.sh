@@ -7,7 +7,7 @@ set -euo pipefail
 version=$(curl -fsSL \
   ${GH_TOKEN:+-H "Authorization: Bearer ${GH_TOKEN}"} \
   https://api.github.com/repos/cli/cli/releases/latest \
-  | grep -oP '"tag_name":\s*"v\K[^"]+')
+  | grep -oP '"tag_name":\s*"v\K[^"]+' || true)
 
 if [[ -z "${version}" ]]; then
   version="2.97.0"
