@@ -291,7 +291,6 @@ func (r *routingRuleResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *routingRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-
 	domainName, domainNameId, ruleID, err := parseRoutingRuleARN(req.ID)
 	if err != nil {
 		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
