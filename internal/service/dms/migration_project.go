@@ -342,10 +342,10 @@ type migrationProjectDataProviderDescriptorModel struct {
 	SecretsManagerSecretID      types.String `tfsdk:"secrets_manager_secret_id"`
 }
 
-// Expand bridges a field-name mismatch AutoFlex can't resolve: the create/modify
-// input names this field DataProviderIdentifier (which accepts an ARN), while the
-// model uses DataProviderARN to match the DataProviderArn field on the Read
-// response. AutoFlex matches by name, and those two names aren't fuzzy-equivalent.
+var _ flex.Expander = migrationProjectDataProviderDescriptorModel{}
+
+// Expand maps DataProviderARN onto the input's DataProviderIdentifier field,
+// which AutoFlex can't name-match.
 func (m migrationProjectDataProviderDescriptorModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &awstypes.DataProviderDescriptorDefinition{
 		DataProviderIdentifier:      m.DataProviderARN.ValueStringPointer(),
