@@ -512,11 +512,28 @@ func (r *registryResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *registryResource) flatten(ctx context.Context, out *agentregistrycontrol.GetRegistryOutput, data *registryResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	// Normalize approval_configuration "approvalConfiguration": {"autoApprovalRules": []} to null.
 	if out.ApprovalConfiguration != nil && len(out.ApprovalConfiguration.AutoApprovalRules) == 0 {
 		out.ApprovalConfiguration = nil
 	}
 	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// auto_detection_configuration is in a different location on Read.
+	if out.AutoDetection != nil && out.AutoDetection.Configuration != nil {
+		var model autoDetectionConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, out.AutoDetection.Configuration, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		data.AutoDetectionConfiguration, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+	}
+
 	return diags
 }
 

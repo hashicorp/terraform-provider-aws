@@ -298,7 +298,6 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/approval_configuration/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"description":   config.StringVariable("description1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
@@ -315,6 +314,17 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 						}),
 					})})),
 				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/approval_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/basic/"),
@@ -337,7 +347,6 @@ func TestAccAgentRegistryRegistry_approvalConfiguration(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/approval_configuration/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"description":   config.StringVariable("description1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegistryExists(ctx, t, resourceName),
@@ -542,6 +551,18 @@ func TestAccAgentRegistryRegistry_autoDetectionConfiguration(t *testing.T) {
 						names.AttrScope:   tfknownvalue.StringExact(awstypes.AutoDetectionScopeOrganization),
 					})})),
 				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"enabled":       config.BoolVariable(true),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "registry_id"),
+				ImportStateVerifyIdentifierAttribute: "registry_id",
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Registry/auto_detection_configuration/"),
