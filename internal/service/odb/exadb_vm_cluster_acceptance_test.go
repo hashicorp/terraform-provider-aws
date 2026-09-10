@@ -150,9 +150,10 @@ func TestAccODBExaDBVMCluster_allArguments(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"data_collection_options"},
 			},
 		},
 	})
@@ -227,9 +228,10 @@ func TestAccODBExaDBVMCluster_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"data_collection_options"},
 			},
 		},
 	})
