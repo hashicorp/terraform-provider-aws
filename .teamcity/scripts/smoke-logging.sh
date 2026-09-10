@@ -13,8 +13,7 @@ if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
     }
     trap cleanup EXIT
 
-    touch "${conf}"
-    chmod 600 "${conf}"
+    install -m 600 /dev/null "${conf}"
     cat <<EOF >"${conf}"
 [profile perftest]
 role_arn       = %ACCTEST_ROLE_ARN%
