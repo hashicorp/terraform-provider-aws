@@ -3,7 +3,7 @@ resource/aws_bedrockagentcore_oauth2_credential_provider: Add `client_secret_con
 ```
 
 ```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config` and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks
+resource/aws_bedrockagentcore_oauth2_credential_provider: Add `oauth2_provider_config.atlassian_oauth2_provider_config`, `oauth2_provider_config.included_oauth2_provider_config`, and `oauth2_provider_config.linkedin_oauth2_provider_config` configuration blocks
 ```
 
 ```release-note:enhancement
