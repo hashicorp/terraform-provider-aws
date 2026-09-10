@@ -294,13 +294,13 @@ resource "aws_dms_migration_project" "test" {
   source_data_provider_descriptor {
     data_provider_arn               = aws_dms_data_provider.source.arn
     secrets_manager_access_role_arn = aws_iam_role.test.arn
-    secrets_manager_secret_id       = aws_secretsmanager_secret.source.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.source.arn
   }
 
   target_data_provider_descriptor {
     data_provider_arn               = aws_dms_data_provider.target.arn
     secrets_manager_access_role_arn = aws_iam_role.test.arn
-    secrets_manager_secret_id       = aws_secretsmanager_secret.target.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.target.arn
   }
 
   depends_on = [aws_iam_role_policy.test]
@@ -318,13 +318,13 @@ resource "aws_dms_migration_project" "test" {
   source_data_provider_descriptor {
     data_provider_arn               = aws_dms_data_provider.source.arn
     secrets_manager_access_role_arn = aws_iam_role.test.arn
-    secrets_manager_secret_id       = aws_secretsmanager_secret.source.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.source.arn
   }
 
   target_data_provider_descriptor {
     data_provider_arn               = aws_dms_data_provider.target.arn
     secrets_manager_access_role_arn = aws_iam_role.test.arn
-    secrets_manager_secret_id       = aws_secretsmanager_secret.target.arn
+    secrets_manager_secret_id       = aws_secretsmanager_secret_version.target.arn
   }
 
   depends_on = [aws_iam_role_policy.test]
